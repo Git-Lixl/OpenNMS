@@ -6,9 +6,24 @@
         <mstation>master.nmanage.com</mstation>
     </header>
     <command binary="false">
+        <name>javaPagerEmail</name>
+        <execute>org.opennms.netmgt.notifd.JavaMailNotificationStrategy</execute>
+        <comment>class for sending pager email notifications</comment>
+        <argument streamed="false">
+            <substitution>-s</substitution>
+            <switch>-subject</switch>
+        </argument>
+        <argument streamed="false">
+            <switch>-pemail</switch>
+        </argument>
+        <argument streamed="false">
+            <switch>-tm</switch>
+        </argument>
+    </command>
+    <command binary="false">
         <name>javaEmail</name>
         <execute>org.opennms.netmgt.notifd.JavaMailNotificationStrategy</execute>
-        <comment>for sending email notifications</comment>
+        <comment>class for sending email notifications</comment>
         <argument streamed="false">
             <substitution>-s</substitution>
             <switch>-subject</switch>
