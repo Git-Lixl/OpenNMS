@@ -5,25 +5,13 @@
  */
 package org.opennms.netmgt.notifd;
 
-import java.util.Date;
 import java.util.List;
-import java.util.Properties;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.NoSuchProviderException;
-import javax.mail.Session;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.log4j.Category;
 import org.opennms.core.utils.Argument;
+import org.opennms.core.utils.JavaMailer;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.NotificationFactory;
-import org.opennms.core.utils.JavaMailer;
-
-import com.sun.mail.smtp.SMTPTransport;
 
 
 /**
@@ -79,8 +67,16 @@ public class JavaMailNotificationStrategy implements NotificationStrategy {
 			log.debug("Current arg switch: " + i + " of " + arguments.size() +" is: " + arg.getSwitch());
 			log.debug("Current arg  value: " + i + " of " + arguments.size() +" is: " + arg.getValue());
 			
+			/*
+			 * Note: The recipient gets set by whichever of the two switches:
+			 * (PARAM_EMAIL or PARAM_PAGER_EMAIL) are
+			 * specified last in the notificationCommands.xml file
+			 */
 			if (NotificationFactory.PARAM_EMAIL.equals(arg.getSwitch())) {
 				log.debug("Found: PARAM_EMAIL");
+				jm.setTo(arg.getValue());
+			} else if (NotificationFactory.PARAM_PAGER_EMAIL.equals(arg.getSwitch())) {
+				log.debug("Found: PARAM_PAGER_EMAIL");
 				jm.setTo(arg.getValue());
 			} else if (NotificationFactory.PARAM_SUBJECT.equals(arg.getSwitch())) {
 				log.debug("Found: PARAM_SUBJECT");
