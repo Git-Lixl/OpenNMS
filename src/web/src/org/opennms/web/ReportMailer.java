@@ -42,7 +42,9 @@ import javax.servlet.ServletException;
 import org.apache.log4j.Category;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
+import org.opennms.core.utils.JavaMailerException;
 import org.opennms.core.utils.ThreadCategory;
+import org.opennms.core.utils.JavaMailer;
 import org.opennms.netmgt.config.UserFactory;
 
 
@@ -65,6 +67,7 @@ public class ReportMailer extends Object implements Runnable
 	protected String filename;
 	protected String commandParms;
 	protected String format;
+	protected boolean useScript=false;
 	Category log;
 	
 	public ReportMailer() throws ServletException
@@ -159,7 +162,12 @@ public class ReportMailer extends Object implements Runnable
 		}
 		
 		try {								
-			mailFileToUser(scriptMailReport, filename, finalEmailAddr);
+			
+			if(useScript) {
+				mailFileToUser(scriptMailReport, filename, finalEmailAddr);
+			} else {
+				mailFileToUser(filename, finalEmailAddr);
+			}
 			if(log.isInfoEnabled())
 				log.info("outage report has been mailed to user at " + finalEmailAddr);
 		}				
@@ -236,25 +244,54 @@ public class ReportMailer extends Object implements Runnable
 		if(mailScript == null || filename == null || emailAddr == null) {
 			throw new IllegalArgumentException("Cannot take null paramters.");
 		}		
-				
-                String[] cmdArgs = { mailScript, filename, emailAddr };
-                java.lang.Process process = Runtime.getRuntime().exec( cmdArgs );
-                
-                //get the stderr to see if the command failed
-                BufferedReader err = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-        
-                if( err.ready() ) {
-                    	//get the error message
-                    	StringWriter tempErr = new StringWriter();            
-                    	Util.streamToStream(err, tempErr);
-                    	String errorMessage = tempErr.toString();
-                    
-                    	//log the error message
+		
+		String[] cmdArgs = { mailScript, filename, emailAddr };
+		java.lang.Process process = Runtime.getRuntime().exec( cmdArgs );
+		
+		//get the stderr to see if the command failed
+		BufferedReader err = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+		
+		if( err.ready() ) {
+			//get the error message
+			StringWriter tempErr = new StringWriter();            
+			Util.streamToStream(err, tempErr);
+			String errorMessage = tempErr.toString();
+			
+			//log the error message
 			if(log.isDebugEnabled())
-	                    	log.debug("Read from stderr: " + errorMessage);
-                    
-                    	throw new IOException("Could not mail outage report" );
-                }				
+				log.debug("Read from stderr: " + errorMessage);
+			
+			throw new IOException("Could not mail outage report" );
+		}				
 	}
 
+	protected void mailFileToUser(String filename, String emailAddr) throws IOException {
+		if(filename == null || emailAddr == null) {
+			throw new IllegalArgumentException("Cannot take null paramters.");
+		}
+		
+		try {
+			JavaMailer jm = new JavaMailer();
+			jm.setTo(emailAddr);
+			jm.setFileName(filename);
+			jm.setMessageText("Availability Report Mailed from JavaMailer class.");
+			jm.mailSend();
+		} catch (JavaMailerException e) {
+			log.error("Caught JavaMailer exception sending file: "+filename, e);
+			throw new IOException ("Error sending file: "+filename);
+		}
+	}
+
+	/**
+	 * @return Returns the useScript value.
+	 */
+	public boolean isUseScript() {
+		return useScript;
+	}
+	/**
+	 * @param useScript Set this to use the script specified.
+	 */
+	public void setUseScript(boolean useScript) {
+		this.useScript = useScript;
+	}
 }
