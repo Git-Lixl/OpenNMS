@@ -1,7 +1,7 @@
 //
 // This file is part of the OpenNMS(R) Application.
 //
-// OpenNMS(R) is Copyright (C) 2002-2003 Blast Internet Services, Inc.  All rights reserved.
+// OpenNMS(R) is Copyright (C) 4 Blast Consulting Company.  All rights reserved.
 // OpenNMS(R) is a derivative work, containing both original code, included code and modified
 // code that was published under the GNU General Public License. Copyrights for modified 
 // and included code are below.
@@ -36,9 +36,9 @@ import java.util.List;
 import org.apache.log4j.Category;
 import org.opennms.netmgt.notifd.NotificationStrategy;
 
-/**This is a class to store and execute a console command
+/**Implementation of Executor strategy that instantiates a Java class.
  * 
- * @author <A HREF="mailto:jason@opennms.org">Jason Johns</A>
+ * @author <A HREF="mailto:david@opennms.org">David Hustace</A>
  * @author <A HREF="http://www.opennms.org/">OpenNMS</A>
  *
  */
@@ -54,17 +54,17 @@ public class ClassExecutor implements ExecutorStrategy
 		int returnCode = 0;
 		Category log = ThreadCategory.getInstance(getClass());
 		
-		log.debug("Going for the class instance...");
+		log.debug("Going for the class instance: " + className);
 		NotificationStrategy ns = null;
 		try {
 			ns = (NotificationStrategy) Class.forName(className).newInstance();
-			log.debug("Class created: "+ ns.getClass() );
+			log.debug(className + " class created: "+ ns.getClass() );
 		} catch (Exception e) {
-			log.error("Execption creating notification strategy: ",e);
-			return 1;
+			log.error("Execption creating notification strategy class: "+className ,e);
+			returnCode = 1;
 		}
 		
-		ns.send(arguments);
+		returnCode = ns.send(arguments);
 		return returnCode;
 	}
 

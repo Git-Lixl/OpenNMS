@@ -1,6 +1,8 @@
 /*
  * Created on Sep 13, 2004
  *
+ * Copyright (C) 2004 Blast Consulting Company
+ * 
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
@@ -26,8 +28,8 @@ import org.apache.log4j.Category;
 import com.sun.mail.smtp.SMTPTransport;
 
 	
-/**
- * @author david
+/** Sends an email message using the Java Mail API
+ * @author <A HREF="mailto:david@opennms.org">David Hustace</A>
  *
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
@@ -58,97 +60,97 @@ public class JavaMailer {
 	private String _fileName;
 	
 	/**
-	 * @return Returns the from.
+	 * @return Returns the from address.
 	 */
 	public String getFrom() {
 		return _from;
 	}
 	/**
-	 * @param from The from to set.
+	 * @param from The from address to set.
 	 */
 	public void setFrom(String from) {
 		_from = from;
 	}
 	/**
-	 * @return Returns the aUTHENTICATE.
+	 * @return Returns the authenticate boolean.
 	 */
 	public boolean isAuthenticate() {
 		return _authenticate;
 	}
 	/**
-	 * @param authenticate The aUTHENTICATE to set.
+	 * @param authenticate The authenticate boolean to set.
 	 */
 	public void setAuthenticate(boolean authenticate) {
 		_authenticate = authenticate;
 	}
 	/**
-	 * @return Returns the file.
+	 * @return Returns the file name attachment.
 	 */
 	public String getFileName() {
 		return _fileName;
 	}
 	/**
-	 * @param file The file to set.
+	 * @param file Sets the file name to be attached to the messaget.
 	 */
 	public void setFileName(String fileName) {
 		this._fileName = fileName;
 	}
 	/**
-	 * @return Returns the mAIL_HOST.
+	 * @return Returns the mail host.
 	 */
 	public String getMailHost() {
 		return _mailHost;
 	}
 	/**
-	 * @param mail_host The mAIL_HOST to set.
+	 * @param mail_host Sets the mail host.
 	 */
 	public void setMailHost(String mail_host) {
 		_mailHost = mail_host;
 	}
 	/**
-	 * @return Returns the mAILER.
+	 * @return Returns the mailer.
 	 */
 	public String getMailer() {
 		return _mailer;
 	}
 	/**
-	 * @param mailer The mAILER to set.
+	 * @param mailer Sets the mailer.
 	 */
 	public void setMailer(String mailer) {
 		_mailer = mailer;
 	}
 	/**
-	 * @return Returns the messageText.
+	 * @return Returns the message text.
 	 */
 	public String getMessageText() {
 		return _messageText;
 	}
 	/**
-	 * @param messageText The messageText to set.
+	 * @param messageText Sets the message text.
 	 */
 	public void setMessageText(String messageText) {
 		_messageText = messageText;
 	}
 	/**
-	 * @return Returns the subject.
+	 * @return Returns the message Subject.
 	 */
 	public String getSubject() {
 		return _subject;
 	}
 	/**
-	 * @param subject The subject to set.
+	 * @param subject Sets the message Subject.
 	 */
 	public void setSubject(String subject) {
 		_subject = subject;
 	}
 	/**
-	 * @return Returns the to.
+	 * @return Returns the To address.
 	 */
 	public String getTo() {
 		return _to;
 	}
 	/**
-	 * @param to The to to set.
+	 * @param to Sets the To address.
 	 */
 	public void setTo(String to) {
 		_to = to;
@@ -164,7 +166,7 @@ public class JavaMailer {
 	 * @param to
 	 * 
 	 */
-	public void mailSend() {
+	public void mailSend()  throws JavaMailerException {
 		
 		Category log = ThreadCategory.getInstance(getClass());
 		
@@ -214,6 +216,8 @@ public class JavaMailer {
 			log.debug("Subject is: "+ _subject);
 			//_msg.setText(_messageText);
 			mbp1.setText(_messageText);
+			
+			
 			MimeMultipart mp = new MimeMultipart();
 			mp.addBodyPart(mbp1);
 			
@@ -238,17 +242,18 @@ public class JavaMailer {
 					t.connect(_mailHost, _user, _password);
 				else
 					t.connect();
+
 				t.sendMessage(_msg, _msg.getAllRecipients());
 			} catch (NoSuchProviderException e) {
-				e.printStackTrace();
+				throw new JavaMailerException ("Couldn't get a transport: ", e);
 			} catch (MessagingException e) {
-				e.printStackTrace();
+				throw new JavaMailerException ("Java Mailer messaging exception: ", e);
 			} finally {
 				System.out.println("Response: " + t.getLastServerResponse());
 				try {
 					t.close();
 				} catch (MessagingException e1) {
-					e1.printStackTrace();
+					throw new JavaMailerException ("Java Mailer messaging exception on transport close: ", e1);
 				}
 			}
 
@@ -256,9 +261,9 @@ public class JavaMailer {
 
 			
 		} catch (AddressException e) {
-			e.printStackTrace();
+			throw new JavaMailerException ("Java Mailer Addressing exception: ", e);
 		} catch (MessagingException e) {
-			e.printStackTrace();
+			throw new JavaMailerException ("Java Mailer messaging exception: ", e);
 		} finally {
 			
 		}

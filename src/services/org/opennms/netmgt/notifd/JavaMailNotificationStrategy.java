@@ -1,7 +1,7 @@
 /*
  * Created on Sep 8, 2004
- *
- * TODO Set Copyright
+ * Copyright (C) 2004, Blast Consulting Company.
+ * 
  */
 package org.opennms.netmgt.notifd;
 
@@ -10,22 +10,18 @@ import java.util.List;
 import org.apache.log4j.Category;
 import org.opennms.core.utils.Argument;
 import org.opennms.core.utils.JavaMailer;
+import org.opennms.core.utils.JavaMailerException;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.NotificationFactory;
 
 
-/**
- * @author David Hustace
+/**Implements NotificationStragey pattern used to send notifications
+ * via the Java Mail API.
+ * 
+ * @author <A HREF="mailto:david@opennms.org">David Hustace</A>
  *  
  */
 public class JavaMailNotificationStrategy implements NotificationStrategy {
-
-	/*
-	 * These should be declared in the notificationCommands.xml file with
-	 * Substitute/Switch statements.
-	 */
-
-
 	
 	Category log = null;
 
@@ -47,8 +43,11 @@ public class JavaMailNotificationStrategy implements NotificationStrategy {
 				
 		JavaMailer jm = buildMessage(arguments);
 		
-		jm.mailSend();
-		
+		try {
+			jm.mailSend();
+		} catch (JavaMailerException e) {
+			return 1;
+		}
 		return 0;
 	}
 
