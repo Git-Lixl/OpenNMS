@@ -11,18 +11,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -39,22 +35,17 @@ import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
-import org.opennms.netmgt.capsd.DbIpInterfaceEntry;
-import org.opennms.netmgt.config.JMXDataCollectionConfigFactory;
+import org.opennms.netmgt.config.BeanInfo;
 import org.opennms.netmgt.config.DatabaseConnectionFactory;
+import org.opennms.netmgt.config.JMXDataCollectionConfigFactory;
+import org.opennms.netmgt.config.collectd.Attrib;
 import org.opennms.netmgt.poller.monitors.NetworkInterface;
-import org.opennms.netmgt.poller.monitors.ServiceMonitor;
 import org.opennms.netmgt.rrd.RRDDataSource;
 import org.opennms.netmgt.rrd.RrdException;
 import org.opennms.netmgt.rrd.RrdUtils;
-import org.opennms.netmgt.utils.AlphaNumeric;
-import org.opennms.netmgt.utils.BarrierSignaler;
 import org.opennms.netmgt.utils.EventProxy;
-//import org.opennms.netmgt.utils.EventProxyException;
 import org.opennms.netmgt.utils.ParameterMap;
 import org.opennms.netmgt.xml.event.Event;
-import org.opennms.protocols.jmx.*;
-import org.opennms.netmgt.config.collectd.*;
 /**
  * <P>
  * The SnmpCollector class ...
@@ -240,7 +231,7 @@ final class JMXCollector implements ServiceCollector {
         // Get path to RRD repository
         //
         m_rrdPath = JMXDataCollectionConfigFactory.getInstance().getRrdRepository();
-        System.out.println("*** m_rrdPath: " + m_rrdPath);
+        //System.out.println("*** m_rrdPath: " + m_rrdPath);
         if (m_rrdPath == null)
             throw new RuntimeException("Configuration error, failed to retrieve path to RRD repository.");
 
@@ -351,7 +342,7 @@ final class JMXCollector implements ServiceCollector {
         
         JMXNodeInfo nodeInfo = new JMXNodeInfo(nodeID, 1);
 
-        // Retrieve list of mib objects to be collected from the
+        // Retrieve list of MBeab objects to be collected from the
         // remote agent which are to be stored in the node-level RRD file.
         // These objects pertain to the node itself not any individual
         // interfaces.
@@ -424,49 +415,41 @@ final class JMXCollector implements ServiceCollector {
             
             MBeanServerConnection connection = connector.getMBeanServerConnection();
            log.debug("MBeanServerConnection: " + connection); 
-            //if (log.isDebugEnabled())
+            if (log.isDebugEnabled())
                 log.debug("JmxMonitor.poll: Polling interface: " + hostIP + " timeout: " + timeout + " retry: " + retry);
            
-            //Vector unNeededMBeans = new Vector();
- 
             int serviceStatus = COLLECTION_FAILED;
             for (int attempts=0; attempts <= retry; attempts++)    {
                 URL jmxLink = null;
                 InputStream iStream = null;
-                try {                    
-                    for (Iterator iter = mbeans.keySet().iterator(); iter.hasNext();) {
-                        String objectName = (String)iter.next();
-                        String[] attrNames = (String[])mbeans.get(objectName);
+                try {    
+                	/*
+                	 * Iterate over the mbeans, for each object name perform a getAttributes,
+                	 * the update the RRD.
+                	 */
+                    for (Iterator iter = mbeans.values().iterator(); iter.hasNext();) {
+                    	BeanInfo beanInfo = (BeanInfo)iter.next();
+                        String objectName = beanInfo.getObjectName();
+                        String[] attrNames = beanInfo.getAttributeNames();
                         
-                        log.debug("JMXCollector - getAttributes: " + objectName);
-                        AttributeList attrList;
+                        log.debug("JMXCollector - getAttributes: " + objectName + " #attributes: " + attrNames.length);
+                        AttributeList attrList = null;
 
                         try {
                             attrList = (AttributeList)connection.getAttributes(new ObjectName(objectName), attrNames);
                             updateRRDs(collectionName, iface, attrList);
                         } catch (InstanceNotFoundException e2) {
-                            // This exception will happen when the node doesn't accept this objectName, so prevent future attempts.
-                            //mbeans.remove(objectName);
-                            //unNeededMBeans.add(objectName);
-                            //log.debug("JMXCollector - collect: removing objectName: " + objectName);
-                            //e2.printStackTrace();                        
+                            e2.printStackTrace();                        
                         }
                         serviceStatus = COLLECTION_SUCCEEDED;
-                        //attrList.clear();
-                        //attrList = null;
                     }                    
                     break;
                 }      
                 catch(Exception e) {
-                    e.printStackTrace();
                     e.fillInStackTrace();
                     log.debug("JMXCollector.collect: IOException while collect address: " + ipv4Addr, e);
                 }
             }  // of for
-            //for (int i = 0; i < unNeededMBeans.size(); i++) {
-            //   mbeans.remove(unNeededMBeans.elementAt(i));
-            //}
-            //unNeededMBeans = null;
             connection = null;
             if (connector != null) {
                 connector.close();
@@ -503,9 +486,14 @@ final class JMXCollector implements ServiceCollector {
      *         because it already existed.
      */
     public boolean createRRD(String collectionName, InetAddress ipaddr, String directory, RRDDataSource ds) throws RrdException {
+    	//System.out.println("createRRD: " + collectionName + " DS: " + ds.getName());
         String creator = "primary JMX interface " + ipaddr.getHostAddress();
         int step = JMXDataCollectionConfigFactory.getInstance().getStep(collectionName);
         List rraList = JMXDataCollectionConfigFactory.getInstance().getRRAList(collectionName);
+        
+        //for (int i = 0; i < rraList.size(); i++) {
+        //	System.out.println("CREATE RRD: " + rraList.get(i));
+        //}
 
         return RrdUtils.createRRD(creator, directory, ds.getName(), step, ds.getType(), ds.getHeartbeat(), ds.getMin(), ds.getMax(), rraList);
     }
@@ -521,17 +509,17 @@ final class JMXCollector implements ServiceCollector {
      *            NetworkInterface object of the interface currently being
      *            polled
      * @param nodeCollector
-     *            Node level MIB data collected via JMX for the polled
+     *            Node level MBeab data collected via JMX for the polled
      *            interface
      * @param ifCollector
-     *            Interface level MIB data collected via JMX for the polled
+     *            Interface level MBeab data collected via JMX for the polled
      *            interface
      * 
      * @exception RuntimeException
      *                Thrown if the data source list for the interface is null.
      */
     private boolean updateRRDs(String collectionName, NetworkInterface iface, AttributeList attributeList) {//, SnmpIfCollector ifCollector) {;
-        System.out.println("JMX: updateRRDs: " + collectionName);
+        //System.out.println("JMX: updateRRDs: " + collectionName);
         
         // Log4j category
         //
@@ -612,17 +600,17 @@ final class JMXCollector implements ServiceCollector {
 
     /**
      * This method is responsible for building a list of RRDDataSource objects
-     * from the provided list of MibObject objects.
+     * from the provided list of MBeabObject objects.
      * 
      * @param collectionName
      *            Collection name
      * @param oidList
-     *            List of MibObject objects defining the oid's to be collected
+     *            List of MBeabObject objects defining the oid's to be collected
      *            via JMX.
      * 
      * @return list of RRDDataSource objects
      */
-    private HashMap buildDataSourceList(String collectionName, List oidList) {
+    private HashMap buildDataSourceList(String collectionName, List attributeList) {
         // Log4j category
         //
         Category log = ThreadCategory.getInstance(getClass());
@@ -633,12 +621,12 @@ final class JMXCollector implements ServiceCollector {
         //
         HashMap dsList = new HashMap();
 
-        // Loop through the MIB object list to be collected for this interface
+        // Loop through the MBeab object list to be collected for this interface
         // and add a corresponding RRD data source object. In this manner
         // each interface will have RRD files create which reflect only the data
         // sources pertinent to it.
         //
-        Iterator o = oidList.iterator();
+        Iterator o = attributeList.iterator();
         while (o.hasNext()) {
             Attrib attr = (Attrib) o.next();
             
@@ -649,7 +637,7 @@ final class JMXCollector implements ServiceCollector {
             // the supported RRD data source types: COUNTER or GAUGE).
             String ds_type = RRDDataSource.mapType(attr.getType());
             if (ds_type != null) {
-                // Passed!! Create new data source instance for this MIB object
+                // Passed!! Create new data source instance for this MBeab object
                 // Assign heartbeat using formula (2 * step) and hard code
                 // min & max values to "U" ("unknown").
                 ds = new RRDDataSource();
@@ -673,7 +661,7 @@ final class JMXCollector implements ServiceCollector {
                 
                 ds.setInstance(collectionName);
 
-                // Truncate MIB object name/alias if it exceeds 19 char max for
+                // Truncate MBeab object name/alias if it exceeds 19 char max for
                 // RRD data source names.
                 String ds_name = attr.getAlias();
                 if (ds_name.length() > MAX_DS_NAME_LENGTH) {
@@ -684,7 +672,7 @@ final class JMXCollector implements ServiceCollector {
                 }
                 ds.setName(ds_name);
 
-                // Map MIB object data type to RRD data type
+                // Map MBeab object data type to RRD data type
                 ds.setType(ds_type);
 
                 // Assign the data source object identifier and instance
@@ -698,7 +686,7 @@ final class JMXCollector implements ServiceCollector {
                 dsList.put(attr.getName(),ds);
             } else if (log.isEnabledFor(Priority.WARN)) {
                 log.warn("buildDataSourceList: Data type '" + attr.getType() + "' not supported.  Only integer-type data may be stored in RRD.");
-                log.warn("buildDataSourceList: MIB object '" + attr.getAlias() + "' will not be mapped to RRD data source.");
+                log.warn("buildDataSourceList: MBeab object '" + attr.getAlias() + "' will not be mapped to RRD data source.");
             }
         }
 
