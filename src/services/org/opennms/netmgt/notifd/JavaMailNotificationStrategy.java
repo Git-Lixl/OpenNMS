@@ -21,6 +21,7 @@ import org.apache.log4j.Category;
 import org.opennms.core.utils.Argument;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.NotificationFactory;
+import org.opennms.core.utils.JavaMailer;
 
 import com.sun.mail.smtp.SMTPTransport;
 
@@ -37,20 +38,6 @@ public class JavaMailNotificationStrategy implements NotificationStrategy {
 	 */
 
 
-	private static final String MAILER = "smtpsend";
-
-	private static final String MAIL_HOST = "127.0.0.1";
-
-	private static final boolean AUTHENTICATE = false;
-
-	Session session = null;
-	String _user = null;
-	String _password = null;
-	Message _msg = null;
-	String _to = null;
-	String _from = null;
-	String _subject = null;
-	String _messageText = null;
 	
 	Category log = null;
 
@@ -68,42 +55,24 @@ public class JavaMailNotificationStrategy implements NotificationStrategy {
 	public int send(List arguments) {
 		
 		log = ThreadCategory.getInstance(getClass());
-				
-		buildMessage(arguments);
-
 		log.debug("In the JavaMailNotification class.");
+				
+		JavaMailer jm = buildMessage(arguments);
 		
-		SMTPTransport t = null;
-		try {
-			t = (SMTPTransport) session.getTransport("smtp");
-			if (AUTHENTICATE)
-				t.connect(MAIL_HOST, _user, _password);
-			else
-				t.connect();
-			t.sendMessage(_msg, _msg.getAllRecipients());
-		} catch (NoSuchProviderException e) {
-			e.printStackTrace();
-		} catch (MessagingException e) {
-			e.printStackTrace();
-		} finally {
-			System.out.println("Response: " + t.getLastServerResponse());
-			try {
-				t.close();
-			} catch (MessagingException e1) {
-				e1.printStackTrace();
-			}
-		}
-
-		System.out.println("\nMail was sent successfully.");
-
+		jm.mailSend();
+		
 		return 0;
 	}
 
 	/**
+	 * This method extracts the to, subject, and message text from
+	 * the parameters passed in the notification.
 	 * @param arguments
 	 */
-	private void buildMessage(List arguments) {
+	private JavaMailer buildMessage(List arguments) {
 
+		JavaMailer jm = new JavaMailer();
+				
 		for (int i = 0; i < arguments.size(); i++) {
 
 			Argument arg = (Argument) arguments.get(i);
@@ -112,69 +81,17 @@ public class JavaMailNotificationStrategy implements NotificationStrategy {
 			
 			if (NotificationFactory.PARAM_EMAIL.equals(arg.getSwitch())) {
 				log.debug("Found: PARAM_EMAIL");
-				_to = arg.getValue();
+				jm.setTo(arg.getValue());
 			} else if (NotificationFactory.PARAM_SUBJECT.equals(arg.getSwitch())) {
 				log.debug("Found: PARAM_SUBJECT");
-				_subject = arg.getValue();
+				jm.setSubject(arg.getValue());
 			} else if (NotificationFactory.PARAM_TEXT_MSG.equals(arg.getSwitch())) {
 				log.debug("Found: PARAM_TEXT_MSG");
-				_messageText = arg.getValue();
+				jm.setMessageText(arg.getValue());
 			}
 		}
-
-		Properties props = System.getProperties();
-
-		if (MAIL_HOST != null)
-			props.put("mail.smtp.host", MAIL_HOST);
-
-		if (AUTHENTICATE)
-			props.put("mail.smtp.auth", "true");
-
-		// Get a Session object
-		session = Session.getInstance(props, null);
-		boolean debug = true;
-		if (debug)
-			session.setDebug(true);
-
-		// construct the message
-		_msg = new MimeMessage(session);
-
-		try {
-			_from = "root@127.0.0.1";
-			if (_from != null)
-				_msg.setFrom(new InternetAddress(_from));
-			else
-				_msg.setFrom();
-			
-			if (_to == null) {
-				log.debug("_to is null");
-				_to = "root@127.0.0.1";
-			}
-			log.debug("To is: "+ _to);
-			_msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(_to, false));
-			
-			if (_subject == null) {
-				log.debug("_subject is null");
-				_subject = "Subject was null";
-			}
-			log.debug("Subject is: "+ _subject);
-			_msg.setSubject(_subject);
-			
-			if (_messageText == null) {
-				log.debug("_messageText is null");
-				_messageText = "Message Text was null";
-			}
-			log.debug("Subject is: "+ _subject);
-			_msg.setText(_messageText);
-			
-			_msg.setHeader("X-Mailer", MAILER);
-			_msg.setSentDate(new Date());
-		} catch (AddressException e) {
-			e.printStackTrace();
-		} catch (MessagingException e) {
-			e.printStackTrace();
-		} finally {
-			
-		}
+		
+		return jm;
 	}
+
 }
