@@ -6,17 +6,20 @@
  */
 package org.opennms.core.utils;
 
-import java.io.File;
 import java.util.Date;
 import java.util.Properties;
 
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import org.apache.log4j.Category;
 
@@ -31,16 +34,28 @@ import com.sun.mail.smtp.SMTPTransport;
  */
 public class JavaMailer {
 
+    private static final String DEFAULT_FROM_ADDRESS = JavaMailerConfig.getProperty("org.opennms.config.utils.fromAddress", "root@127.0.0.1");
+    private static final String DEFAULT_MAIL_HOST = JavaMailerConfig.getProperty("org.opennms.core.utils.mailHost", "127.0.0.1");
+    private static final boolean DEFAULT_AUTHENTICATE = JavaMailerConfig.getProperty("org.opennms.core.utils.authenticate", false);
+    private static final String DEFAULT_AUTHENTICATE_USER = JavaMailerConfig.getProperty("org.opennms.core.utils.authenticateUser", "opennms");
+    private static final String DEFAULT_AUTHENTICATE_PASSWORD = JavaMailerConfig.getProperty("org.opennms.core.utils.authenticatePassword", "opennms");
+    private static final String DEFAULT_MAILER = JavaMailerConfig.getProperty("org.opennms.core.utils.mailer", "smtpsend");
+    private static final String DEFAULT_TRANSPORT = JavaMailerConfig.getProperty("org.opennms.core.utils.transport", "smtp");
+
+	private String _mailHost = DEFAULT_MAIL_HOST;
+	private String _mailer = DEFAULT_MAILER;
+	private String _transport = DEFAULT_TRANSPORT;
+
 	private String _to;
-	private String _from = "root@127.0.0.1";
+
+    private String _from = DEFAULT_FROM_ADDRESS;
+	private boolean _authenticate = DEFAULT_AUTHENTICATE;
+	private String _user = DEFAULT_AUTHENTICATE_USER;
+	private String _password = DEFAULT_AUTHENTICATE_PASSWORD;
+
 	private String _subject;
 	private String _messageText;
-	private File file;
-	private String MAIL_HOST;
-	private String MAILER = "smtpsend";
-	private boolean AUTHENTICATE = false;
-	private String _user;
-	private String _password;
+	private String _fileName;
 	
 	/**
 	 * @return Returns the from.
@@ -57,50 +72,50 @@ public class JavaMailer {
 	/**
 	 * @return Returns the aUTHENTICATE.
 	 */
-	public boolean isAUTHENTICATE() {
-		return AUTHENTICATE;
+	public boolean isAuthenticate() {
+		return _authenticate;
 	}
 	/**
 	 * @param authenticate The aUTHENTICATE to set.
 	 */
-	public void setAUTHENTICATE(boolean authenticate) {
-		AUTHENTICATE = authenticate;
+	public void setAuthenticate(boolean authenticate) {
+		_authenticate = authenticate;
 	}
 	/**
 	 * @return Returns the file.
 	 */
-	public File getFile() {
-		return file;
+	public String getFileName() {
+		return _fileName;
 	}
 	/**
 	 * @param file The file to set.
 	 */
-	public void setFile(File file) {
-		this.file = file;
+	public void setFileName(String fileName) {
+		this._fileName = fileName;
 	}
 	/**
 	 * @return Returns the mAIL_HOST.
 	 */
-	public String getMAIL_HOST() {
-		return MAIL_HOST;
+	public String getMailHost() {
+		return _mailHost;
 	}
 	/**
 	 * @param mail_host The mAIL_HOST to set.
 	 */
-	public void setMAIL_HOST(String mail_host) {
-		MAIL_HOST = mail_host;
+	public void setMailHost(String mail_host) {
+		_mailHost = mail_host;
 	}
 	/**
 	 * @return Returns the mAILER.
 	 */
-	public String getMAILER() {
-		return MAILER;
+	public String getMailer() {
+		return _mailer;
 	}
 	/**
 	 * @param mailer The mAILER to set.
 	 */
-	public void setMAILER(String mailer) {
-		MAILER = mailer;
+	public void setMailer(String mailer) {
+		_mailer = mailer;
 	}
 	/**
 	 * @return Returns the messageText.
@@ -155,10 +170,10 @@ public class JavaMailer {
 		
 		Properties props = System.getProperties();
 
-		if (MAIL_HOST != null)
-			props.put("mail.smtp.host", MAIL_HOST);
+		if (_mailHost != null)
+			props.put("mail.smtp.host", _mailHost);
 
-		if (AUTHENTICATE)
+		if (_authenticate)
 			props.put("mail.smtp.auth", "true");
 
 		// Get a Session object
@@ -169,6 +184,8 @@ public class JavaMailer {
 
 		// construct the message
 		Message _msg = new MimeMessage(session);
+		MimeBodyPart mbp1 = new MimeBodyPart(); // for message text
+		MimeBodyPart mbp2 = null;  // for file attachment if necessary
 
 		try {
 			if (_from != null)
@@ -195,17 +212,30 @@ public class JavaMailer {
 				_messageText = "Message Text was null";
 			}
 			log.debug("Subject is: "+ _subject);
-			_msg.setText(_messageText);
+			//_msg.setText(_messageText);
+			mbp1.setText(_messageText);
+			MimeMultipart mp = new MimeMultipart();
+			mp.addBodyPart(mbp1);
 			
-			_msg.setHeader("X-Mailer", MAILER);
+			if (_fileName != null) {
+				log.debug("_file is not null");
+				mbp2 = new MimeBodyPart();
+				FileDataSource fds = new FileDataSource(_fileName);
+				mbp2.setDataHandler(new DataHandler(fds));
+				mbp2.setFileName(fds.getName());
+				mp.addBodyPart(mbp2);
+			}
+			
+			
+			_msg.setHeader("X-Mailer", _mailer);
 			_msg.setSentDate(new Date());
-			
+			_msg.setContent(mp);
 			
 			SMTPTransport t = null;
 			try {
-				t = (SMTPTransport) session.getTransport("smtp");
-				if (AUTHENTICATE)
-					t.connect(MAIL_HOST, _user, _password);
+				t = (SMTPTransport) session.getTransport(_transport);
+				if (_authenticate)
+					t.connect(_mailHost, _user, _password);
 				else
 					t.connect();
 				t.sendMessage(_msg, _msg.getAllRecipients());
