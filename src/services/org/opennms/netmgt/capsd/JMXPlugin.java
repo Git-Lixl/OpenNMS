@@ -62,13 +62,19 @@ public class JMXPlugin extends AbstractPlugin {
                 return false;
             }
             
-            return connection != null;
+            boolean res = connection != null;
+            
+            if (connector != null){
+            	connector.close();
+            }
+            connection = null;
+            
+            return res;
             
         } catch (Exception e) {
             log.debug("JMX isProtocolSupported - failed! " + e.getMessage());
             //e.printStackTrace();
-        }
-
+        } 
         
         return false;
     }

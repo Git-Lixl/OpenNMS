@@ -17,7 +17,7 @@ import java.net.UnknownHostException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.*;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,7 +65,6 @@ import org.opennms.netmgt.config.collectd.*;
  * 
  */
 final class JMXCollector implements ServiceCollector {
-    public static String[] ATTRIBUTES = {"FreePhysicalMemorySize", "TotalPhysicalMemorySize", "FreeSwapSpaceSize", "TotalSwapSpaceSize"};
     
     /**
      * Name of monitored service.
@@ -174,6 +173,7 @@ final class JMXCollector implements ServiceCollector {
 
         // Get local host name (used when generating threshold events)
         //
+/*
         try {
             m_host = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
@@ -181,7 +181,7 @@ final class JMXCollector implements ServiceCollector {
                 log.warn("initialize: Unable to resolve local host name.", e);
             m_host = "unresolved.host";
         }
-
+*/
         // Initialize the JMXDataCollectionConfigFactory
         try {
             JMXDataCollectionConfigFactory.reload();
@@ -415,7 +415,7 @@ final class JMXCollector implements ServiceCollector {
             
             InetAddress ipv4Addr = (InetAddress)iface.getAddress();
             String hostIP = ipv4Addr.getHostAddress();
-            //log.debug("JMX POLLER service:jmx:rmi://host/jndi/rmi://" + hostIP + ":" + namingPort + jndiPath);
+            log.debug("JMX POLLER service:jmx:rmi://host/jndi/rmi://" + hostIP + ":" + namingPort + jndiPath);
 
             JMXServiceURL url = new JMXServiceURL("service:jmx:rmi://" + hostIP + "/jndi/rmi://" + hostIP + ":" + namingPort + jndiPath);
             
@@ -423,10 +423,12 @@ final class JMXCollector implements ServiceCollector {
             JMXConnector connector = JMXConnectorFactory.connect(url);
             
             MBeanServerConnection connection = connector.getMBeanServerConnection();
-            
+           log.debug("MBeanServerConnection: " + connection); 
             //if (log.isDebugEnabled())
-            //    log.debug("JmxMonitor.poll: Polling interface: " + hostIP + " timeout: " + timeout + " retry: " + retry);
-            
+                log.debug("JmxMonitor.poll: Polling interface: " + hostIP + " timeout: " + timeout + " retry: " + retry);
+           
+            //Vector unNeededMBeans = new Vector();
+ 
             int serviceStatus = COLLECTION_FAILED;
             for (int attempts=0; attempts <= retry; attempts++)    {
                 URL jmxLink = null;
@@ -437,16 +439,21 @@ final class JMXCollector implements ServiceCollector {
                         String[] attrNames = (String[])mbeans.get(objectName);
                         
                         log.debug("JMXCollector - getAttributes: " + objectName);
+                        AttributeList attrList;
 
                         try {
-                            AttributeList attrList = (AttributeList)connection.getAttributes(new ObjectName(objectName), attrNames);
+                            attrList = (AttributeList)connection.getAttributes(new ObjectName(objectName), attrNames);
                             updateRRDs(collectionName, iface, attrList);
                         } catch (InstanceNotFoundException e2) {
                             // This exception will happen when the node doesn't accept this objectName, so prevent future attempts.
-                            mbeans.remove(objectName);
-                            log.debug("JMXCollector - collect: removing objectName: " + objectName);
+                            //mbeans.remove(objectName);
+                            //unNeededMBeans.add(objectName);
+                            //log.debug("JMXCollector - collect: removing objectName: " + objectName);
+                            //e2.printStackTrace();                        
                         }
                         serviceStatus = COLLECTION_SUCCEEDED;
+                        //attrList.clear();
+                        //attrList = null;
                     }                    
                     break;
                 }      
@@ -456,8 +463,16 @@ final class JMXCollector implements ServiceCollector {
                     log.debug("JMXCollector.collect: IOException while collect address: " + ipv4Addr, e);
                 }
             }  // of for
+            //for (int i = 0; i < unNeededMBeans.size(); i++) {
+            //   mbeans.remove(unNeededMBeans.elementAt(i));
+            //}
+            //unNeededMBeans = null;
+            connection = null;
+            if (connector != null) {
+                connector.close();
+            }
         } catch (Exception e1) {
-            //e1.printStackTrace();
+            e1.printStackTrace();
         }
         
         // Retrieve max vars per pdu attribute
