@@ -26,7 +26,7 @@ import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.ConfigFileConstants;
 import org.opennms.netmgt.collectd.Attr;
-import org.opennms.netmgt.config.collectd.*;
+import org.opennms.netmgt.config.collectd.Attrib;
 import org.opennms.netmgt.config.collectd.JmxDatacollectionConfig;
 import org.opennms.netmgt.config.collectd.Mbean;
 import org.opennms.netmgt.config.collectd.Mbeans;
@@ -110,7 +110,8 @@ public final class JMXDataCollectionConfigFactory {
         m_collectionMap = new HashMap();
         m_collectionGroupMap = new HashMap();
         
-
+        // BOZO isn't the collection name defined in the jmx-datacollection.xml file and
+        // global to all the mbeans?
         java.util.Collection collections = m_config.getJmxCollectionCollection();
         Iterator citer = collections.iterator();
         while (citer.hasNext()) {
@@ -159,7 +160,7 @@ public final class JMXDataCollectionConfigFactory {
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-            m_singleton = new JMXDataCollectionConfigFactory("/Users/mjamison/Desktop/OpenNMS-3/share/rrd/jmx/");
+            m_singleton = new JMXDataCollectionConfigFactory("/opt/opennms/rrd/response/jmx/");
         }
 
         m_loaded = true;
@@ -256,17 +257,46 @@ public final class JMXDataCollectionConfigFactory {
         Enumeration enum = beans.enumerateMbean();
         while (enum.hasMoreElements()) {
             Mbean mbean = (Mbean)enum.nextElement();
-            System.out.println("MBean: " + mbean.getName() + " " + mbean.getObjectname());
+            //System.out.println("MBean: " + mbean.getName() + " " + mbean.getObjectname());
             Attrib[] attributes = mbean.getAttrib();
             for (int i = 0; i < attributes.length; i++) {
                 list.add(attributes[i]);
-                System.out.println("addAttribute: " + attributes[i].getName());
+                //System.out.println("addAttribute: " + attributes[i].getName());
             }
         }
         return list;
     }
     
     public HashMap getMBeanInfo(String cName) {
+        HashMap map = new HashMap();
+        
+        // Retrieve the appropriate Collection object
+        // 
+        org.opennms.netmgt.config.collectd.JmxCollection collection = (org.opennms.netmgt.config.collectd.JmxCollection) m_collectionMap.get(cName);
+        
+        ArrayList list = new ArrayList();
+        Mbeans beans = collection.getMbeans();
+        Enumeration enum = beans.enumerateMbean();
+        while (enum.hasMoreElements()) {
+        	BeanInfo beanInfo = new BeanInfo();
+        	
+            Mbean mbean = (Mbean)enum.nextElement();
+            beanInfo.setMbeanName(mbean.getName());
+            beanInfo.setObjectName(mbean.getObjectname());
+            int count = mbean.getAttribCount();
+            String[] attribs = new String[count];
+            Attrib[] attributes = mbean.getAttrib();
+            for (int i = 0; i < attributes.length; i++) {
+                attribs[i] = attributes[i].getName();
+            }
+            
+            beanInfo.setAttributes(attribs);
+            map.put(mbean.getObjectname(), beanInfo);
+        }
+        return map;
+    }
+
+    public HashMap getMBeanInfo_save(String cName) {
         HashMap map = new HashMap();
         
         // Retrieve the appropriate Collection object
