@@ -46,6 +46,7 @@ import org.opennms.core.utils.JavaMailerException;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.core.utils.JavaMailer;
 import org.opennms.netmgt.config.UserFactory;
+import org.opennms.report.availability.AvailabilityReport;
 
 
 /**
@@ -66,8 +67,10 @@ public class ReportMailer extends Object implements Runnable
 	protected UserFactory userFactory;
 	protected String filename;
 	protected String commandParms;
-	protected String format;
 	protected boolean useScript=false;
+	protected String logoUrl = null;
+	protected String format = null;
+	protected String categoryName = null;
 	Category log;
 	
 	public ReportMailer() throws ServletException
@@ -76,59 +79,52 @@ public class ReportMailer extends Object implements Runnable
                 log = ThreadCategory.getInstance(this.getClass());
 	}
 
-	public void initialise( String fileName,
-			        String userName,
-				String generateReport,
-				String mailReport,
-				String parms,
-				String fmt) throws ServletException{
-		
+	public void initialise(String fileName, String userName, String generateReport, String mailReport, String parms, String fmt)
+			throws ServletException {
+
 		filename = fileName;
 		commandParms = parms;
 		this.scriptGenerateReport = generateReport;
-		this.scriptMailReport = mailReport;	
+		this.scriptMailReport = mailReport;
 		this.format = fmt;
-			
-		if(log.isDebugEnabled())
-		{
+
+		if (log.isDebugEnabled()) {
 			log.debug("scriptGenerateReport " + scriptGenerateReport);
 			log.debug("parms " + parms);
 			log.debug("fmt " + fmt);
 		}
-		if( this.scriptGenerateReport == null ) {
+		if (this.scriptGenerateReport == null) {
 			throw new ServletException("Missing required init parameter: script.generateReport");
 		}
-		
-		if( this.scriptMailReport == null ) {
+
+		if (this.scriptMailReport == null) {
 			throw new ServletException("Missing required init parameter: script.mailReport");
-		}		
-				
-		try { 				
+		}
+
+		try {
 			UserFactory.init();
 			this.userFactory = UserFactory.getInstance();
-		}
-		catch(Exception e) {
-			if(log.isDebugEnabled())
+		} catch (Exception e) {
+			if (log.isDebugEnabled())
 				log.debug("could not initialize the UserFactory", e);
 			throw new ServletException("could not initialize the UserFactory", e);
 		}
-       		
-		if(userName == null) {
+
+		if (userName == null) {
 			//shouldn't happen
 			throw new IllegalStateException("OutageReportServlet can't work without authenticating the remote user.");
 		}
-	
+
 		String emailAddr = null;
-	
-		try {		
+
+		try {
 			emailAddr = this.getEmailAddress(userName);
 			finalEmailAddr = emailAddr;
-			
-			if(emailAddr == null || emailAddr.trim().length() == 0) {
+
+			if (emailAddr == null || emailAddr.trim().length() == 0) {
 				return;
 			}
-		}
-		catch( Exception e ) {
+		} catch (Exception e) {
 			//if(log.isDebugEnabled())
 			//	log.debug("error looking up email address", e);
 			throw new ServletException(e);
@@ -218,26 +214,35 @@ public class ReportMailer extends Object implements Runnable
 			log.debug("Command Line Args " + cmdArgs[1]);
 			log.debug("Command Line Args " + cmdArgs[2]);
 		}
-        	java.lang.Process process = Runtime.getRuntime().exec( cmdArgs );
+
+		//java.lang.Process process = Runtime.getRuntime().exec( cmdArgs );
+		try {
+			AvailabilityReport.generateReport(getLogoUrl(), getCategoryName(), getFormat());
+		} catch (Exception e) {
+			log.error("Caught exception generating report: ", e);
+		}
         
         	//get the stderr to see if the command failed
-        	BufferedReader err = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        	//BufferedReader err = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
-        	if( err.ready() ) {
-            		//get the error message
+/*
+		if( err.ready() ) {
+			//get the error message
 			StringWriter tempErr = new StringWriter();            
-            		Util.streamToStream(err, tempErr);
-            		String errorMessage = tempErr.toString();
-            
-            		//log the error message
+			Util.streamToStream(err, tempErr);
+			String errorMessage = tempErr.toString();
+			
+			//log the error message
 			if(log.isDebugEnabled())
-            			log.debug("Read from stderr: " + errorMessage);
-            
-            		throw new IOException("Could not generate outage report" );
-        	}		
+				log.debug("Read from stderr: " + errorMessage);
+			
+			throw new IOException("Could not generate outage report" );
+		}		
 
 		//wait until the file is completely generated
 		process.waitFor();		
+*/
+		
 	}
 	
 	protected void mailFileToUser(String mailScript, String filename, String emailAddr) throws IOException {
@@ -273,6 +278,7 @@ public class ReportMailer extends Object implements Runnable
 		try {
 			JavaMailer jm = new JavaMailer();
 			jm.setTo(emailAddr);
+			jm.setSubject("OpenNMS Availability Report");
 			jm.setFileName(filename);
 			jm.setMessageText("Availability Report Mailed from JavaMailer class.");
 			jm.mailSend();
@@ -293,5 +299,41 @@ public class ReportMailer extends Object implements Runnable
 	 */
 	public void setUseScript(boolean useScript) {
 		this.useScript = useScript;
+	}
+	/**
+	 * @return Returns the logo.
+	 */
+	public String getLogoUrl() {
+		return logoUrl;
+	}
+	/**
+	 * @param logo The logo to set.
+	 */
+	public void setLogoUrl(String logo) {
+		this.logoUrl = logo;
+	}
+	/**
+	 * @return Returns the categoryName.
+	 */
+	public String getCategoryName() {
+		return categoryName;
+	}
+	/**
+	 * @param categoryName The categoryName to set.
+	 */
+	public void setCategoryName(String categoryName) {
+		this.categoryName = categoryName;
+	}
+	/**
+	 * @return Returns the format.
+	 */
+	public String getFormat() {
+		return format;
+	}
+	/**
+	 * @param format The format to set.
+	 */
+	public void setFormat(String format) {
+		this.format = format;
 	}
 }
