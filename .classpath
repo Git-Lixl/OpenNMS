@@ -47,5 +47,6 @@
 	<classpathentry kind="lib" path="lib/pop3.jar"/>
 	<classpathentry kind="lib" path="lib/mailapi.jar"/>
 	<classpathentry kind="lib" path="lib/imap.jar"/>
+	<classpathentry kind="lib" path="lib/activation.jar"/>
 	<classpathentry kind="output" path="work/opennms/classes"/>
 </classpath>

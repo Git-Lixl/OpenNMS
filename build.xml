@@ -167,6 +167,7 @@ your distribution.
     <pathelement path="${packaged.lib.dir}/smtp.jar"/>
 <!--  	<pathelement path="${packaged.lib.dir}/imap.jar"/> -->
 <!--  	<pathelement path="${packaged.lib.dir}/pop3.jar"/> -->
+    <pathelement path="${packaged.lib.dir}/activation.jar"/>
   </path>
 
   <path id="tomcatlib.jars.path">
