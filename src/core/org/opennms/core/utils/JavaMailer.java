@@ -214,6 +214,7 @@ public class JavaMailer {
 				_messageText = "Message Text was null";
 			}
 			log.debug("Subject is: "+ _subject);
+			
 			//_msg.setText(_messageText);
 			mbp1.setText(_messageText);
 			
