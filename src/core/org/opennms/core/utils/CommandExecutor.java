@@ -46,7 +46,7 @@ import org.apache.log4j.Category;
  * @author <A HREF="http://www.opennms.org/">OpenNMS</A>
  *
  */
-public class CommandExecutor
+public class CommandExecutor implements ExecutorStrategy
 {
 	/**This method executes the command using a Process. The method will decide if 
 	   an input stream needs to be used.
