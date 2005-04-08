@@ -97,6 +97,12 @@ public class JMXMonitor extends IPv4LatencyMonitor
                     log.debug("JMXMonitor.poll: IOException while polling address: " + ipv4Addr, e);
                 }
             }  // of for
+            
+            if (connector != null) {
+            	connector.close();
+            }
+            connection = null;
+            
             return serviceStatus;
             
         } catch (Exception e1) {
