@@ -1,114 +1,115 @@
-/*
- * Created on Feb 1, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
+<<<<<<< JMXMonitor.java
+//
+//This file is part of the OpenNMS(R) Application.
+//
+//OpenNMS(R) is Copyright (C) 2002-2003 The OpenNMS Group, Inc.  All rights reserved.
+//OpenNMS(R) is a derivative work, containing both original code, included code and modified
+//code that was published under the GNU General Public License. Copyrights for modified 
+//and included code are below.
+//
+//OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.                                                            
+//
+//You should have received a copy of the GNU General Public License
+//along with this program; if not, write to the Free Software
+//Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+//  
+//For more information contact: 
+// OpenNMS Licensing       <license@opennms.org>
+// http://www.opennms.org/
+// http://www.opennms.com/
+//
+
 package org.opennms.netmgt.poller.monitors;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.Map;
 
-import javax.management.MBeanServerConnection;
-import javax.management.*;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
+import javax.naming.InitialContext;
 
 import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.utils.ParameterMap;
+import org.opennms.protocols.jmx.connectors.ConnectionWrapper;
 
-/**
- * @author mjamison
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
+/*
+ * This class computes the response time of making a connection to 
+ * the remote server.  If the connection is successful the reponse time 
+ * RRD is updated.
+ * 
+ * @author <A HREF="mailto:mike@opennms.org">Mike Jamison </A>
+ * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
  */
-public class JMXMonitor extends IPv4LatencyMonitor
- {
-    private static final int DEFAULT_PORT = 9004;
-    private static final int DEFAULT_RETRY = 0;
-    private static final int DEFAULT_TIMEOUT = 3000;  // 3 sec wait for connect
-    private static boolean INIT_ED = false;
+public abstract class JMXMonitor extends IPv4LatencyMonitor {
 
-
-    private MBeanServerConnection connection; 
+    public abstract ConnectionWrapper getMBeanServerConnection(Map parameterMap, InetAddress address);
+    
     /* (non-Javadoc)
      * @see org.opennms.netmgt.poller.monitors.ServiceMonitor#poll(org.opennms.netmgt.poller.monitors.NetworkInterface, java.util.Map, org.opennms.netmgt.config.poller.Package)
      */
     public int poll(NetworkInterface iface, Map map, Package pkg) {
-        try {
-            String serverProtocol = ParameterMap.getKeyedString(map, "ServerProtocol", "rmi");
-            String namingPort     = ParameterMap.getKeyedString(map, "NamingPort",     "9004");
-            String jndiPath       = ParameterMap.getKeyedString(map, "JNDIPath",       "/jmxrmi");
-            String rrdPath        = ParameterMap.getKeyedString(map, "rrd-repository",  null);
-            String dsName         = ParameterMap.getKeyedString(map, "ds-name",        "jmx");
-            
-            Category log = ThreadCategory.getInstance(getClass());
-            int retry   = ParameterMap.getKeyedInteger(map, "retry", DEFAULT_RETRY);
-            int timeout = ParameterMap.getKeyedInteger(map, "timeout", DEFAULT_TIMEOUT);
-            
-            if (dsName == null) {
-                dsName = DS_NAME;
-            }
-            
-            InetAddress ipv4Addr = (InetAddress)iface.getAddress();
-            String hostIP = ipv4Addr.getHostAddress();
-            //log.debug("JMX POLLER service:jmx:rmi://host/jndi/rmi://" + hostIP + ":" + namingPort + jndiPath);
 
-            //JMXServiceURL url = new JMXServiceURL("service:jmx:rmi://" + hostIP + "/jndi/rmi://" + hostIP + ":" + namingPort + jndiPath);
-            JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + hostIP + ":" + namingPort + jndiPath);
+        Category       log           = ThreadCategory.getInstance(getClass());
+        boolean        res           = false;
+        InitialContext ctx           = null;
+        int            serviceStatus = ServiceMonitor.SERVICE_UNAVAILABLE;
+        String         dsName        = null;
+        
+        ConnectionWrapper connection = null;
+
+
+        try {
             
-            // Connect a JSR 160 JMXConnector to the server side
-            JMXConnector connector = JMXConnectorFactory.connect(url);
-            
-            MBeanServerConnection connection = connector.getMBeanServerConnection();
-            
-            //if (log.isDebugEnabled())
-            //    log.debug("JmxMonitor.poll: Polling interface: " + hostIP + " timeout: " + timeout + " retry: " + retry);
-            
-            int serviceStatus = ServiceMonitor.SERVICE_UNAVAILABLE;
+            int    retry     = ParameterMap.getKeyedInteger(map, "retry",            3);
+            String rrdPath   = ParameterMap.getKeyedString(map,  "rrd-repository",   null);
+                   dsName    = ParameterMap.getKeyedString(map,  "ds-name",          "jmx");
+
+            InetAddress ipv4Addr = (InetAddress)iface.getAddress();
             long t0 = 0;
             for (int attempts=0; attempts <= retry && serviceStatus != ServiceMonitor.SERVICE_AVAILABLE; attempts++)    {
                 URL jmxLink = null;
-                InputStream iStream = null;
                 try {
                     
-                    t0 = System.currentTimeMillis();
+                     t0 = System.currentTimeMillis();
                     
-                    Integer count = connection.getMBeanCount();
+                     connection = getMBeanServerConnection(map, ipv4Addr);
+                     if (connection != null) {
+                         Integer result = connection.getMBeanServer().getMBeanCount();
+                         serviceStatus = ServiceMonitor.SERVICE_AVAILABLE;
+                       
+                         long responseTime = System.currentTimeMillis() - t0;
+                        
+                         if (responseTime >= 0 && rrdPath != null) {
+                             this.updateRRD(rrdPath, ipv4Addr, dsName, responseTime, pkg);
+                         }
+                     }
                     
-                    long responseTime = System.currentTimeMillis() - t0;
-                    
-                    if (responseTime >= 0 && rrdPath != null) {
-                        this.updateRRD(rrdPath, ipv4Addr, dsName, responseTime, pkg);
-                    }
-                    
-                    serviceStatus = ServiceMonitor.SERVICE_AVAILABLE;
-                    break;
+                     break;
                 }      
                 catch(Exception e) {
-                    e.fillInStackTrace();
-                    log.debug("JMXMonitor.poll: IOException while polling address: " + ipv4Addr, e);
+                    log.debug(dsName + "poll: IOException while polling address: " + ipv4Addr);
+                    break;
                 }
             }  // of for
-            
-            if (connector != null) {
-            	connector.close();
+         } catch (Exception e) {
+            log.debug(dsName + " Monitor - failed! " + e.getMessage());
+        } finally {
+            if (connection != null) {
+                connection.close();
             }
-            connection = null;
-            
-            return serviceStatus;
-            
-        } catch (Exception e1) {
-            //e1.printStackTrace();
         }
-        return 0;
+        
+        return serviceStatus;
     }
-    
 }
