@@ -30,60 +30,32 @@
 
 package org.opennms.netmgt.collectd;
 
-import java.util.*;
+import java.net.InetAddress;
+import java.util.Map;
 
-/**
- * This class encapsulates all of the node-level data required by the JMX data
- * collector in order to successfully perform data collection for a scheduled
- * primary JMX interface.
+import org.opennms.protocols.jmx.connectors.ConnectionWrapper;
+import org.opennms.protocols.jmx.connectors.JBossConnectionFactory;
+
+/*
+ * The JBossCollector class manages the querying and storage of data into RRD files.  The list of 
+ * MBeans to be queried is read from the jmx-datacollection-config.xml file using the "jboss" service name.
+ * The super class, JMXCollector, performs all the work.
  * 
- * @author <a href="mailto:mike@opennms.org">Mike Jamison </a>
- * @author <a href="http://www.opennms.org/">OpenNMS </a>
+ * @author <A HREF="mailto:mike@opennms.org">Mike Jamison </A>
+ * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
  */
-public class JMXNodeInfo {
-    private int m_nodeId;
+public class JBossCollector  extends JMXCollector {
 
-    private List m_oidList;
-    private HashMap m_mbeans;
-
-    private HashMap m_dsList;
-
-    public JMXNodeInfo(int nodeId) {
-        m_nodeId = nodeId;
-        m_oidList = null;
-        m_dsList = null;
-        m_mbeans = new HashMap();
+    public JBossCollector() {
+        setServiceName("jboss");
     }
 
-    public int getNodeId() {
-        return m_nodeId;
+    /* Returns the CollectionWrapper object from the factory using the parameterMap and ip address.
+     * 
+     * @see org.opennms.netmgt.collectd.JMXCollector#getMBeanServer(java.util.Map)
+     */
+    public ConnectionWrapper getMBeanServerConnection(Map parameterMap, InetAddress address) {
+        return  JBossConnectionFactory.getMBeanServerConnection(parameterMap, address);
     }
     
-    public void setMBeans(HashMap map) {
-        m_mbeans = map;
-    }
-    
-    public HashMap getMBeans() {
-        return m_mbeans;
-    }
-
-    public void setNodeId(int nodeId) {
-        m_nodeId = nodeId;
-    }
-
-    public void setDsMap(HashMap dsList) {
-        m_dsList = dsList;
-    }
-
-    public void setAttributeList(List oidList) {
-        m_oidList = oidList;
-    }
-
-    public HashMap getDsMap() {
-        return m_dsList;
-    }
-
-    public List getAttributeList() {
-        return m_oidList;
-    }
-} // end class
+}

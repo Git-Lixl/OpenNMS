@@ -13,6 +13,14 @@
 			<parameter key="thresholding-group" value="default-snmp"/>
 		</service>
 		
+		<service name="JBoss" interval="30000" user-defined="false" status="on">
+			<parameter key="thresholding-group" value="jboss"/>
+		</service>
+
+		<service name="JVM" interval="30000" user-defined="false" status="on">
+			<parameter key="thresholding-group" value="jsr160"/>
+		</service>
+
 		 <service name="ICMP" interval="300000" user-defined="false" status="on">
                         <parameter key="thresholding-group" value="icmp-latency"/>
                 </service>
@@ -41,6 +49,8 @@
 	</package>
 	
 	<thresholder service="SNMP" 	class-name="org.opennms.netmgt.threshd.SnmpThresholder"/>
+	<thresholder service="JBoss" 	class-name="org.opennms.netmgt.threshd.JBossThresholder"/>
+	<thresholder service="JBoss" 	class-name="org.opennms.netmgt.threshd.Jsr160Thresholder"/>
 	<thresholder service="ICMP"     class-name="org.opennms.netmgt.threshd.LatencyThresholder"/>
         <thresholder service="HTTP"     class-name="org.opennms.netmgt.threshd.LatencyThresholder"/>
         <thresholder service="HTTP-8000"        class-name="org.opennms.netmgt.threshd.LatencyThresholder"/>
