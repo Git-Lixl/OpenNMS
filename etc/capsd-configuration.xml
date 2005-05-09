@@ -8,11 +8,22 @@
 	abort-protocol-scans-if-no-route = "false"
 	delete-propagation-enabled = "true"
         xmlrpc="false">
-        <protocol-plugin protocol="JMX" class-name="org.opennms.netmgt.capsd.JMXPlugin" scan="on" user-defined="false">
-                <property key="port" value="9004"/>
-                <property key="NamingPort" value="9004"/>
-                <property key="JNDIPath" value="/jmxrmi"/>
-                <property key="retry" value="5"/>
+        <protocol-plugin protocol="JBoss" class-name="org.opennms.netmgt.capsd.JBossPlugin" scan="on" user-defined="false">
+                <property key="port" value="1099"/>
+                <property key="retry" value="2"/>
+                <property key="timeout" value="2000"/>
+                <property key="factory" value="RMI"/>
+                <!-- if you set the factory to HTTP (necessary when monitoring through a firewall) then you 
+                     need to ensure the invoker-suffix property is properly set.  The value must match the 
+                     InvokerURLSuffix value in the jboss-service.xml found in the 
+                     <jboss-home>/server/default/deploy/http-invoker/META-INF directory
+                 -->
+                <property key="invoker-suffix" value=":8080/invoker/JNDIFactory"/>
+        </protocol-plugin>
+        <protocol-plugin protocol="JVM" class-name="org.opennms.netmgt.capsd.Jsr160Plugin" scan="on" user-defined="false">
+                <property key="port" value="9003"/>
+                <property key="type" value="default"/>
+                <property key="retry" value="2"/>
                 <property key="timeout" value="2000"/>
         </protocol-plugin>
 	<protocol-plugin protocol="ICMP" class-name="org.opennms.netmgt.capsd.IcmpPlugin" scan="on" user-defined="false">
