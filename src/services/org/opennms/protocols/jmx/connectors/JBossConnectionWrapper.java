@@ -52,6 +52,7 @@ public class JBossConnectionWrapper implements ConnectionWrapper {
      * @see org.opennms.protocols.jmx.connectors.ConnectionWrapper#closeConnection()
      */
     public void close() {
+        mbeanServer = null;
     }
     
     /* (non-Javadoc)
