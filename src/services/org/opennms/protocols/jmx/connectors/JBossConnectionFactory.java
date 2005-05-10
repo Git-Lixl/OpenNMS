@@ -93,13 +93,13 @@ public class JBossConnectionFactory {
                 Object rmiAdaptor = ctx.lookup("jmx/rmi/RMIAdaptor");
                 wrapper = new JBossConnectionWrapper(MBeanServerProxy.buildServerProxy(rmiAdaptor));
      
-            } catch (Exception e) {
+            } catch (Throwable e) {
                  log.debug("JBossConnectionFactory - unable to get MBeanServer using RMI on " + address.getHostAddress() + ":" + port);
             } finally {
                 try {
                     if (ctx != null)
                        ctx.close();
-                } catch (NamingException e1) {
+                } catch (Throwable e1) {
                     log.debug("JBossConnectionFactory error closing initial context");
                 }
             }
