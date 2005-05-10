@@ -89,9 +89,11 @@ public abstract class JMXPlugin extends AbstractPlugin {
             
             Integer result = connection.getMBeanServer().getMBeanCount();
             log.debug("isProtocolSupported? " + getProtocolName() + " " + result + " " + connection);
-            res = true;
+            if (result != null) {
+                res = true;
+            }
         } catch (Exception e) {
-            log.debug(getProtocolName(map) + " - isProtocolSupported - failed! " + e.getMessage());
+            log.debug(getProtocolName(map) + " - isProtocolSupported - failed! " + address.getHostAddress());
         } finally {
             if (connection != null) {
                 connection.close();
