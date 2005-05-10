@@ -24,23 +24,18 @@
 			<parameter key="retry" value="2"/>
 			<parameter key="timeout" value="3000"/>
 			<parameter key="factory" value="RMI"/>
-                        <!-- if you set the factory to HTTP (necessary when monitoring through a firewall) then you 
-                             need to ensure the invoker-suffix property is properly set.  The value must match the 
-                             InvokerURLSuffix value in the jboss-service.xml found in the 
-                             <jboss-home>/server/default/deploy/http-invoker/META-INF directory
-                        -->
+                <!-- if you set the factory to HTTP (necessary when monitoring through a firewall) then you 
+                     need to ensure the invoker-suffix property is properly set.  The port must match the 
+                     InvokerURLSuffix value in the jboss-service.xml found in the 
+                     <jboss-home>/server/default/deploy/http-invoker/META-INF directory
+                     
+                     Also do not use the port property above since it is not used, the reason is that the
+                     HTTP service already is monitoring on that port.  The default value is already in place (below)
+                     so you shouldn't need to modify it unless JBoss is running on another port.
+                 -->
 			<parameter key="invoker-suffix" value=":8080/invoker/JNDIFactory"/>
 			<parameter key="rrd-repository" value="/Users/mjamison/opennms/dist/share/rrd/response"/>
 			<parameter key="ds-name" value="jboss"/>
-		</service>
-		<service name="JVM" interval="3000" user-defined="false" status="on">
-			<parameter key="port" value="9003"/>
-			<parameter key="retry" value="2"/>
-			<parameter key="timeout" value="3000"/>
-			<parameter key="factory" value="JMXRMI"/>
-			<parameter key="rrd-repository" value="/Users/mjamison/opennms/dist/share/rrd/response"/>
-			<parameter key="ds-name" value="jmx"/>
-			<parameter key="friendly-name" value="jvm"/>
 		</service>
 		<service name="DominoIIOP" interval="300000" user-defined="false" status="on">
                         <parameter key="retry" value="2"/>
@@ -226,7 +221,6 @@
 	<monitor service="SMTP" 	class-name="org.opennms.netmgt.poller.monitors.SmtpMonitor"/>
 	<monitor service="DHCP" 	class-name="org.opennms.netmgt.poller.monitors.DhcpMonitor"/>
 	<monitor service="DNS"  	class-name="org.opennms.netmgt.poller.monitors.DnsMonitor" />
-	<monitor service="JVM"  	class-name="org.opennms.netmgt.poller.monitors.Jsr160Monitor" />
 	<monitor service="JBoss"  	class-name="org.opennms.netmgt.poller.monitors.JBossMonitor" />
 	<monitor service="NTP"  	class-name="org.opennms.netmgt.poller.monitors.NtpMonitor" />
 	<monitor service="FTP"  	class-name="org.opennms.netmgt.poller.monitors.FtpMonitor"/>
