@@ -47,7 +47,6 @@
 	</package>
 	
 	<collector service="JBoss"      class-name="org.opennms.netmgt.collectd.JBossCollector"/>
-	<collector service="JVM"        class-name="org.opennms.netmgt.collectd.Jsr160Collector"/>
 	<collector service="SNMP" 	class-name="org.opennms.netmgt.collectd.SnmpCollector"/>
 </collectd-configuration>
 
