@@ -725,7 +725,7 @@ public abstract class JMXCollector implements ServiceCollector {
                     }
                 }
                 try {
-                    Thread.currentThread().sleep(250);
+                    Thread.currentThread().sleep(500);
                 }catch (Exception te) {
                     
                 }

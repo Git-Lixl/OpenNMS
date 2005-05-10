@@ -80,7 +80,6 @@ public class Jsr160ConnectionFactory {
                 
                 connectionWrapper = new Jsr160ConnectionWrapper(connector, connection);
             } catch(Exception e) {
-                e.fillInStackTrace();
                 log.error("Unable to get MBeanServerConnection: " + url, e);
             }
         }
@@ -123,7 +122,6 @@ public class Jsr160ConnectionFactory {
                 connectionWrapper = new Jsr160ConnectionWrapper(connector, connection);
                 
             } catch(Exception e) {
-                e.fillInStackTrace();
                 log.error("Unable to get MBeanServerConnection: " + url, e);
             }
         }

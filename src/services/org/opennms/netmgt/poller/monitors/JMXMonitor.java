@@ -1,4 +1,3 @@
-<<<<<<< JMXMonitor.java
 //
 //This file is part of the OpenNMS(R) Application.
 //
@@ -65,6 +64,7 @@ public abstract class JMXMonitor extends IPv4LatencyMonitor {
         InitialContext ctx           = null;
         int            serviceStatus = ServiceMonitor.SERVICE_UNAVAILABLE;
         String         dsName        = null;
+        InetAddress    ipv4Addr      = (InetAddress)iface.getAddress();
         
         ConnectionWrapper connection = null;
 
@@ -75,7 +75,6 @@ public abstract class JMXMonitor extends IPv4LatencyMonitor {
             String rrdPath   = ParameterMap.getKeyedString(map,  "rrd-repository",   null);
                    dsName    = ParameterMap.getKeyedString(map,  "ds-name",          "jmx");
 
-            InetAddress ipv4Addr = (InetAddress)iface.getAddress();
             long t0 = 0;
             for (int attempts=0; attempts <= retry && serviceStatus != ServiceMonitor.SERVICE_AVAILABLE; attempts++)    {
                 URL jmxLink = null;
@@ -103,7 +102,7 @@ public abstract class JMXMonitor extends IPv4LatencyMonitor {
                 }
             }  // of for
          } catch (Exception e) {
-            log.debug(dsName + " Monitor - failed! " + e.getMessage());
+            log.debug(dsName + " Monitor - failed! " + ipv4Addr.getHostAddress());
         } finally {
             if (connection != null) {
                 connection.close();

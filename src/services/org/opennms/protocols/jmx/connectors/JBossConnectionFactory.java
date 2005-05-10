@@ -67,6 +67,7 @@ public class JBossConnectionFactory {
         JBossConnectionWrapper wrapper = null;
                 
         String connectionType = ParameterMap.getKeyedString(propertiesMap, "factory", "RMI");
+        String timeout        = ParameterMap.getKeyedString(propertiesMap, "timeout", "3000");
         
         if (connectionType == null) {
             log.error("factory property is not set, check the configuration files.");
@@ -74,28 +75,26 @@ public class JBossConnectionFactory {
         }
         
         if (connectionType.equals("RMI")) {
-            InitialContext ctx = null;
+            InitialContext ctx  = null;
+            String         port = null;
 
             try {
                 
-                String port      = ParameterMap.getKeyedString(propertiesMap, "port", "1099");
+                port      = ParameterMap.getKeyedString(propertiesMap, "port", "1099");
 
                 Hashtable props = new Hashtable();
                 props.put(Context.INITIAL_CONTEXT_FACTORY, "org.jboss.naming.NamingContextFactory");
                 props.put(Context.PROVIDER_URL,            "jnp://" + address.getHostAddress() + ":" + port);
                 props.put(Context.URL_PKG_PREFIXES,        "org.jboss.naming:org.jboss.interfaces" );
+                props.put("jnp.sotimeout",                 timeout );
                 
                 ctx = new InitialContext(props);
                 
-                //System.setProperty("jmx.serial.form", "1.1");
-
                 Object rmiAdaptor = ctx.lookup("jmx/rmi/RMIAdaptor");
                 wrapper = new JBossConnectionWrapper(MBeanServerProxy.buildServerProxy(rmiAdaptor));
      
             } catch (Exception e) {
-                e.printStackTrace();
-                e.fillInStackTrace();
-                log.debug("JBossConnectionFactory - unable to get MBeanServer using RMI", e);
+                 log.debug("JBossConnectionFactory - unable to get MBeanServer using RMI on " + address.getHostAddress() + ":" + port);
             } finally {
                 try {
                     if (ctx != null)
@@ -106,29 +105,29 @@ public class JBossConnectionFactory {
             }
         }
         else if (connectionType.equals("HTTP")) {
-            InitialContext ctx = null;
+            InitialContext ctx  = null;
+            String invokerSuffix = null;
 
             try {
                 
-                String invokerSuffix = ParameterMap.getKeyedString(propertiesMap, "invoker-suffix", ":8080/invoker/JNDIFactory");
+                invokerSuffix = ParameterMap.getKeyedString(propertiesMap, "invoker-suffix", ":8080/invoker/JNDIFactory");
 
                 Hashtable props = new Hashtable();
                 props.put(Context.INITIAL_CONTEXT_FACTORY, "org.jboss.naming.HttpNamingContextFactory");
                 props.put(Context.PROVIDER_URL,            "http://" + address.getHostAddress() + invokerSuffix);
                 props.put(Context.URL_PKG_PREFIXES,        "org.jboss.naming:org.jboss.interfaces" );
+                props.put("jnp.sotimeout",                 timeout );
                 
-                log.debug(props);
+                //log.debug(props);
                 
                 ctx = new InitialContext(props);
                 
                 Object rmiAdaptor = ctx.lookup("jmx/rmi/RMIAdaptor");
                 wrapper = new JBossConnectionWrapper(MBeanServerProxy.buildServerProxy(rmiAdaptor));
-     
+                
             } catch (Exception e) {
-                e.printStackTrace();
-                e.fillInStackTrace();
-                log.debug("JBossConnectionFactory - unable to get MBeanServer using HTTP", e);
-            } finally {
+                log.debug("JBossConnectionFactory - unable to get MBeanServer using HTTP on " + address.getHostAddress() + invokerSuffix);
+           } finally {
                 try {
                     if (ctx != null)
                        ctx.close();

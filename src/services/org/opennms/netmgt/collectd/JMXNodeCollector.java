@@ -177,7 +177,7 @@ public class JMXNodeCollector {
         m_maxVarsPerPdu = maxVarsPerPdu;
 
         if (log.isDebugEnabled())
-            log.debug("SnmpNodeCollector: totalOids=" + objList.size() + " maxVarsPerPdu=" + maxVarsPerPdu);
+            log.debug("JMXNodeCollector: totalOids=" + objList.size() + " maxVarsPerPdu=" + maxVarsPerPdu);
 
     }
 
