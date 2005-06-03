@@ -80,7 +80,7 @@ public class JBossConnectionFactory {
 
             try {
                 
-                port      = ParameterMap.getKeyedString(propertiesMap, "port", "1099");
+                port = ParameterMap.getKeyedString(propertiesMap, "port", "1099");
 
                 Hashtable props = new Hashtable();
                 props.put(Context.INITIAL_CONTEXT_FACTORY, "org.jboss.naming.NamingContextFactory");
@@ -115,10 +115,7 @@ public class JBossConnectionFactory {
                 Hashtable props = new Hashtable();
                 props.put(Context.INITIAL_CONTEXT_FACTORY, "org.jboss.naming.HttpNamingContextFactory");
                 props.put(Context.PROVIDER_URL,            "http://" + address.getHostAddress() + invokerSuffix);
-                props.put(Context.URL_PKG_PREFIXES,        "org.jboss.naming:org.jboss.interfaces" );
                 props.put("jnp.sotimeout",                 timeout );
-                
-                //log.debug(props);
                 
                 ctx = new InitialContext(props);
                 
