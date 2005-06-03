@@ -508,8 +508,11 @@ public abstract class JMXCollector implements ServiceCollector {
                             log.debug(serviceName + " Collector - getAttributes: " + objectName + " #attributes: " + attrNames.length);
  
                             try {
-                                AttributeList attrList = (AttributeList) mbeanServer.getAttributes(new ObjectName(objectName),attrNames);
-                                updateRRDs(collectionName, iface, attrList, collDir, null, null);
+                                ObjectName oName = new ObjectName(objectName);
+                                if (mbeanServer.isRegistered(oName)) {
+                                   AttributeList attrList = (AttributeList) mbeanServer.getAttributes(oName,attrNames);
+                                   updateRRDs(collectionName, iface, attrList, collDir, null, null);
+                                }
                             } catch (InstanceNotFoundException e2) {
                                 log.error("Unable to retrieve attributes from " + objectName);
                             }
@@ -525,13 +528,15 @@ public abstract class JMXCollector implements ServiceCollector {
                                         /*
                                          * the exclude list doesn't apply
                                          */
-                                        AttributeList attrList = (AttributeList) mbeanServer.getAttributes(oName, attrNames);
-                                        updateRRDs(collectionName, 
-                                                   iface, 
-                                                   attrList, 
-                                                   collDir,
-                                                   oName.getKeyProperty(beanInfo.getKeyField()), 
-                                                   beanInfo.getKeyAlias());
+                                        if (mbeanServer.isRegistered(oName)) {
+                                            AttributeList attrList = (AttributeList) mbeanServer.getAttributes(oName, attrNames);
+                                            updateRRDs(collectionName, 
+                                                       iface, 
+                                                       attrList, 
+                                                       collDir,
+                                                       oName.getKeyProperty(beanInfo.getKeyField()), 
+                                                       beanInfo.getKeyAlias());
+                                        }
                                     }
                                     else {
                                         /*
@@ -547,13 +552,15 @@ public abstract class JMXCollector implements ServiceCollector {
                                             }
                                         }
                                         if (!found) {
-                                            AttributeList attrList = (AttributeList) mbeanServer.getAttributes(oName, attrNames);
-                                            updateRRDs(collectionName, 
-                                                       iface, 
-                                                       attrList, 
-                                                       collDir,
-                                                       oName.getKeyProperty(beanInfo.getKeyField()), 
-                                                       beanInfo.getKeyAlias());
+                                            if (mbeanServer.isRegistered(oName)) {
+                                                AttributeList attrList = (AttributeList) mbeanServer.getAttributes(oName, attrNames);
+                                                updateRRDs(collectionName, 
+                                                           iface, 
+                                                           attrList, 
+                                                           collDir,
+                                                           oName.getKeyProperty(beanInfo.getKeyField()), 
+                                                           beanInfo.getKeyAlias());
+                                            }
                                         }
                                     }
                                 } catch (InstanceNotFoundException e2) {
