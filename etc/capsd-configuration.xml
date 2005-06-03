@@ -22,6 +22,8 @@
                      Also do not use the port property above since it is not used, the reason is that the
                      HTTP service already is monitoring on that port.  The default value is already in place (below)
                      so you shouldn't need to modify it unless JBoss is running on another port.
+
+                     NOTE:  For JBoss 3.2, you should only modify the port and leave "/invoker/JNDIFactory"
                  -->
           <property key="invoker-suffix" value=":8080/invoker/JNDIFactory"/>
     </protocol-plugin>
