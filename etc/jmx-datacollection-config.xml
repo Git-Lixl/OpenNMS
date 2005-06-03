@@ -16,7 +16,7 @@
               <attrib name="TotalMemory"  alias="TotalMemory"      type="gauge"/>  
           </mbean>  
           
-          <mbean name="DefaultDSManagedConnectionPool" objectname="jboss.jca:service=ManagedConnectionPool,name=PortalDS">  
+          <mbean name="DefaultDSManagedConnectionPool" objectname="jboss.jca:service=ManagedConnectionPool,name=DefaultDS">  
               <attrib name="AvailableConnectionCount"   alias="DefDS_AvailConns"    type="gauge"/> 
               <attrib name="ConnectionCount"            alias="DefDS_Conns"         type="gauge"/>  
               <attrib name="InUseConnectionCount"       alias="DefDS_InUseConns"    type="gauge"/>  
