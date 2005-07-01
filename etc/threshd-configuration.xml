@@ -13,8 +13,12 @@
 			<parameter key="thresholding-group" value="default-snmp"/>
 		</service>
 		
-		<service name="JBoss" interval="30000" user-defined="false" status="on">
-			<parameter key="thresholding-group" value="jboss"/>
+		<service name="JBoss32" interval="30000" user-defined="false" status="on">
+			<parameter key="thresholding-group" value="jboss32"/>
+		</service>
+
+		<service name="JBoss4" interval="30000" user-defined="false" status="on">
+			<parameter key="thresholding-group" value="jboss4"/>
 		</service>
 
 		 <service name="ICMP" interval="300000" user-defined="false" status="on">

@@ -38,7 +38,7 @@
         </group>
 
         <!--group name="jboss"
-                rrdRepository = "/Users/mjamison/opennms/dist/share/rrd/snmp/">
+                rrdRepository = "@install.share.dir@/rrd/snmp/">
                 <threshold type="high" ds-name="portal-core_hits"  ds-type="node" value="10" rearm="5" trigger="3"/>
                 <threshold type="high" ds-name="portal-core_access"   ds-type="node" value="10" rearm="7" trigger="3"/>
         </group-->
