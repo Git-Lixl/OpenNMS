@@ -412,9 +412,7 @@ public abstract class JMXCollector implements ServiceCollector {
         // remote agent which are to be stored in the node-level RRD file.
         // These objects pertain to the node itself not any individual
         // interfaces.
-
         List attrList = JMXDataCollectionConfigFactory.getInstance().getAttributeList(collectionName, serviceName, ipAddr.getHostAddress());
-
         nodeInfo.setAttributeList(attrList);
         HashMap dsList = buildDataSourceList(collectionName, attrList);
         nodeInfo.setDsMap(dsList);
@@ -424,6 +422,12 @@ public abstract class JMXCollector implements ServiceCollector {
         //
         iface.setAttribute(NODE_INFO_KEY, nodeInfo);
         iface.setAttribute("collectionName", collectionName);
+        
+        File repos = new File(m_rrdPath + "/" + nodeID + "/" + collectionName);
+        if (!repos.exists()) {
+            repos.mkdir();
+        }
+        
     }
 
     /**
@@ -732,13 +736,13 @@ public abstract class JMXCollector implements ServiceCollector {
                     }
                 }
                 try {
-                    Thread.currentThread().sleep(500);
+                    Thread.currentThread().sleep(1100);
                 }catch (Exception te) {
                     
                 }
             }
         } catch (Throwable e) {
-            log.error("RRD Error", e);
+            //log.error("RRD Error", e);
             rrdError = true;
         }
         return rrdError;
