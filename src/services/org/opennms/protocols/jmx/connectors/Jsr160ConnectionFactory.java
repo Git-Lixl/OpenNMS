@@ -33,8 +33,8 @@ package org.opennms.protocols.jmx.connectors;
 import java.net.InetAddress;
 import java.util.*;
 
-import javax.management.*;
-import javax.management.remote.*;
+import javax.management.MBeanServerConnection;
+import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
@@ -64,15 +64,14 @@ public class Jsr160ConnectionFactory {
         String factory =  ParameterMap.getKeyedString( propertiesMap, "factory", "STANDARD");
         int    port =     ParameterMap.getKeyedInteger(propertiesMap, "port",     1099);
         String protocol = ParameterMap.getKeyedString( propertiesMap, "protocol", "rmi");
-        String urlPath =  ParameterMap.getKeyedString( propertiesMap, "urlPath", "/jmxrmi");
+        String urlPath =  ParameterMap.getKeyedString( propertiesMap, "urlPath",  "/jmxrmi");
         
         log.debug("JMX: " + factory + " - service:" + protocol + "//" + address.getHostAddress() + ":" + port + urlPath);
 
         if (factory == null || factory.equals("STANDARD")) {
             try {
                 
-                //url = new JMXServiceURL(protocol, "/jndi/rmi://" + address.getHostAddress(), port, urlPath);
-                url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + address.getHostAddress() + ":" + port + urlPath);
+                url = new JMXServiceURL("service:jmx:" + protocol + ":///jndi/"+protocol+"://" + address.getHostAddress() + ":" + port + urlPath);
                 
                 // Connect a JSR 160 JMXConnector to the server side
                 JMXConnector connector = JMXConnectorFactory.connect(url);
@@ -80,7 +79,7 @@ public class Jsr160ConnectionFactory {
                 
                 connectionWrapper = new Jsr160ConnectionWrapper(connector, connection);
             } catch(Exception e) {
-                log.error("Unable to get MBeanServerConnection: " + url, e);
+                log.error("Unable to get MBeanServerConnection: " + url);
             }
         }
         else if (factory.equals("PASSWORD-CLEAR")) {
