@@ -18,6 +18,7 @@
           <!-- if you set the factory to HTTP (necessary when monitoring through a firewall) then you 
                need to ensure the port matches the port specified in the InvokerURLSuffix for the Naming Service entry in 
               <jboss-home>/server/default/deploy/http-invoker/META-INF/jboss-service.xml
+               The default port is 8080
           -->
         </protocol-plugin>
         <protocol-plugin protocol="JBoss32" class-name="org.opennms.netmgt.capsd.JBossPlugin" scan="on" user-defined="false">
@@ -29,6 +30,7 @@
           <!-- if you set the factory to HTTP (necessary when monitoring through a firewall) then you 
                need to ensure the port matches the port specified in the InvokerURLSuffix for the Naming Service entry in 
                <jboss-home>/server/default/deploy/http-invoker/META-INF/jboss-service.xml
+               The default port is 8080
           -->
         </protocol-plugin>
         <protocol-plugin protocol="JVM" class-name="org.opennms.netmgt.capsd.Jsr160Plugin" scan="on" user-defined="false">
