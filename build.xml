@@ -197,7 +197,7 @@ your distribution.
 <!--  	<pathelement path="${packaged.lib.dir}/pop3.jar"/> -->
     <pathelement path="${packaged.lib.dir}/activation.jar"/>
     <pathelement path="${packaged.lib.dir}/jmta.jar"/>
-    <pathelement path="${packaged.lib.dir}/z_jbossall-client.jar"/>
+    <pathelement path="${packaged.lib.dir}/jboss/jbossall-client.jar"/>
   </path>
 
   <!-- The jars listed for Class-Path in the MANIFEST.MF for the installer's
@@ -941,6 +941,7 @@ your distribution.
 
  <target name="install.lib" depends="prep,compile,jar">
   <mkdir dir="${install.prefix}${install.dir}/lib"/>
+  <mkdir dir="${install.prefix}${install.dir}/lib/jboss"/>
   <mkdir dir="${install.prefix}${install.dir}/lib/updates"/>
   <echo file="${install.prefix}${install.dir}/lib/updates/README.updates">
 
@@ -966,6 +967,15 @@ OpenNMS as part of the post-install.
     <include name="*.jar"/>
    </fileset>
   </chmod>
+ 	
+  <copy todir="${install.prefix}${install.dir}/lib/jboss">
+    <fileset dir="${packaged.lib.dir}/jboss" includes="*.jar" />
+  </copy>
+  <chmod perm="0664">
+    <fileset dir="${install.prefix}${install.dir}/lib/jboss">
+      <include name="*.jar"/>
+    </fileset>
+   </chmod>
 
   <copy todir="${install.prefix}${install.dir}/lib">
    <fileset dir="${build.jicmp.dir}" includes="libjicmp.${build.jniext}"/>
