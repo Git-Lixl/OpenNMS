@@ -94,6 +94,10 @@ public class SpringBoardMBeanTest extends TestCase {
     "       <name>OpenNMS:Name=SpringBoard</name>\n" + 
     "       <class-name>org.opennms.netmgt.vmmgr.SpringBoard</class-name>\n" + 
 //    "       <invoke pass=\"0\" method=\"init\"/>\n" + 
+    "       <attribute>" +
+    "           <name>BaseContext</name>" +
+    "           <value type=\"java.lang.String\">file:etc/opennms-context.xml</value>" +
+    "       </attribute>\n" +
     "       <invoke pass=\"0\" method=\"start\"/>\n" + 
     "       <invoke at=\"status\" pass=\"0\" method=\"status\"/>\n" + 
     "       <invoke at=\"stop\" pass=\"0\" method=\"stop\"/>\n" + 

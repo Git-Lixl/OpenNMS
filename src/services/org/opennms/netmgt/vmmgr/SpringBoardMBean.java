@@ -35,9 +35,9 @@ import java.util.List;
 
 public interface SpringBoardMBean {
     
-    public String getContextDir();
+    public String getBaseContext();
     
-    public void setContextDir(String contextDir);
+    public void setBaseContext(String baseContext);
     
     public void start();
     

@@ -31,31 +31,26 @@
 //
 package org.opennms.netmgt.vmmgr;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.context.support.FileSystemXmlApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class SpringBoard implements SpringBoardMBean {
     
-    private File contextDir;
-    private FileSystemXmlApplicationContext m_context;
+    private String m_baseContext = "opennmns-context.xml";
+    private ClassPathXmlApplicationContext m_context;
     
-    public String getContextDir() {
-        return (contextDir == null ? null : contextDir.getAbsolutePath());
+    public String getBaseContext() {
+        return m_baseContext;
     }
 
-    public void setContextDir(String contextDir) {
-        // TODO Auto-generated method stub
-        
+    public void setBaseContext(String baseContext) {
+        m_baseContext = baseContext;
     }
 
     public void start() {
-        String appContext = System.getProperty("opennms.appcontext", "opennms-appContext.xml");
-        File contextFile = new File(contextDir, appContext);
-        System.err.println(contextFile.getPath());
-        m_context = new FileSystemXmlApplicationContext(contextFile.getPath());
+        m_context = new ClassPathXmlApplicationContext(new String[] { m_baseContext, "**/*-context.xml"});
     }
 
     public List status() {
