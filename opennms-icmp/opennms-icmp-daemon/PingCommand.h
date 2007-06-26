@@ -9,13 +9,9 @@ class PingCommand : public DefaultCommand {
 public:
 	PingCommand( QStringList arguments );
 	void execute();
-	int responseCode();
-	QString responseCodeText();
 	QString responseText();
 
 protected:
-	int responseCodeValue;
-	QString responseCodeTextValue;	
 };
 
 #endif

@@ -18,6 +18,8 @@ public:
 
 protected:
 	QStringList arguments;
+	int responseCodeValue;
+	QString responseCodeTextValue;	
 };
 
 #endif

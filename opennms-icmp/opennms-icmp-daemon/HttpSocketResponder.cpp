@@ -50,7 +50,7 @@ void HttpServer::run()
 	arguments = path.split("/");
 	QString commandText = arguments.takeFirst().toLower();
 
-	DefaultCommand *command = new DefaultCommand( arguments );
+	DefaultCommand *command = NULL;
 	
 	if (httpRequest[0].toLower() == "get")
 	{
@@ -59,6 +59,10 @@ void HttpServer::run()
 		{
 			command = new PingCommand( arguments );
 			qDebug() << "just made a ping command: " << command->responseText();
+		}
+		else
+		{
+			command = new DefaultCommand( arguments );
 		}
 	}
 
