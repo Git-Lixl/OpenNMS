@@ -58,7 +58,7 @@ void HttpServer::run()
 		if (commandText == "ping")
 		{
 			command = new PingCommand( arguments );
-			qDebug() << "just made a ping command: " << command->responseText();
+			qDebug() << "just made a ping command: " << typeid(*command).name();
 		}
 		else
 		{
