@@ -1,5 +1,8 @@
 #include <QtNetwork/QTcpSocket>
 #include <QtCore/QDateTime>
+#include <QtCore/QThread>
+#include <unistd.h>
+#include <stdlib.h>
 
 #include "HttpServer.h"
 
@@ -21,14 +24,17 @@ static QString trim( const QString & s )
   	return s;
 }
 
-HttpServer::HttpServer( QTcpSocket *socket, QObject *parent ) : QObject( parent ), mSocket( socket )
+HttpServer::HttpServer( QT_SOCKLEN_T socket, QObject *parent ) : QThread (parent )
 {
-	Q_ASSERT( socket );
-	
-	connect( socket, SIGNAL(disconnected()), SLOT(slotConnectionClosed()) );
-	connect( socket, SIGNAL(error(QAbstractSocket::SocketError)), SLOT(slotError(QAbstractSocket::SocketError)) );
-  	connect( socket, SIGNAL(readyRead()), SLOT(slotReadyRead()) );
+	mSocket = new QTcpSocket();
+	mSocket->setSocketDescriptor(socket);
 }
+
+/*
+HttpServer::HttpServer( QTcpSocket *socket, QObject *parent ) : QThread ( parent ), mSocket( socket )
+{
+}
+*/
 
 HttpServer::~HttpServer()
 {
@@ -50,17 +56,6 @@ HttpServer::~HttpServer()
 	}
 }
 
-/*
-void HttpServer::slotSendResponse()
-{
-	const QString line = QString(mLine);
-	mLine = "";
-	QTextStream s( mSocket );
-	s << line << "\n";
-	slotDisplayServer( line );
-}
-*/
-
 void HttpServer::slotDisplayClient( const QString &s )
 {
 	qDebug() << "C: " << trim(s);
@@ -76,35 +71,46 @@ void HttpServer::slotDisplayMeta( const QString &s )
 	qDebug() << "M: " << trim(s);
 }
 
-void HttpServer::slotReadyRead()
+void HttpServer::run()
 {
+	mSocket->waitForReadyRead();
 	QString line;
 	bool inHeaders = true;
+
 	while ( mSocket->canReadLine() )
 	{
 		line = trim(mSocket->readLine());
 		if (line.isEmpty())
 		{
 			inHeaders = false;
-			QTextStream s( mSocket );
-			s << "HTTP/1.0 200 OK" << endl << "Connection: close" << endl << "Content-type: text/plain" << endl << endl;
-			s << "This is a test." << endl;
-			QDateTime now = QDateTime::currentDateTime();
-			s << "The current date and time is: " << now.toString() << endl;
+//			QTextStream out( mSocket );
+			QByteArray out;
+
+			long sleeptime = rand() % 5;
+			qDebug() << "sleeping " << sleeptime;
+			sleep((int)sleeptime);
+			
+			mSocket->write("HTTP/1.0 200 OK\n");
+			mSocket->write("Connection: close\n");
+			mSocket->write("Content-type: text/plain\n");
+			mSocket->write("\n");
+			
+			mSocket->write("This is a test.\n");
+
+			QString now = QDateTime::currentDateTime().toString();
+			mSocket->write("The current date and time is: ");
+			mSocket->write(now.toLocal8Bit());
+			mSocket->write("\n");
+			
+			mSocket->write("My current thread ID is: ");
+			mSocket->write(QString((const char*)QThread::currentThreadId()).toLocal8Bit());
+			mSocket->write("\n");
+
 			mSocket->close();
 		}
 		// slotDisplayClient( line );
 	}
-}
-
-void HttpServer::slotError( QAbstractSocket::SocketError error )
-{
-	slotDisplayMeta( QString( "E: %1").arg( err2str(error)) );
-}
-
-void HttpServer::slotConnectionClosed()
-{
-	slotDisplayMeta( "Connection closed by peer." );
+	exit();
 }
 
 void HttpServer::slotCloseConnection()

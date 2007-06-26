@@ -1,5 +1,5 @@
-#ifndef HTTPDAEMON_H
-#define HTTPDAEMON_H
+#ifndef __HTTPDAEMON_H__
+#define __HTTPDAEMON_H__
 
 #include <QtNetwork/QTcpServer>
 
