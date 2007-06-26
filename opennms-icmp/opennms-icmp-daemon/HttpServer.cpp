@@ -1,4 +1,5 @@
 #include <QtNetwork/QTcpSocket>
+#include <QtCore/QDateTime>
 
 #include "HttpServer.h"
 
@@ -88,6 +89,8 @@ void HttpServer::slotReadyRead()
 			QTextStream s( mSocket );
 			s << "HTTP/1.0 200 OK" << endl << "Connection: close" << endl << "Content-type: text/plain" << endl << endl;
 			s << "This is a test." << endl;
+			QDateTime now = QDateTime::currentDateTime();
+			s << "The current date and time is: " << now.toString() << endl;
 			mSocket->close();
 		}
 		// slotDisplayClient( line );
