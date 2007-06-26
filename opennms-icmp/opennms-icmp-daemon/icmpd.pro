@@ -2,9 +2,9 @@
 #SOURCES       = HttpDaemon.cpp \
 #                main.cpp
 HEADERS       = HttpDaemon.h \
-				HttpServer.h
+				HttpSocketResponder.h
 SOURCES       = HttpDaemon.cpp \
-				HttpServer.cpp \
+				HttpSocketResponder.cpp \
 				main.cpp
 QT           += network
 QT           -= gui

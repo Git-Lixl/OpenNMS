@@ -4,7 +4,6 @@
 #include <QtNetwork/QTcpSocket>
 #include <QtNetwork/QTcpServer>
 
-#include "HttpServer.h"
 #include "HttpDaemon.h"
 
 int main(int argc, char *argv[])

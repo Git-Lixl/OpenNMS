@@ -9,11 +9,15 @@ class HttpDaemon : public QTcpServer
 	
 	public:
 		HttpDaemon( QObject *parent = 0 );
-		~HttpDaemon();
 		
+	protected:
+		void incomingConnection( int socketDescriptor );
+		
+	/*
 	private Q_SLOTS:
 		void newConnectionAvailable();
 
+	*/
 };
 
 #endif
