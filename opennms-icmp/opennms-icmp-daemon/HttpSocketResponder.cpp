@@ -1,19 +1,15 @@
 #include <QtNetwork/QTcpSocket>
 #include <QtCore/QDateTime>
+#include <QtCore/QRegExp>
+#include <QtCore/QStringList>
 #include <QtCore/QThread>
+#include <QtCore/QUrl>
 #include <unistd.h>
 #include <stdlib.h>
 
 #include "HttpSocketResponder.h"
-
-static QString err2str( QAbstractSocket::SocketError error )
-{
-  	switch ( error ) {
-    	case QAbstractSocket::ConnectionRefusedError: return "Connection refused";
-    	case QAbstractSocket::HostNotFoundError: return "Host not found";
-    	default: return "Unknown error";
-  	}
-}
+#include "DefaultCommand.h"
+#include "PingCommand.h"
 
 static QString trim( const QString & s )
 {
@@ -41,7 +37,30 @@ void HttpServer::run()
 	tcpSocket.waitForReadyRead();
 	qDebug() << socketDescriptor << ": ready to read";
 	QString line;
+
 	bool inHeaders = true;
+
+	line = trim(tcpSocket.readLine());
+	QStringList httpRequest = line.split(QRegExp("\\s+"));
+	QUrl *URL = new QUrl(httpRequest[1]);
+	QStringList arguments;
+
+	QString path = URL->path();
+	path.remove(QRegExp("^/+"));
+	arguments = path.split("/");
+	QString commandText = arguments.takeFirst().toLower();
+
+	DefaultCommand *command = new DefaultCommand( arguments );
+	
+	if (httpRequest[0].toLower() == "get")
+	{
+		/* only command we know for now ;) */
+		if (commandText == "ping")
+		{
+			command = new PingCommand( arguments );
+			qDebug() << "just made a ping command: " << command->responseText();
+		}
+	}
 
 	while ( tcpSocket.canReadLine() )
 	{
@@ -52,30 +71,32 @@ void HttpServer::run()
 			{
 				inHeaders = false;
 
-				tcpSocket.write("HTTP/1.0 200 OK\n");
-				tcpSocket.write("Connection: close\n");
-				tcpSocket.write("Content-type: text/plain\n");
-				tcpSocket.write("\n");
+				QTextStream s(&tcpSocket);
 
-				tcpSocket.write("This is a test.\n");
+				s << "HTTP/1.0 " << command->responseCode() << " " << command->responseCodeText() << "\n";
+				if (!command->responseHeaders().isEmpty())
+				{
+					QString headers = command->responseHeaders();
+					headers.remove(QRegExp("[\\r\\n\\s]+$"));
+					s << headers << "\n";
+				}
+				s << "Connection: close\n";
+				s << "Content-type: " << command->responseContentType() << "\n";
+				s << "\n";
+				s << command->responseText();
 
-				QString now = QDateTime::currentDateTime().toString();
-				tcpSocket.write("The current date and time is: ");
-				tcpSocket.write(now.toLocal8Bit());
-				tcpSocket.write("\n");
-
-				tcpSocket.write("My current thread ID is: ");
-				tcpSocket.write(QString((const char*)QThread::currentThreadId()).toLocal8Bit());
-				tcpSocket.write("\n");
-
-				tcpSocket.disconnectFromHost();
-				tcpSocket.waitForDisconnected();
+				s.flush();
 			}
+//			qDebug() << "line = " << line;
 		}
 		else
 		{
 			qDebug() << "spurious data after headers have completed: " << line;
 		}
 	}
+
+	tcpSocket.disconnectFromHost();
+	tcpSocket.waitForDisconnected();
+	
 	exit();
 }
