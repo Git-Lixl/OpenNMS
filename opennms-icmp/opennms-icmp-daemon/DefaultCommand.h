@@ -9,12 +9,12 @@ class DefaultCommand : public QObject {
 	
 public:
 	DefaultCommand( QStringList arguments );
-	void execute();
-	int responseCode();
-	QString responseCodeText();
-	QString responseHeaders();
-	QString responseText();
-	QString responseContentType();
+	virtual void execute();
+	virtual int responseCode();
+	virtual QString responseCodeText();
+	virtual QString responseHeaders();
+	virtual QString responseText();
+	virtual QString responseContentType();
 
 protected:
 	QStringList arguments;

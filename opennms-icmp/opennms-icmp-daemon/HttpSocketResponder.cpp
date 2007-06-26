@@ -22,7 +22,6 @@ static QString trim( const QString & s )
 
 HttpServer::HttpServer( int socketDescriptor, QObject *parent ) : QThread ( parent ), socketDescriptor( socketDescriptor )
 {
-	qDebug() << socketDescriptor << ": new instance of HttpServer thread";
 }
 
 void HttpServer::run()
@@ -33,9 +32,7 @@ void HttpServer::run()
 		return;
 	}
 
-	qDebug() << socketDescriptor << ": thread started";
 	tcpSocket.waitForReadyRead();
-	qDebug() << socketDescriptor << ": ready to read";
 	QString line;
 
 	bool inHeaders = true;
@@ -50,7 +47,7 @@ void HttpServer::run()
 	arguments = path.split("/");
 	QString commandText = arguments.takeFirst().toLower();
 
-	DefaultCommand *command = NULL;
+	DefaultCommand *command = new DefaultCommand( arguments );
 	
 	if (httpRequest[0].toLower() == "get")
 	{
@@ -58,11 +55,6 @@ void HttpServer::run()
 		if (commandText == "ping")
 		{
 			command = new PingCommand( arguments );
-			qDebug() << "just made a ping command: " << typeid(*command).name();
-		}
-		else
-		{
-			command = new DefaultCommand( arguments );
 		}
 	}
 
@@ -91,7 +83,6 @@ void HttpServer::run()
 
 				s.flush();
 			}
-//			qDebug() << "line = " << line;
 		}
 		else
 		{

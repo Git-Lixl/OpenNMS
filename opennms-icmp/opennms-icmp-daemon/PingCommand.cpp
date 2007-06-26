@@ -1,9 +1,8 @@
 #include "PingCommand.h"
 #include <QtCore/QDebug>
 
-PingCommand::PingCommand( QStringList arguments ) : DefaultCommand( arguments )
+PingCommand::PingCommand( QStringList arguments ) : DefaultCommand( arguments ), responseCodeValue(500), responseCodeTextValue("Internal Server Error")
 {
-	qDebug() << "PingCommand instantiated";
 }
 
 void PingCommand::execute()
@@ -12,5 +11,5 @@ void PingCommand::execute()
 
 QString PingCommand::responseText( )
 {
-	return "I like dongs!\n";
+	return "I *hate* cheese!\n";
 }

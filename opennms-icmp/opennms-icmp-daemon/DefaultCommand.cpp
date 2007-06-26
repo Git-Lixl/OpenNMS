@@ -1,9 +1,8 @@
 #include "DefaultCommand.h"
 #include <QtCore/QDebug>
 
-DefaultCommand::DefaultCommand( QStringList arguments ) : arguments(arguments), responseCodeValue(500), responseCodeTextValue("Internal Server Error")
+DefaultCommand::DefaultCommand( QStringList arguments ) : arguments(arguments), responseCodeValue(501), responseCodeTextValue("Not Implemented")
 {
-	qDebug() << "DefaultCommand instantiated";
 }
 
 void DefaultCommand::execute()

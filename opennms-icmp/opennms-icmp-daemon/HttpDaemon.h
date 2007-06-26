@@ -12,12 +12,6 @@ class HttpDaemon : public QTcpServer
 		
 	protected:
 		void incomingConnection( int socketDescriptor );
-		
-	/*
-	private Q_SLOTS:
-		void newConnectionAvailable();
-
-	*/
 };
 
 #endif
