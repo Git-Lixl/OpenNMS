@@ -11,9 +11,8 @@ public:
 	virtual void execute();
 	virtual QString responseText();
 
-protected:
-	int responseCodeValue;
-	QString responseCodeTextValue;	
+private:
+	QHostAddress address;
 };
 
 #endif

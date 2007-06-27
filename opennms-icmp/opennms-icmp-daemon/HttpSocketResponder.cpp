@@ -58,6 +58,8 @@ void HttpServer::run()
 		}
 	}
 
+	command->execute();
+	
 	while ( tcpSocket.canReadLine() )
 	{
 		line = trim(tcpSocket.readLine());

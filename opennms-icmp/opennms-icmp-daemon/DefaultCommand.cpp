@@ -11,12 +11,12 @@ void DefaultCommand::execute()
 
 int DefaultCommand::responseCode()
 {
-	return responseCodeValue;
+	return this->responseCodeValue;
 }
 
 QString DefaultCommand::responseCodeText()
 {
-	return responseCodeTextValue;
+	return this->responseCodeTextValue;
 }
 
 QString DefaultCommand::responseHeaders()
