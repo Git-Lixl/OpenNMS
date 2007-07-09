@@ -219,7 +219,7 @@ PingCommand::PingCommand( QStringList arguments ) : DefaultCommand( arguments )
 	QString hostname = arguments.takeFirst();
 	if (!hostname.isEmpty())
 	{
-		address = new QHostAddress(hostname);
+		address.setAddress(hostname);
 	}
 }
 
@@ -240,7 +240,7 @@ void PingCommand::execute()
 		return;
 	}
 
-	
+	qDebug() << "pinging " << address;
 	
 	responseCodeValue = 200;
 	responseCodeTextValue = "OK";

@@ -2,6 +2,7 @@
 #define __PINGCOMMAND_H__
 
 #include "DefaultCommand.h"
+#include <QtNetwork/QHostAddress>
 
 class PingCommand : public DefaultCommand {
 	Q_OBJECT
