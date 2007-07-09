@@ -8,6 +8,14 @@
 //
 // OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
 //
+// Modifications:
+//
+// 2007 Jul 03: Fix test resource calls. - dj@opennms.org
+// 2007 Jul 03: Enable testIplikeAllStars. - dj@opennms.org
+// 2007 Jul 03: Move notifd configuration to a resource. - dj@opennms.org
+// 2007 Jun 29: Add additional tests for nodes without interfaces and interfaces
+//              without services.  Reset FilterDaoFactory on setup. - dj@opennms.org
+//
 // Original code base Copyright (C) 1999-2001 Oculan Corp.  All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
@@ -41,34 +49,15 @@ import org.opennms.netmgt.config.NotifdConfigManager;
 import org.opennms.netmgt.config.NotificationManager;
 import org.opennms.netmgt.config.notifications.Notification;
 import org.opennms.netmgt.dao.db.AbstractTransactionalTemporaryDatabaseSpringContextTests;
+import org.opennms.netmgt.filter.FilterDaoFactory;
 import org.opennms.netmgt.notifd.mock.MockNotifdConfigManager;
 import org.opennms.netmgt.utils.EventBuilder;
+import org.opennms.test.ConfigurationTestUtils;
 
 public class NotificationManagerTest extends AbstractTransactionalTemporaryDatabaseSpringContextTests {
     private NotificationManagerImpl m_notificationManager;
     private DataSource m_dataSource;
     private NotifdConfigManager m_configManager;
-    
-    private static final String s_notifdConfigurationString =
-        "<notifd-configuration\n"
-        + "    status='on'\n"
-        + "    pages-sent=\"SELECT * FROM notifications\"\n"
-        + "    next-notif-id=\"SELECT nextval('notifynxtid')\"\n"
-        + "    next-user-notif-id=\"SELECT nextval('userNotifNxtId')\"\n"
-        + "    next-group-id=\"SELECT nextval('notifygrpid')\"\n"
-        + "    service-id-sql=\"SELECT serviceID from service where serviceName = ?\"\n"
-        + "    outstanding-notices-sql=\"SELECT notifyid FROM notifications where notifyId = ? AND respondTime is not null\"\n"
-        + "    acknowledge-id-sql=\"SELECT notifyid FROM notifications WHERE eventuei=? AND nodeid=? AND interfaceid=? AND serviceid=?\"\n"
-        + "     acknowledge-update-sql=\"UPDATE notifications SET answeredby=?, respondtime=? WHERE notifyId=?\"\n"
-        + "    match-all='true'>\n"
-        + "  <queue>\n"
-        + "    <queue-id>default</queue-id>\n"
-        + "    <interval>20s</interval>\n"
-        + "    <handler-class>\n"
-        + "      <name>org.opennms.netmgt.notifd.DefaultQueueHandler</name>\n"
-        + "    </handler-class>\n"
-        + "  </queue>\n"
-        + "</notifd-configuration>";
     
     public NotificationManagerTest() {
         System.setProperty("opennms.home", "../opennms-daemon/src/main/filtered");
@@ -84,7 +73,9 @@ public class NotificationManagerTest extends AbstractTransactionalTemporaryDatab
     protected void onSetUpInTransactionIfEnabled() throws Exception {
         super.onSetUpInTransactionIfEnabled();
 
-        m_configManager = new MockNotifdConfigManager(s_notifdConfigurationString);
+        FilterDaoFactory.setInstance(null);
+        FilterDaoFactory.getInstance();
+        m_configManager = new MockNotifdConfigManager(ConfigurationTestUtils.getConfigForResourceWithReplacements(this, "notifd-configuration.xml"));
         m_notificationManager = new NotificationManagerImpl(m_configManager, m_dataSource);
         
         assertNotNull("getJdbcTemplate() should not return null", getJdbcTemplate());
@@ -104,6 +95,13 @@ public class NotificationManagerTest extends AbstractTransactionalTemporaryDatab
         getJdbcTemplate().update("INSERT INTO node ( nodeId, nodeCreateTime, nodeLabel ) VALUES ( 3, now(), 'node 3' )");
         getJdbcTemplate().update("INSERT INTO ipInterface ( nodeId, ipAddr ) VALUES ( 3, '192.168.1.2' )");
         getJdbcTemplate().update("INSERT INTO ifServices ( nodeId, ipAddr, serviceId ) VALUES ( 3, '192.168.1.2', 1 )");
+
+        // Node 4 has an interface, but no services
+        getJdbcTemplate().update("INSERT INTO node ( nodeId, nodeCreateTime, nodeLabel ) VALUES ( 4, now(), 'node 4' )");
+        getJdbcTemplate().update("INSERT INTO ipInterface ( nodeId, ipAddr ) VALUES ( 4, '192.168.1.3' )");
+
+        // Node 5 has no interfaces
+        getJdbcTemplate().update("INSERT INTO node ( nodeId, nodeCreateTime, nodeLabel ) VALUES ( 5, now(), 'node 5' )");
 
         getJdbcTemplate().update("INSERT INTO categories ( categoryId, categoryName ) VALUES ( 1, 'CategoryOne' )");
         getJdbcTemplate().update("INSERT INTO categories ( categoryId, categoryName ) VALUES ( 2, 'CategoryTwo' )");
@@ -186,8 +184,7 @@ public class NotificationManagerTest extends AbstractTransactionalTemporaryDatab
                                            false);
     }
     
-    // FIXME .... PopulatedTemporaryDatabaseTestCase doesn't add iplike
-    public void FIXMEtestIplikeAllStars() {
+    public void testIplikeAllStars() {
         doTestNodeInterfaceServiceWithRule("was expecting the node/interface/service match to be true",
                                            1, "192.168.1.1", "HTTP",
                                            "(ipaddr IPLIKE *.*.*.*)",
@@ -276,6 +273,26 @@ public class NotificationManagerTest extends AbstractTransactionalTemporaryDatab
         doTestNodeInterfaceServiceWithRule("was expecting the node/interface/service match to be true",
                                            2, "192.168.1.1", "HTTP",
                                            "(catincCategoryOne) & (catincCategoryTwo) & (catincCategoryThree)",
+                                           false);
+    }
+
+    public void testIpAddrMatchWithNoServiceOnInterface() {
+        doTestNodeInterfaceServiceWithRule("node/interface/service match",
+                                           4, null, null,
+                                           "(ipaddr == '192.168.1.3')",
+                                           true);
+    }
+
+    /**
+     * This test returns false because the ipInterface table is the
+     * "primary" table in database-schema.xml, so it is joined with
+     * every query, even if we don't ask for it to be joined and if
+     * it isn't referenced in the filter query.  Sucky, huh?
+     */
+    public void testNodeMatchWithNoInterfacesOnNode() {
+        doTestNodeInterfaceServiceWithRule("node/interface/service match",
+                                           5, null, null,
+                                           "(nodeId == 5)",
                                            false);
     }
     

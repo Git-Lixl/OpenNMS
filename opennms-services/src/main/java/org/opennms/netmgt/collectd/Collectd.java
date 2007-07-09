@@ -13,6 +13,7 @@
 //
 // Modifications:
 //
+// 2007 Jun 30: Java 5 generics, log when we do match a specification. - dj@oopennms.org
 // 2006 Aug 15: Remove old, incorrect comment. Fix up log message. -
 // dj@opennms.org
 // 2004 Dec 27: Changed SQL_RETRIEVE_INTERFACES to omit interfaces that have
@@ -125,7 +126,7 @@ public final class Collectd extends AbstractServiceDaemon implements
 
     private MonitoredServiceDao m_monSvcDao;
 
-    private IpInterfaceDao m_ifSvcDao;
+    private IpInterfaceDao m_ifaceDao;
 
     static class SchedulingCompletedFlag {
         boolean m_schedulingCompleted = false;
@@ -310,7 +311,7 @@ public final class Collectd extends AbstractServiceDaemon implements
     private void scheduleInterfacesWithService(String svcName) {
         log().info("scheduleInterfacesWithService: svcName = " + svcName);
 
-        Collection<OnmsIpInterface> ifsWithServices = getIpInterfaceDao().findHierarchyByServiceType(svcName);
+        Collection<OnmsIpInterface> ifsWithServices = getIpInterfaceDao().findByServiceType(svcName);
         for (OnmsIpInterface iface : ifsWithServices) {
             scheduleInterface(iface, svcName, true);
         }
@@ -350,13 +351,13 @@ public final class Collectd extends AbstractServiceDaemon implements
     }
 
 	private OnmsIpInterface getIpInterface(int nodeId, String ipAddress) {
-		OnmsNode node = m_nodeDao.getHierarchy(nodeId);
+		OnmsNode node = m_nodeDao.get(nodeId);
         OnmsIpInterface iface = node.getIpInterfaceByIpAddress(ipAddress);
 		return iface;
 	}
 
     private void scheduleInterface(OnmsIpInterface iface, String svcName, boolean existing) {
-        Collection matchingSpecs = getSpecificationsForInterface(iface, svcName);
+        Collection<CollectionSpecification> matchingSpecs = getSpecificationsForInterface(iface, svcName);
         StringBuffer sb;
         
         if (log().isDebugEnabled()) {
@@ -368,8 +369,7 @@ public final class Collectd extends AbstractServiceDaemon implements
             log().debug(sb.toString());
         }
 
-        for (Iterator it = matchingSpecs.iterator(); it.hasNext();) {
-            CollectionSpecification spec = (CollectionSpecification) it.next();
+        for (CollectionSpecification spec : matchingSpecs) {
 
             if (existing == false) {
                 /*
@@ -412,9 +412,9 @@ public final class Collectd extends AbstractServiceDaemon implements
                  * interface, service and package pairing
                  */
 
-                cSvc = new CollectableService(iface, spec, getScheduler(),
+                cSvc = new CollectableService(iface, m_ifaceDao, spec, getScheduler(),
                                               m_schedulingCompletedFlag,
-                                              m_transTemplate);
+                                              m_transTemplate.getTransactionManager());
 
                 // Add new collectable service to the colleable service list.
                 m_collectableServices.add(cSvc);
@@ -502,6 +502,17 @@ public final class Collectd extends AbstractServiceDaemon implements
 
             Collection outageCalendars = new LinkedList();
 
+            if (log().isDebugEnabled()) {
+                StringBuffer sb = new StringBuffer();
+                sb.append("getSpecificationsForInterface: address/service: ");
+                sb.append(iface);
+                sb.append("/");
+                sb.append(svcName);
+                sb.append(" scheduled, interface does belong to package: ");
+                sb.append(wpkg.getName());
+                log().debug(sb.toString());
+            }
+            
             matchingPkgs.add(new CollectionSpecification(wpkg, svcName, outageCalendars, getServiceCollector(svcName)));
         }
         return matchingPkgs;
@@ -1227,11 +1238,11 @@ public final class Collectd extends AbstractServiceDaemon implements
     }
 
     public void setIpInterfaceDao(IpInterfaceDao ifSvcDao) {
-        m_ifSvcDao = ifSvcDao;
+        m_ifaceDao = ifSvcDao;
     }
 
     private IpInterfaceDao getIpInterfaceDao() {
-        return m_ifSvcDao;
+        return m_ifaceDao;
     }
 
     public void setTransactionTemplate(TransactionTemplate transTemplate) {

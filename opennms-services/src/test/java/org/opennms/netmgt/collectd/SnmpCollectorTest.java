@@ -40,6 +40,7 @@ import java.util.LinkedList;
 
 import junit.framework.TestCase;
 
+import org.easymock.EasyMock;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.mock.snmp.MockSnmpAgent;
@@ -51,6 +52,7 @@ import org.opennms.netmgt.config.SnmpPeerFactory;
 import org.opennms.netmgt.config.collectd.Filter;
 import org.opennms.netmgt.config.collectd.Package;
 import org.opennms.netmgt.config.collectd.Service;
+import org.opennms.netmgt.dao.IpInterfaceDao;
 import org.opennms.netmgt.dao.support.RrdTestUtils;
 import org.opennms.netmgt.mock.MockDatabase;
 import org.opennms.netmgt.mock.MockNetwork;
@@ -63,6 +65,9 @@ import org.opennms.test.FileAnticipator;
 import org.opennms.test.mock.MockLogAppender;
 import org.opennms.test.mock.MockUtil;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class SnmpCollectorTest extends TestCase {
     private SnmpCollector m_snmpCollector;
@@ -72,6 +77,8 @@ public class SnmpCollectorTest extends TestCase {
     private FileAnticipator m_fileAnticipator;
 
     private File m_snmpRrdDirectory;
+
+    private PlatformTransactionManager m_transMgr;
 
     @Override
     protected void setUp() throws Exception {
@@ -89,6 +96,8 @@ public class SnmpCollectorTest extends TestCase {
         m_db.populate(m_network);
 
         DataSourceFactory.setInstance(m_db);
+        
+        m_transMgr = new DataSourceTransactionManager(m_db);
         
         m_fileAnticipator = new FileAnticipator();
     }
@@ -137,6 +146,7 @@ public class SnmpCollectorTest extends TestCase {
         node.setId(new Integer(1));
         node.setSysObjectId(".1.3.6.1.4.1.1588.2.1.1.1");
         OnmsIpInterface iface = new OnmsIpInterface("127.0.0.1", node);
+        iface.setId(27);
 
         Collection outageCalendars = new LinkedList();
 
@@ -154,7 +164,7 @@ public class SnmpCollectorTest extends TestCase {
                                                                    outageCalendars,
                                                                    m_snmpCollector);
 
-        CollectionAgent agent = new CollectionAgent(iface);
+        CollectionAgent agent = getCollectionAgent(iface);
         
         File nodeDir = m_fileAnticipator.expecting(getSnmpRrdDirectory(), "1");
         for (String file : new String[] { "tcpActiveOpens", "tcpAttemptFails", "tcpCurrEstab",
@@ -169,6 +179,14 @@ public class SnmpCollectorTest extends TestCase {
         
         // Wait for any RRD writes to finish up
         Thread.sleep(1000);
+    }
+
+    private CollectionAgent getCollectionAgent(OnmsIpInterface iface) {
+        IpInterfaceDao ifDao = EasyMock.createMock(IpInterfaceDao.class);
+        EasyMock.expect(ifDao.get(iface.getId())).andReturn(iface).anyTimes();
+        EasyMock.replay(ifDao);
+        CollectionAgent agent = DefaultCollectionAgent.create(iface.getId(), ifDao, m_transMgr);
+        return agent;
     }
 
     public void testBrocadeCollect() throws Exception {
@@ -190,6 +208,7 @@ public class SnmpCollectorTest extends TestCase {
         node.setId(new Integer(1));
         node.setSysObjectId(".1.3.6.1.4.1.1588.2.1.1.1");
         OnmsIpInterface iface = new OnmsIpInterface("127.0.0.1", node);
+        iface.setId(27);
 
         Collection outageCalendars = new LinkedList();
 
@@ -207,7 +226,7 @@ public class SnmpCollectorTest extends TestCase {
                                                                    outageCalendars,
                                                                    m_snmpCollector);
 
-        CollectionAgent agent = new CollectionAgent(iface);
+        CollectionAgent agent = getCollectionAgent(iface);
         
         File nodeDir = m_fileAnticipator.expecting(getSnmpRrdDirectory(), "1");
         File brocadeDir = m_fileAnticipator.expecting(nodeDir, "brocadeFCPortIndex");

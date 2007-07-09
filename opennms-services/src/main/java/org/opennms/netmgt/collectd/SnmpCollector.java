@@ -350,7 +350,7 @@ public class SnmpCollector implements ServiceCollector {
      *            Network interface to be released.
      */
     public void release(CollectionAgent agent) {
-        // Nothing to release...
+        agent.setAttribute("SNMP_COLLECTION", null);
     }
 
     /**
@@ -367,13 +367,11 @@ public class SnmpCollector implements ServiceCollector {
     public int collect(CollectionAgent agent, EventProxy eventProxy, Map<String, String> parameters) {
         try {
 
-
-            final ForceRescanState forceRescanState = new ForceRescanState(agent, eventProxy);
             final ServiceParameters params = new ServiceParameters(parameters);
             params.logIfAliasConfig();
-
             OnmsSnmpCollection snmpCollection = new OnmsSnmpCollection(agent, params);
 
+            final ForceRescanState forceRescanState = new ForceRescanState(agent, eventProxy);
 
             CollectionSet collectionSet = snmpCollection.createCollectionSet(agent);
             if (!collectionSet.hasDataToCollect()) {
@@ -393,6 +391,8 @@ public class SnmpCollector implements ServiceCollector {
         } catch (CollectionError e) {
             return e.reportError();
         } catch (Throwable t) {
+            t.printStackTrace();
+            log().error("received Throwable: " + t, t);
             return this.unexpected(agent, t);
         }
     }

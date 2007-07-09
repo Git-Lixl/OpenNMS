@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms</groupId>
   <artifactId>opennms</artifactId>
-  <version>1.3.4-SNAPSHOT</version>
+  <version>1.3.6-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>OpenNMS</name>
   <url>http://opennms.org</url>
@@ -411,6 +411,9 @@ opennms.home = ${opennms.home}
     <plugins>
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <use>false</use>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -924,6 +927,18 @@ opennms.home = ${opennms.home}
         <build.postgresql.compiler.arg>-I/usr/local/include</build.postgresql.compiler.arg>
         <build.postgresql.include.dir>/usr/local/include/postgresql/server</build.postgresql.include.dir>
       </properties>
+    </profile>
+
+    <profile>
+      <id>toplevel-tagging</id>
+      <activation>
+        <property>
+          <name>tagging</name>
+        </property>
+      </activation>
+      <modules>
+        <module>opennms-tools</module>
+      </modules>
     </profile>
 
   </profiles>

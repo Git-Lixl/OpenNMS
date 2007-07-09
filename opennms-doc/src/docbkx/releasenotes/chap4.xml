@@ -24,8 +24,8 @@
 
     <bridgehead>CentOS 3, CentOS 4 and CentOS 5</bridgehead>
 
-    <bridgehead>Fedora Core 4, Fedora Core 5 and Fedora Core 6 (including 64
-    bit).</bridgehead>
+    <bridgehead>Fedora Core 4, Fedora Core 5, Fedora Core 6 and Fedora Core 7
+    (including 64 bit).</bridgehead>
 
     <bridgehead>Solaris 10 on x86 and SPARC</bridgehead>
 
@@ -68,7 +68,8 @@
     PostgreSQL to run with larger buffers.</para>
 
     <para>There are details for configuring the shared memory segments on
-    <ulink url="http://wiki.finkproject.org/index.php/Shared_Memory_Regions_on_Darwin">the
+    <ulink
+    url="http://wiki.finkproject.org/index.php/Shared_Memory_Regions_on_Darwin">the
     Fink wiki</ulink>.</para>
   </section>
 
