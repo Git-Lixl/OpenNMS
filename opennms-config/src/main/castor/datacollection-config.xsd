@@ -286,6 +286,20 @@
           </restriction>
         </simpleType>
       </attribute>
+      
+      <attribute name="excludeIfType" use="optional">
+        <annotation>
+          <documentation>Interface types to exclude from collection. Used
+          only when ifType="all". Supports individual ifType values or
+          comma-separated list of ifType values.</documentation>
+        </annotation>
+
+        <simpleType>
+          <restriction base="string">
+            <pattern value="^((\d+,)*\d+)$"/>
+          </restriction>
+        </simpleType>
+      </attribute>      
     </complexType>
   </element>
 

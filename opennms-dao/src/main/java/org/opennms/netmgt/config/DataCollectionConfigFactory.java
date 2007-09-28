@@ -541,6 +541,11 @@ public final class DataCollectionConfigFactory implements DataCollectionConfig {
         // automatically be added.
         String ifTypeStr = String.valueOf(ifType);
         String groupIfType = group.getIfType();
+        String groupExcludeIfType = group.getExcludeIfType();
+        
+        if (groupExcludeIfType == null) {
+        	groupExcludeIfType = "";
+        }
 
         boolean addGroupObjects = false;
         if (ifType == NODE_ATTRIBUTES) {
@@ -548,72 +553,39 @@ public final class DataCollectionConfigFactory implements DataCollectionConfig {
                 addGroupObjects = true;
             }
         } else {
-            if (groupIfType.equals("all")) {
+        	// Split this check into two sub-cases. If no
+        	// "excludeIfType" attribute is present, then just
+        	// include every group regardless of its ifType...
+            if ( (groupIfType.equals("all")) && (groupExcludeIfType.equals("")) ) {
                 addGroupObjects = true;
+            } else if ( (groupIfType.equals("all")) && (!groupExcludeIfType.equals("")) ) {
+            	// ... but if an "excludeIfType" attribute is
+            	// present, check just that the present interface's
+            	// ifType is not in the excluded list.
+            	String[] excludeIfTypes = groupExcludeIfType.split(",");
+            	addGroupObjects = true;
+            	for (String excludeType : excludeIfTypes) {
+            		if (ifTypeStr.equals(excludeType)) {
+            			addGroupObjects = false;
+            			break;
+            		}
+            	}
             } else if (groupIfType.equals("ignore")) {
                 // Do nothing
             } else if (ifType == ALL_IF_ATTRIBUTES) {
                 addGroupObjects = true;
             } else {
-                // First determine if the group's ifType value contains
-                // a single type value or a list of values. In the case
-                // of a list the ifType values will be delimited by commas.
-                boolean isList = false;
-                if (groupIfType.indexOf(',') != -1)
-                    isList = true;
-
-                // Next compare the provided ifType parameter with the
-                // group's ifType value to determine if the group's OIDs
-                // should be added to the MIB object list.
-                //
-                // If the group ifType value is a single value then only
-                // a simple comparison is needed to see if there is an
-                // exact match.
-                //
-                // In the case of the group ifType value being a list
-                // of ifType values it is more complicated...each comma
-                // delimited substring which starts with the provided
-                // ifType parm must be extracted and compared until an
-                // EXACT match is found..
-                if (!isList) {
-                    if (ifTypeStr.equals(groupIfType))
-                        addGroupObjects = true;
-                } else {
-                    int tmpIndex = groupIfType.indexOf(ifTypeStr);
-                    while (tmpIndex != -1) {
-                        groupIfType = groupIfType.substring(tmpIndex);
-
-                        // get substring starting at tmpIndex to
-                        // either the end of the groupIfType string
-                        // or to the first comma after tmpIndex
-                        int nextComma = groupIfType.indexOf(',');
-
-                        String parsedType = null;
-                        if (nextComma == -1) // No comma, this is last type
-                                                // value
-                        {
-                            parsedType = groupIfType;
-                        } else // Found comma
-                        {
-                            parsedType = groupIfType.substring(0, nextComma);
-                        }
-                        if (ifTypeStr.equals(parsedType)) {
-                            addGroupObjects = true;
-                            break;
-                        }
-
-                        // No more commas indicates no more ifType values to
-                        // compare...we're done
-                        if (nextComma == -1)
-                            break;
-
-                        // Get next substring and reset tmpIndex to
-                        // once again point to the first occurrence of
-                        // the ifType string parm.
-                        groupIfType = groupIfType.substring(nextComma + 1);
-                        tmpIndex = groupIfType.indexOf(ifTypeStr);
-                    }
-                }
+            	// We used to reimplement String.split(String) here,
+            	// not sure why.  The new "else" block is much shorter
+            	// and comprehensible.
+            	String[] includeIfTypes = groupIfType.split(",");
+            	addGroupObjects = false;
+            	for (String includeType : includeIfTypes) {
+            		if (ifTypeStr.equals(includeType)) {
+            			addGroupObjects = true;
+            			break;
+            		}
+            	}
             }
         }
 
