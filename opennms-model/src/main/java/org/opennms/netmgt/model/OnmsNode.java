@@ -62,6 +62,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.opennms.netmgt.model.OnmsIpInterface.CollectionType;
 import org.springframework.core.style.ToStringCreator;
@@ -74,6 +75,7 @@ import org.springframework.core.style.ToStringCreator;
  * @hibernate.class table="node"
  *     
 */
+@XmlRootElement
 @Entity
 @Table(name="node")
 @SecondaryTable(name="pathOutage")
