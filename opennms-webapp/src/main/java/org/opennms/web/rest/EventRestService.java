@@ -1,14 +1,18 @@
 package org.opennms.web.rest;
 
+import java.util.Date;
+
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
-import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 import org.opennms.netmgt.dao.EventDao;
 import org.opennms.netmgt.model.OnmsCriteria;
@@ -32,13 +36,16 @@ public class EventRestService {
     @Context 
     UriInfo m_uriInfo;
 
+    @Context
+    SecurityContext m_securityContext;
     
     @GET
     @Produces("text/xml")
     @Path("{eventId}")
     @Transactional
     public OnmsEvent getEvent(@PathParam("eventId") String eventId) {
-        return m_eventDao.get(new Integer(eventId));
+    	OnmsEvent result= m_eventDao.get(new Integer(eventId));
+    	return result;
     }
     
     @GET
@@ -73,6 +80,24 @@ public class EventRestService {
     		criteria.add(Restrictions.eq(key, thisValue));
     	}
         return new OnmsEventCollection(m_eventDao.findMatching(criteria));
+    }
+    
+    @PUT
+    @Path("{eventId}")
+    @Transactional
+    public void updateEvent(@PathParam("eventId") String eventId, @FormParam("ack") Boolean ack) {
+    	OnmsEvent event=m_eventDao.get(new Integer(eventId));
+    	if(ack==null) {
+    		throw new  IllegalArgumentException("Must supply the 'ack' parameter, set to either 'true' or 'false'");
+    	}
+       	if(ack) {
+    		event.setEventAckTime(new Date());
+    		event.setEventAckUser(m_securityContext.getUserPrincipal().getName());
+    	} else {
+    		event.setEventAckTime(null);
+    		event.setEventAckUser(null);
+    	}
+    	m_eventDao.save(event);
     }
 }
 
