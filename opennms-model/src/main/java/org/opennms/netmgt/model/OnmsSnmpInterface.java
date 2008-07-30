@@ -367,7 +367,6 @@ public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
         return label;
     }
 
-    @XmlElement(name = "label")
     public String computeLabelForRRD() {
         String name = computeNameForRRD();
         String physAddrForRRD = computePhysAddrForRRD();
