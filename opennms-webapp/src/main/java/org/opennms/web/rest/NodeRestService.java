@@ -13,14 +13,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.log4j.Category;
 import org.hibernate.criterion.Restrictions;
+import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.dao.NodeDao;
 import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsNodeList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sun.jersey.api.core.ResourceContext;
 import com.sun.jersey.spi.resource.PerRequest;
 
 @Component
@@ -36,18 +42,15 @@ public class NodeRestService {
     
     @Context 
     UriInfo m_uriInfo;
+    
+    @Context
+    ResourceContext m_context;
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public OnmsNodeList getNodes() {
         OnmsCriteria criteria = getQueryFilters();
         return new OnmsNodeList(m_nodeDao.findMatching(criteria));
-    }
-    
-    @POST
-    @Consumes(MediaType.APPLICATION_XML)
-    public void addNode(OnmsNode node) {
-        m_nodeDao.save(node);
     }
 
     @GET
@@ -56,26 +59,41 @@ public class NodeRestService {
     public OnmsNode getNode(@PathParam("nodeId") int nodeId) {
         return m_nodeDao.get(nodeId);
     }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_XML)
+    @Transactional(readOnly=false)
+    public void addNode(OnmsNode node) {
+        log().debug("addNode: Adding node " + node);
+        if (node != null)
+            m_nodeDao.save(node);
+    }
     
     @PUT
     @Consumes(MediaType.APPLICATION_XML)
     @Path("{nodeId}")
+    @Transactional(readOnly=false)
     public void updateNode(OnmsNode node, @PathParam("nodeId") int nodeId) {
-        if (nodeId == node.getId())
+        if (nodeId == node.getId()) {
+            log().debug("updateNode: updating node " + nodeId);
             m_nodeDao.saveOrUpdate(node);
+        } else {
+            log().warn("updateNode: invalid nodeId for node " + node);
+        }
     }
     
     @DELETE
-    @Consumes(MediaType.APPLICATION_XML)
     @Path("{nodeId}")
+    @Transactional(readOnly=false)
     public void deleteNode(@PathParam("nodeId") int nodeId) {
+        log().debug("deleteNode: deleting node " + nodeId);
         OnmsNode node = m_nodeDao.get(nodeId);
         m_nodeDao.delete(node);
     }
 
     @Path("{nodeId}/ipinterfaces")
-    public OnmsIpInterfaceResource getIpInterfaceResource(@PathParam("nodeId") int nodeId) {
-        return new OnmsIpInterfaceResource(m_nodeDao.load(nodeId));
+    public OnmsIpInterfaceResource getIpInterfaceResource() {
+        return m_context.getResource(OnmsIpInterfaceResource.class);
     }
 
     @Path("{nodeId}/snmpinterfaces")
@@ -105,6 +123,10 @@ public class NodeRestService {
         }
         
         return criteria;
+    }
+    
+    protected Category log() {
+        return ThreadCategory.getInstance(getClass());
     }
 
 }

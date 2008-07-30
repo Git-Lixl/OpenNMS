@@ -60,7 +60,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.springframework.core.style.ToStringCreator;
 
-@XmlRootElement
+@XmlRootElement(name = "ipInterface")
 @Entity
 @Table(name="ipInterface")
 public class OnmsIpInterface extends OnmsEntity implements Serializable {
@@ -318,7 +318,7 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
     /**
      * The SnmpInterface associated with this interface if any
      */
-    @XmlElement(name = "OnmsSnmpInterface")
+    @XmlElement(name = "snmpInterface")
     @ManyToOne(optional=true, fetch=FetchType.LAZY)
     @JoinColumn(name="snmpInterfaceId")
     public OnmsSnmpInterface getSnmpInterface() {

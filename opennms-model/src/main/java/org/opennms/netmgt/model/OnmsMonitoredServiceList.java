@@ -7,8 +7,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-
-@XmlRootElement
+@XmlRootElement(name = "services")
 public class OnmsMonitoredServiceList extends LinkedList<OnmsMonitoredService> {
 
     private static final long serialVersionUID = 8031737923157780179L;
@@ -21,7 +20,7 @@ public class OnmsMonitoredServiceList extends LinkedList<OnmsMonitoredService> {
         super(c);
     }
 
-    @XmlElement(name = "onmsMonitoredService")
+    @XmlElement(name = "service")
     public List<OnmsMonitoredService> getServices() {
         return this;
     }

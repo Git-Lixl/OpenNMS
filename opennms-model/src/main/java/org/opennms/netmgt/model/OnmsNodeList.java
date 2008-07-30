@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 
-@XmlRootElement
+@XmlRootElement(name = "nodes")
 public class OnmsNodeList extends LinkedList<OnmsNode> {
 
     private static final long serialVersionUID = 8031737923157780179L;
@@ -21,7 +21,7 @@ public class OnmsNodeList extends LinkedList<OnmsNode> {
         super(c);
     }
 
-    @XmlElement(name = "onmsNode")
+    @XmlElement(name = "node")
     public List<OnmsNode> getNodes() {
         return this;
     }

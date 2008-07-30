@@ -59,7 +59,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.hibernate.annotations.Where;
 import org.springframework.core.style.ToStringCreator;
 
-@XmlRootElement
+@XmlRootElement(name = "service")
 @Entity
 @Table(name="ifServices")
 public class OnmsMonitoredService extends OnmsEntity implements Serializable,

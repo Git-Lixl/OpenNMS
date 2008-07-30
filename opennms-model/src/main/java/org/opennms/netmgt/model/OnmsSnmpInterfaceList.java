@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 
-@XmlRootElement
+@XmlRootElement(name = "snmpInterfaces")
 public class OnmsSnmpInterfaceList extends LinkedList<OnmsSnmpInterface> {
 
     private static final long serialVersionUID = 1123252152117491694L;
@@ -21,7 +21,7 @@ public class OnmsSnmpInterfaceList extends LinkedList<OnmsSnmpInterface> {
         super(c);
     }
 
-    @XmlElement(name = "onmsSnmpInterface")
+    @XmlElement(name = "snmpInterface")
     public List<OnmsSnmpInterface> getInterfaces() {
         return this;
     }

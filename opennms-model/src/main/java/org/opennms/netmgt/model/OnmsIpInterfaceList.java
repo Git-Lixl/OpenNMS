@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 
-@XmlRootElement
+@XmlRootElement(name = "ipInterfaces")
 public class OnmsIpInterfaceList extends LinkedList<OnmsIpInterface> {
 
     private static final long serialVersionUID = 1123252152117491694L;
@@ -21,7 +21,7 @@ public class OnmsIpInterfaceList extends LinkedList<OnmsIpInterface> {
         super(c);
     }
 
-    @XmlElement(name = "onmsIpInterface")
+    @XmlElement(name = "ipInterface")
     public List<OnmsIpInterface> getInterfaces() {
         return this;
     }

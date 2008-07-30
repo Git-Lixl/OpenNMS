@@ -51,7 +51,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -61,7 +60,7 @@ import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.model.OnmsIpInterface.CollectionType;
 import org.springframework.core.style.ToStringCreator;
 
-@XmlRootElement
+@XmlRootElement(name = "snmpInterface")
 @Entity
 @Table(name = "snmpInterface")
 public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
