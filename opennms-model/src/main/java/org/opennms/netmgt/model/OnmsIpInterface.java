@@ -52,6 +52,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -192,10 +194,17 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
      * Unique identifier for ipInterface.
      */
     @Id
+    @XmlTransient
     @SequenceGenerator(name="opennmsSequence", sequenceName="opennmsNxtId")
     @GeneratedValue(generator="opennmsSequence")    
     public Integer getId() {
         return m_id;
+    }
+    
+    @XmlID
+    @Transient
+    public String getInterfaceId() {
+        return getId().toString();
     }
 
     public void setId(Integer id) {
@@ -308,7 +317,7 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
     /**
      * The SnmpInterface associated with this interface if any
      */
-    @XmlTransient
+    @XmlElement(name = "OnmsSnmpInterface")
     @ManyToOne(optional=true, fetch=FetchType.LAZY)
     @JoinColumn(name="snmpInterfaceId")
     public OnmsSnmpInterface getSnmpInterface() {
