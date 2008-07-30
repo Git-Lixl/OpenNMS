@@ -52,9 +52,13 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.xml.bind.annotation.XmlIDREF;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.springframework.core.style.ToStringCreator;
 
+@XmlRootElement
 @Entity
 @Table(name="events")
 public class OnmsEvent extends OnmsEntity implements Serializable {
@@ -314,6 +318,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 		m_ipAddr = ipaddr;
 	}
 
+	@XmlTransient
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="eventDpName", nullable=false)
 	public OnmsDistPoller getDistPoller() {
@@ -559,6 +564,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 		m_eventAckTime = eventacktime;
 	}
 
+	@XmlTransient
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="alarmId")
 	public OnmsAlarm getAlarm() {
@@ -569,6 +575,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 		m_alarm = alarm;
 	}
 
+	@XmlIDREF
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="nodeId")
 	public OnmsNode getNode() {
@@ -579,6 +586,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 		m_node = node;
 	}
 
+	@XmlTransient
 	@OneToMany(mappedBy="event", fetch=FetchType.LAZY)
 	public Set<OnmsNotification> getNotifications() {
 		return m_notifications;
@@ -588,6 +596,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 		m_notifications = notifications;
 	}
 
+	@XmlTransient
 	@OneToMany(mappedBy="serviceRegainedEvent", fetch=FetchType.LAZY)
 	public Set<OnmsOutage> getAssociatedServiceRegainedOutages() {
 		return m_associatedServiceRegainedOutages;
@@ -597,6 +606,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 		m_associatedServiceRegainedOutages = outagesBySvcregainedeventid;
 	}
 
+	@XmlTransient
 	@OneToMany(mappedBy="serviceLostEvent", fetch=FetchType.LAZY)
 	public Set<OnmsOutage> getAssociatedServiceLostOutages() {
 		return m_associatedServiceLostOutages;

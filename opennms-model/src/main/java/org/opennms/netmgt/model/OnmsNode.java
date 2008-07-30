@@ -62,7 +62,6 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -447,8 +446,8 @@ public class OnmsNode extends OnmsEntity implements Serializable,
      * The interfaces on this node
      * 
      */
+    @XmlTransient
     @OneToMany(mappedBy="node")
-    @XmlElement(name = "OnmsIpInterface")
     @org.hibernate.annotations.Cascade( {
         org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN })

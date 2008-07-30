@@ -52,11 +52,14 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlIDREF;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.Where;
 import org.springframework.core.style.ToStringCreator;
 
-
+@XmlRootElement
 @Entity
 @Table(name="ifServices")
 public class OnmsMonitoredService extends OnmsEntity implements Serializable,
@@ -190,6 +193,7 @@ Comparable<OnmsMonitoredService> {
         m_notify = notify;
     }
 
+    @XmlIDREF
     @ManyToOne(optional=false, fetch=FetchType.LAZY)
     @JoinColumn(name="ipInterfaceId")
     public OnmsIpInterface getIpInterface() {
@@ -255,6 +259,7 @@ Comparable<OnmsMonitoredService> {
         return down;
     }
 
+    @XmlTransient
     @OneToMany(mappedBy="monitoredService", fetch=FetchType.LAZY)
     @Where(clause="ifRegainedService is null")
     public Set<OnmsOutage> getCurrentOutages() {

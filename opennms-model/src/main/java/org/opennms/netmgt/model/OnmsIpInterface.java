@@ -55,11 +55,12 @@ import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.springframework.core.style.ToStringCreator;
 
-
+@XmlRootElement
 @Entity
 @Table(name="ipInterface")
 public class OnmsIpInterface extends OnmsEntity implements Serializable {
