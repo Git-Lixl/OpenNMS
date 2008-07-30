@@ -338,6 +338,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 		m_eventSnmpHost = eventsnmphost;
 	}
 
+	@XmlTransient
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="serviceId", nullable=true)
 	public OnmsServiceType getServiceType() {
