@@ -4,8 +4,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import org.opennms.netmgt.model.OnmsMonitoredService;
+import org.opennms.netmgt.model.OnmsMonitoredServiceList;
 import org.opennms.netmgt.model.OnmsNode;
 
 public class OnmsMonitoredServiceResource {
@@ -19,13 +21,13 @@ public class OnmsMonitoredServiceResource {
     }
     
     @GET
-    @Produces("text/xml")
+    @Produces(MediaType.APPLICATION_XML)
     public OnmsMonitoredServiceList getServices() {
         return new OnmsMonitoredServiceList(m_node.getIpInterfaceByIpAddress(m_ipAddress).getMonitoredServices());
     }
 
     @GET
-    @Produces("text/xml")
+    @Produces(MediaType.APPLICATION_XML)
     @Path("{service}")
     public OnmsMonitoredService getService(@PathParam("service") String service) {
         return m_node.getIpInterfaceByIpAddress(m_ipAddress).getMonitoredServiceByServiceType(service);

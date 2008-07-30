@@ -51,7 +51,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.log4j.Category;
 import org.opennms.core.utils.AlphaNumeric;
@@ -59,6 +61,7 @@ import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.model.OnmsIpInterface.CollectionType;
 import org.springframework.core.style.ToStringCreator;
 
+@XmlRootElement
 @Entity
 @Table(name = "snmpInterface")
 public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
@@ -364,6 +367,7 @@ public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
         return label;
     }
 
+    @XmlElement(name = "label")
     public String computeLabelForRRD() {
         String name = computeNameForRRD();
         String physAddrForRRD = computePhysAddrForRRD();

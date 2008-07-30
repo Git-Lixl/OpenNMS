@@ -1,4 +1,4 @@
-package org.opennms.web.rest;
+package org.opennms.netmgt.model;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -7,29 +7,28 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.opennms.netmgt.model.OnmsEvent;
 
 @XmlRootElement
-public class OnmsEventList extends LinkedList<OnmsEvent> {
+public class OnmsNodeList extends LinkedList<OnmsNode> {
 
     private static final long serialVersionUID = 8031737923157780179L;
     
-    public OnmsEventList() {
+    public OnmsNodeList() {
         super();
     }
 
-    public OnmsEventList(Collection<? extends OnmsEvent> c) {
+    public OnmsNodeList(Collection<? extends OnmsNode> c) {
         super(c);
     }
 
-    @XmlElement(name = "event")
-    public List<OnmsEvent> getEvents() {
+    @XmlElement(name = "onmsNode")
+    public List<OnmsNode> getNodes() {
         return this;
     }
     
-    public void setEvents(List<OnmsEvent> events) {
+    public void setNodes(List<OnmsNode> nodes) {
         clear();
-        addAll(events);
+        addAll(nodes);
     }
 
 }
