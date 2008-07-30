@@ -62,6 +62,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.opennms.netmgt.model.OnmsIpInterface.CollectionType;
@@ -172,6 +173,12 @@ public class OnmsNode extends OnmsEntity implements Serializable,
     @GeneratedValue(generator="nodeSequence")
     public Integer getId() {
         return m_id;
+    }
+    
+    @XmlID
+    @Transient
+    public String getNodeId() {
+        return getId().toString();
     }
 
     public void setId(Integer nodeid) {

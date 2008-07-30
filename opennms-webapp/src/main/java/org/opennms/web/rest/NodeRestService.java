@@ -10,13 +10,14 @@ import org.opennms.netmgt.model.OnmsNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sun.jersey.spi.resource.PerRequest;
 
 @Component
 @PerRequest
 @Scope("prototype")
-@Path("nodes/")
+@Path("node/")
 public class NodeRestService {
     
     @Autowired
@@ -25,6 +26,7 @@ public class NodeRestService {
     @GET
     @Produces("text/xml")
     @Path("{nodeId}")
+    @Transactional
     public OnmsNode getNode(@PathParam("nodeId") String nodeId) {
         return m_nodeDao.get(new Integer(nodeId));
     }
