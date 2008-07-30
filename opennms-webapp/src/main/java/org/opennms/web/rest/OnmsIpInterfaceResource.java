@@ -4,9 +4,11 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Category;
@@ -22,6 +24,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sun.jersey.api.core.ResourceContext;
 import com.sun.jersey.spi.resource.PerRequest;
 
 @Component
@@ -34,6 +37,9 @@ public class OnmsIpInterfaceResource {
 
     @Autowired
     private IpInterfaceDao m_ipInterfaceDao;
+
+    @Context
+    ResourceContext m_context;
 
     @GET
     @Produces(MediaType.APPLICATION_XML)
@@ -59,22 +65,34 @@ public class OnmsIpInterfaceResource {
         OnmsNode node = m_nodeDao.get(nodeId);
         node.addIpInterface(ipInterface);
         m_ipInterfaceDao.save(ipInterface);
-        //m_nodeDao.saveOrUpdate(node);
     }
     
+    @PUT
+    @Consumes(MediaType.APPLICATION_XML)
+    @Path("{ipAddress}")
+    @Transactional(readOnly=false)
+    public void updateIpInterface(OnmsIpInterface ipInterface, @PathParam("ipAddress") String ipAddress) {
+        if (ipInterface.getIpAddress().equals(ipAddress)) {
+            log().debug("updateIpInterface: updating ipInterface " + ipInterface);
+            m_ipInterfaceDao.saveOrUpdate(ipInterface);
+        } else {
+            log().warn("updateIpInterface: invalid IP Address for ipInterface " + ipInterface);
+        }
+    }
+
     @DELETE
+    @Path("{ipAddress}")
     @Transactional(readOnly=false)
     public void deleteIpInterface(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress) {
-        log().debug("deleteIpInterface: de;eting interface " + ipAddress + " from node " + nodeId);
+        log().debug("deleteIpInterface: deleting interface " + ipAddress + " from node " + nodeId);
         OnmsNode node = m_nodeDao.get(nodeId);
         OnmsIpInterface intf = node.getIpInterfaceByIpAddress(ipAddress);
         m_ipInterfaceDao.delete(intf);
     }
     
     @Path("{ipAddress}/services")
-    public OnmsMonitoredServiceResource getServices(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress) {
-        OnmsNode node = m_nodeDao.get(nodeId);
-        return new OnmsMonitoredServiceResource(node, ipAddress);
+    public OnmsMonitoredServiceResource getServices() {
+        return m_context.getResource(OnmsMonitoredServiceResource.class);
     }
 
     protected Category log() {

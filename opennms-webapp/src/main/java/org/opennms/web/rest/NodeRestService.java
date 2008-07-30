@@ -97,8 +97,8 @@ public class NodeRestService {
     }
 
     @Path("{nodeId}/snmpinterfaces")
-    public OnmsSnmpInterfaceResource getSnmpInterfaceResource(@PathParam("nodeId") int nodeId) {
-        return new OnmsSnmpInterfaceResource(m_nodeDao.load(nodeId));
+    public OnmsSnmpInterfaceResource getSnmpInterfaceResource() {
+        return m_context.getResource(OnmsSnmpInterfaceResource.class);
     }
     
     private OnmsCriteria getQueryFilters() {
