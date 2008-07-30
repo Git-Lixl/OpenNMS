@@ -52,6 +52,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlIDREF;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.springframework.core.style.ToStringCreator;
 
@@ -277,6 +279,7 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
 
     @ManyToOne(optional=false, fetch=FetchType.LAZY)
     @JoinColumn(name="nodeId")
+    @XmlIDREF
     public OnmsNode getNode() {
         return m_node;
     }
@@ -288,6 +291,7 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
     /** 
      * The services on this node
      */
+    @XmlTransient
     @OneToMany(mappedBy="ipInterface")
     @org.hibernate.annotations.Cascade( {
         org.hibernate.annotations.CascadeType.ALL,
@@ -304,6 +308,7 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
     /**
      * The SnmpInterface associated with this interface if any
      */
+    @XmlTransient
     @ManyToOne(optional=true, fetch=FetchType.LAZY)
     @JoinColumn(name="snmpInterfaceId")
     public OnmsSnmpInterface getSnmpInterface() {
