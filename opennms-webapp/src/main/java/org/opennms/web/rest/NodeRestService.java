@@ -14,13 +14,11 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Category;
-import org.hibernate.criterion.Restrictions;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.dao.NodeDao;
 import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsNodeList;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -33,10 +31,10 @@ import com.sun.jersey.spi.resource.PerRequest;
 @PerRequest
 @Scope("prototype")
 @Path("nodes")
-public class NodeRestService {
+public class NodeRestService extends OnmsRestService {
     
-    private static int LIMIT = 10;
-    
+	private static final int LIMIT=10;
+	
     @Autowired
     private NodeDao m_nodeDao;
     
@@ -105,22 +103,8 @@ public class NodeRestService {
         MultivaluedMap<String,String> params = m_uriInfo.getQueryParameters();
         OnmsCriteria criteria = new OnmsCriteria(OnmsNode.class);
 
-        int limit = LIMIT;
-        if(params.containsKey("limit")) {
-            limit = Integer.parseInt(params.getFirst("limit"));
-            params.remove("limit");
-        }
-        criteria.setMaxResults(limit);
-
-        if(params.containsKey("offset")) {
-            criteria.setFirstResult(Integer.parseInt(params.getFirst("offset")));
-            params.remove("offset");
-        }
-
-        for(String key: params.keySet()) {
-            String thisValue = params.getFirst(key);
-            criteria.add(Restrictions.eq(key, thisValue));
-        }
+    	setLimitOffset(params, criteria, LIMIT);
+    	addFiltersToCriteria(params, criteria);
         
         return criteria;
     }

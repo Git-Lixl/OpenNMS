@@ -97,7 +97,7 @@ public class EventRestService extends OnmsRestService {
 		MultivaluedMap<java.lang.String, java.lang.String> params = m_uriInfo
 				.getQueryParameters();
 		OnmsCriteria criteria = new OnmsCriteria(OnmsEvent.class);
-		checkLimitOffset(params, criteria);
+		setLimitOffset(params, criteria);
 		addFiltersToCriteria(params, criteria);
 		return new OnmsEventCollection(m_eventDao.findMatching(criteria));
 	}

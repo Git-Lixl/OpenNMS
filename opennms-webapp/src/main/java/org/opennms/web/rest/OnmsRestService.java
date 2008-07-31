@@ -20,8 +20,12 @@ public class OnmsRestService {
 		super();
 	}
 
-	protected void checkLimitOffset(MultivaluedMap<java.lang.String, java.lang.String> params, OnmsCriteria criteria) {
-		int limit=10; //Default limit to 10
+	protected void setLimitOffset(MultivaluedMap<java.lang.String, java.lang.String> params, OnmsCriteria criteria) {
+		setLimitOffset(params, criteria, 10);  //Default limit is 10
+	}
+	
+	protected void setLimitOffset(MultivaluedMap<java.lang.String, java.lang.String> params, OnmsCriteria criteria, int defaultLimit) {
+		int limit=defaultLimit;
 		if(params.containsKey("limit")) {
 			limit=Integer.parseInt(params.getFirst("limit"));
 			params.remove("limit");
