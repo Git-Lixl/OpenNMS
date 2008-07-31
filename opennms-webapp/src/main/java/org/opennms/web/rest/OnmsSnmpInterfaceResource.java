@@ -86,7 +86,9 @@ public class OnmsSnmpInterfaceResource {
         if (intf == null)
             throwException(Status.BAD_REQUEST, "deleteSnmpInterface: can't find snmp interface with ifIndex " + ifIndex + " for node with id " + nodeId);
         log().debug("deletSnmpInterface: deleting interface with ifIndex " + ifIndex + " from node " + nodeId);
-        m_snmpInterfaceDao.delete(intf);
+        node.getSnmpInterfaces().remove(intf);
+        m_nodeDao.saveOrUpdate(node);
+        // TODO Add important events here
         return Response.ok().build();
     }
     

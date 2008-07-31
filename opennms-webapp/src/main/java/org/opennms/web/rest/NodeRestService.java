@@ -41,7 +41,7 @@ import com.sun.jersey.spi.resource.PerRequest;
 @Path("nodes")
 public class NodeRestService extends OnmsRestService {
     
-	private static final int LIMIT=10;
+    private static final int LIMIT=10;
 	
     @Autowired
     private NodeDao m_nodeDao;

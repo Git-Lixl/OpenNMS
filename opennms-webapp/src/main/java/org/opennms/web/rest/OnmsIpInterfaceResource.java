@@ -116,7 +116,8 @@ public class OnmsIpInterfaceResource {
         if (intf == null)
             throwException(Status.CONFLICT, "deleteIpInterface: can't find interface with ip address " + ipAddress + " for node with id " + nodeId);
         log().debug("deleteIpInterface: deleting interface " + ipAddress + " from node " + nodeId);
-        m_ipInterfaceDao.delete(intf);
+        node.getIpInterfaces().remove(intf);
+        m_nodeDao.save(node);
         Event e = new Event();
         e.setUei(EventConstants.INTERFACE_DELETED_EVENT_UEI);
         e.setNodeid(nodeId);

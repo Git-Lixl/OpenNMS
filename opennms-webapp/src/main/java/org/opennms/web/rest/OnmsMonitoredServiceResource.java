@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
+import org.opennms.netmgt.dao.IpInterfaceDao;
 import org.opennms.netmgt.dao.MonitoredServiceDao;
 import org.opennms.netmgt.dao.NodeDao;
 import org.opennms.netmgt.dao.ServiceTypeDao;
@@ -41,6 +42,9 @@ public class OnmsMonitoredServiceResource {
     
     @Autowired
     private NodeDao m_nodeDao;
+    
+    @Autowired
+    private IpInterfaceDao m_ipInterfaceDao;
     
     @Autowired
     private MonitoredServiceDao m_serviceDao;
@@ -124,11 +128,12 @@ public class OnmsMonitoredServiceResource {
         OnmsIpInterface intf = node.getIpInterfaceByIpAddress(ipAddress);
         if (intf == null)
             throwException(Status.BAD_REQUEST, "deleteService: can't find interface with ip address " + ipAddress + " for node with id " + nodeId);
-        OnmsMonitoredService service = node.getIpInterfaceByIpAddress(ipAddress).getMonitoredServiceByServiceType(serviceName);
+        OnmsMonitoredService service = intf.getMonitoredServiceByServiceType(serviceName);
         if (service == null)
             throwException(Status.CONFLICT, "deleteService: service " + serviceName + " not found on interface " + intf);
         log().debug("deleteService: deleting service " + serviceName + " from node " + nodeId);
-        m_serviceDao.delete(service);
+        intf.getMonitoredServices().remove(service);
+        m_ipInterfaceDao.saveOrUpdate(intf);
         Event e = new Event();
         e.setUei(EventConstants.SERVICE_DELETED_EVENT_UEI);
         e.setNodeid(nodeId);
