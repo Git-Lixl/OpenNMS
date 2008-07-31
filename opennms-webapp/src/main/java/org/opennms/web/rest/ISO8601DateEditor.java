@@ -22,7 +22,7 @@ public class ISO8601DateEditor extends PropertyEditorSupport {
 		Date date=(Date)super.getValue();
 		Calendar cal=new GregorianCalendar();
 		cal.setTime(date);
-		return DatatypeConverter.printDate(cal);
+		return DatatypeConverter.printDateTime(cal);
 	}
 
 	@Override
