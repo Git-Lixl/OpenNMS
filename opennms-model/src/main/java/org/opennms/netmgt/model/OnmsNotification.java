@@ -47,6 +47,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.springframework.core.style.ToStringCreator;
 
@@ -176,6 +178,7 @@ public class OnmsNotification {
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="pageTime")
+   	@XmlJavaTypeAdapter(DateXMLAdapter.class)
     public Date getPageTime() {
         return m_pageTime;
     }
@@ -187,7 +190,8 @@ public class OnmsNotification {
     
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="respondTime")
-    public Date getRespondTime() {
+   	@XmlJavaTypeAdapter(DateXMLAdapter.class)
+   public Date getRespondTime() {
         return m_respondTime;
     }
 
@@ -214,6 +218,7 @@ public class OnmsNotification {
     	m_ipAddress = ipAddress;
     }
 
+    @XmlTransient
     @ManyToOne
     @JoinColumn(name="serviceId")
     public OnmsServiceType getServiceType() {
@@ -235,6 +240,7 @@ public class OnmsNotification {
     }
 
 
+    @XmlTransient
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="eventId", nullable=false)
     public OnmsEvent getEvent() {
@@ -258,6 +264,7 @@ public class OnmsNotification {
         // do nothing as this is a HACK
     }
 
+    @XmlTransient
     @ManyToOne
     @JoinColumn(name="nodeId")
     public OnmsNode getNode() {
@@ -268,6 +275,7 @@ public class OnmsNotification {
         m_node = node;
     }
 
+    @XmlTransient
     @OneToMany(mappedBy="notification", fetch=FetchType.LAZY)
     public Set<OnmsUserNotification> getUsersNotified() {
         return m_usersNotified;

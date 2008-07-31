@@ -1,5 +1,38 @@
+//
+// This file is part of the OpenNMS(R) Application.
+//
+// OpenNMS(R) is Copyright (C) 2006 The OpenNMS Group, Inc.  All rights reserved.
+// OpenNMS(R) is a derivative work, containing both original code, included code and modified
+// code that was published under the GNU General Public License. Copyrights for modified 
+// and included code are below.
+//
+// OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
+//
+// Modifications:
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+//
+// For more information contact:
+// OpenNMS Licensing       <license@opennms.org>
+//     http://www.opennms.org/
+//     http://www.opennms.com/
+//
+
 package org.opennms.web.rest;
 
+import java.text.ParseException;
 import java.util.Date;
 
 import javax.ws.rs.FormParam;
@@ -14,7 +47,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
-import org.hibernate.criterion.Restrictions;
 import org.opennms.netmgt.dao.EventDao;
 import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsEvent;
@@ -30,8 +62,9 @@ import com.sun.jersey.spi.resource.PerRequest;
 @PerRequest
 @Scope("prototype")
 @Path("events")
-public class EventRestService {
-    @Autowired
+public class EventRestService extends OnmsRestService {
+	
+	@Autowired
     private EventDao m_eventDao;
     
     @Context 
@@ -58,47 +91,37 @@ public class EventRestService {
     }
 
     @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    @Transactional
-    public OnmsEventCollection getEvents() {
-        MultivaluedMap<java.lang.String,java.lang.String> params=m_uriInfo.getQueryParameters();
-        OnmsCriteria criteria=new OnmsCriteria(OnmsEvent.class);
+	@Produces( { MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+	@Transactional
+	public OnmsEventCollection getEvents() throws ParseException {
+		MultivaluedMap<java.lang.String, java.lang.String> params = m_uriInfo
+				.getQueryParameters();
+		OnmsCriteria criteria = new OnmsCriteria(OnmsEvent.class);
+		checkLimitOffset(params, criteria);
+		addFiltersToCriteria(params, criteria);
+		return new OnmsEventCollection(m_eventDao.findMatching(criteria));
+	}
 
-        int limit=10; //Default limit to 10
-        if(params.containsKey("limit")) {
-            limit=Integer.parseInt(params.getFirst("limit"));
-            params.remove("limit");
-        }
-        criteria.setMaxResults(limit);
-
-        if(params.containsKey("offset")) {
-            criteria.setFirstResult(Integer.parseInt(params.getFirst("offset")));
-            params.remove("offset");
-        }
-
-        for(String key: params.keySet()) {
-            String thisValue=params.getFirst(key);
-            criteria.add(Restrictions.eq(key, thisValue));
-        }
-        return new OnmsEventCollection(m_eventDao.findMatching(criteria));
-    }
-
-    @PUT
-    @Path("{eventId}")
-    @Transactional
-    public void updateEvent(@PathParam("eventId") String eventId, @FormParam("ack") Boolean ack) {
-        OnmsEvent event=m_eventDao.get(new Integer(eventId));
-        if(ack==null) {
-            throw new  IllegalArgumentException("Must supply the 'ack' parameter, set to either 'true' or 'false'");
-        }
-        if(ack) {
-            event.setEventAckTime(new Date());
-            event.setEventAckUser(m_securityContext.getUserPrincipal().getName());
-        } else {
-            event.setEventAckTime(null);
-            event.setEventAckUser(null);
-        }
-        m_eventDao.save(event);
-    }
+	@PUT
+	@Path("{eventId}")
+	@Transactional
+	public void updateEvent(@PathParam("eventId")
+	String eventId, @FormParam("ack")
+	Boolean ack) {
+		OnmsEvent event = m_eventDao.get(new Integer(eventId));
+		if (ack == null) {
+			throw new IllegalArgumentException(
+					"Must supply the 'ack' parameter, set to either 'true' or 'false'");
+		}
+		if (ack) {
+			event.setEventAckTime(new Date());
+			event.setEventAckUser(m_securityContext.getUserPrincipal()
+					.getName());
+		} else {
+			event.setEventAckTime(null);
+			event.setEventAckUser(null);
+		}
+		m_eventDao.save(event);
+	}
 }
 

@@ -55,6 +55,7 @@ import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.springframework.core.style.ToStringCreator;
 
@@ -283,6 +284,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="eventTime", nullable=false)
+	@XmlJavaTypeAdapter(DateXMLAdapter.class)
 	public Date getEventTime() {
 		return m_eventTime;
 	}
@@ -369,6 +371,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="eventCreateTime", nullable=false)
+	@XmlJavaTypeAdapter(DateXMLAdapter.class)
 	public Date getEventCreateTime() {
 		return m_eventCreateTime;
 	}
@@ -557,6 +560,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="eventAckTime")
+	@XmlJavaTypeAdapter(DateXMLAdapter.class)
 	public Date getEventAckTime() {
 		return m_eventAckTime;
 	}

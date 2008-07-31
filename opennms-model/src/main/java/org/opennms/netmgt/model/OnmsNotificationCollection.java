@@ -8,25 +8,25 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="events")
-public class OnmsEventCollection extends LinkedList<OnmsEvent> {
+@XmlRootElement(name="notifications")
+public class OnmsNotificationCollection extends LinkedList<OnmsNotification> {
 
 	private static final long serialVersionUID = 1L;
 
-	public OnmsEventCollection() {
+	public OnmsNotificationCollection() {
         super();
     }
 
-    public OnmsEventCollection(Collection<? extends OnmsEvent> c) {
+    public OnmsNotificationCollection(Collection<? extends OnmsNotification> c) {
         super(c);
     }
 
-    @XmlElement(name="onmsEvent")
-    public List<OnmsEvent> getEvents() {
+    @XmlElement(name="onmsNotification")
+    public List<OnmsNotification> getNotifications() {
         return this;
     }
 
-    public void setEvents(List<OnmsEvent> events) {
+    public void setEvents(List<OnmsNotification> events) {
         clear();
         addAll(events);
     }
