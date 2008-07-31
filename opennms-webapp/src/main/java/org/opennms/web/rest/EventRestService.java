@@ -9,6 +9,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
@@ -40,7 +41,7 @@ public class EventRestService {
     SecurityContext m_securityContext;
     
     @GET
-    @Produces("text/xml")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Path("{eventId}")
     @Transactional
     public OnmsEvent getEvent(@PathParam("eventId") String eventId) {
@@ -49,7 +50,7 @@ public class EventRestService {
     }
     
     @GET
-    @Produces("text/plain")
+    @Produces(MediaType.TEXT_PLAIN)
     @Path("count")
     @Transactional
     public String getCount() {
@@ -57,47 +58,47 @@ public class EventRestService {
     }
 
     @GET
-    @Produces("text/xml")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Transactional
     public OnmsEventCollection getEvents() {
-    	MultivaluedMap<java.lang.String,java.lang.String> params=m_uriInfo.getQueryParameters();
-		OnmsCriteria criteria=new OnmsCriteria(OnmsEvent.class);
+        MultivaluedMap<java.lang.String,java.lang.String> params=m_uriInfo.getQueryParameters();
+        OnmsCriteria criteria=new OnmsCriteria(OnmsEvent.class);
 
-    	int limit=10; //Default limit to 10
-    	if(params.containsKey("limit")) {
-    		limit=Integer.parseInt(params.getFirst("limit"));
-    		params.remove("limit");
-    	}
-		criteria.setMaxResults(limit);
+        int limit=10; //Default limit to 10
+        if(params.containsKey("limit")) {
+            limit=Integer.parseInt(params.getFirst("limit"));
+            params.remove("limit");
+        }
+        criteria.setMaxResults(limit);
 
-    	if(params.containsKey("offset")) {
-    		criteria.setFirstResult(Integer.parseInt(params.getFirst("offset")));
-    		params.remove("offset");
-    	}
-    	
-		for(String key: params.keySet()) {
-    		String thisValue=params.getFirst(key);
-    		criteria.add(Restrictions.eq(key, thisValue));
-    	}
+        if(params.containsKey("offset")) {
+            criteria.setFirstResult(Integer.parseInt(params.getFirst("offset")));
+            params.remove("offset");
+        }
+
+        for(String key: params.keySet()) {
+            String thisValue=params.getFirst(key);
+            criteria.add(Restrictions.eq(key, thisValue));
+        }
         return new OnmsEventCollection(m_eventDao.findMatching(criteria));
     }
-    
+
     @PUT
     @Path("{eventId}")
     @Transactional
     public void updateEvent(@PathParam("eventId") String eventId, @FormParam("ack") Boolean ack) {
-    	OnmsEvent event=m_eventDao.get(new Integer(eventId));
-    	if(ack==null) {
-    		throw new  IllegalArgumentException("Must supply the 'ack' parameter, set to either 'true' or 'false'");
-    	}
-       	if(ack) {
-    		event.setEventAckTime(new Date());
-    		event.setEventAckUser(m_securityContext.getUserPrincipal().getName());
-    	} else {
-    		event.setEventAckTime(null);
-    		event.setEventAckUser(null);
-    	}
-    	m_eventDao.save(event);
+        OnmsEvent event=m_eventDao.get(new Integer(eventId));
+        if(ack==null) {
+            throw new  IllegalArgumentException("Must supply the 'ack' parameter, set to either 'true' or 'false'");
+        }
+        if(ack) {
+            event.setEventAckTime(new Date());
+            event.setEventAckUser(m_securityContext.getUserPrincipal().getName());
+        } else {
+            event.setEventAckTime(null);
+            event.setEventAckUser(null);
+        }
+        m_eventDao.save(event);
     }
 }
 

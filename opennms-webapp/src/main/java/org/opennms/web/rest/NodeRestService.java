@@ -54,7 +54,7 @@ public class NodeRestService {
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Path("{nodeId}")
     public OnmsNode getNode(@PathParam("nodeId") int nodeId) {
         return m_nodeDao.get(nodeId);

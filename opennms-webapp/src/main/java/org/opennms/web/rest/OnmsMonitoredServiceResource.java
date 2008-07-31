@@ -36,14 +36,14 @@ public class OnmsMonitoredServiceResource {
     private MonitoredServiceDao m_serviceDao;
 
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public OnmsMonitoredServiceList getServices(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress) {
         OnmsNode node = m_nodeDao.get(nodeId);
         return new OnmsMonitoredServiceList(node.getIpInterfaceByIpAddress(ipAddress).getMonitoredServices());
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Path("{service}")
     public OnmsMonitoredService getService(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress, @PathParam("service") String service) {
         OnmsNode node = m_nodeDao.get(nodeId);

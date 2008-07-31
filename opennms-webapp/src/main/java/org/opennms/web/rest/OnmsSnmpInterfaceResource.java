@@ -36,14 +36,14 @@ public class OnmsSnmpInterfaceResource {
     private SnmpInterfaceDao m_snmpInterfaceDao;
     
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public OnmsSnmpInterfaceList getSnmpInterfaces(@PathParam("nodeId") int nodeId) {
         OnmsNode node = m_nodeDao.get(nodeId);
         return new OnmsSnmpInterfaceList(node.getSnmpInterfaces());
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Path("{ifIndex}")
     public OnmsSnmpInterface getSnmpInterface(@PathParam("nodeId") int nodeId, @PathParam("ifIndex") int ifIndex) {
         OnmsNode node = m_nodeDao.get(nodeId);

@@ -42,7 +42,7 @@ public class OnmsIpInterfaceResource {
     ResourceContext m_context;
 
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public OnmsIpInterfaceList getIpInterfaces(@PathParam("nodeId") int nodeId) {
         log().debug("getIpInterfaces: reading interfaces for node " + nodeId);
         OnmsNode node = m_nodeDao.get(nodeId);
@@ -50,7 +50,7 @@ public class OnmsIpInterfaceResource {
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Path("{ipAddress}")
     public OnmsIpInterface getIpInterface(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress) {
         OnmsNode node = m_nodeDao.get(nodeId);
