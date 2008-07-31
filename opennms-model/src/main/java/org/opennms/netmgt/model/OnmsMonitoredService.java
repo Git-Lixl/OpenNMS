@@ -127,11 +127,13 @@ Comparable<OnmsMonitoredService> {
         m_id = id;
     }
 
+    @XmlTransient
     @Transient
     public String getIpAddress() {
         return m_ipInterface.getIpAddress();
     }
 
+    @XmlTransient
     @Transient
     public Integer getIfIndex() {
         return m_ipInterface.getIfIndex();
@@ -204,6 +206,7 @@ Comparable<OnmsMonitoredService> {
         m_ipInterface = ipInterface;
     }
 
+    @XmlTransient
     @Transient
     public Integer getNodeId() {
         return m_ipInterface.getNode().getId();
