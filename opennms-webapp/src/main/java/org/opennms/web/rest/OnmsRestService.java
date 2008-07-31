@@ -1,16 +1,12 @@
 package org.opennms.web.rest;
 
-import java.text.SimpleDateFormat;
-
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.hibernate.criterion.Restrictions;
-import org.opennms.netmgt.model.DateXMLAdapter;
 import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsEvent;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.beans.propertyeditors.CustomDateEditor;
 
 public class OnmsRestService {
 
@@ -69,9 +65,7 @@ public class OnmsRestService {
 			}
 		}
 		BeanWrapper wrapper = new BeanWrapperImpl(OnmsEvent.class);
-		SimpleDateFormat dateFormat = new SimpleDateFormat(DateXMLAdapter.DATE_FORMAT_STRING);
-		CustomDateEditor editor = new CustomDateEditor(dateFormat, true);
-		wrapper.registerCustomEditor(java.util.Date.class, editor);
+		wrapper.registerCustomEditor(java.util.Date.class, new ISO8601DateEditor());
 		for(String key: params.keySet()) {
 			String stringValue=params.getFirst(key);
 			Object thisValue=wrapper.convertIfNecessary(stringValue, wrapper.getPropertyType(key));

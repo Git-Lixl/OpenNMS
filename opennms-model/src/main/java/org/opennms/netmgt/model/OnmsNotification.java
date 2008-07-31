@@ -48,7 +48,6 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.springframework.core.style.ToStringCreator;
 
@@ -178,7 +177,6 @@ public class OnmsNotification {
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="pageTime")
-   	@XmlJavaTypeAdapter(DateXMLAdapter.class)
     public Date getPageTime() {
         return m_pageTime;
     }
@@ -190,8 +188,7 @@ public class OnmsNotification {
     
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="respondTime")
-   	@XmlJavaTypeAdapter(DateXMLAdapter.class)
-   public Date getRespondTime() {
+    public Date getRespondTime() {
         return m_respondTime;
     }
 
