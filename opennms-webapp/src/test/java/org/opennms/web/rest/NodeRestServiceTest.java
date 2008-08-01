@@ -1,5 +1,7 @@
 package org.opennms.web.rest;
 
+import javax.ws.rs.core.MediaType;
+
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -15,57 +17,80 @@ public class NodeRestServiceTest extends AbstractSpringJerseyRestTestCase {
         contextPath = "/opennms/rest";
     }
 
-    public void testNodePostGetDelete() throws Exception {
+    public void testNode() throws Exception {
         createNode();
         String url = "/nodes/1";
-        sendRequest(GET, url, 200, "Darwin TestMachine 9.4.0 Darwin Kernel Version 9.4.0");
-        sendRequest(DELETE, url, 200, null);
-        sendRequest(GET, url, 204, null);
+        String xml = sendRequest(GET, url, 200);
+        assertTrue(xml.contains("Darwin TestMachine 9.4.0 Darwin Kernel Version 9.4.0"));
+        sendPut(url, "sysContact=OpenNMS");
+        xml = sendRequest(GET, url, 200);
+        assertTrue(xml.contains("<sysContact>OpenNMS</sysContact>"));        
+        sendRequest(DELETE, url, 200);
+        sendRequest(GET, url, 204);
     }
 
-    public void testIpInterfacePostGetDelete() throws Exception {
+    public void testIpInterface() throws Exception {
         createIpInterface();
         String url = "/nodes/1/ipinterfaces/10.10.10.10";
-        sendRequest(GET, url, 200, null);
-        sendRequest(DELETE, url, 200, null);
-        sendRequest(GET, url, 204, null);
+        String xml = sendRequest(GET, url, 200);
+        assertTrue(xml.contains("<ipAddress>10.10.10.10</ipAddress>"));
+        sendPut(url, "ipStatus=0");
+        xml = sendRequest(GET, url, 200);
+        assertTrue(xml.contains("<ipStatus>0</ipStatus>"));
+        sendRequest(DELETE, url, 200);
+        sendRequest(GET, url, 204);
     }
 
-    public void testSnmpInterfacePostGetDelete() throws Exception {
+    public void testSnmpInterface() throws Exception {
         createSnmpInterface();
         String url = "/nodes/1/snmpinterfaces/6";
-        sendRequest(GET, url, 200, null);
-        sendRequest(DELETE, url, 200, null);
-        sendRequest(GET, url, 204, null);
+        String xml = sendRequest(GET, url, 200);
+        assertTrue(xml.contains("<ifIndex>6</ifIndex>"));
+        sendPut(url, "ifName=eth0");
+        xml = sendRequest(GET, url, 200);
+        assertTrue(xml.contains("<ifName>eth0</ifName>"));
+        sendRequest(DELETE, url, 200);
+        sendRequest(GET, url, 204);
     }
 
-    public void testMonitoredServicePostGetDelete() throws Exception {
+    public void testMonitoredService() throws Exception {
         createService();
         String url = "/nodes/1/ipinterfaces/10.10.10.10/services/ICMP";
-        sendRequest(GET, url, 200, null);
-        sendRequest(DELETE, url, 200, null);
-        sendRequest(GET, url, 204, null);
+        String xml = sendRequest(GET, url, 200);
+        assertTrue(xml.contains("<name>ICMP</name>"));
+        sendPut(url, "status=A");
+        xml = sendRequest(GET, url, 200);
+        assertTrue(xml.contains("<status>A</status>"));
+        sendRequest(DELETE, url, 200);
+        sendRequest(GET, url, 204);
     }
     
     private void sendPost(String url, String xml) throws Exception {
-        MockHttpServletRequest request = createRequest(POST, url);
-        request.setContentType("application/xml");
-        request.setContent(xml.getBytes());
+        sendData(POST, MediaType.APPLICATION_XML, url, xml);
+    }
+
+    private void sendPut(String url, String formData) throws Exception {
+        sendData(PUT, MediaType.APPLICATION_FORM_URLENCODED, url, formData);
+    }
+    
+    private void sendData(String requestType, String contentType, String url, String data) throws Exception {
+        MockHttpServletRequest request = createRequest(requestType, url);
+        request.setContentType(contentType);
+        request.setContent(data.getBytes());
         MockHttpServletResponse response = createResponse();        
         dispatch(request, response);
         assertEquals(200, response.getStatus());
     }
-    
-    private void sendRequest(String requestType, String url, int spectedStatus, String spectedOutput) throws Exception {
+
+    private String sendRequest(String requestType, String url, int spectedStatus) throws Exception {
         MockHttpServletRequest request = createRequest(requestType, url);
         MockHttpServletResponse response = createResponse();
         dispatch(request, response);
         assertEquals(spectedStatus, response.getStatus());
-        if (spectedOutput != null) {
-            String xml = response.getContentAsString();
+        String xml = response.getContentAsString();
+        if (xml != null)
             System.err.println(xml);
-            assertTrue(xml.contains(spectedOutput));
-        }
+        return xml;
     }
     
     private void createNode() throws Exception {

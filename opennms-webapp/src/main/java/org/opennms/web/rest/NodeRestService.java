@@ -27,6 +27,8 @@ import org.opennms.netmgt.utils.EventProxy;
 import org.opennms.netmgt.utils.EventProxyException;
 import org.opennms.netmgt.xml.event.Event;
 
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -89,14 +91,24 @@ public class NodeRestService extends OnmsRestService {
     }
     
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Path("{nodeId}")
-    public Response updateNode(OnmsNode node, @PathParam("nodeId") int nodeId) {
-        if (nodeId != node.getId())
-            throwException(Status.CONFLICT, "updateNode: invalid nodeId for node " + node);
-        log().debug("updateNode: updating node " + nodeId);
+    public Response updateNode(@PathParam("nodeId") int nodeId, MultivaluedMapImpl params) {
+        OnmsNode node = m_nodeDao.get(nodeId);
+        if (node == null)
+            throwException(Status.BAD_REQUEST, "updateNode: Can't find node with id " + nodeId);
+        log().debug("updateNode: updating node " + node);
+        BeanWrapper wrapper = new BeanWrapperImpl(node);
+        for(String key : params.keySet()) {
+            if (wrapper.isWritableProperty(key)) {
+                String stringValue = params.getFirst(key);
+                Object value = wrapper.convertIfNecessary(stringValue, wrapper.getPropertyType(key));
+                wrapper.setPropertyValue(key, value);
+            }
+        }
+        log().debug("updateNode: node " + node + " updated");
         m_nodeDao.saveOrUpdate(node);
-        return Response.ok().build();
+        return Response.ok(node).build();
     }
     
     @DELETE

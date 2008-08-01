@@ -22,6 +22,8 @@ import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.OnmsSnmpInterfaceList;
 
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -81,23 +83,36 @@ public class OnmsSnmpInterfaceResource {
         OnmsNode node = m_nodeDao.get(nodeId);
         if (node == null)
             throwException(Status.BAD_REQUEST, "deleteSnmpInterface: can't find node with id " + nodeId);
-        OnmsSnmpInterface intf = node.getSnmpInterfaceWithIfIndex(ifIndex);
-        if (intf == null)
+        OnmsSnmpInterface snmpInterface = node.getSnmpInterfaceWithIfIndex(ifIndex);
+        if (snmpInterface == null)
             throwException(Status.BAD_REQUEST, "deleteSnmpInterface: can't find snmp interface with ifIndex " + ifIndex + " for node with id " + nodeId);
         log().debug("deletSnmpInterface: deleting interface with ifIndex " + ifIndex + " from node " + nodeId);
-        node.getSnmpInterfaces().remove(intf);
+        node.getSnmpInterfaces().remove(snmpInterface);
         m_nodeDao.saveOrUpdate(node);
         // TODO Add important events here
         return Response.ok().build();
     }
     
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Path("{ifIndex}")
-    public Response updateSnmpInterface(OnmsSnmpInterface snmpInterface, @PathParam("ifIndex") int ifIndex) {
-        if (snmpInterface.getIfIndex().equals(ifIndex) == false)
-            throwException(Status.CONFLICT, "updateSnmpInterface: invalid ifIndex " + ifIndex + " for snmpInterface " + snmpInterface);
-        log().debug("updateSnmpInterface: updating snmpInterface with ifIndex " + ifIndex);
+    public Response updateSnmpInterface(@PathParam("nodeId") int nodeId, @PathParam("ifIndex") int ifIndex, MultivaluedMapImpl params) {
+        OnmsNode node = m_nodeDao.get(nodeId);
+        if (node == null)
+            throwException(Status.BAD_REQUEST, "deleteSnmpInterface: can't find node with id " + nodeId);
+        OnmsSnmpInterface snmpInterface = node.getSnmpInterfaceWithIfIndex(ifIndex);
+        if (snmpInterface == null)
+            throwException(Status.BAD_REQUEST, "deleteSnmpInterface: can't find snmp interface with ifIndex " + ifIndex + " for node with id " + nodeId);
+        log().debug("updateSnmpInterface: updating snmp interface " + snmpInterface);
+        BeanWrapper wrapper = new BeanWrapperImpl(snmpInterface);
+        for(String key : params.keySet()) {
+            if (wrapper.isWritableProperty(key)) {
+                String stringValue = params.getFirst(key);
+                Object value = wrapper.convertIfNecessary(stringValue, wrapper.getPropertyType(key));
+                wrapper.setPropertyValue(key, value);
+            }
+        }
+        log().debug("updateSnmpInterface: snmp interface " + snmpInterface + " updated");
         m_snmpInterfaceDao.saveOrUpdate(snmpInterface);
         return Response.ok().build();
     }

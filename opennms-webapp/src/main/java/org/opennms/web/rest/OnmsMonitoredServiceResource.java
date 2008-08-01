@@ -28,6 +28,8 @@ import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.utils.EventProxy;
 import org.opennms.netmgt.utils.EventProxyException;
 import org.opennms.netmgt.xml.event.Event;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -86,9 +88,9 @@ public class OnmsMonitoredServiceResource {
             throwException(Status.BAD_REQUEST, "addService: service must have a name");
         OnmsServiceType serviceType = m_serviceTypeDao.findByName(service.getServiceName());
         if (serviceType == null)  {
+            log().info("addService: creating service type " + service.getServiceName());
             serviceType = new OnmsServiceType(service.getServiceName());
             m_serviceTypeDao.save(serviceType);
-//            throwException(Status.BAD_REQUEST, "addService: invalid service name " + service.getServiceName());
         }
         service.setServiceType(serviceType);
         service.setIpInterface(intf);
@@ -110,12 +112,29 @@ public class OnmsMonitoredServiceResource {
     }
     
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Path("{service}")
-    public Response updateService(OnmsMonitoredService service, @PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress, @PathParam("service") String serviceName) {
-        if (service.getServiceName().equals(serviceName) == false)
-            throwException(Status.CONFLICT, "updateService: invalid service name for " + service);
+    public Response updateService(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress, @PathParam("service") String serviceName, MultivaluedMapImpl params) {
+        OnmsNode node = m_nodeDao.get(nodeId);
+        if (node == null)
+            throwException(Status.BAD_REQUEST, "addService: can't find node with id " + nodeId);
+        OnmsIpInterface intf = node.getIpInterfaceByIpAddress(ipAddress);
+        if (intf == null)
+            throwException(Status.BAD_REQUEST, "addService: can't find ip interface on " + nodeId + "@" + ipAddress);
+        OnmsMonitoredService service = intf.getMonitoredServiceByServiceType(serviceName);
+        if (service == null)
+            throwException(Status.BAD_REQUEST, "addService: can't find service " + serviceName + " on " + nodeId + "@" + ipAddress);
+
         log().debug("updateService: updating service " + service);
+        BeanWrapper wrapper = new BeanWrapperImpl(service);
+        for(String key : params.keySet()) {
+            if (wrapper.isWritableProperty(key)) {
+                String stringValue = params.getFirst(key);
+                Object value = wrapper.convertIfNecessary(stringValue, wrapper.getPropertyType(key));
+                wrapper.setPropertyValue(key, value);
+            }
+        }
+        log().debug("updateSservice: service " + service + " updated");
         m_serviceDao.saveOrUpdate(service);
         return Response.ok().build();
     }

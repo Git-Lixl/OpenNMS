@@ -26,6 +26,8 @@ import org.opennms.netmgt.utils.EventProxy;
 import org.opennms.netmgt.utils.EventProxyException;
 import org.opennms.netmgt.xml.event.Event;
 
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -94,12 +96,25 @@ public class OnmsIpInterfaceResource {
     }
     
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Path("{ipAddress}")
-    public Response updateIpInterface(OnmsIpInterface ipInterface, @PathParam("ipAddress") String ipAddress) {
-        if (ipInterface.getIpAddress().equals(ipAddress) == false)
-            throwException(Status.CONFLICT, "updateIpInterface: invalid IP Address for ipInterface " + ipInterface);
-        log().debug("updateIpInterface: updating ipInterface " + ipInterface);
+    public Response updateIpInterface(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress, MultivaluedMapImpl params) {
+        OnmsNode node = m_nodeDao.get(nodeId);
+        if (node == null)
+            throwException(Status.BAD_REQUEST, "deleteIpInterface: can't find node with id " + nodeId);
+        OnmsIpInterface ipInterface = node.getIpInterfaceByIpAddress(ipAddress);
+        if (ipInterface == null)
+            throwException(Status.CONFLICT, "deleteIpInterface: can't find interface with ip address " + ipAddress + " for node with id " + nodeId);
+        log().debug("updateIpInterface: updating ip interface " + ipInterface);
+        BeanWrapper wrapper = new BeanWrapperImpl(ipInterface);
+        for(String key : params.keySet()) {
+            if (wrapper.isWritableProperty(key)) {
+                String stringValue = params.getFirst(key);
+                Object value = wrapper.convertIfNecessary(stringValue, wrapper.getPropertyType(key));
+                wrapper.setPropertyValue(key, value);
+            }
+        }
+        log().debug("updateIpInterface: ip interface " + ipInterface + " updated");
         m_ipInterfaceDao.saveOrUpdate(ipInterface);
         return Response.ok().build();
     }
