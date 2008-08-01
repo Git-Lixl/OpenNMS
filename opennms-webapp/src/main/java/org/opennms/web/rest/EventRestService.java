@@ -35,6 +35,7 @@ package org.opennms.web.rest;
 import java.text.ParseException;
 import java.util.Date;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -87,6 +88,10 @@ public class EventRestService extends OnmsRestService {
 		return result;
 	}
 
+	/**
+	 * returns a plaintext string being the number of events
+	 * @return
+	 */
 	@GET
 	@Produces(MediaType.TEXT_PLAIN)
 	@Path("count")
@@ -95,6 +100,12 @@ public class EventRestService extends OnmsRestService {
 		return Integer.toString(m_eventDao.countAll());
 	}
 
+	/**
+	 * Returns all the events which match the filter/query in the query parameters
+	 * 
+	 * @return Collection of OnmsEvents (ready to be XML-ified)
+	 * @throws ParseException
+	 */
 	@GET
 	@Produces( { MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
 	@Transactional
@@ -107,8 +118,13 @@ public class EventRestService extends OnmsRestService {
 		return new OnmsEventCollection(m_eventDao.findMatching(criteria));
 	}
 
+	/**
+	 * Updates the event with id "eventid" 
+	 * If the "ack" parameter is "true", then acks the events as the current logged in user, otherwise unacks the events
+	 */
 	@PUT
 	@Path("{eventId}")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Transactional
 	public void updateEvent(@PathParam("eventId")
 	String eventId, @FormParam("ack")
@@ -121,7 +137,14 @@ public class EventRestService extends OnmsRestService {
 		processEventAck(event, ack);
 	}
 
+	/**
+	 * Updates all the events that match any filter/query supplied in the form. 
+	 * If the "ack" parameter is "true", then acks the events as the current logged in user, otherwise unacks the events
+	 * 
+	 * @param formProperties Map of the parameters passed in by form encoding
+	 */
 	@PUT
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Transactional
 	public void updateEvents(MultivaluedMapImpl formProperties) {
 		Boolean ack=false;
