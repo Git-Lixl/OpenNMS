@@ -26,7 +26,9 @@ public class OnmsRestService {
 			limit=Integer.parseInt(params.getFirst("limit"));
 			params.remove("limit");
 		}
-		criteria.setMaxResults(limit);
+		if(limit!=0) {
+			criteria.setMaxResults(limit);
+		}
 	
 		if(params.containsKey("offset")) {
 			criteria.setFirstResult(Integer.parseInt(params.getFirst("offset")));

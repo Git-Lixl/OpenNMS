@@ -62,7 +62,7 @@ public class NotificationRestService extends OnmsRestService {
     	MultivaluedMap<java.lang.String,java.lang.String> params=m_uriInfo.getQueryParameters();
 		OnmsCriteria criteria=new OnmsCriteria(OnmsNotification.class);
 
-    	setLimitOffset(params, criteria);
+    	setLimitOffset(params, criteria, 10);
     	addFiltersToCriteria(params, criteria);
 
         return new OnmsNotificationCollection(m_notifDao.findMatching(criteria));

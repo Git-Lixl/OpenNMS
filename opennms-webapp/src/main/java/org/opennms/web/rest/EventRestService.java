@@ -42,6 +42,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
@@ -63,41 +64,45 @@ import com.sun.jersey.spi.resource.PerRequest;
 @Scope("prototype")
 @Path("events")
 public class EventRestService extends OnmsRestService {
-	
+
 	@Autowired
-    private EventDao m_eventDao;
-    
-    @Context 
-    UriInfo m_uriInfo;
+	private EventDao m_eventDao;
 
-    @Context
-    SecurityContext m_securityContext;
-    
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    @Path("{eventId}")
-    @Transactional
-    public OnmsEvent getEvent(@PathParam("eventId") String eventId) {
-    	OnmsEvent result= m_eventDao.get(new Integer(eventId));
-    	return result;
-    }
-    
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    @Path("count")
-    @Transactional
-    public String getCount() {
-    	return Integer.toString(m_eventDao.countAll());
-    }
+	@Context
+	UriInfo m_uriInfo;
 
-    @GET
+	@Context
+	HttpHeaders m_headers;
+
+	@Context
+	SecurityContext m_securityContext;
+
+	@GET
+	@Produces( { MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+	@Path("{eventId}")
+	@Transactional
+	public OnmsEvent getEvent(@PathParam("eventId")
+	String eventId) {
+		OnmsEvent result = m_eventDao.get(new Integer(eventId));
+		return result;
+	}
+
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
+	@Path("count")
+	@Transactional
+	public String getCount() {
+		return Integer.toString(m_eventDao.countAll());
+	}
+
+	@GET
 	@Produces( { MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
 	@Transactional
 	public OnmsEventCollection getEvents() throws ParseException {
 		MultivaluedMap<java.lang.String, java.lang.String> params = m_uriInfo
 				.getQueryParameters();
 		OnmsCriteria criteria = new OnmsCriteria(OnmsEvent.class);
-		setLimitOffset(params, criteria);
+		setLimitOffset(params, criteria, 10);
 		addFiltersToCriteria(params, criteria);
 		return new OnmsEventCollection(m_eventDao.findMatching(criteria));
 	}
@@ -113,6 +118,30 @@ public class EventRestService extends OnmsRestService {
 			throw new IllegalArgumentException(
 					"Must supply the 'ack' parameter, set to either 'true' or 'false'");
 		}
+		processEventAck(event, ack);
+	}
+
+	@PUT
+	@Transactional
+	public void updateEvents(MultivaluedMapImpl formProperties) {
+
+		Boolean ack=false;
+		if(formProperties.containsKey("ack")) {
+			ack="true".equals(formProperties.getFirst("ack"));
+			formProperties.remove("ack");
+		}
+		
+		OnmsCriteria criteria = new OnmsCriteria(OnmsEvent.class);
+		setLimitOffset(formProperties, criteria, 10);
+		addFiltersToCriteria(formProperties, criteria);
+
+		
+		for (OnmsEvent event : m_eventDao.findMatching(criteria)) {
+			processEventAck(event, ack);
+		}
+	}
+
+	private void processEventAck(OnmsEvent event, Boolean ack) {
 		if (ack) {
 			event.setEventAckTime(new Date());
 			event.setEventAckUser(m_securityContext.getUserPrincipal()
@@ -124,4 +153,3 @@ public class EventRestService extends OnmsRestService {
 		m_eventDao.save(event);
 	}
 }
-

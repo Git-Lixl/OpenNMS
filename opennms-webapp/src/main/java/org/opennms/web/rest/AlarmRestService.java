@@ -17,6 +17,7 @@ import org.opennms.netmgt.dao.AlarmDao;
 import org.opennms.netmgt.model.OnmsAlarm;
 import org.opennms.netmgt.model.OnmsAlarmCollection;
 import org.opennms.netmgt.model.OnmsCriteria;
+import org.opennms.netmgt.model.OnmsEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -69,21 +70,46 @@ public class AlarmRestService extends OnmsRestService {
     }
     
     @PUT
-    @Path("{alarmId}")
-    @Transactional
-    public void updateEvent(@PathParam("alarmId") String alarmId, @FormParam("ack") Boolean ack) {
-    	OnmsAlarm alarm=m_alarmDao.get(new Integer(alarmId));
-    	if(ack==null) {
-    		throw new  IllegalArgumentException("Must supply the 'ack' parameter, set to either 'true' or 'false'");
-    	}
-       	if(ack) {
-       		alarm.setAlarmAckTime(new Date());
-       		alarm.setAlarmAckUser(m_securityContext.getUserPrincipal().getName());
-    	} else {
-    		alarm.setAlarmAckTime(null);
-    		alarm.setAlarmAckUser(null);
-    	}
-       	m_alarmDao.save(alarm);
-    }
+	@Path("{alarmId}")
+	@Transactional
+	public void updateAlarm(@PathParam("alarmId")
+	String alarmId, @FormParam("ack")
+	Boolean ack) {
+		OnmsAlarm alarm = m_alarmDao.get(new Integer(alarmId));
+		if (ack == null) {
+			throw new IllegalArgumentException(
+					"Must supply the 'ack' parameter, set to either 'true' or 'false'");
+		}
+		processAlarmAck(alarm, ack);
+	}
+
+	@PUT
+	@Transactional
+	public void updateAlarms(MultivaluedMapImpl formProperties) {
+
+		Boolean ack=false;
+		if(formProperties.containsKey("ack")) {
+			ack="true".equals(formProperties.getFirst("ack"));
+			formProperties.remove("ack");
+		}
+		OnmsCriteria criteria = new OnmsCriteria(OnmsEvent.class);
+		setLimitOffset(formProperties, criteria, 10);
+		addFiltersToCriteria(formProperties, criteria);
+		for (OnmsAlarm alarm : m_alarmDao.findMatching(criteria)) {
+			processAlarmAck(alarm, ack);
+		}
+	}
+
+	private void processAlarmAck(OnmsAlarm alarm, Boolean ack) {
+		if (ack) {
+			alarm.setAlarmAckTime(new Date());
+			alarm.setAlarmAckUser(m_securityContext.getUserPrincipal()
+					.getName());
+		} else {
+			alarm.setAlarmAckTime(null);
+			alarm.setAlarmAckUser(null);
+		}
+		m_alarmDao.save(alarm);
+	}
 }
 
