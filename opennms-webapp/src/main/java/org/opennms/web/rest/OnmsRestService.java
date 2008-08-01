@@ -51,13 +51,15 @@ public class OnmsRestService {
 	}
 
 	/**
-	 * Method to pull out all the named params in params and use them to add restriction filters to criteria.  
+	 * Method to pull out all the named params in params and use them to add restriction filters to a criteria object.  
 	 * Uses the objectClass to determine parameters and types; auto converts from strings to appropriate types, if at all possible.
 	 * Additionally, the param "comparator", if set, will change the comparision from the default of equality.  Acceptable comparators are:
 	 * "equals", "ilike", "like", "gt", "lt", "ge", "le", "ne" (other values will default to equality).
 	 * If there is an "orderBy" param, results will be ordered by the property name given.  Default is ascending, unless "order" is set to "desc"
+	 * If there is a "query" param, it will be added to the criteria as a raw hibernate SQL statement (in addition to any other parameters specified
 	 * 
-	 * The "criteria" object will be populated with the filter and ordering details provied
+	 * The "criteria" object will be populated with the filter and ordering details provided
+	 * 
 	 * @param params set of string parameters from which various configuration properties are extracted
 	 * @param criteria the object which will be populated with the filter/ordering
 	 * @param objectClass the type of thing being filtered.
@@ -66,6 +68,12 @@ public class OnmsRestService {
 		
 		setOrdering(params, criteria);
 		
+		if(params.containsKey("query")) {
+			String query=params.getFirst("query");
+			criteria.add(Restrictions.sqlRestriction(query));
+			params.remove("query");
+		}
+
 		//By default, just do equals comparision
 		ComparisonOperation op=ComparisonOperation.EQ;
 		if(params.containsKey("comparator")) {
@@ -128,6 +136,7 @@ public class OnmsRestService {
 				}
 			}
 		}
+
 	}
 
 	/**
