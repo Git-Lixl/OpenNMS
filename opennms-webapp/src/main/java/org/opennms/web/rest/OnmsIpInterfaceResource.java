@@ -8,14 +8,11 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.log4j.Category;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.dao.IpInterfaceDao;
 import org.opennms.netmgt.dao.NodeDao;
@@ -25,7 +22,6 @@ import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.utils.EventProxy;
 import org.opennms.netmgt.utils.EventProxyException;
 import org.opennms.netmgt.xml.event.Event;
-
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +36,7 @@ import com.sun.jersey.spi.resource.PerRequest;
 @PerRequest
 @Scope("prototype")
 @Transactional
-public class OnmsIpInterfaceResource {
+public class OnmsIpInterfaceResource extends OnmsRestService {
 
     @Autowired
     private NodeDao m_nodeDao;
@@ -59,6 +55,8 @@ public class OnmsIpInterfaceResource {
     public OnmsIpInterfaceList getIpInterfaces(@PathParam("nodeId") int nodeId) {
         log().debug("getIpInterfaces: reading interfaces for node " + nodeId);
         OnmsNode node = m_nodeDao.get(nodeId);
+        if (node == null)
+            throwException(Status.BAD_REQUEST, "getIpInterfaces: can't find node " + nodeId);
         return new OnmsIpInterfaceList(node.getIpInterfaces());
     }
 
@@ -67,6 +65,8 @@ public class OnmsIpInterfaceResource {
     @Path("{ipAddress}")
     public OnmsIpInterface getIpInterface(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress) {
         OnmsNode node = m_nodeDao.get(nodeId);
+        if (node == null)
+            throwException(Status.BAD_REQUEST, "getIpInterface: can't find node " + nodeId);
         return node.getIpInterfaceByIpAddress(ipAddress);
     }
 
@@ -148,15 +148,6 @@ public class OnmsIpInterfaceResource {
     @Path("{ipAddress}/services")
     public OnmsMonitoredServiceResource getServices() {
         return m_context.getResource(OnmsMonitoredServiceResource.class);
-    }
-
-    private void throwException(Status status, String msg) {
-        log().error(msg);
-        throw new WebApplicationException(Response.status(status).tag(msg).build());
-    }
-
-    protected Category log() {
-        return ThreadCategory.getInstance(getClass());
     }
 
 }

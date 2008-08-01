@@ -8,7 +8,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -16,8 +15,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.log4j.Category;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.dao.NodeDao;
 import org.opennms.netmgt.model.OnmsCriteria;
@@ -26,7 +23,6 @@ import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.netmgt.utils.EventProxy;
 import org.opennms.netmgt.utils.EventProxyException;
 import org.opennms.netmgt.xml.event.Event;
-
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -155,14 +151,4 @@ public class NodeRestService extends OnmsRestService {
         e.setTime(EventConstants.formatToString(new java.util.Date()));
         m_eventProxy.send(e);
     }
-    
-    private void throwException(Status status, String msg) {
-        log().error(msg);
-        throw new WebApplicationException(Response.status(status).tag(msg).build());
-    }
-    
-    protected Category log() {
-        return ThreadCategory.getInstance(getClass());
-    }
-
 }

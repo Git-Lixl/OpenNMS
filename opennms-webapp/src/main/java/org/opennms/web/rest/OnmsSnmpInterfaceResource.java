@@ -8,20 +8,16 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.log4j.Category;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.dao.NodeDao;
 import org.opennms.netmgt.dao.SnmpInterfaceDao;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.OnmsSnmpInterfaceList;
-
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +31,7 @@ import com.sun.jersey.spi.resource.PerRequest;
 @PerRequest
 @Scope("prototype")
 @Transactional
-public class OnmsSnmpInterfaceResource {
+public class OnmsSnmpInterfaceResource extends OnmsRestService {
 
     @Autowired
     private NodeDao m_nodeDao;
@@ -115,15 +111,6 @@ public class OnmsSnmpInterfaceResource {
         log().debug("updateSnmpInterface: snmp interface " + snmpInterface + " updated");
         m_snmpInterfaceDao.saveOrUpdate(snmpInterface);
         return Response.ok().build();
-    }
-
-    private void throwException(Status status, String msg) {
-        log().error(msg);
-        throw new WebApplicationException(Response.status(status).tag(msg).build());
-    }
-
-    protected Category log() {
-        return ThreadCategory.getInstance(getClass());
     }
 
 }

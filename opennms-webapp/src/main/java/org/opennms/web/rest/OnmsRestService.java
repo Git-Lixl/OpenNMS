@@ -1,9 +1,15 @@
 package org.opennms.web.rest;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
+import org.apache.log4j.Category;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.model.OnmsCriteria;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -162,4 +168,14 @@ public class OnmsRestService {
 			}
 		}
 	}
+	
+	    protected void throwException(Status status, String msg) {
+	        log().error(msg);
+	        throw new WebApplicationException(Response.status(status).type(MediaType.TEXT_PLAIN).entity(msg).build());
+	    }
+	    
+	    protected Category log() {
+	        return ThreadCategory.getInstance(getClass());
+	    }
+
 }

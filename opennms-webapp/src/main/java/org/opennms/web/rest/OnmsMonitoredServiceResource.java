@@ -8,13 +8,10 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.log4j.Category;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.dao.IpInterfaceDao;
 import org.opennms.netmgt.dao.MonitoredServiceDao;
@@ -41,7 +38,7 @@ import com.sun.jersey.spi.resource.PerRequest;
 @PerRequest
 @Scope("prototype")
 @Transactional
-public class OnmsMonitoredServiceResource {
+public class OnmsMonitoredServiceResource extends OnmsRestService {
     
     @Autowired
     private NodeDao m_nodeDao;
@@ -169,13 +166,4 @@ public class OnmsMonitoredServiceResource {
         return Response.ok().build();
     }
     
-    private void throwException(Status status, String msg) {
-        log().error(msg);
-        throw new WebApplicationException(Response.status(status).tag(msg).build());
-    }
-
-    protected Category log() {
-        return ThreadCategory.getInstance(getClass());
-    }
-
 }
