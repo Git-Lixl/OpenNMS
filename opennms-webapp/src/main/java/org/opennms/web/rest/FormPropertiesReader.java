@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class FormPropertiesReader implements MessageBodyReader<MultivaluedMapImp
 		String postBody = buffer.toString();
 		for (String item : postBody.split("&")) {
 			String[] kv = item.split("=");
-			result.add(kv[0], kv[1]);
+			result.add(URLDecoder.decode(kv[0], "UTF-8"), URLDecoder.decode(kv[1],"UTF-8"));
 		}
 
 		return result;
