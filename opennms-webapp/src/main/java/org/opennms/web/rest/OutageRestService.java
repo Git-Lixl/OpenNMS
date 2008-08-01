@@ -59,7 +59,7 @@ public class OutageRestService extends OnmsRestService {
 		OnmsCriteria criteria=new OnmsCriteria(OnmsOutage.class);
 
     	setLimitOffset(params, criteria);
-    	addFiltersToCriteria(params, criteria);
+    	addFiltersToCriteria(params, criteria, OnmsOutage.class);
 
         return new OnmsOutageCollection(m_outageDao.findMatching(criteria));
     }

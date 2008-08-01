@@ -147,7 +147,7 @@ public class NodeRestService extends OnmsRestService {
         OnmsCriteria criteria = new OnmsCriteria(OnmsNode.class);
 
     	setLimitOffset(params, criteria, LIMIT);
-    	addFiltersToCriteria(params, criteria);
+    	addFiltersToCriteria(params, criteria, OnmsNode.class);
         
         return criteria;
     }

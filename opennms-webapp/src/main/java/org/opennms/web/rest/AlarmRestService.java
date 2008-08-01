@@ -17,7 +17,6 @@ import org.opennms.netmgt.dao.AlarmDao;
 import org.opennms.netmgt.model.OnmsAlarm;
 import org.opennms.netmgt.model.OnmsAlarmCollection;
 import org.opennms.netmgt.model.OnmsCriteria;
-import org.opennms.netmgt.model.OnmsEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -64,7 +63,7 @@ public class AlarmRestService extends OnmsRestService {
 		OnmsCriteria criteria=new OnmsCriteria(OnmsAlarm.class);
 
     	setLimitOffset(params, criteria);
-    	addFiltersToCriteria(params, criteria);
+    	addFiltersToCriteria(params, criteria, OnmsAlarm.class);
 
         return new OnmsAlarmCollection(m_alarmDao.findMatching(criteria));
     }
@@ -92,9 +91,9 @@ public class AlarmRestService extends OnmsRestService {
 			ack="true".equals(formProperties.getFirst("ack"));
 			formProperties.remove("ack");
 		}
-		OnmsCriteria criteria = new OnmsCriteria(OnmsEvent.class);
+		OnmsCriteria criteria = new OnmsCriteria(OnmsAlarm.class);
 		setLimitOffset(formProperties, criteria, 10);
-		addFiltersToCriteria(formProperties, criteria);
+		addFiltersToCriteria(formProperties, criteria, OnmsAlarm.class);
 		for (OnmsAlarm alarm : m_alarmDao.findMatching(criteria)) {
 			processAlarmAck(alarm, ack);
 		}

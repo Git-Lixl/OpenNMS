@@ -63,7 +63,7 @@ public class NotificationRestService extends OnmsRestService {
 		OnmsCriteria criteria=new OnmsCriteria(OnmsNotification.class);
 
     	setLimitOffset(params, criteria, 10);
-    	addFiltersToCriteria(params, criteria);
+    	addFiltersToCriteria(params, criteria, OnmsNotification.class);
 
         return new OnmsNotificationCollection(m_notifDao.findMatching(criteria));
     }
@@ -71,12 +71,37 @@ public class NotificationRestService extends OnmsRestService {
     @PUT
     @Path("{notifId}")
     @Transactional
-    public void updateEvent(@PathParam("notifId") String notifId, @FormParam("ack") Boolean ack) {
+    public void updateNotification(@PathParam("notifId") String notifId, @FormParam("ack") Boolean ack) {
     	OnmsNotification notif=m_notifDao.get(new Integer(notifId));
     	if(ack==null) {
     		throw new  IllegalArgumentException("Must supply the 'ack' parameter, set to either 'true' or 'false'");
     	}
-       	if(ack) {
+       	processNotifAck(notif,ack);
+    }
+    
+	@PUT
+	@Transactional
+	public void updateNotifications(MultivaluedMapImpl formProperties) {
+
+		Boolean ack=false;
+		if(formProperties.containsKey("ack")) {
+			ack="true".equals(formProperties.getFirst("ack"));
+			formProperties.remove("ack");
+		}
+		
+		OnmsCriteria criteria = new OnmsCriteria(OnmsNotification.class);
+		setLimitOffset(formProperties, criteria, 10);
+		addFiltersToCriteria(formProperties, criteria, OnmsNotification.class);
+
+		
+		for (OnmsNotification notif : m_notifDao.findMatching(criteria)) {
+			processNotifAck(notif, ack);
+		}
+	}
+
+
+	private void processNotifAck( OnmsNotification notif, Boolean ack) {
+		if(ack) {
        		notif.setRespondTime(new Date());
        		notif.setAnsweredBy(m_securityContext.getUserPrincipal().getName());
     	} else {
@@ -84,6 +109,6 @@ public class NotificationRestService extends OnmsRestService {
     		notif.setAnsweredBy(null);
     	}
        	m_notifDao.save(notif);
-    }
+	}
 }
 

@@ -103,7 +103,7 @@ public class EventRestService extends OnmsRestService {
 				.getQueryParameters();
 		OnmsCriteria criteria = new OnmsCriteria(OnmsEvent.class);
 		setLimitOffset(params, criteria, 10);
-		addFiltersToCriteria(params, criteria);
+		addFiltersToCriteria(params, criteria, OnmsEvent.class);
 		return new OnmsEventCollection(m_eventDao.findMatching(criteria));
 	}
 
@@ -124,7 +124,6 @@ public class EventRestService extends OnmsRestService {
 	@PUT
 	@Transactional
 	public void updateEvents(MultivaluedMapImpl formProperties) {
-
 		Boolean ack=false;
 		if(formProperties.containsKey("ack")) {
 			ack="true".equals(formProperties.getFirst("ack"));
@@ -133,7 +132,7 @@ public class EventRestService extends OnmsRestService {
 		
 		OnmsCriteria criteria = new OnmsCriteria(OnmsEvent.class);
 		setLimitOffset(formProperties, criteria, 10);
-		addFiltersToCriteria(formProperties, criteria);
+		addFiltersToCriteria(formProperties, criteria, OnmsEvent.class);
 
 		
 		for (OnmsEvent event : m_eventDao.findMatching(criteria)) {
