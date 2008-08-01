@@ -8,7 +8,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 /*
  * TODO
  * 1. Need to figure it out how to create a Mock for EventProxy to validate events sent by RESTful service
- * 2. Test object change (PUT)
  */
 public class NodeRestServiceTest extends AbstractSpringJerseyRestTestCase {
     
@@ -22,9 +21,10 @@ public class NodeRestServiceTest extends AbstractSpringJerseyRestTestCase {
         String url = "/nodes/1";
         String xml = sendRequest(GET, url, 200);
         assertTrue(xml.contains("Darwin TestMachine 9.4.0 Darwin Kernel Version 9.4.0"));
-        sendPut(url, "sysContact=OpenNMS");
+        sendPut(url, "sysContact=OpenNMS&assetRecord.manufacturer=Apple&assetRecord.operatingSystem=MacOSX Leopard");
         xml = sendRequest(GET, url, 200);
         assertTrue(xml.contains("<sysContact>OpenNMS</sysContact>"));        
+        assertTrue(xml.contains("<operatingSystem>MacOSX Leopard</operatingSystem>"));        
         sendRequest(DELETE, url, 200);
         sendRequest(GET, url, 204);
     }
@@ -65,6 +65,18 @@ public class NodeRestServiceTest extends AbstractSpringJerseyRestTestCase {
         sendRequest(GET, url, 204);
     }
     
+    public void testCategory() throws Exception {
+        createCategory();
+        String url = "/nodes/1/categories/Routers";
+        String xml = sendRequest(GET, url, 200);
+        assertTrue(xml.contains("<name>Routers</name>"));
+        sendPut(url, "description=My Equipment");
+        xml = sendRequest(GET, url, 200);
+        assertTrue(xml.contains("<description>My Equipment</description>"));
+        sendRequest(DELETE, url, 200);
+        sendRequest(GET, url, 204);
+    }
+
     private void sendPost(String url, String xml) throws Exception {
         sendData(POST, MediaType.APPLICATION_XML, url, xml);
     }
@@ -151,6 +163,15 @@ public class NodeRestServiceTest extends AbstractSpringJerseyRestTestCase {
         "<status>N</status>" +
         "</service>";
         sendPost("/nodes/1/ipinterfaces/10.10.10.10/services", service);
+    }
+
+    private void createCategory() throws Exception {
+        createNode();
+        String service = "<category>" +
+        "<name>Routers</name>" +
+        "<description>Core Routers</description>" +
+        "</category>";
+        sendPost("/nodes/1/categories", service);
     }
 
 }

@@ -77,13 +77,8 @@ public class NodeRestService extends OnmsRestService {
     public Response addNode(OnmsNode node) {
         log().debug("addNode: Adding node " + node);
         m_nodeDao.save(node);
-        Event e = new Event();
-        e.setUei(EventConstants.NODE_ADDED_EVENT_UEI);
-        e.setNodeid(node.getId());
-        e.setSource(getClass().getName());
-        e.setTime(EventConstants.formatToString(new java.util.Date()));
         try {
-            m_eventProxy.send(e);
+            sendEvent(EventConstants.NODE_ADDED_EVENT_UEI, node.getId());
         } catch (EventProxyException ex) {
             throwException(Status.BAD_REQUEST, ex.getMessage());
         }
@@ -119,13 +114,8 @@ public class NodeRestService extends OnmsRestService {
             throwException(Status.BAD_REQUEST, "deleteNode: Can't find node with id " + nodeId);
         log().debug("deleteNode: deleting node " + nodeId);
         m_nodeDao.delete(node);
-        Event e = new Event();
-        e.setUei(EventConstants.NODE_DELETED_EVENT_UEI);
-        e.setNodeid(nodeId);
-        e.setSource(getClass().getName());
-        e.setTime(EventConstants.formatToString(new java.util.Date()));
         try {
-            m_eventProxy.send(e);
+            sendEvent(EventConstants.NODE_DELETED_EVENT_UEI, nodeId);
         } catch (EventProxyException ex) {
             throwException(Status.BAD_REQUEST, ex.getMessage());
         }
@@ -141,7 +131,12 @@ public class NodeRestService extends OnmsRestService {
     public OnmsSnmpInterfaceResource getSnmpInterfaceResource() {
         return m_context.getResource(OnmsSnmpInterfaceResource.class);
     }
-    
+
+    @Path("{nodeId}/categories")
+    public OnmsCategoryResource getCategoryResource() {
+        return m_context.getResource(OnmsCategoryResource.class);
+    }
+
     private OnmsCriteria getQueryFilters() {
         MultivaluedMap<String,String> params = m_uriInfo.getQueryParameters();
         OnmsCriteria criteria = new OnmsCriteria(OnmsNode.class);
@@ -150,6 +145,15 @@ public class NodeRestService extends OnmsRestService {
     	addFiltersToCriteria(params, criteria, OnmsNode.class);
         
         return criteria;
+    }
+    
+    private void sendEvent(String uei, int nodeId) throws EventProxyException {
+        Event e = new Event();
+        e.setUei(EventConstants.NODE_DELETED_EVENT_UEI);
+        e.setNodeid(nodeId);
+        e.setSource(getClass().getName());
+        e.setTime(EventConstants.formatToString(new java.util.Date()));
+        m_eventProxy.send(e);
     }
     
     private void throwException(Status status, String msg) {
