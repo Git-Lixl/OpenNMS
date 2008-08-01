@@ -37,6 +37,7 @@ import com.sun.jersey.spi.resource.PerRequest;
 @Component
 @PerRequest
 @Scope("prototype")
+@Transactional
 public class OnmsIpInterfaceResource {
 
     @Autowired
@@ -69,7 +70,6 @@ public class OnmsIpInterfaceResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_XML)
-    @Transactional(readOnly=false)
     public Response addIpInterface(@PathParam("nodeId") int nodeId, OnmsIpInterface ipInterface) {
         OnmsNode node = m_nodeDao.get(nodeId);
         if (node == null)
@@ -96,7 +96,6 @@ public class OnmsIpInterfaceResource {
     @PUT
     @Consumes(MediaType.APPLICATION_XML)
     @Path("{ipAddress}")
-    @Transactional(readOnly=false)
     public Response updateIpInterface(OnmsIpInterface ipInterface, @PathParam("ipAddress") String ipAddress) {
         if (ipInterface.getIpAddress().equals(ipAddress) == false)
             throwException(Status.CONFLICT, "updateIpInterface: invalid IP Address for ipInterface " + ipInterface);
@@ -107,7 +106,6 @@ public class OnmsIpInterfaceResource {
 
     @DELETE
     @Path("{ipAddress}")
-    @Transactional(readOnly=false)
     public Response deleteIpInterface(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress) {
         OnmsNode node = m_nodeDao.get(nodeId);
         if (node == null)

@@ -32,6 +32,7 @@ import com.sun.jersey.spi.resource.PerRequest;
 @Component
 @PerRequest
 @Scope("prototype")
+@Transactional
 public class OnmsSnmpInterfaceResource {
 
     @Autowired
@@ -57,7 +58,6 @@ public class OnmsSnmpInterfaceResource {
     
     @POST
     @Consumes(MediaType.APPLICATION_XML)
-    @Transactional(readOnly=false)
     public Response addSnmpInterface(@PathParam("nodeId") int nodeId, OnmsSnmpInterface snmpInterface) {
         OnmsNode node = m_nodeDao.get(nodeId);
         if (node == null)
@@ -76,7 +76,6 @@ public class OnmsSnmpInterfaceResource {
     }
     
     @DELETE
-    @Transactional(readOnly=false)
     @Path("{ifIndex}")
     public Response deleteSnmpInterface(@PathParam("nodeId") int nodeId, @PathParam("ifIndex") int ifIndex) {
         OnmsNode node = m_nodeDao.get(nodeId);
@@ -95,7 +94,6 @@ public class OnmsSnmpInterfaceResource {
     @PUT
     @Consumes(MediaType.APPLICATION_XML)
     @Path("{ifIndex}")
-    @Transactional(readOnly=false)
     public Response updateSnmpInterface(OnmsSnmpInterface snmpInterface, @PathParam("ifIndex") int ifIndex) {
         if (snmpInterface.getIfIndex().equals(ifIndex) == false)
             throwException(Status.CONFLICT, "updateSnmpInterface: invalid ifIndex " + ifIndex + " for snmpInterface " + snmpInterface);

@@ -39,6 +39,7 @@ import com.sun.jersey.spi.resource.PerRequest;
 @PerRequest
 @Scope("prototype")
 @Path("nodes")
+@Transactional
 public class NodeRestService extends OnmsRestService {
     
     private static final int LIMIT=10;
@@ -71,7 +72,6 @@ public class NodeRestService extends OnmsRestService {
 
     @POST
     @Consumes(MediaType.APPLICATION_XML)
-    @Transactional(readOnly=false)
     public Response addNode(OnmsNode node) {
         log().debug("addNode: Adding node " + node);
         m_nodeDao.save(node);
@@ -91,7 +91,6 @@ public class NodeRestService extends OnmsRestService {
     @PUT
     @Consumes(MediaType.APPLICATION_XML)
     @Path("{nodeId}")
-    @Transactional(readOnly=false)
     public Response updateNode(OnmsNode node, @PathParam("nodeId") int nodeId) {
         if (nodeId != node.getId())
             throwException(Status.CONFLICT, "updateNode: invalid nodeId for node " + node);
@@ -102,7 +101,6 @@ public class NodeRestService extends OnmsRestService {
     
     @DELETE
     @Path("{nodeId}")
-    @Transactional(readOnly=false)
     public Response deleteNode(@PathParam("nodeId") int nodeId) {
         OnmsNode node = m_nodeDao.get(nodeId);
         if (node == null)

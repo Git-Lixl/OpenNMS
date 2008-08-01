@@ -38,6 +38,7 @@ import com.sun.jersey.spi.resource.PerRequest;
 @Component
 @PerRequest
 @Scope("prototype")
+@Transactional
 public class OnmsMonitoredServiceResource {
     
     @Autowired
@@ -72,7 +73,6 @@ public class OnmsMonitoredServiceResource {
     
     @POST
     @Consumes(MediaType.APPLICATION_XML)
-    @Transactional(readOnly=false)
     public Response addService(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress, OnmsMonitoredService service) {
         OnmsNode node = m_nodeDao.get(nodeId);
         if (node == null)
@@ -85,8 +85,11 @@ public class OnmsMonitoredServiceResource {
         if (service.getServiceName() == null)
             throwException(Status.BAD_REQUEST, "addService: service must have a name");
         OnmsServiceType serviceType = m_serviceTypeDao.findByName(service.getServiceName());
-        if (serviceType == null)
-            throwException(Status.BAD_REQUEST, "addService: invalid service name " + service.getServiceName());
+        if (serviceType == null)  {
+            serviceType = new OnmsServiceType(service.getServiceName());
+            m_serviceTypeDao.save(serviceType);
+//            throwException(Status.BAD_REQUEST, "addService: invalid service name " + service.getServiceName());
+        }
         service.setServiceType(serviceType);
         service.setIpInterface(intf);
         log().debug("addService: adding service " + service);
@@ -109,7 +112,6 @@ public class OnmsMonitoredServiceResource {
     @PUT
     @Consumes(MediaType.APPLICATION_XML)
     @Path("{service}")
-    @Transactional(readOnly=false)
     public Response updateService(OnmsMonitoredService service, @PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress, @PathParam("service") String serviceName) {
         if (service.getServiceName().equals(serviceName) == false)
             throwException(Status.CONFLICT, "updateService: invalid service name for " + service);
@@ -120,7 +122,6 @@ public class OnmsMonitoredServiceResource {
 
     @DELETE
     @Path("{service}")
-    @Transactional(readOnly=false)
     public Response deleteService(@PathParam("nodeId") int nodeId, @PathParam("ipAddress") String ipAddress, @PathParam("service") String serviceName) {
         OnmsNode node = m_nodeDao.get(nodeId);
         if (node == null)
