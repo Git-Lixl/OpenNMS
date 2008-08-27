@@ -39,6 +39,7 @@ package org.opennms.netmgt.config;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -336,6 +337,8 @@ public interface PollerConfig {
     public abstract PollerConfiguration getConfiguration();
 
     public abstract void saveResponseTimeData(String locationMonitor, OnmsMonitoredService monSvc, double responseTime, Package pkg);
+    
+    public abstract void storeResponseTime(String locationMonitor, OnmsMonitoredService monSvc, Map<String, Number> entries, Package pkg);
 
     public abstract Collection<ServiceMonitorLocator> getServiceMonitorLocators(DistributionContext context);
 

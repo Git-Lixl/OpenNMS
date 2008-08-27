@@ -71,11 +71,16 @@ import org.opennms.netmgt.utils.ParameterMap;
 
 // this is marked not distributable because it relies on a shared library
 @Distributable(DistributionContext.DAEMON)
-final public class StrafePingMonitor extends IPv4Monitor {
+public class StrafePingMonitor extends IPv4Monitor {
     private static final int DEFAULT_MULTI_PING_COUNT = 20;
     private static final long DEFAULT_PING_INTERVAL = 50;
     private static final int DEFAULT_FAILURE_PING_COUNT = 20;
 
+    
+    protected ArrayList<Number> getResponseTimes(InetAddress host, int count, long timeout, long pingInterval) throws Exception {
+    	return new ArrayList<Number>(Pinger.parallelPing(host, count, timeout, pingInterval));
+    }
+    
     /**
      * Constructs a new monitor.
      */
@@ -125,7 +130,7 @@ final public class StrafePingMonitor extends IPv4Monitor {
             long pingInterval = ParameterMap.getKeyedLong(parameters, "wait-interval", DEFAULT_PING_INTERVAL);
             int failurePingCount = ParameterMap.getKeyedInteger(parameters, "failure-ping-count", DEFAULT_FAILURE_PING_COUNT);
             
-            responseTimes = new ArrayList<Number>(Pinger.parallelPing(host, count, timeout, pingInterval));
+            responseTimes = getResponseTimes(host, count, timeout, pingInterval);
 
             if (CollectionMath.countNull(responseTimes) >= failurePingCount) {
             	if (log().isDebugEnabled()) {
@@ -160,6 +165,8 @@ final public class StrafePingMonitor extends IPv4Monitor {
             returnval.put("median", CollectionMath.median(responseTimes));
             returnval.put("response-time", CollectionMath.average(responseTimes));
 
+            log().debug("loss: "+returnval.get("loss")+" median:"+returnval.get("median")+" rt: "+returnval.get("response-time"));
+            
             serviceStatus.setProperties(returnval);
         } catch (Exception e) {
             log.debug("failed to ping " + host, e);

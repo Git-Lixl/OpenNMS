@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -351,7 +352,7 @@ public class DefaultPollerBackEnd implements PollerBackEnd, SpringServiceDaemon 
 
         if (newStatus.getPollResult().getResponseTime() != null) {
             Package pkg = getPollingPackageForMonitor(locationMonitor);
-            m_pollerConfig.saveResponseTimeData(Integer.toString(locationMonitorID), monSvc, newStatus.getPollResult().getResponseTime(), pkg);
+            m_pollerConfig.storeResponseTime(Integer.toString(locationMonitorID), monSvc, newStatus.getPollResult().getProperties(), pkg);
         }
 
         OnmsLocationSpecificStatus currentStatus = m_locMonDao.getMostRecentStatusChange(locationMonitor, monSvc);

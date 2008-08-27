@@ -463,5 +463,8 @@ public class MockPollerConfig extends PollOutagesConfigManager implements Poller
         throw new UnsupportedOperationException("MockPollerConfig.isPolledLocally is not yet implemented");
     }
 
+	public void storeResponseTime(String locationMonitor, OnmsMonitoredService monSvc, Map<String, Number> entries, Package pkg) {
+        throw new UnsupportedOperationException("not yet implelmented");
+	}
 
 }

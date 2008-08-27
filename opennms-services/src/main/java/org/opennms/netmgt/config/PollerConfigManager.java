@@ -40,6 +40,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.net.InetAddress;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,6 +49,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -75,10 +78,13 @@ import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.ServiceSelector;
 import org.opennms.netmgt.poller.Distributable;
 import org.opennms.netmgt.poller.DistributionContext;
+import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.ServiceMonitor;
 import org.opennms.netmgt.poller.ServiceMonitorLocator;
+import org.opennms.netmgt.rrd.RrdDataSource;
 import org.opennms.netmgt.rrd.RrdException;
 import org.opennms.netmgt.rrd.RrdUtils;
+import org.opennms.netmgt.utils.ParameterMap;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 
 /**
@@ -87,6 +93,8 @@ import org.springframework.dao.PermissionDeniedDataAccessException;
  */
 abstract public class PollerConfigManager implements PollerConfig {
 
+    public static final String DEFAULT_BASENAME = "response-time";
+	
     /**
      * @author <a href="mailto:david@opennms.org">David Hustace</a>
      * @param reader
@@ -909,8 +917,6 @@ abstract public class PollerConfigManager implements PollerConfig {
         
     }
     
-    
-
     private String getServiceParameter(Service svc, String key) {
         
         for(Parameter parm : parameters(svc)) {
@@ -924,6 +930,97 @@ abstract public class PollerConfigManager implements PollerConfig {
             }
         }
         return null;
+    }
+    
+	public void storeResponseTime(String locationMonitor, OnmsMonitoredService monSvc, Map<String, Number> entries, Package pkg) {
+        String svcName = monSvc.getServiceName();
+        
+        Service svc = getServiceInPackage(svcName, pkg);
+        
+		String rrdPath     = getServiceParameter(svc, "rrd-repository");
+		rrdPath += File.separatorChar+"distributed"+File.separatorChar+locationMonitor;
+		String dsName      = getServiceParameter(svc, "ds-name");
+		if (dsName == null) dsName = DEFAULT_BASENAME;
+		String rrdBaseName = getServiceParameter(svc, "rrd-base-name");
+		if (rrdBaseName == null) rrdBaseName = dsName;
+
+		if (rrdPath == null) {
+			log().debug("storeResponseTime: RRD repository not specified in parameters, latency data will not be stored.");
+			return;
+		}
+
+		if (!entries.containsKey(dsName) && entries.containsKey(DEFAULT_BASENAME)) {
+		    entries.put(dsName, entries.get(DEFAULT_BASENAME));
+		    entries.remove(DEFAULT_BASENAME);
+		}
+
+		
+		updateRRD(rrdPath, monSvc.getIpAddress(), rrdBaseName, entries, pkg);
+	}
+	
+	private void updateRRD(String repository, String addr, String rrdBaseName, String dsName, long value, Package pkg) {
+		LinkedHashMap<String, Number> lhm = new LinkedHashMap<String, Number>();
+		lhm.put(dsName, value);
+		updateRRD(repository, addr, rrdBaseName, lhm, pkg);
+	}
+	
+    private void updateRRD(String repository, String addr, String rrdBaseName, Map<String, Number> entries, Package pkg) {
+        try {
+            // Create RRD if it doesn't already exist
+        	List<RrdDataSource> dsList = new ArrayList<RrdDataSource>();
+        	for (String dsName : entries.keySet()) {
+        		dsList.add(new RrdDataSource(dsName, "GAUGE", getStep(pkg)*2, "U", "U"));
+        	}
+            createRRD(repository, addr, rrdBaseName, dsList, pkg);
+
+            // add interface address to RRD repository path
+            String path = repository + File.separator + addr;
+
+            StringBuffer value = new StringBuffer();
+            Iterator<String> i = entries.keySet().iterator();
+            while (i.hasNext()) {
+            	Number num = entries.get(i.next());
+            	if (num == null || Double.isNaN(num.doubleValue())) {
+            		value.append("U");
+            	} else {
+                	NumberFormat nf = NumberFormat.getInstance();
+                	nf.setGroupingUsed(false);
+                	nf.setMinimumFractionDigits(0);
+                	nf.setMaximumFractionDigits(Integer.MAX_VALUE);
+                	nf.setMinimumIntegerDigits(0);
+                	nf.setMaximumIntegerDigits(Integer.MAX_VALUE);
+                	value.append(nf.format(num.doubleValue()));
+            	}
+            	if (i.hasNext()) {
+            		value.append(":");
+            	}
+            }
+            RrdUtils.updateRRD(addr, path, rrdBaseName, value.toString());
+
+        } catch (RrdException e) {
+            if (log().isEnabledFor(Level.ERROR)) {
+                String msg = e.getMessage();
+                log().error(msg);
+                throw new RuntimeException(msg, e);
+            }
+        }
+    }
+
+    private boolean createRRD(String repository, String addr, String rrdBaseName, String dsName, Package pkg) throws RrdException {
+        List<RrdDataSource> dsList = Collections.singletonList(new RrdDataSource(dsName, "GAUGE", getStep(pkg)*2, "U", "U"));
+        return createRRD(repository, addr, rrdBaseName, dsList, pkg);
+
+    }
+
+    private boolean createRRD(String repository, String addr, String rrdBaseName, List<RrdDataSource> dsList, Package pkg) throws RrdException {
+
+        List rraList = getRRAList(pkg);
+
+        // add interface address to RRD repository path
+        String path = repository + File.separator + addr;
+
+        return RrdUtils.createRRD(addr, path, rrdBaseName, getStep(pkg), dsList, rraList);
+
     }
     
 }
