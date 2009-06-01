@@ -39,6 +39,7 @@
         classpath:/META-INF/opennms/applicationContext-reporting.xml
         /WEB-INF/applicationContext-spring-security.xml
         /WEB-INF/applicationContext-jersey.xml
+	    /WEB-INF/applicationContext-virtualgroups.xml
     </param-value>
   </context-param>
   
@@ -731,12 +732,29 @@
         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
   </servlet>
+  
+  <!-- DWR Servlet -->
+   <servlet>
+  <servlet-name>dwr-invoker</servlet-name>
+  <display-name>DWR Servlet</display-name>
+  <servlet-class>org.directwebremoting.spring.DwrSpringServlet</servlet-class>
+  <init-param>
+     <param-name>debug</param-name>
+     <param-value>true</param-value>
+  </init-param>
+</servlet>
 
  <!-- WebStart Servlet mapping -->
      <servlet-mapping>
         <servlet-name>JnlpDownloadServlet</servlet-name>
         <url-pattern>/webstart/*</url-pattern>
      </servlet-mapping>
+
+ <!-- dwr servlet mapping -->
+  <servlet-mapping>
+    <servlet-name>dwr-invoker</servlet-name>
+    <url-pattern>/dwr/*</url-pattern>
+  </servlet-mapping>
 
   <!-- desktop graph servlet mapping -->
   <!-- desktop survey report servlet mapping -->  

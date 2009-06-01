@@ -25,4 +25,20 @@
      <property name="dataLinkInterfaceDao" ref="dataLinkInterfaceDao" />
    </bean>
 
+  <bean id="groupDao" class="org.opennms.netmgt.dao.hibernate.GroupDaoHibernate">
+     <property name="sessionFactory" ref="sessionFactory" />
+  </bean>
+
+   <bean id="groupService" class="org.opennms.netmgt.dao.support.DefaultVirtualGroupsService">
+     <property name="groupDao" ref="groupDao" />
+     <property name="nodeDao" ref="nodeDao" />
+     <property name="monitoredServiceDao" ref="monitoredServiceDao" />
+  </bean>
+
+  <bean name="org.opennms.netmgt.dao.VirtualGroupTest" id="org.opennms.netmgt.dao.VirtualGroupTest" class="org.opennms.netmgt.dao.VirtualGroupTest">
+     <property name="populator" ref="databasePopulator" />
+     <property name="groupDao" ref="groupDao" />
+     <property name="groupService" ref="groupService" />
+   </bean>
+
 </beans>

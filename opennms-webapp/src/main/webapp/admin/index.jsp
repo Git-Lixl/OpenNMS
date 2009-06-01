@@ -184,6 +184,7 @@
       <ul class="plain">  
         <li><a href="javascript:addInterfacePost()">Add Interface</a></li>
         <li><a href="admin/provisioningGroups.htm">Manage Provisioning Groups</a></li>
+        <li><a href="admin/virtualGroups.htm">Virtual Groups</a></li>
         <li><a href="admin/asset/index.jsp">Import and Export Asset Information</a></li>
         <li><a href="admin/categories.htm">Manage Surveillance Categories</a></li>
         <li><a href="javascript:deletePost()">Delete Nodes</a></li>

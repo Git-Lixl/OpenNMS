@@ -305,6 +305,11 @@
     </plugins>
   </build>
   <dependencies>
+   <dependency>
+    <groupId>org.directwebremoting</groupId>
+    <artifactId>dwr</artifactId>
+    <version>2.0.2</version>
+   </dependency>
     <!-- Sort dependencies by groupId then artifactId, but put dependencies with a groupId of org.opennms first. -->
     <dependency>
       <groupId>org.opennms</groupId>

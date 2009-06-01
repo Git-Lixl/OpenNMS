@@ -38,6 +38,7 @@ package org.opennms.netmgt.dao;
 
 import org.opennms.netmgt.dao.db.AbstractTransactionalTemporaryDatabaseSpringContextTests;
 import org.opennms.netmgt.dao.hibernate.LocationMonitorDaoHibernate;
+import org.opennms.netmgt.dao.support.VirtualGroupsService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.test.DaoTestConfigBean;
 
@@ -45,6 +46,8 @@ public class AbstractTransactionalDaoTestCase extends AbstractTransactionalTempo
 
     private DistPollerDao m_distPollerDao;
     private NodeDao m_nodeDao;
+    private GroupDao m_groupDao;
+    private VirtualGroupsService m_groupService;
     private IpInterfaceDao m_ipInterfaceDao;
     private SnmpInterfaceDao m_snmpInterfaceDao;
     private MonitoredServiceDao m_monitoredServiceDao;
@@ -206,6 +209,25 @@ public class AbstractTransactionalDaoTestCase extends AbstractTransactionalTempo
     }
 
 
+    public GroupDao getGroupDao() {
+      return m_groupDao;
+    }
+
+    public void setGroupDao( GroupDao dao ) {
+      m_groupDao = dao;
+    }
+
+     public void setGroupService( VirtualGroupsService service )
+    {
+      m_groupService = service;
+    }
+
+
+    public VirtualGroupsService getGroupService()
+    {
+      return m_groupService;
+    }
+    
     public ServiceTypeDao getServiceTypeDao() {
         return m_serviceTypeDao;
     }

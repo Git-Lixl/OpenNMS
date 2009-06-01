@@ -10,6 +10,9 @@
   
   <context:annotation-config/>
 
+  <!-- Import of virtualGroups mapping -->
+  <import resource="virtualgroups-web.xml" />
+
   <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
     <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
     <property name="locations">
@@ -349,6 +352,14 @@
           <property name="name" value="Dashboard"/>
           <property name="url" value="dashboard.jsp"/>
           <property name="locationMatch" value="dashboard"/>
+        </bean>
+
+
+        <!-- Virtual Groups views -->
+        <bean class="org.opennms.web.navigate.LocationBasedNavBarEntry">
+          <property name="name" value="Virtual Groups Monitor"/>
+          <property name="url" value="element/monitorGroup.htm"/>
+          <property name="locationMatch" value="event"/>
         </bean>
 
         <bean class="org.opennms.web.navigate.LocationBasedNavBarEntry">

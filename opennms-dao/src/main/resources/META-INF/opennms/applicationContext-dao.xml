@@ -34,6 +34,8 @@
         <value>org.opennms.netmgt.model.OnmsAssetRecord</value>
         <value>org.opennms.netmgt.model.PathElement</value>
         <value>org.opennms.netmgt.model.OnmsNode</value>
+        <value>org.opennms.netmgt.model.Group</value>
+        <value>org.opennms.netmgt.model.GroupItem</value>
         <value>org.opennms.netmgt.model.OnmsIpInterface</value>
         <value>org.opennms.netmgt.model.OnmsSnmpInterface</value>
         <value>org.opennms.netmgt.model.OnmsArpInterface</value>
