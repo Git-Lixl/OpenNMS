@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           ">
+
+   <bean name="/admin/virtualGroups.htm" class="org.opennms.web.controller.VirtualGroupsController">
+     <property name="groupDao" ref="virtualGroupsGroupDao" />
+     <property name="daoUtils" ref="virtualGroupsDaoUtils" />
+   </bean>
+ 
+   <bean name="/admin/editVirtualGroup.htm" class="org.opennms.web.controller.EditVirtualGroupController">
+    <property name="groupDao" ref="virtualGroupsGroupDao" />
+    <property name="nodeDao" ref="nodeDao" />
+    <property name="monitoredServiceDao" ref="monitoredServiceDao" />
+    <property name="daoUtils" ref="virtualGroupsDaoUtils" />
+  </bean>
+
+   <bean name="/element/monitorGroup.htm" class="org.opennms.web.controller.MonitorVirtualGroupController">
+    <property name="groupDao" ref="virtualGroupsGroupDao" />
+    <property name="nodeDao" ref="nodeDao" />
+    <property name="monitoredServiceDao" ref="monitoredServiceDao" />
+    <property name="groupsService" ref="vGroupsService" />
+  </bean>
+</beans>
