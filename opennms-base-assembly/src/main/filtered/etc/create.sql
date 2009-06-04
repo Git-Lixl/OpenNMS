@@ -73,6 +73,8 @@ drop table groups cascade;
 drop table group_user cascade;
 drop table category_user cascade;
 drop table category_group cascade;
+drop table group_items cascade;
+drop table groups cascade;
 
 drop sequence catNxtId;
 drop sequence nodeNxtId;
@@ -88,6 +90,8 @@ drop sequence vulnNxtId;
 drop sequence reportNxtId;
 drop sequence mapNxtId;
 drop sequence opennmsNxtId;  --# should be used for all sequences, eventually
+drop sequence groupItemsNxtId;
+drop sequence groupNxtId;
 
 --# Begin quartz persistence 
 
@@ -185,6 +189,16 @@ create sequence pollResultNxtId minvalue 1;
 --#          sequence,   column, table
 --# install: mapNxtId mapid map
 create sequence mapNxtId minvalue 1;
+
+--#########################################################################
+--# Virtual Groups Indexes
+--#########################################################################
+
+--# install: groupNxtId groupId   groups
+create sequence groupNxtId minvalue 1;
+
+--# install: groupItemsNxtId itemId   group_items
+create sequence groupItemsNxtId minvalue 1;
 
 --########################################################################
 --# serverMap table - Contains a list of IP Addresses mapped to
@@ -2249,3 +2263,31 @@ INSERT INTO qrtz_locks values('STATE_ACCESS');
 INSERT INTO qrtz_locks values('MISFIRE_ACCESS');
 
 --# End Quartz persistence tables
+
+--#########################################################################
+--#  Virtual Groups .... (create this tables after the node table)
+--#########################################################################
+
+create table groups (
+  groupId		integer not null,
+  description		varchar(256),
+  constraint pk_groupID primary key (groupId)
+);
+
+create table group_items (
+  itemId		integer not null,
+  groupId		integer not null,
+  itemType             varchar(64),
+  contentGroupId            integer,
+  contentNodeId            integer,
+  contentServiceId            integer,
+  description		varchar(256),
+
+  constraint pk_groupItemsID primary key (itemId),
+  constraint fk_groupItemID1 foreign key (groupId) references groups ON DELETE CASCADE,
+  constraint fk_groupitemdeletenode foreign key (contentNodeId) references node (nodeid) ON DELETE CASCADE,
+  constraint fk_groupitemdeletegroup foreign key (contentGroupId) references groups (groupid) ON DELETE CASCADE,
+  constraint fk_groupitemdeleteservice foreign key (contentServiceId) references ifservices (id) ON DELETE CASCADE
+);
+
+

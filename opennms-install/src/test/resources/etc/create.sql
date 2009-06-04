@@ -2172,6 +2172,7 @@ INSERT INTO qrtz_locks values('CALENDAR_ACCESS');
 INSERT INTO qrtz_locks values('STATE_ACCESS');
 INSERT INTO qrtz_locks values('MISFIRE_ACCESS');
 
+--# End Quartz persistence tables
 
 --#########################################################################
 --#  Virtual Groups .... (create this tables after the node table)
@@ -2199,4 +2200,4 @@ create table group_items (
   constraint fk_groupitemdeleteservice foreign key (contentServiceId) references ifservices (id) ON DELETE CASCADE
 );
 
---# End Quartz persistence tables
+
