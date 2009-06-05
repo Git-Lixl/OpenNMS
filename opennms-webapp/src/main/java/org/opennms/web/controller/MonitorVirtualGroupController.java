@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.Set;
 import java.util.TreeMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -47,6 +48,7 @@ import org.opennms.netmgt.dao.NodeDao;
 import org.opennms.netmgt.dao.support.VirtualGroupsService;
 import org.opennms.netmgt.model.Group;
 import org.opennms.netmgt.model.GroupItem;
+import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.web.category.CategoryUtil;
@@ -111,6 +113,42 @@ public class MonitorVirtualGroupController extends AbstractController {
     }
 
     return groupDao.get(Integer.parseInt(groupName));
+  }
+
+  /**
+   * Method that retrieve if an interface is up or down.
+   * @param intf - interface to check
+   * @return true if the interface is down
+   */
+  protected boolean isInterfaceDown( OnmsIpInterface intf )
+  {
+    boolean res = false;
+    Set<OnmsMonitoredService> services = intf.getMonitoredServices();
+      for (OnmsMonitoredService svc : services) {
+          if ( svc.isDown()) {
+              res = true;
+              break;
+          }
+    }
+    return res;
+  }
+
+  /**
+   * Method that retrieve if a node is up or down.
+   * @param node - node to check
+   * @return true if the node is down
+   */
+  protected boolean isNodeDown( OnmsNode node )
+  {
+    boolean res = false;
+    Set<OnmsIpInterface> interfaces = node.getIpInterfaces();
+    for (OnmsIpInterface ipIf : interfaces) {
+        if ( isInterfaceDown( ipIf ) ) {
+            res = true;
+            break;
+        }
+    }
+    return res;
   }
 
   /**
@@ -291,8 +329,7 @@ public class MonitorVirtualGroupController extends AbstractController {
     }
 
     protected boolean checkIsDown() {
-
-      return node.isDown();
+      return isNodeDown( node );
     }
 
     @Override
@@ -390,7 +427,7 @@ public class MonitorVirtualGroupController extends AbstractController {
       for (GroupItem it : group.getItems()) {
         if (it.getType() == GroupItem.ItemType.NODE) {
           OnmsNode node = nodeDao.load(it.getContentNodeId());
-          if (node.isDown()) {
+          if (isNodeDown( node )) {
             count++;
           }
         } else if (it.getType() == GroupItem.ItemType.GROUP) {

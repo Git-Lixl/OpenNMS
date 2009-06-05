@@ -32,11 +32,13 @@
 
 package org.opennms.netmgt.dao.support;
 
+import java.util.Set;
 import org.opennms.netmgt.model.Group;
 import org.opennms.netmgt.dao.GroupDao;
 import org.opennms.netmgt.model.GroupItem;
 import org.opennms.netmgt.dao.MonitoredServiceDao;
 import org.opennms.netmgt.dao.NodeDao;
+import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsNode;
 
@@ -48,6 +50,42 @@ public class DefaultVirtualGroupsService implements VirtualGroupsService {
   private GroupDao groupDao;
   private NodeDao nodeDao;
   private MonitoredServiceDao monitoredServiceDao;
+
+   /**
+   * Method that retrieve if an interface is up or down.
+   * @param intf - interface to check
+   * @return true if the interface is down
+   */
+  protected boolean isInterfaceDown( OnmsIpInterface intf )
+  {
+    boolean res = false;
+    Set<OnmsMonitoredService> services = intf.getMonitoredServices();
+      for (OnmsMonitoredService svc : services) {
+          if ( svc.isDown()) {
+              res = true;
+              break;
+          }
+    }
+    return res;
+  }
+
+  /**
+   * Method that retrieve if a node is up or down.
+   * @param node - node to check
+   * @return true if the node is down
+   */
+  protected boolean isNodeDown( OnmsNode node )
+  {
+    boolean res = false;
+    Set<OnmsIpInterface> interfaces = node.getIpInterfaces();
+    for (OnmsIpInterface ipIf : interfaces) {
+        if ( isInterfaceDown( ipIf ) ) {
+            res = true;
+            break;
+        }
+    }
+    return res;
+  }
 
 
   /**
@@ -62,7 +100,7 @@ public class DefaultVirtualGroupsService implements VirtualGroupsService {
         switch (it.getType()) {
           case NODE:
             OnmsNode node = nodeDao.load(it.getContentNodeId());
-            if (node.isDown()) {
+            if (isNodeDown( node )) {
               res = true;
             }
             break;
