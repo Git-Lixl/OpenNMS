@@ -356,10 +356,11 @@
 
 
         <!-- Virtual Groups views -->
-        <bean class="org.opennms.web.navigate.LocationBasedNavBarEntry">
+        <bean class="org.opennms.web.navigate.PropertyEnabledNavBarEntry">
           <property name="name" value="Virtual Groups Monitor"/>
           <property name="url" value="element/monitorGroup.htm"/>
           <property name="locationMatch" value="event"/>
+          <property name="keyName" value="opennms.virtualgroups.enabled" />
         </bean>
 
         <bean class="org.opennms.web.navigate.LocationBasedNavBarEntry">
