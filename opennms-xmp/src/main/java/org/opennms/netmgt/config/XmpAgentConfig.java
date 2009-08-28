@@ -10,7 +10,7 @@
  *
  * Modifications:
  * 
- * Created: January 23, 2009
+ * Created: Aug 26, 2009
  *
  * Copyright (C) 2009 The OpenNMS Group, Inc.  All rights reserved.
  *
@@ -33,41 +33,60 @@
  *      http://www.opennms.org/
  *      http://www.opennms.com/
  */
-package org.opennms.netmgt.dao;
 
-import java.util.List;
+package org.opennms.netmgt.config;
 
-import org.opennms.netmgt.config.common.End2endMailConfig;
-import org.opennms.netmgt.config.common.ReadmailConfig;
-import org.opennms.netmgt.config.common.SendmailConfig;
-import org.springframework.dao.DataAccessResourceFailureException;
+public class XmpAgentConfig {
+    /**
+     * The TCP port on which the agent communicates
+     */
+    private int m_port;
+    
+    /**
+     * The username used for authenticating to the agent
+     */
+    private String m_authenUser;
+    
+    /**
+     * The timeout used when communicating with the agent
+     */
+    private long m_timeout;
+    
+    /**
+     * The number of retries permitted when timeout expires
+     */
+    private int m_retry;
 
+    public int getPort() {
+        return m_port;
+    }
 
-/**
- * 
- * @author <a href="mailto:david@opennms.org">David Hustace</a>
- *
- */
-public interface JavaMailConfigurationDao {
+    public void setPort(int port) {
+        m_port = port;
+    }
 
-    SendmailConfig getDefaultSendmailConfig();
-    
-    SendmailConfig getSendMailConfig(String name);
-    
-    List<SendmailConfig> getSendmailConfigs();
-    
-    ReadmailConfig getDefaultReadmailConfig();
-    
-    ReadmailConfig getReadMailConfig(String name);
-    
-    List<ReadmailConfig> getReadmailConfigs();
-    
-    End2endMailConfig getEnd2EndConfig(String name);
-    
-    List<End2endMailConfig> getEnd2EndConfigs();
-    
-    void verifyMarshaledConfiguration() throws IllegalStateException;
-    
-    void reloadConfiguration() throws DataAccessResourceFailureException;
+    public String getAuthenUser() {
+        return m_authenUser;
+    }
+
+    public void setAuthenUser(String authenUser) {
+        m_authenUser = authenUser;
+    }
+
+    public long getTimeout() {
+        return m_timeout;
+    }
+
+    public void setTimeout(long timeout) {
+        m_timeout = timeout;
+    }
+
+    public int getRetry() {
+        return m_retry;
+    }
+
+    public void setRetry(int retries) {
+        m_retry = retries;
+    }
     
 }

@@ -75,6 +75,9 @@ import org.krupczak.Xmp.XmpMessage;
 import org.krupczak.Xmp.XmpSession;
 import org.krupczak.Xmp.XmpVar;
 import org.opennms.core.utils.ThreadCategory;
+import org.opennms.netmgt.config.XmpAgentConfig;
+import org.opennms.netmgt.config.XmpConfigFactory;
+import org.opennms.netmgt.config.XmpPeerFactory;
 import org.opennms.netmgt.config.xmpConfig.XmpConfig;
 import org.opennms.netmgt.config.xmpDataCollection.Group;
 import org.opennms.netmgt.config.xmpDataCollection.MibObj;
@@ -92,6 +95,7 @@ public class XmpCollector implements ServiceCollector {
     /* instance variables ******************************** */
     int xmpPort;
     int timeout;  /* millseconds */
+    int retries;
     Set setOfNodes;
     SocketOpts sockopts;
     String authenUser;
@@ -99,6 +103,8 @@ public class XmpCollector implements ServiceCollector {
     /* constructors  ************************************* */
     public XmpCollector() 
     {
+        log().debug("XmpCollector created");
+
         // initialize collections and containers for storing
         // list of systems to query 
         setOfNodes = new HashSet();
@@ -323,7 +329,14 @@ public class XmpCollector implements ServiceCollector {
         try {
             XmpCollectionFactory.init();
         } catch (Exception e) {
-            log().error("initialize: collection factory failed to initialize");
+            log().error("initialize: XmpCollectionFactory failed to initialize");
+            throw new UndeclaredThrowableException(e);
+        }
+        
+        try {
+            XmpPeerFactory.init();
+        } catch (Exception e) {
+            log().error("initialize: XmpPeerFactory failed to initialize");
             throw new UndeclaredThrowableException(e);
         }
 
@@ -444,18 +457,31 @@ public class XmpCollector implements ServiceCollector {
         log().debug("collect agent "+agent);
 
         oldUptime = 0;
+        
+        // First go to the peer factory
+        XmpAgentConfig peerConfig = XmpPeerFactory.getInstance().getAgentConfig(agent.getInetAddress());
+        authenUser = peerConfig.getAuthenUser();
+        timeout = (int)peerConfig.getTimeout();
+        retries = peerConfig.getRetry();
+        xmpPort = peerConfig.getPort();
 
         if (parameters.get("authenUser") != null)
             authenUser = (String)parameters.get("authenUser");
 
         if (parameters.get("timeout") != null) {
-            timeout = Integer.valueOf(parameters.get("timeout")).intValue();
+            timeout = Integer.valueOf(parameters.get("timeout"));
+        }
+        
+        if (parameters.get("retry") != null) {
+            retries = Integer.valueOf(parameters.get("retries"));
         }
         parameters.get("collection");
 
         if (parameters.get("port") != null) {
-            xmpPort = Integer.valueOf((String)parameters.get("port")).intValue();
+            xmpPort = Integer.valueOf((String)parameters.get("port"));
         }
+
+        log().debug("collect got parameters for "+agent);
 
         String collectionName = parameters.get("collection");
 
@@ -466,6 +492,8 @@ public class XmpCollector implements ServiceCollector {
             log().warn("collect found no collectionName for "+agent);
             return null;
         }
+
+        log().debug("collect got collectionName for "+agent);
 
         // get/create our collections set
         collectionSet = new XmpCollectionSet(agent);
@@ -491,7 +519,10 @@ public class XmpCollector implements ServiceCollector {
 
         // open/get a session with the target agent
 
-        // log().debug("collect: attempting to open session with "+agent.getInetAddress()+":"+xmpPort+","+authenUser);
+        log().debug("collect: attempting to open XMP session with "+agent.getInetAddress()+":"+xmpPort+","+authenUser);
+
+        // Set the SO_TIMEOUT, why don't we...
+        sockopts.setConnectTimeout(timeout);
 
         session = new XmpSession(sockopts,
                                  agent.getInetAddress(),
@@ -508,6 +539,8 @@ public class XmpCollector implements ServiceCollector {
             return collectionSet;
         }
 
+        log().debug("collect: successfully opened XMP session with"+agent);
+
         // for each group within the collection (from data config)
         // query agent
 
@@ -519,7 +552,7 @@ public class XmpCollector implements ServiceCollector {
             MibObj[] mibObjects = group.getMibObj();
             XmpVar[] vars = new XmpVar[mibObjects.length];
 
-            log().debug("collecting group "+groupName+" with "+mibObjects.length+" mib objects");
+            log().debug("collecting XMP group "+groupName+" with "+mibObjects.length+" mib objects");
 
             // prepare the query vars
             for (i=0 ; i< mibObjects.length; i++) {
@@ -579,15 +612,15 @@ public class XmpCollector implements ServiceCollector {
 
         collectionSet.setStatus(ServiceCollector.COLLECTION_SUCCEEDED);
 
-        //log().info("collect finished, uptime for "+agent+" is "+
-        //            agent.getSavedSysUpTime());
+        log().debug("XMP collect finished, uptime for "+agent+" is "+
+                    agent.getSavedSysUpTime());
 
         return collectionSet;
     }
 
     public RrdRepository getRrdRepository(String collectionName)
     {
-        log().info("getRrdRepository called for "+collectionName);
+        log().info("XMP getRrdRepository called for "+collectionName);
 
         // return the Rrd that I initialized but
         // I dont have to put data in it; initialize

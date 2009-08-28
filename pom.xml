@@ -1668,7 +1668,7 @@
       <dependency>
         <groupId>org.krupczak</groupId>
         <artifactId>Xmp</artifactId>
-        <version>0.1-39</version>
+        <version>0.1-40</version>
       </dependency>
       <dependency>
         <groupId>xmlunit</groupId>
@@ -1694,11 +1694,16 @@
         <groupId>org.codehaus.groovy.maven</groupId>
         <artifactId>gmaven-mojo</artifactId>
         <version>${gmavenVersion}</version>
-	  </dependency>
-	  <dependency>
+      </dependency>
+      <dependency>
         <groupId>org.codehaus.groovy.maven.runtime</groupId>
         <artifactId>gmaven-runtime-1.5</artifactId>
         <version>${gmavenVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.homeip.yusuke</groupId>
+        <artifactId>twitter4j</artifactId>
+        <version>[2.0,)</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
