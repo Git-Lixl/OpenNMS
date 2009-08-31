@@ -176,4 +176,21 @@
             <switch>-tuipin</switch>
         </argument>
     </command>
+    <command binary="false">
+    	<name>microblogUpdate</name>
+    	<execute>org.opennms.netmgt.notifd.MicroblogNotificationStrategy</execute>
+    	<comment>Class for sending notifications as microblog updates</comment>
+    	<argument streamed="false">
+    		<switch>serviceUrl</switch>
+    	</argument>
+    	<argument streamed="false">
+    		<switch>authenUser</switch>
+    	</argument>
+    	<argument streamed="false">
+    		<switch>authenPass</switch>
+    	</argument>
+        <argument streamed="false">
+            <switch>-tm</switch>
+        </argument>
+    </command>
 </notification-commands>

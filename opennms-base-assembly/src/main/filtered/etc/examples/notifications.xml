@@ -230,5 +230,27 @@ on node %nodelabel% has been deleted from OpenNMS&apos;s polling database.</text
         <text-message>A Threshold has returned to normal on node: %nodelabel%, interface:%interface%. The parameter %parm[ds]% reached a value of %parm[value]% with a rearm threshold of %parm[rearm]%. This threshold for this alert was %parm[threshold]%.</text-message>
         <subject>Notice #%noticeid%: High Threshold Rearmed for %parm[ds]% on node %nodelabel%.</subject>
     </notification>
+    <notification name="nodeDown - Identica" status="on">
+        <uei>uei.opennms.org/nodes/nodeDown</uei>
+        <rule>IPADDR != '0.0.0.0'</rule>
+        <destinationPath>Microblog</destinationPath>
+        <text-message>All services are down on node %nodelabel%</text-message>
+        <subject></subject>
+        <numeric-message></numeric-message>
+        <parameter name="serviceUrl" value="https://identi.ca/api/" />
+        <parameter name="authenUser" value="username_all_lowercase" />
+        <parameter name="authenPass" value="passwordGoesHere" />
+    </notification>
+    <notification name="nodeDown - Twitter" status="on">
+        <uei>uei.opennms.org/nodes/nodeDown</uei>
+        <rule>IPADDR != '0.0.0.0'</rule>
+        <destinationPath>Microblog</destinationPath>
+        <text-message>All services are down on node %nodelabel%</text-message>
+        <subject></subject>
+        <numeric-message></numeric-message>
+        <parameter name="serviceUrl" value="https://twitter.com/" />
+        <parameter name="authenUser" value="username_lcase" />
+        <parameter name="authenPass" value="passwordGoesHere" />
+    </notification>
 
 </notifications>

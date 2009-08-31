@@ -107,16 +107,6 @@
   trademark of <a href="http://www.opennms.com">The OpenNMS Group, Inc.</a>
 </p>
 <p>
-  OpenNMS is a derivative work, containing both original code, included
-  code and modified code that was published under the GNU General Public
-  License. Please see the source for detailed copyright notices, but some
-  notable copyright owners are listed below:
-</p>
-<ul>
-    <li>Original (static) Mapping code Copyright &copy; 2003
-      <a href="http://www.nksi.com">Networked Knowledge Systems, Inc.</a>.</li>
-  </ul>
-<p>
   This program is free software; you can redistribute it and/or
   modify it under the terms of the 
   <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a>

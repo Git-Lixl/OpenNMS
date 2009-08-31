@@ -303,5 +303,9 @@
       <groupId>org.opennms</groupId>
       <artifactId>rancid-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>net.homeip.yusuke</groupId>
+      <artifactId>twitter4j</artifactId>
+    </dependency>
   </dependencies>
 </project>
