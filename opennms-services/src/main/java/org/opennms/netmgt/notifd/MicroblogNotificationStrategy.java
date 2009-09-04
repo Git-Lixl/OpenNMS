@@ -42,9 +42,11 @@ import org.opennms.core.utils.Argument;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.NotificationManager;
 
+import twitter4j.DirectMessage;
 import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
+import twitter4j.TwitterResponse;
 
 
 /**
@@ -57,31 +59,137 @@ public class MicroblogNotificationStrategy implements NotificationStrategy {
     private static final String SERVICE_URL = "serviceUrl";
     private static final String AUTHEN_USERNAME = "authenUser";
     private static final String AUTHEN_PASSWORD = "authenPass";
+    private static final String DIRECT_MSG = "directMessage";
+    private static final String AT_REPLY = "atReply";
+    
+    private class StatusOrDM extends TwitterResponse {
+        private long m_id;
+        private TwitterResponse m_response;
+        
+        private StatusOrDM(Status status) {
+            m_response = status;
+            m_id = status.getId();
+        }
+        
+        private StatusOrDM(DirectMessage dm) {
+            m_response = dm;
+            m_id = dm.getId();
+        }
+        
+        public TwitterResponse getResponse() {
+            return m_response;
+        }
+        
+        public long getId() {
+            return m_id;
+        }
+    }
     
     public MicroblogNotificationStrategy() {
     }
 
     public int send(List<Argument> arguments) {
         Twitter svc = buildUblogService(arguments);
-        String message = buildMessage(arguments);
-        Status status;
+        String messageBody = buildMessageBody(arguments);
+        TwitterResponse response;
+        
+        if (log().isDebugEnabled()) {
+            log().debug("Dispatching microblog notification for user '" + svc.getUserId() + "' at base URL '" + svc.getBaseURL() + "' with message '" + messageBody + "'");
+        }
+        try {
+            response = dispatch(arguments, svc, messageBody);
+        } catch (TwitterException e) {
+            log().error("Microblog notification failed");
+            return 1;
+        }
+        
+        log().info("Microblog notification succeeded");
+        if (response instanceof Status) {
+            log().info("Status update posted with ID=" + ((Status)response).getId());
+        } else if (response instanceof DirectMessage) {
+            log().info("Direct message sent with ID=" + ((DirectMessage)response).getId());
+        }
+        
+        return 0;
+    }
+    
+    private StatusOrDM dispatch(List<Argument> arguments, Twitter svc, String messageBody) throws TwitterException {
+        boolean directMessage = false;
+        boolean atReply = false;
+        String destName = null;
+
+        for (Argument arg : arguments) {            
+            if (DIRECT_MSG.equals(arg.getSwitch())) {
+                if ("true".equals(arg.getValue().toLowerCase())) {
+                    directMessage = true;
+                    if (log().isDebugEnabled()) {
+                        log().debug("Directing notification as a direct message");
+                    }
+                }
+            } else if (AT_REPLY.equals(arg.getSwitch())) {
+                if ("true".equals(arg.getValue().toLowerCase())) {
+                    atReply = true;
+                    if (log().isDebugEnabled()) {
+                        log().debug("Directing notification as an at-reply");
+                    }
+                }
+            } else if (NotificationManager.PARAM_MICROBLOG_USERNAME.equals(arg.getSwitch())) {
+                if (arg.getValue() != null) {
+
+                    destName = arg.getValue().trim();
+                    if (destName.startsWith("@")) {
+                        destName = destName.substring(1);
+                    }
+                }
+            }
+        }
+        
+        if (atReply && directMessage) {
+            throw new IllegalArgumentException("Both atReply and directMessage cannot be set simultaneously");
+        } else if (atReply && destName == null) {
+            throw new IllegalArgumentException("Cannot send an at-reply to a user whose microblog username is not set");
+        } else if (directMessage && destName == null) {
+            throw new IllegalArgumentException("Cannot send a direct message to a user whose microblog username is not set");
+        }
+
+        if (directMessage) {
+            return new StatusOrDM(directMessage(svc, destName, messageBody));
+        } else {
+            return new StatusOrDM(update(svc, destName, messageBody));
+        }
+        
+    }
+    
+    private Status update(Twitter svc, String destName, String messageBody) throws TwitterException {
+        String message = messageBody;        
+        if (destName != null) {
+            message = "@" + destName + " " + messageBody;  
+        }
         
         if (log().isDebugEnabled()) {
             log().debug("Updating service: " + svc + " with status: " + message);
         }
         try {
-            status = svc.updateStatus(message);
+            return svc.updateStatus(message);
         } catch (TwitterException e) {
             log().error("Failed to update status for user '" + svc.getUserId() + "' at service URL '" + svc.getBaseURL() + "', caught exception: " + e.getMessage());
-            return 1;
+            throw e;
         }
-        
-        log().info("Successfully updated status: '" + status.getText() + "'");
-        
-        return 0;
     }
     
-    public Twitter buildUblogService(List<Argument> arguments) {
+    private DirectMessage directMessage(Twitter svc, String destName, String messageBody) throws TwitterException {
+        if (log().isDebugEnabled()) {
+            log().debug("Sending direct message to user '" + destName + "' with message '" + messageBody + "'");
+        }
+        try {
+            return svc.sendDirectMessage(destName, messageBody);
+        } catch (TwitterException e) {
+            log().error("Failed to send DM to user '" + destName + "' from user '"+ svc.getUserId() + "' at service URL '" + svc.getBaseURL() + "', caught exception: " + e.getMessage());
+            throw e;
+        }
+    }
+    
+    private Twitter buildUblogService(List<Argument> arguments) {
         String serviceUrl = "";
         String authenUser = "";
         String authenPass = "";
@@ -90,7 +198,7 @@ public class MicroblogNotificationStrategy implements NotificationStrategy {
             if (SERVICE_URL.equals(arg.getSwitch())) {
                 serviceUrl = arg.getValue();
             } else if (AUTHEN_USERNAME.equals(arg.getSwitch())) {
-                authenUser = arg.getValue();
+                authenUser = arg.getValue().toLowerCase();
             } else if (AUTHEN_PASSWORD.equals(arg.getSwitch())) {
                 authenPass = arg.getValue();
             }
@@ -111,21 +219,27 @@ public class MicroblogNotificationStrategy implements NotificationStrategy {
         return svc;
     }
 
-    private String buildMessage(List<Argument> arguments) {
-        String message = null;
+    private String buildMessageBody(List<Argument> arguments) {
+        String messageBody = "";
         
         for (Argument arg : arguments) {
             if (NotificationManager.PARAM_TEXT_MSG.equals(arg.getSwitch())) {
-                message = arg.getValue();
+                messageBody = arg.getValue();
             }
         }
         
-        if (message == null) {
+        if (messageBody == null) {
             // FIXME We should have a better Exception to use here for configuration problems
             throw new IllegalArgumentException("No message specified, but is required");
         }
+        
+        // Collapse whitespace in final message
+        messageBody.replaceAll("\\s+", " ");
+        if (log().isDebugEnabled()) {
+            log().debug("Final message body after collapsing whitespace is: '" + messageBody + "'");
+        }
 
-        return message;
+        return messageBody;
     }
 
     private Category log() {

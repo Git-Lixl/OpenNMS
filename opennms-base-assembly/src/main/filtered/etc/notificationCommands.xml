@@ -193,4 +193,50 @@
             <switch>-tm</switch>
         </argument>
     </command>
+    <command binary="false">
+    	<name>microblogAtReply</name>
+    	<execute>org.opennms.netmgt.notifd.MicroblogNotificationStrategy</execute>
+    	<comment>Class for sending notifications as microblog at-replies</comment>
+    	<argument streamed="false">
+    		<switch>serviceUrl</switch>
+    	</argument>
+    	<argument streamed="false">
+    		<switch>authenUser</switch>
+    	</argument>
+    	<argument streamed="false">
+    		<switch>authenPass</switch>
+    	</argument>
+    	<argument streamed="false">
+    		<switch>atReply</switch>
+    	</argument>
+    	<argument streamed="false">
+    		<switch>-ublog</switch>
+    	</argument>
+        <argument streamed="false">
+            <switch>-tm</switch>
+        </argument>
+    </command>
+    <command binary="false">
+    	<name>microblogDirectMessage</name>
+    	<execute>org.opennms.netmgt.notifd.MicroblogNotificationStrategy</execute>
+    	<comment>Class for sending notifications as microblog direct messages</comment>
+    	<argument streamed="false">
+    		<switch>serviceUrl</switch>
+    	</argument>
+    	<argument streamed="false">
+    		<switch>authenUser</switch>
+    	</argument>
+    	<argument streamed="false">
+    		<switch>authenPass</switch>
+    	</argument>
+    	<argument streamed="false">
+    		<switch>directMessage</switch>
+    	</argument>
+    	<argument streamed="false">
+    		<switch>-ublog</switch>
+    	</argument>
+        <argument streamed="false">
+            <switch>-tm</switch>
+        </argument>
+    </command>
 </notification-commands>

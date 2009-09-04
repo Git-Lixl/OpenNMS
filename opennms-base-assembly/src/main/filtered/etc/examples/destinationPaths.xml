@@ -216,10 +216,22 @@
                 <command>growlMessage</command>
         </target>
     </path>
-    <path name="Microblog">
+    <path name="MicroblogUpdate">
         <target>
                 <name>Admin</name>
                 <command>microblogUpdate</command>
+        </target>
+    </path>
+    <path name="Admin-MicroblogAtReply">
+        <target>
+                <name>Admin</name>
+                <command>microblogAtReply</command>
+        </target>
+    </path>
+    <path name="Admin-MicroblogDM">
+        <target>
+                <name>Admin</name>
+                <command>microblogDirectMessage</command>
         </target>
     </path>
 </destinationPaths>
