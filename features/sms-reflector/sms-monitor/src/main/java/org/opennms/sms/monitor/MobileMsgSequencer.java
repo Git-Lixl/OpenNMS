@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import org.apache.log4j.Logger;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.utils.PropertiesUtils;
+import org.opennms.sms.monitor.MobileMsgSequenceBuilder.MobileMsgTransactionBuilder;
 import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
 import org.opennms.sms.monitor.internal.config.MobileSequenceResponse;
 import org.opennms.sms.monitor.internal.config.MobileSequenceTransaction;
@@ -30,9 +31,7 @@ import org.opennms.sms.monitor.internal.config.UssdSequenceResponse;
 import org.opennms.sms.monitor.session.SessionVariableGenerator;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgSequence;
-import org.opennms.sms.reflector.smsservice.MobileMsgSequenceBuilder;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
-import org.opennms.sms.reflector.smsservice.MobileMsgSequenceBuilder.MobileMsgTransactionBuilder;
 
 public class MobileMsgSequencer {
 	private static MobileMsgTracker s_tracker;

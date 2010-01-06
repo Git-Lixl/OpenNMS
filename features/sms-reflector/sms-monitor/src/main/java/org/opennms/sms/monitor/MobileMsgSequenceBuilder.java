@@ -1,5 +1,8 @@
-package org.opennms.sms.reflector.smsservice;
+package org.opennms.sms.monitor;
 
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgSequence;
+import org.opennms.sms.reflector.smsservice.MobileMsgTransaction;
 import org.opennms.sms.reflector.smsservice.MobileMsgTransaction.SmsTransaction;
 import org.opennms.sms.reflector.smsservice.MobileMsgTransaction.UssdTransaction;
 

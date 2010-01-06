@@ -29,20 +29,12 @@
  *     http://www.opennms.org/
  *     http://www.opennms.com/
  */
-package org.opennms.sms.reflector.smsservice.internal;
+package org.opennms.sms.reflector.smsservice;
 
 import java.io.IOException;
 
 import org.opennms.protocols.rt.Messenger;
 import org.opennms.protocols.rt.RequestTracker;
-import org.opennms.sms.reflector.smsservice.MatchingRequestLocator;
-import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
-import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
-import org.opennms.sms.reflector.smsservice.SmsRequest;
-import org.opennms.sms.reflector.smsservice.UssdRequest;
 import org.smslib.OutboundMessage;
 import org.smslib.USSDRequest;
 import org.springframework.beans.factory.InitializingBean;
