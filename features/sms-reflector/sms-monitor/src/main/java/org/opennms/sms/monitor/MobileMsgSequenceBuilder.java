@@ -1,7 +1,32 @@
 package org.opennms.sms.monitor;
 
+import static org.opennms.core.utils.LogUtils.tracef;
+import static org.opennms.core.utils.LogUtils.warnf;
+import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.and;
+import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.isSms;
+import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.isUssd;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.opennms.core.tasks.DefaultTaskCoordinator;
+import org.opennms.core.utils.PropertiesUtils;
+import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
+import org.opennms.sms.monitor.internal.config.MobileSequenceResponse;
+import org.opennms.sms.monitor.internal.config.MobileSequenceTransaction;
+import org.opennms.sms.monitor.internal.config.SequenceResponseMatcher;
+import org.opennms.sms.monitor.internal.config.SequenceSessionVariable;
+import org.opennms.sms.monitor.internal.config.SmsSequenceRequest;
+import org.opennms.sms.monitor.internal.config.SmsSequenceResponse;
+import org.opennms.sms.monitor.internal.config.UssdSequenceRequest;
+import org.opennms.sms.monitor.internal.config.UssdSequenceResponse;
+import org.opennms.sms.monitor.session.SessionVariableGenerator;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgSequence;
+import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 import org.opennms.sms.reflector.smsservice.MobileMsgTransaction;
 import org.opennms.sms.reflector.smsservice.MobileMsgTransaction.SmsTransaction;
 import org.opennms.sms.reflector.smsservice.MobileMsgTransaction.UssdTransaction;
@@ -133,7 +158,17 @@ public class MobileMsgSequenceBuilder {
 	private long m_timeout = DEFAULT_TIMEOUT;
 	private int m_retries = DEFAULT_RETRIES;
 	
-	public MobileMsgTransactionBuilder sendSms(String label, String gatewayId, String recipient, String text) {
+	private MobileSequenceConfig m_sequenceConfig;
+	
+	public MobileMsgSequenceBuilder(MobileSequenceConfig sequenceConfig) {
+	    m_sequenceConfig = sequenceConfig;
+    }
+	
+	public MobileSequenceConfig getSequenceConfig() {
+	    return m_sequenceConfig;
+	}
+
+    public MobileMsgTransactionBuilder sendSms(String label, String gatewayId, String recipient, String text) {
 		addCurrentBuilderToSequence();
 		m_currentBuilder = new SmsTransactionBuilder(m_sequence, label, gatewayId == null? m_gatewayId : gatewayId, m_timeout, m_retries, recipient, text);
 		return m_currentBuilder;
@@ -181,5 +216,90 @@ public class MobileMsgSequenceBuilder {
 		m_sequence.addTransaction(m_currentBuilder.getTransaction());
 		m_currentBuilder = null;
 	}
+
+    Map<String, Number> execute(Properties session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator)
+            throws ClassNotFoundException, InstantiationException,
+            IllegalAccessException, SequencerException, Throwable {
+        setDefaultRetries(Integer.parseInt(session.getProperty("retry", String.valueOf(getDefaultRetries()))));
+    	setDefaultTimeout(Long.parseLong(session.getProperty("timeout", String.valueOf(getDefaultTimeout()))));
+    
+    	Map<String,SessionVariableGenerator> sessionGenerators = new HashMap<String,SessionVariableGenerator>();
+    
+    	// FIXME: use the service registry for this
+    	for (SequenceSessionVariable var : getSequenceConfig().getSessionVariables()) {
+    		Class<?> c = Class.forName(var.getClassName());
+    
+    		Class<?> superclass = c.getSuperclass();
+    		if (superclass != null && superclass.getName().equals("org.opennms.sms.monitor.session.BaseSessionVariableGenerator")) {
+    			SessionVariableGenerator generator = (SessionVariableGenerator)c.newInstance();
+    			generator.setParameters(var.getParametersAsMap());
+    			sessionGenerators.put(var.getName(), generator);
+    			String value = generator.checkOut();
+    			if (value == null) {
+    				value = "";
+    			}
+    			session.setProperty(var.getName(), value);
+    		} else {
+    		    warnf(this, "unable to get instance of session class: %s", c);
+    		}
+    	}
+    
+    	for (final MobileSequenceTransaction t : getSequenceConfig().getTransactions()) {
+    		final MobileMsgTransactionBuilder transactionBuilder;
+    
+    		if (t.getGatewayId() != null) {
+    			setDefaultGatewayId(t.getGatewayId());
+    		}
+    
+    		String label = t.getRequest().getLabel();
+    		if (label == null) label = t.getLabel();
+    		
+    		if (t.getRequest() instanceof SmsSequenceRequest) {
+    			SmsSequenceRequest req = (SmsSequenceRequest)t.getRequest();
+    			transactionBuilder = sendSms(
+    				PropertiesUtils.substitute(label, session),
+    				PropertiesUtils.substitute(req.getGatewayId(), session),
+    				PropertiesUtils.substitute(req.getRecipient(), session),
+    				PropertiesUtils.substitute(req.getText(), session)
+    			);
+    		} else if (t.getRequest() instanceof UssdSequenceRequest) {
+    			UssdSequenceRequest req = (UssdSequenceRequest)t.getRequest();
+    			transactionBuilder = sendUssd(
+    				PropertiesUtils.substitute(label, session),
+    				PropertiesUtils.substitute(req.getGatewayId(), session),
+    				PropertiesUtils.substitute(req.getText(), session)
+    			);
+    		} else {
+    			throw new SequencerException("Unknown request type: " + t.getRequest());
+    		}
+    		
+    		for (MobileSequenceResponse r : t.getResponses()) {
+    			List<MobileMsgResponseMatcher> matchers = new ArrayList<MobileMsgResponseMatcher>();
+    			for (SequenceResponseMatcher m : r.getMatchers()) {
+    				matchers.add(m.getMatcher(session));
+    			}
+    			if (r instanceof SmsSequenceResponse) {
+    				matchers.add(isSms());
+    			} else if (r instanceof UssdSequenceResponse) {
+    				matchers.add(isUssd());
+    			}
+    			transactionBuilder.expects(and(matchers.toArray(new MobileMsgResponseMatcher[0])));
+    		}
+    	}
+    
+    	MobileMsgSequence seq = getSequence();
+    	tracef(this, "MobileMsgSequence = %s", seq);
+    	try {
+    		long start = System.currentTimeMillis();
+            Map<String, Number> responseTimes = seq.execute(tracker, coordinator);
+    		long end = System.currentTimeMillis();
+    		responseTimes.put("response-time", Long.valueOf(end - start));
+    		return responseTimes;
+    	} finally {
+    		for (Map.Entry<String, SessionVariableGenerator> generator : sessionGenerators.entrySet()) {
+    			generator.getValue().checkIn(session.getProperty(generator.getKey()));
+    		}
+    	}
+    }
 
 }
