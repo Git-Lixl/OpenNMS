@@ -51,6 +51,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.protocols.rt.Messenger;
+import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
 import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
@@ -207,7 +208,7 @@ public class MobileMsgSequenceBuilderTest {
 
     @Test(expected=java.net.SocketTimeoutException.class)
     public void testPingTimeoutWithBuilder() throws Throwable {
-        MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder();
+        MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder(new MobileSequenceConfig());
 
         builder.sendSms("SMS Ping", "G", PHONE_NUMBER, "ping").expects(and(isSms(), textMatches("^pong$")));
         MobileMsgSequence sequence = builder.getSequence();
@@ -219,7 +220,7 @@ public class MobileMsgSequenceBuilderTest {
 
     @Test
     public void testPingWithBuilder() throws Throwable {
-        MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder();
+        MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder(new MobileSequenceConfig());
 
         builder.sendSms("SMS Ping", "G", PHONE_NUMBER, "ping").expects(and(isSms(), textMatches("^pong$")));
         MobileMsgSequence sequence = builder.getSequence();
@@ -241,7 +242,7 @@ public class MobileMsgSequenceBuilderTest {
 
     @Test
     public void testUssdWithBuilder() throws Throwable {
-    	MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder();
+    	MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder(new MobileSequenceConfig());
 
         builder.sendUssd("USSD request", "G", "#225#").expects(and(isUssd(), textMatches(TMOBILE_USSD_MATCH), ussdStatusIs(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED)));
         MobileMsgSequence sequence = builder.getSequence();
@@ -262,7 +263,7 @@ public class MobileMsgSequenceBuilderTest {
 
     @Test
     public void testMultipleStepSequenceBuilder() throws Throwable {
-    	MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder();
+    	MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder(new MobileSequenceConfig());
     	
         builder.sendSms("SMS Ping", "G", PHONE_NUMBER, "ping").expects(and(isSms(), textMatches("^pong$")));
         builder.sendUssd("USSD request", "G", "#225#").expects(and(isUssd(), textMatches(TMOBILE_USSD_MATCH), ussdStatusIs(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED)));
