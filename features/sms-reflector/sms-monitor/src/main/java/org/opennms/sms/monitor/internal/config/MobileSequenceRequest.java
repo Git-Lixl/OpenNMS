@@ -1,9 +1,14 @@
 package org.opennms.sms.monitor.internal.config;
 
+import java.util.Properties;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.opennms.sms.monitor.SequencerException;
+import org.opennms.sms.monitor.MobileMsgSequenceBuilder.MobileMsgTransactionBuilder;
+import org.opennms.sms.reflector.smsservice.MobileMsgSequence;
 
 @XmlRootElement(name="request")
 public abstract class MobileSequenceRequest extends MobileSequenceOperation {
@@ -39,4 +44,6 @@ public abstract class MobileSequenceRequest extends MobileSequenceOperation {
 			.append("text", getText())
 			.toString();
 	}
+
+	public abstract MobileMsgTransactionBuilder getRequestTransaction(MobileMsgSequence sequence, Properties session, String defaultLabel, String defaultGatewayId, long defaultTimeout, int defaultRetries) throws SequencerException;
 }

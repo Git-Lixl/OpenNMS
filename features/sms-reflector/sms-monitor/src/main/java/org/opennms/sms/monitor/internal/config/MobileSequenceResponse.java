@@ -1,12 +1,16 @@
 package org.opennms.sms.monitor.internal.config;
 
+import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.and;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 import javax.xml.bind.annotation.XmlElementRef;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 
 public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 
@@ -45,4 +49,17 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 			.append("matchers", getMatchers())
 			.toString();
 	}
+
+	public MobileMsgResponseMatcher getResponseMatcher(Properties session) {
+		List<MobileMsgResponseMatcher> matchers = new ArrayList<MobileMsgResponseMatcher>();
+		matchers.add(getResponseTypeMatcher());
+		
+		for (SequenceResponseMatcher m : getMatchers()) {
+			matchers.add(m.getMatcher(session));
+		}
+		
+		return and(matchers.toArray(new MobileMsgResponseMatcher[0]));
+	}
+
+	abstract protected MobileMsgResponseMatcher getResponseTypeMatcher();
 }

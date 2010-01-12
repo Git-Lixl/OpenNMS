@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.netmgt.model.PollStatus;
@@ -18,6 +19,7 @@ import org.opennms.sms.monitor.internal.config.SequenceConfigFactory;
 import org.opennms.sms.phonebook.Phonebook;
 import org.opennms.sms.phonebook.PhonebookException;
 import org.opennms.sms.ping.PingConstants;
+import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @Distributable(DistributionContext.DAEMON)
 public class MobileMsgSequenceMonitor extends IPv4Monitor {
@@ -27,13 +29,15 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
     private static Logger log = Logger.getLogger(MobileMsgSequenceMonitor.class);
 
     private Phonebook m_phonebook;
-	private MobileMsgSequencer m_sequencer;
+	private MobileMsgTracker m_tracker;
+	private DefaultTaskCoordinator m_coordinator;
 
 	@Override
 	public void initialize(Map<String,Object> params) {
 		super.initialize(params);
-		m_sequencer = BeanUtils.getBean(CONTEXT_NAME, "mobileMsgSequencer", MobileMsgSequencer.class);
 		m_phonebook = BeanUtils.getBean(CONTEXT_NAME, "phonebook", Phonebook.class);
+		m_tracker = BeanUtils.getBean(CONTEXT_NAME, "mobileMsgTracker", MobileMsgTracker.class);
+		m_coordinator = BeanUtils.getBean(CONTEXT_NAME, "sequenceTaskCoordinator", DefaultTaskCoordinator.class);
 	}
 
 	@Override
@@ -76,7 +80,7 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
 	        }
 
 
-	        Map<String, Number> responseTimes = m_sequencer.executeSequence(sequenceConfig, session);
+	        Map<String, Number> responseTimes = new MobileMsgSequenceBuilder(sequenceConfig).execute(session, m_tracker, m_coordinator);
 	        PollStatus response = PollStatus.available();
 	        response.setProperties(responseTimes);
 	        return response;
