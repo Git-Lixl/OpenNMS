@@ -1,14 +1,14 @@
 package org.opennms.sms.monitor.internal.config;
 
-import java.util.Properties;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
-import org.opennms.sms.monitor.MobileMsgSequenceBuilder.MobileMsgTransactionBuilder;
-import org.opennms.sms.reflector.smsservice.MobileMsgSequence;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgTransaction;
 
 @XmlRootElement(name="request")
 public abstract class MobileSequenceRequest extends MobileSequenceOperation {
@@ -45,5 +45,14 @@ public abstract class MobileSequenceRequest extends MobileSequenceOperation {
 			.toString();
 	}
 
-	public abstract MobileMsgTransactionBuilder getRequestTransaction(MobileMsgSequence sequence, Properties session, String defaultLabel, String defaultGatewayId, long defaultTimeout, int defaultRetries) throws SequencerException;
+
+	public abstract MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceSession session, MobileMsgResponseMatcher match, String label, String defaultGatewayId) throws SequencerException;
+
+	public String getGatewayId(String defaultGatewayId) {
+		return getGatewayId() == null? defaultGatewayId : getGatewayId();
+	}
+
+	public String getLabel(String defaultLabel) {
+		return getLabel() == null ? defaultLabel : getLabel();
+	}
 }

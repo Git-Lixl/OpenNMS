@@ -52,9 +52,18 @@ import org.junit.Test;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.protocols.rt.Messenger;
 import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
+import org.opennms.sms.monitor.internal.config.MobileSequenceRequest;
+import org.opennms.sms.monitor.internal.config.SequenceResponseMatcher;
+import org.opennms.sms.monitor.internal.config.SmsSequenceRequest;
+import org.opennms.sms.monitor.internal.config.SmsSequenceResponse;
+import org.opennms.sms.monitor.internal.config.TextResponseMatcher;
+import org.opennms.sms.monitor.internal.config.UssdSequenceRequest;
+import org.opennms.sms.monitor.internal.config.UssdSequenceResponse;
+import org.opennms.sms.monitor.internal.config.UssdSessionStatusMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgSequence;
 import org.opennms.sms.reflector.smsservice.MobileMsgTrackerImpl;
 import org.opennms.sms.reflector.smsservice.SmsResponse;
@@ -208,10 +217,19 @@ public class MobileMsgSequenceBuilderTest {
 
     @Test(expected=java.net.SocketTimeoutException.class)
     public void testPingTimeoutWithBuilder() throws Throwable {
-        MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder(new MobileSequenceConfig());
+        MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
+        
+        SmsSequenceResponse response = new SmsSequenceResponse();
+        response.addMatcher(new TextResponseMatcher("^pong$"));
 
-        builder.sendSms("SMS Ping", "G", PHONE_NUMBER, "ping").expects(and(isSms(), textMatches("^pong$")));
-        MobileMsgSequence sequence = builder.getSequence();
+        SmsSequenceRequest smsRequest = new SmsSequenceRequest();
+		smsRequest.setLabel("SMS Ping");
+		smsRequest.setGatewayId("G");
+		smsRequest.setRecipient(PHONE_NUMBER);
+		smsRequest.setText("ping");
+		
+		sequenceConfig.createTransaction(smsRequest, response);
+        MobileMsgSequence sequence = sequenceConfig.getSequence();
         System.err.println("sequence = " + sequence);
         assertNotNull(sequence);
 
@@ -220,10 +238,20 @@ public class MobileMsgSequenceBuilderTest {
 
     @Test
     public void testPingWithBuilder() throws Throwable {
-        MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder(new MobileSequenceConfig());
+        MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
+        
+        SmsSequenceResponse response = new SmsSequenceResponse();
+        response.addMatcher(new TextResponseMatcher("^pong$"));
 
-        builder.sendSms("SMS Ping", "G", PHONE_NUMBER, "ping").expects(and(isSms(), textMatches("^pong$")));
-        MobileMsgSequence sequence = builder.getSequence();
+
+        SmsSequenceRequest smsRequest = new SmsSequenceRequest();
+		smsRequest.setLabel("SMS Ping");
+		smsRequest.setGatewayId("G");
+		smsRequest.setRecipient(PHONE_NUMBER);
+		smsRequest.setText("ping");
+		
+		sequenceConfig.createTransaction(smsRequest, response);
+        MobileMsgSequence sequence = sequenceConfig.getSequence();
         System.err.println("sequence = " + sequence);
         assertNotNull(sequence);
 
@@ -242,10 +270,22 @@ public class MobileMsgSequenceBuilderTest {
 
     @Test
     public void testUssdWithBuilder() throws Throwable {
-    	MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder(new MobileSequenceConfig());
+    	MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
+    	
+        UssdSequenceResponse response = new UssdSequenceResponse();
+        response.addMatcher(new TextResponseMatcher(TMOBILE_USSD_MATCH));
+        response.addMatcher(new UssdSessionStatusMatcher(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED));
 
-        builder.sendUssd("USSD request", "G", "#225#").expects(and(isUssd(), textMatches(TMOBILE_USSD_MATCH), ussdStatusIs(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED)));
-        MobileMsgSequence sequence = builder.getSequence();
+
+
+        MobileSequenceRequest ussdRequest = new UssdSequenceRequest();
+		ussdRequest.setLabel("G");
+		ussdRequest.setGatewayId("USSD request");
+		ussdRequest.setText("#225#");
+		
+		
+		sequenceConfig.createTransaction(ussdRequest, response);
+        MobileMsgSequence sequence = sequenceConfig.getSequence();
         System.err.println("sequence = " + sequence);
         assertNotNull(sequence);
 
@@ -263,11 +303,32 @@ public class MobileMsgSequenceBuilderTest {
 
     @Test
     public void testMultipleStepSequenceBuilder() throws Throwable {
-    	MobileMsgSequenceBuilder builder = new MobileMsgSequenceBuilder(new MobileSequenceConfig());
+		MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
     	
-        builder.sendSms("SMS Ping", "G", PHONE_NUMBER, "ping").expects(and(isSms(), textMatches("^pong$")));
-        builder.sendUssd("USSD request", "G", "#225#").expects(and(isUssd(), textMatches(TMOBILE_USSD_MATCH), ussdStatusIs(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED)));
-        MobileMsgSequence sequence = builder.getSequence();
+        SmsSequenceResponse smsResponse = new SmsSequenceResponse();
+        smsResponse.addMatcher(new TextResponseMatcher("^pong$"));
+        
+        UssdSequenceResponse ussdResponse = new UssdSequenceResponse();
+        ussdResponse.addMatcher(new TextResponseMatcher(TMOBILE_USSD_MATCH));
+        ussdResponse.addMatcher(new UssdSessionStatusMatcher(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED));
+
+    	
+        SmsSequenceRequest smsRequest = new SmsSequenceRequest();
+		smsRequest.setLabel("SMS Ping");
+		smsRequest.setGatewayId("G");
+		smsRequest.setRecipient(PHONE_NUMBER);
+		smsRequest.setText("ping");
+		
+		sequenceConfig.createTransaction(smsRequest, smsResponse);
+		
+        MobileSequenceRequest ussdRequest = new UssdSequenceRequest();
+		ussdRequest.setLabel("USSD request");
+		ussdRequest.setGatewayId("G");
+		ussdRequest.setText("#225#");
+		
+		
+		sequenceConfig.createTransaction(ussdRequest, ussdResponse);
+        MobileMsgSequence sequence = sequenceConfig.getSequence();
         assertNotNull(sequence);
         
         sequence.start(m_tracker, m_coordinator);

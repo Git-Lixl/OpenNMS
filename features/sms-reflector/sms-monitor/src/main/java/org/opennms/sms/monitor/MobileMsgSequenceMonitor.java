@@ -2,7 +2,6 @@ package org.opennms.sms.monitor;
 
 
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
@@ -18,7 +17,6 @@ import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
 import org.opennms.sms.monitor.internal.config.SequenceConfigFactory;
 import org.opennms.sms.phonebook.Phonebook;
 import org.opennms.sms.phonebook.PhonebookException;
-import org.opennms.sms.ping.PingConstants;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @Distributable(DistributionContext.DAEMON)
@@ -45,26 +43,15 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
 
 	    try {
 	        
-	        if (parameters.get("retry") == null) {
-	            parameters.put("retry", String.valueOf(PingConstants.DEFAULT_RETRIES));
-	        }
-	        if (parameters.get("timeout") == null) {
-	            parameters.put("timeout", String.valueOf(PingConstants.DEFAULT_TIMEOUT));
-	        }
+	    	MobileSequenceSession session = new MobileSequenceSession(parameters);
+	    	
+	        session.setRecipient(m_phonebook.getTargetForAddress(svc.getIpAddr()));
+
+
 	        String config = ParameterMap.getKeyedString(parameters, "sequence", "");
 	        if (config == null || "".equals(config)) {
 	            return PollStatus.unavailable("Sequence configuration was empty.  You must specify a 'sequence' parameter in the SMSSequenceMonitor poller configuration!");
 	        }
-
-	        Properties session = new Properties();
-
-	        // first, transfer anything from the parameters to the session
-	        for (Map.Entry<String,Object> entry : parameters.entrySet()) {
-	            if (entry.getKey() != null && entry.getValue() != null) {
-	                session.put(entry.getKey(), entry.getValue());
-	            }
-	        }
-	        session.setProperty("recipient", m_phonebook.getTargetForAddress(svc.getIpAddr()));
 
 
 	        MobileSequenceConfig sequenceConfig = null;
@@ -78,9 +65,18 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
 	            log.warn("No transactions were configured for host " + svc.getIpAddr());
 	            return PollStatus.unavailable("No transactions were configured for host " + svc.getIpAddr());
 	        }
+	        
+			session.checkoutVariables(sequenceConfig.getSessionVariables());
+			
+			Map<String, Number> results = null;
+			try {
+				results = sequenceConfig.executeSequence(session, m_tracker, m_coordinator);
+			} finally {
+				session.checkinVariables();
+			}
 
 
-	        Map<String, Number> responseTimes = new MobileMsgSequenceBuilder(sequenceConfig).execute(session, m_tracker, m_coordinator);
+	        Map<String, Number> responseTimes = results;
 	        PollStatus response = PollStatus.available();
 	        response.setProperties(responseTimes);
 	        return response;

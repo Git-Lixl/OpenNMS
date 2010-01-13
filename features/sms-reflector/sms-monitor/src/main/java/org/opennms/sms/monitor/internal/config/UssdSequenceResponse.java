@@ -1,6 +1,5 @@
 package org.opennms.sms.monitor.internal.config;
 
-import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.isSms;
 import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.isUssd;
 
 import javax.xml.bind.annotation.XmlRootElement;
