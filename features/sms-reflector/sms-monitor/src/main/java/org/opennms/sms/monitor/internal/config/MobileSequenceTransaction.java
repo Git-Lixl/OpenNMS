@@ -11,12 +11,17 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.opennms.sms.monitor.MobileSequenceSession;
+import org.opennms.sms.monitor.SequencerException;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgTransaction;
 
 @XmlRootElement(name="transaction")
 @XmlType(propOrder={"request", "responses"})
 public class MobileSequenceTransaction implements Comparable<MobileSequenceTransaction> {
 	private String m_label;
 	private String m_gatewayId;
+	private String m_defaultGatewayId;
 	private MobileSequenceRequest m_request;
 	private List<MobileSequenceResponse> m_responses = Collections.synchronizedList(new ArrayList<MobileSequenceResponse>());
 
@@ -31,6 +36,14 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 	public MobileSequenceTransaction(String gatewayId, String label) {
 		this(label);
 		setGatewayId(gatewayId);
+	}
+	
+	public void setDefaultGatewayId(String gatewayId) {
+		m_defaultGatewayId = gatewayId;
+	}
+	
+	public String getDefaultGatewayId() {
+		return m_defaultGatewayId;
 	}
 	
 	@XmlAttribute(name="label")
@@ -88,6 +101,18 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 			.append("request", getRequest())
 			.append("response(s)", getResponses())
 			.toString();
+	}
+
+	public MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceSession session) throws SequencerException {
+
+		MobileSequenceRequest request = getRequest();
+	
+		MobileMsgResponseMatcher match =null;
+		for (MobileSequenceResponse r : getResponses()) {
+			match = r.getResponseMatcher(session.getProperties());
+		}
+		
+		return request.createTransaction(sequenceConfig, session, match, getLabel(), getDefaultGatewayId());
 	}
 
 }

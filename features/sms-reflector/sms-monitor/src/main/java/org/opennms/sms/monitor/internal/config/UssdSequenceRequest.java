@@ -1,15 +1,12 @@
 package org.opennms.sms.monitor.internal.config;
 
-import java.util.Properties;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.opennms.core.utils.PropertiesUtils;
+import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
-import org.opennms.sms.monitor.MobileMsgSequenceBuilder.MobileMsgTransactionBuilder;
-import org.opennms.sms.monitor.MobileMsgSequenceBuilder.SmsTransactionBuilder;
-import org.opennms.sms.monitor.MobileMsgSequenceBuilder.UssdTransactionBuilder;
-import org.opennms.sms.reflector.smsservice.MobileMsgSequence;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgTransaction;
+import org.opennms.sms.reflector.smsservice.MobileMsgTransaction.UssdTransaction;
 
 @XmlRootElement(name="ussd-request")
 public class UssdSequenceRequest extends MobileSequenceRequest {
@@ -27,14 +24,8 @@ public class UssdSequenceRequest extends MobileSequenceRequest {
 	}
 
 	@Override
-	public MobileMsgTransactionBuilder getRequestTransaction(MobileMsgSequence sequence, Properties session, String defaultLabel,
-			String defaultGatewayId, long defaultTimeout, int defaultRetries) throws SequencerException {
-		
-		String label1 = PropertiesUtils.substitute(getLabel() == null ? defaultLabel : getLabel(), session);
-		String gatewayId = PropertiesUtils.substitute(getGatewayId(), session);
-		String text = PropertiesUtils.substitute(getText(), session);
-		
-		return new UssdTransactionBuilder(this, sequence, label1, gatewayId == null? defaultGatewayId : gatewayId, defaultTimeout, defaultRetries, text);
-	}
+	public MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceSession session, MobileMsgResponseMatcher match, String defaultLabel, String defaultGatewayId) throws SequencerException {
+				return new UssdTransaction(sequenceConfig.getSequence(), session.substitute(getLabel(defaultLabel)), session.substitute(getGatewayId(defaultGatewayId)), session.getTimeout(), session.getRetries(), session.substitute(getText()), match);
+			}
 
 }

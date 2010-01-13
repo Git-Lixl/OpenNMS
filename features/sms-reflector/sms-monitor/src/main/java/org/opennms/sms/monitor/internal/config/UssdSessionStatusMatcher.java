@@ -16,8 +16,11 @@ public class UssdSessionStatusMatcher extends SequenceResponseMatcher {
 	}
 
 	public UssdSessionStatusMatcher(String text) {
-		this();
 		setText(text);
+	}
+	
+	public UssdSessionStatusMatcher(USSDSessionStatus status) {
+		setText(status.toString());
 	}
 
 	@Override

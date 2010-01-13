@@ -71,7 +71,7 @@ public class SequenceXmlTest {
     	MobileSequenceTransaction reqBalanceTransfer = new MobileSequenceTransaction("ussd-transfer");
     	reqBalanceTransfer.setGatewayId("ACM0");
     	
-    	UssdSequenceRequest request = new UssdSequenceRequest("req-balance-transfer", "*327*${recipient}*${amount}#");
+    	MobileSequenceRequest request = new UssdSequenceRequest("req-balance-transfer", "*327*${recipient}*${amount}#");
     	request.setGatewayId("ACM0");
     	reqBalanceTransfer.setRequest(request);
     	
