@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
-import org.opennms.sms.reflector.smsservice.MobileMsgSequence;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="mobile-sequence")
@@ -26,8 +25,12 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 	private static final long serialVersionUID = 1L;
 	private List<MobileSequenceTransaction> m_transactions = Collections.synchronizedList(new ArrayList<MobileSequenceTransaction>());
 	private List<SequenceSessionVariable> m_sessionVariables;
-	private MobileMsgSequence m_sequence = new MobileMsgSequence();
-
+	private MobileMsgSequence m_sequence;
+	
+	public MobileSequenceConfig(){
+		m_sequence = new MobileMsgSequence(this);
+	}
+	
 	@XmlTransient
 	public MobileMsgSequence getSequence() {
 		return m_sequence;

@@ -8,7 +8,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
-import org.opennms.sms.reflector.smsservice.MobileMsgTransaction;
 
 @XmlRootElement(name="request")
 public abstract class MobileSequenceRequest extends MobileSequenceOperation {
@@ -46,7 +45,7 @@ public abstract class MobileSequenceRequest extends MobileSequenceOperation {
 	}
 
 
-	public abstract MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceSession session, MobileMsgResponseMatcher match, String defaultLabel, String defaultGatewayId) throws SequencerException;
+	public abstract MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgResponseMatcher match) throws SequencerException;
 
 	public String getGatewayId(String defaultGatewayId) {
 		return getGatewayId() == null? defaultGatewayId : getGatewayId();

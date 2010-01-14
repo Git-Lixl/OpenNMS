@@ -10,7 +10,7 @@ import org.opennms.core.tasks.Callback;
 public class MobileMsgCallbackAdapter implements MobileMsgResponseCallback {
 	private final Callback<MobileMsgResponse> cb;
 
-	MobileMsgCallbackAdapter(Callback<MobileMsgResponse> cb) {
+	public MobileMsgCallbackAdapter(Callback<MobileMsgResponse> cb) {
 		this.cb = cb;
 	}
 
