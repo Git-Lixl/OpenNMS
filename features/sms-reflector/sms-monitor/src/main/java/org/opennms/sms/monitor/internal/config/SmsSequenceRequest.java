@@ -7,9 +7,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
+import org.opennms.sms.monitor.internal.config.MobileMsgTransaction.SmsTransaction;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
-import org.opennms.sms.reflector.smsservice.MobileMsgTransaction;
-import org.opennms.sms.reflector.smsservice.MobileMsgTransaction.SmsTransaction;
 
 @XmlRootElement(name="sms-request")
 public class SmsSequenceRequest extends MobileSequenceRequest {
@@ -45,7 +44,11 @@ public class SmsSequenceRequest extends MobileSequenceRequest {
 	}
 
 	@Override
-	public MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceSession session, MobileMsgResponseMatcher match, String defaultLabel, String defaultGatewayId) throws SequencerException {
-		return new SmsTransaction(sequenceConfig.getSequence(), session.substitute(getLabel(defaultLabel)), session.substitute(getGatewayId(defaultGatewayId)), session.getTimeout(), session.getRetries(), session.substitute(getRecipient()), session.substitute(getText()), match);
+	public MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgResponseMatcher match) throws SequencerException {
+		return createSmsTransaction(sequenceConfig, transaction, session, match);
+	}
+
+	private SmsTransaction createSmsTransaction( MobileSequenceConfig sequenceConfig,  MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgResponseMatcher match) {
+		return new SmsTransaction(sequenceConfig, transaction, session, getRecipient(), match);
 	}
 }

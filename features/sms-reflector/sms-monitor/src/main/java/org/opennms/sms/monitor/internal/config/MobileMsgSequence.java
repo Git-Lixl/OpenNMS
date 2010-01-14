@@ -1,4 +1,4 @@
-package org.opennms.sms.reflector.smsservice;
+package org.opennms.sms.monitor.internal.config;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,6 +9,7 @@ import java.util.Map;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.tasks.SequenceTask;
 import org.opennms.core.tasks.Task;
+import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.util.Assert;
 
@@ -18,9 +19,18 @@ public class MobileMsgSequence {
 	private List<MobileMsgTransaction> m_transactions = Collections.synchronizedList(new ArrayList<MobileMsgTransaction>());
 	private Task m_mainTask;
 	private boolean m_failed = false;
+	private MobileSequenceConfig m_sequenceConfig;
 	
+	public MobileMsgSequence(MobileSequenceConfig mobileSequenceConfig) {
+		m_sequenceConfig = mobileSequenceConfig;
+	}
+
 	public void addTransaction(MobileMsgTransaction t) {
 		m_transactions.add(t);
+	}
+	
+	public void addTransaction(MobileSequenceTransaction t){
+		m_sequenceConfig.addTransaction(t);
 	}
 
 	public Map<String, Number> execute(MobileMsgTracker tracker, DefaultTaskCoordinator coordinator) throws Throwable {

@@ -1,10 +1,15 @@
 /**
  * 
  */
-package org.opennms.sms.reflector.smsservice;
+package org.opennms.sms.monitor.internal.config;
 
 import org.opennms.core.tasks.Async;
 import org.opennms.core.tasks.Callback;
+import org.opennms.sms.reflector.smsservice.MobileMsgCallbackAdapter;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 import org.smslib.USSDRequest;
 
 public class UssdAsync implements Async<MobileMsgResponse> {
