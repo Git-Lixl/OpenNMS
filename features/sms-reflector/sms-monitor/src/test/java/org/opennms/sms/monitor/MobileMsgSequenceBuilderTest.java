@@ -279,8 +279,8 @@ public class MobileMsgSequenceBuilderTest {
 
 
         MobileSequenceRequest ussdRequest = new UssdSequenceRequest();
-		ussdRequest.setLabel("G");
-		ussdRequest.setGatewayId("USSD request");
+		ussdRequest.setLabel("USSD request");
+		ussdRequest.setGatewayId("G");
 		ussdRequest.setText("#225#");
 		
 		

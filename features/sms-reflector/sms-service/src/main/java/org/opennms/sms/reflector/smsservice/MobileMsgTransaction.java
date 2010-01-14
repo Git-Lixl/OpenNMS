@@ -15,10 +15,6 @@ public abstract class MobileMsgTransaction implements Callback<MobileMsgResponse
 		private String m_recipient;
 		private String m_text;
 
-		public SmsTransaction(MobileMsgSequence sequence, String label, String gatewayId, long timeout, int retries, String recipient, String text) {
-			this(sequence, label, gatewayId, timeout, retries, recipient, text, null);
-		}
-
 		public SmsTransaction(MobileMsgSequence sequence, String label, String gatewayId, long timeout, int retries, String recipient, String text, MobileMsgResponseMatcher matcher) {
 			super(sequence, label, gatewayId, timeout, retries, matcher);
 			m_recipient = recipient;
@@ -45,11 +41,6 @@ public abstract class MobileMsgTransaction implements Callback<MobileMsgResponse
 
 	public static class UssdTransaction extends MobileMsgTransaction {
 		private String m_text;
-
-		public UssdTransaction(MobileMsgSequence sequence, String label, String gatewayId, long timeout, int retries, String text) {
-			this(sequence, label, gatewayId, timeout, retries, text, null);
-			m_text = text;
-		}
 
 		public UssdTransaction(MobileMsgSequence sequence, String label, String gatewayId, long timeout, int retries, String text, MobileMsgResponseMatcher matcher) {
 			super(sequence, label, gatewayId, timeout, retries, matcher);

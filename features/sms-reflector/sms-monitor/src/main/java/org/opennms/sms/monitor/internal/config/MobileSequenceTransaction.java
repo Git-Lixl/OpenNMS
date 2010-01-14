@@ -7,6 +7,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
@@ -42,6 +43,7 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 		m_defaultGatewayId = gatewayId;
 	}
 	
+	@XmlTransient
 	public String getDefaultGatewayId() {
 		return m_defaultGatewayId;
 	}

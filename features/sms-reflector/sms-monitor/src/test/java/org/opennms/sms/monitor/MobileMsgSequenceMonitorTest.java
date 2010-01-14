@@ -32,6 +32,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class MobileMsgSequenceMonitorTest {
 
 	MonitoredService m_service;
+	private MobileMsgSequenceMonitor m_monitor;
 	
 	@Before
 	public void setUp() {
@@ -65,81 +66,26 @@ public class MobileMsgSequenceMonitorTest {
 				return "SMS";
 			}
 		};
+		
+		m_monitor = createAndInitializeMonitor();
 	}
 	
 	@Test
 	@DirtiesContext
 	public void testBrokenConfiguration() throws Exception {
-		MobileMsgSequenceMonitor m = new MobileMsgSequenceMonitor();
-		Map<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("retry", "0");
-		parameters.put("timeout", "3000");
-		parameters.put("sequence", "<mobile-sequence xmlns=\"http://xmlns.opennms.org/xsd/config/mobile-sequence\"><octagon sides=\"8\" /></mobile-sequence>");
+		
+		String mobileConfig = "<mobile-sequence xmlns=\"http://xmlns.opennms.org/xsd/config/mobile-sequence\"><octagon sides=\"8\" /></mobile-sequence>";
+		Map<String, Object> parameters = createConfigParameters(mobileConfig);
 
-		PollStatus s = m.poll(m_service, parameters);
+		PollStatus s = m_monitor.poll(m_service, parameters);
 		assertEquals("monitor should fail", PollStatus.SERVICE_UNAVAILABLE, s.getStatusCode());
 	}
 
 	@Test
 	@DirtiesContext
-	public void testParseConfiguration() throws Exception {
-
-		MobileMsgSequenceMonitor m = new MobileMsgSequenceMonitor();
-		Map<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("retry", "0");
-		parameters.put("timeout", "3000");
-		parameters.put("sequence", "<mobile-sequence xmlns=\"http://xmlns.opennms.org/xsd/config/mobile-sequence\" />");
-
-		PollStatus s = m.poll(m_service, parameters);
-		assertEquals("ping should pass", PollStatus.SERVICE_UNAVAILABLE, s.getStatusCode());
-		assertEquals("No transactions were configured for host 127.0.0.1", s.getReason());
-	}
-
-	@Test
-	@DirtiesContext
-	public void testSimpleSequence() throws Exception {
-
-		MobileMsgSequenceMonitor m = new MobileMsgSequenceMonitor();
-		
-		Map<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("retry", "0");
-		parameters.put("timeout", "3000");
-		parameters.put("sequence", getXmlBuffer("sms-ping-sequence.xml"));
-
-		PollStatus s = m.poll(m_service, parameters);
-
-		System.err.println("reason = " + s.getReason());
-		System.err.println("status name = " + s.getStatusName());
-		assertEquals("ping should pass", PollStatus.SERVICE_AVAILABLE, s.getStatusCode());
-		assertTrue(s.getProperty("sms-ping").longValue() > 10);
-	}
-
-	@Test
-	@DirtiesContext
-	public void testUssdSequence() throws Exception {
-		MobileMsgSequenceMonitor m = new MobileMsgSequenceMonitor();
-		
-		Map<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("retry", "0");
-		parameters.put("timeout", "3000");
-		parameters.put("sequence", getXmlBuffer("tmobile-balance-sequence.xml"));
-		
-		PollStatus s = m.poll(m_service, parameters);
-
-		System.err.println("reason = " + s.getReason());
-		System.err.println("status name = " + s.getStatusName());
-		assertEquals("ping should pass", PollStatus.SERVICE_AVAILABLE, s.getStatusCode());
-	}
-	
-	@Test
-	@DirtiesContext
 	public void testInlineSequence() throws Exception {
-		MobileMsgSequenceMonitor m = new MobileMsgSequenceMonitor();
 		
-		Map<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("retry", "0");
-		parameters.put("timeout", "3000");
-		parameters.put("sequence", "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+		Map<String, Object> parameters = createConfigParameters("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
 				"<mobile-sequence xmlns=\"http://xmlns.opennms.org/xsd/config/mobile-sequence\">\n" +
 				"<transaction label=\"sms-ping\">\n" +
 				"<sms-request recipient=\"${recipient}\" text=\"You suck!\"/>\n" +
@@ -150,11 +96,67 @@ public class MobileMsgSequenceMonitorTest {
 				"</transaction>\n" +
 				"</mobile-sequence>");
 		
-		PollStatus s = m.poll(m_service, parameters);
+		assertPollAvailable(parameters);
+	}
 
-		System.err.println("reason = " + s.getReason());
-		System.err.println("status name = " + s.getStatusName());
-		assertEquals("ping should pass", PollStatus.SERVICE_AVAILABLE, s.getStatusCode());
+	@Test
+	@DirtiesContext
+	public void testParseConfiguration() throws Exception {
+
+		Map<String, Object> parameters = createConfigParameters("<mobile-sequence xmlns=\"http://xmlns.opennms.org/xsd/config/mobile-sequence\" />");
+
+		PollStatus s = assertPollUnavailable(parameters);
+		assertEquals("No transactions were configured for host 127.0.0.1", s.getReason());
+	}
+
+	@Test
+	@DirtiesContext
+	public void testSimpleSequence() throws Exception {
+		
+		Map<String, Object> parameters = createConfigParameters(getXmlBuffer("sms-ping-sequence.xml"));
+
+		PollStatus s = assertPollAvailable(parameters);
+		assertTrue(s.getProperty("sms-ping").longValue() > 10);
+	}
+
+	@Test
+	@DirtiesContext
+	public void testUssdSequence() throws Exception {
+		
+		Map<String, Object> parameters = createConfigParameters(getXmlBuffer("tmobile-balance-sequence.xml"));
+		
+		assertPollAvailable(parameters);
+	}
+
+	private PollStatus assertPollAvailable(Map<String, Object> parameters) {
+		return assertPollStatus(parameters, PollStatus.SERVICE_AVAILABLE);
+	}
+
+	private PollStatus assertPollStatus(Map<String, Object> parameters, int expectedStatus) {
+		PollStatus s = m_monitor.poll(m_service, parameters);
+		assertEquals("unaccepted poll status", expectedStatus, s.getStatusCode());
+		return s;
+	}
+
+	private PollStatus assertPollUnavailable(Map<String, Object> parameters) {
+		return assertPollStatus(parameters, PollStatus.SERVICE_UNAVAILABLE);
+	}
+
+	private MobileMsgSequenceMonitor createAndInitializeMonitor() {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put(MobileMsgSequenceMonitor.CONTEXT_KEY, "testMobileMessagePollerContext");
+		
+		MobileMsgSequenceMonitor m = new MobileMsgSequenceMonitor();
+		m.initialize(params);
+		return m;
+	}
+	
+	private Map<String, Object> createConfigParameters(String mobileConfig) {
+		Map<String, Object> parameters = new HashMap<String, Object>();
+		parameters.put("retry", "0");
+		parameters.put("timeout", "3000");
+		parameters.put("sequence", mobileConfig);
+		return parameters;
 	}
 	
     private String getXmlBuffer(String fileName) throws IOException {
