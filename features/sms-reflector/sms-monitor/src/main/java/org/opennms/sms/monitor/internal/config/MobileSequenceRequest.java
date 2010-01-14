@@ -46,7 +46,7 @@ public abstract class MobileSequenceRequest extends MobileSequenceOperation {
 	}
 
 
-	public abstract MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceSession session, MobileMsgResponseMatcher match, String label, String defaultGatewayId) throws SequencerException;
+	public abstract MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceSession session, MobileMsgResponseMatcher match, String defaultLabel, String defaultGatewayId) throws SequencerException;
 
 	public String getGatewayId(String defaultGatewayId) {
 		return getGatewayId() == null? defaultGatewayId : getGatewayId();

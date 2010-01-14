@@ -22,7 +22,8 @@ import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 @Distributable(DistributionContext.DAEMON)
 public class MobileMsgSequenceMonitor extends IPv4Monitor {
 
-    private static final String CONTEXT_NAME = "mobileMessagePollerContext";
+    public static final String DEFAULT_CONTEXT_NAME = "mobileMessagePollerContext";
+    public static final String CONTEXT_KEY = "mobileMessageContextName";
 
     private static Logger log = Logger.getLogger(MobileMsgSequenceMonitor.class);
 
@@ -33,9 +34,11 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
 	@Override
 	public void initialize(Map<String,Object> params) {
 		super.initialize(params);
-		m_phonebook = BeanUtils.getBean(CONTEXT_NAME, "phonebook", Phonebook.class);
-		m_tracker = BeanUtils.getBean(CONTEXT_NAME, "mobileMsgTracker", MobileMsgTracker.class);
-		m_coordinator = BeanUtils.getBean(CONTEXT_NAME, "sequenceTaskCoordinator", DefaultTaskCoordinator.class);
+		String contextName =ParameterMap.getKeyedString(params, CONTEXT_KEY, DEFAULT_CONTEXT_NAME); 
+
+		m_phonebook = BeanUtils.getBean(contextName, "phonebook", Phonebook.class);
+		m_tracker = BeanUtils.getBean(contextName, "mobileMsgTracker", MobileMsgTracker.class);
+		m_coordinator = BeanUtils.getBean(contextName, "sequenceTaskCoordinator", DefaultTaskCoordinator.class);
 	}
 
 	@Override

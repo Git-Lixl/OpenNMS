@@ -20,7 +20,7 @@ public class UssdSessionStatusMatcher extends SequenceResponseMatcher {
 	}
 	
 	public UssdSessionStatusMatcher(USSDSessionStatus status) {
-		setText(status.toString());
+		setText(status.name());
 	}
 
 	@Override

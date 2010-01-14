@@ -6,7 +6,7 @@
 	<bean id="serviceRegistry" class="org.opennms.core.soa.support.DefaultServiceRegistry"/>
 	
     <bean id="sequenceExecutor" class="org.springframework.scheduling.concurrent.ScheduledExecutorFactoryBean">
-        <property name="poolSize" ref="10" />
+        <property name="poolSize" value="10" />
     </bean>
   
 

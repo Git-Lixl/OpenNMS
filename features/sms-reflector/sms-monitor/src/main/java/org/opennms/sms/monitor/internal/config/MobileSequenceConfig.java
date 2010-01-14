@@ -5,11 +5,13 @@ import static org.opennms.core.utils.LogUtils.tracef;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,6 +28,7 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 	private List<SequenceSessionVariable> m_sessionVariables;
 	private MobileMsgSequence m_sequence = new MobileMsgSequence();
 
+	@XmlTransient
 	public MobileMsgSequence getSequence() {
 		return m_sequence;
 	}
@@ -92,7 +95,7 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 		
 		t.addResponse(response);
 		
-		MobileSequenceSession session = new MobileSequenceSession(Collections.<String,Object>emptyMap());
+		MobileSequenceSession session = new MobileSequenceSession(new HashMap<String, Object>());
 	
 		getSequence().addTransaction(t.createTransaction(this, session));
 	}
