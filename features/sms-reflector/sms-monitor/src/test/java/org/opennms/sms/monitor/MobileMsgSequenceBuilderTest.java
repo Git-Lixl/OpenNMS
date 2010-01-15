@@ -51,7 +51,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.protocols.rt.Messenger;
-import org.opennms.sms.monitor.internal.config.MobileMsgSequence;
+import org.opennms.sms.monitor.internal.MobileMsgSequence;
 import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
 import org.opennms.sms.monitor.internal.config.MobileSequenceRequest;
 import org.opennms.sms.monitor.internal.config.SequenceResponseMatcher;

@@ -1,4 +1,4 @@
-package org.opennms.sms.monitor.internal.config;
+package org.opennms.sms.monitor.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,6 +9,8 @@ import java.util.Map;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.tasks.SequenceTask;
 import org.opennms.core.tasks.Task;
+import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
+import org.opennms.sms.monitor.internal.config.MobileSequenceTransaction;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.util.Assert;
