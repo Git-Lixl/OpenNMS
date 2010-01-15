@@ -1,7 +1,5 @@
 package org.opennms.sms.monitor.internal.config;
 
-import static org.opennms.core.utils.LogUtils.tracef;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,10 +14,14 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
+import org.opennms.core.tasks.SequenceTask;
+import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
 import org.opennms.sms.monitor.internal.MobileMsgSequence;
+import org.opennms.sms.monitor.internal.MobileMsgTransaction;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
+import org.springframework.util.Assert;
 
 @XmlRootElement(name="mobile-sequence")
 public class MobileSequenceConfig implements Serializable, Comparable<MobileSequenceConfig> {
@@ -27,6 +29,7 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 	private List<MobileSequenceTransaction> m_transactions = Collections.synchronizedList(new ArrayList<MobileSequenceTransaction>());
 	private List<SequenceSessionVariable> m_sessionVariables;
 	private MobileMsgSequence m_sequence;
+	private Task m_task;
 	
 	public MobileSequenceConfig(){
 		m_sequence = new MobileMsgSequence(this);
@@ -104,26 +107,72 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 		getSequence().addTransaction(t.createTransaction(this, session));
 	}
 
-	public MobileMsgSequence createSequence(MobileSequenceSession session) throws SequencerException {
-		computeDefaultGateways();
-	
-		for (MobileSequenceTransaction t : getTransactions()) {
-			getSequence().addTransaction(t.createTransaction(this, session));
-		}
-	
-		MobileMsgSequence seq = getSequence();
-		return seq;
-	}
-
 	public Map<String, Number> executeSequence(MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator) throws SequencerException,
 			Throwable {
-		tracef(this, "MobileMsgSequence = %s", createSequence(session));
 		long start = System.currentTimeMillis();
-		Map<String, Number> responseTimes = createSequence(session).execute(tracker, coordinator);
+		start(session, tracker, coordinator);
+		Map<String, Number> responseTimes = waitFor();
 		long end = System.currentTimeMillis();
 		responseTimes.put("response-time", Long.valueOf(end - start));
 		return responseTimes;
 	}
+	
+	public void start(MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator) throws SequencerException {
+		computeDefaultGateways();
+		
+		for (MobileSequenceTransaction t : getTransactions()) {
+			getSequence().addTransaction(t.createTransaction(this, session));
+		}
+		MobileMsgSequence r = getSequence();
+		
+		Assert.notNull(tracker);
+		Assert.notNull(coordinator);
+		SequenceTask sequence = coordinator.createSequence(null);
+		for (MobileMsgTransaction t1 : r.getTransactions()) {
+			Task task = t1.createTask(tracker, coordinator, sequence);
+			sequence.add(task);
+		}
+		sequence.schedule();
+		setTask(sequence);
+	}
+
+	public Map<String, Number> waitFor() throws Throwable {
+		MobileMsgSequence r = getSequence();
+		if (getTask() == null) {
+			throw new IllegalStateException("getLatency called, but the sequence has never been started!");
+		}
+		getTask().waitFor();
+		
+		Map<String,Number> response = new HashMap<String,Number>();
+		for (MobileMsgTransaction t : r.getTransactions()) {
+			if (t.getTransaction().getError() != null) {
+				throw t.getTransaction().getError();
+			}
+			response.put(t.getLabel(), t.getTransaction().getLatency());
+		}
+		return response;
+	}
+
+	public void setTask(Task task) {
+		m_task = task;
+	}
+	
+	@XmlTransient
+	public Task getTask() {
+		return m_task;
+	}
+
+	public boolean hasFailed() {
+		for (MobileSequenceTransaction t : getTransactions()) {
+			if (t.getError() != null) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	
 
 }
 

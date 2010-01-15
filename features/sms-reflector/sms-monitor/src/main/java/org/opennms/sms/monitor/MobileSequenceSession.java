@@ -19,6 +19,25 @@ public class MobileSequenceSession {
 	private Properties m_properties = new Properties();
 	private Map<String, SessionVariableGenerator> m_generators = new HashMap<String,SessionVariableGenerator>();
 	
+	public MobileSequenceSession() {
+		this(new HashMap<String, Object>());
+	}
+	
+	public MobileSequenceSession(Map<String, Object> parameters) {
+		if (parameters.get("retry") == null) {
+		    parameters.put("retry", String.valueOf(DEFAULT_RETRIES));
+		}
+		if (parameters.get("timeout") == null) {
+		    parameters.put("timeout", String.valueOf(DEFAULT_TIMEOUT));
+		}
+		// first, transfer anything from the parameters to the session
+		for (Map.Entry<String,Object> entry : parameters.entrySet()) {
+		    if (entry.getKey() != null && entry.getValue() != null) {
+		        getProperties().put(entry.getKey(), entry.getValue());
+		    }
+		}
+	}
+	
 	public Properties getProperties() {
 		return m_properties;
 	}
@@ -70,19 +89,8 @@ public class MobileSequenceSession {
 		}
 	}
 
-	public MobileSequenceSession(Map<String, Object> parameters) {
-		if (parameters.get("retry") == null) {
-		    parameters.put("retry", String.valueOf(DEFAULT_RETRIES));
-		}
-		if (parameters.get("timeout") == null) {
-		    parameters.put("timeout", String.valueOf(DEFAULT_TIMEOUT));
-		}
-		// first, transfer anything from the parameters to the session
-		for (Map.Entry<String,Object> entry : parameters.entrySet()) {
-		    if (entry.getKey() != null && entry.getValue() != null) {
-		        getProperties().put(entry.getKey(), entry.getValue());
-		    }
-		}
-	}
+	
+
+	
 
 }
