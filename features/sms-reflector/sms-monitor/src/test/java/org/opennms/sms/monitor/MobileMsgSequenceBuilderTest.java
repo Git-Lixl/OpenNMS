@@ -229,11 +229,8 @@ public class MobileMsgSequenceBuilderTest {
 		smsRequest.setText("ping");
 		
 		sequenceConfig.createTransaction(smsRequest, response);
-        MobileMsgSequence sequence = sequenceConfig.getSequence();
-        System.err.println("sequence = " + sequence);
-        assertNotNull(sequence);
-
-        sequence.execute(m_tracker, m_coordinator);
+        
+        sequenceConfig.executeSequence(new MobileSequenceSession(), m_tracker, m_coordinator);
     }
 
     @Test
@@ -251,17 +248,14 @@ public class MobileMsgSequenceBuilderTest {
 		smsRequest.setText("ping");
 		
 		sequenceConfig.createTransaction(smsRequest, response);
-        MobileMsgSequence sequence = sequenceConfig.getSequence();
-        System.err.println("sequence = " + sequence);
-        assertNotNull(sequence);
 
-        sequence.start(m_tracker, m_coordinator);
+        sequenceConfig.start(new MobileSequenceSession(), m_tracker, m_coordinator);
 
         Thread.sleep(500);
         InboundMessage msg = new InboundMessage(new Date(), PHONE_NUMBER, "pong", 0, "0");
 		m_messenger.sendTestResponse(msg);
         
-        Map<String,Number> timing = sequence.getLatency();
+        Map<String,Number> timing = sequenceConfig.waitFor();
 
         assertNotNull(timing);
         assertTrue(timing.size() > 0);
@@ -285,16 +279,13 @@ public class MobileMsgSequenceBuilderTest {
 		
 		
 		sequenceConfig.createTransaction(ussdRequest, response);
-        MobileMsgSequence sequence = sequenceConfig.getSequence();
-        System.err.println("sequence = " + sequence);
-        assertNotNull(sequence);
 
-        sequence.start(m_tracker, m_coordinator);
+        sequenceConfig.start(new MobileSequenceSession(), m_tracker, m_coordinator);
 
         Thread.sleep(500);
         sendTmobileUssdResponse("G");
         
-        Map<String,Number> timing = sequence.getLatency();
+        Map<String,Number> timing = sequenceConfig.waitFor();
 
         assertNotNull(timing);
         assertTrue(timing.size() > 0);
@@ -328,10 +319,8 @@ public class MobileMsgSequenceBuilderTest {
 		
 		
 		sequenceConfig.createTransaction(ussdRequest, ussdResponse);
-        MobileMsgSequence sequence = sequenceConfig.getSequence();
-        assertNotNull(sequence);
         
-        sequence.start(m_tracker, m_coordinator);
+        sequenceConfig.start(new MobileSequenceSession(), m_tracker, m_coordinator);
 
         Thread.sleep(100);
         InboundMessage msg = new InboundMessage(new Date(), PHONE_NUMBER, "pong", 0, "0");
@@ -340,7 +329,7 @@ public class MobileMsgSequenceBuilderTest {
         Thread.sleep(100);
         sendTmobileUssdResponse("G");
 
-        Map<String,Number> timing = sequence.getLatency();
+        Map<String,Number> timing = sequenceConfig.waitFor();
 
         assertNotNull(timing);
         assertTrue(timing.size() == 2);
