@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.opennms.sms.monitor.internal.config;
+package org.opennms.sms.monitor.internal;
 
 import org.opennms.core.tasks.Async;
 import org.opennms.core.tasks.Callback;
@@ -9,6 +9,9 @@ import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.tasks.SequenceTask;
 import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
+import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
+import org.opennms.sms.monitor.internal.config.MobileSequenceTransaction;
+import org.opennms.sms.monitor.internal.config.SmsSequenceRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;

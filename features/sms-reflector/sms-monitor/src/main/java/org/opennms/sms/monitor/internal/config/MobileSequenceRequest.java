@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
+import org.opennms.sms.monitor.internal.MobileMsgTransaction;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 
 @XmlRootElement(name="request")

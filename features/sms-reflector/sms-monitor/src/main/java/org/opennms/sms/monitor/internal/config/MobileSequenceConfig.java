@@ -18,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
+import org.opennms.sms.monitor.internal.MobileMsgSequence;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="mobile-sequence")

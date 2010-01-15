@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.opennms.sms.monitor.internal.config;
+package org.opennms.sms.monitor.internal;
 
 import org.opennms.core.tasks.Async;
 import org.opennms.core.tasks.Callback;
