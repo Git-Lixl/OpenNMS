@@ -5,13 +5,11 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.opennms.core.tasks.Async;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
 import org.opennms.sms.monitor.internal.MobileMsgTransaction;
-import org.opennms.sms.monitor.internal.SmsAsync;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
-import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
+import org.opennms.sms.monitor.internal.MobileMsgTransaction.SmsTransaction;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 
 @XmlRootElement(name="sms-request")
 public class SmsSequenceRequest extends MobileSequenceRequest {
@@ -47,19 +45,11 @@ public class SmsSequenceRequest extends MobileSequenceRequest {
 	}
 
 	@Override
-	public MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceTransaction transaction, MobileSequenceSession session) throws SequencerException {
-		return new MobileMsgTransaction(sequenceConfig, transaction, session);
+	public MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgResponseMatcher match) throws SequencerException {
+		return createSmsTransaction(sequenceConfig, transaction, session, match);
 	}
 
-	@Override
-	public Async<MobileMsgResponse> createAsync(MobileMsgTracker tracker, MobileSequenceSession session, MobileSequenceConfig sequenceConfig, MobileSequenceTransaction transaction) {
-		return new SmsAsync(tracker, sequenceConfig, 
-				session.substitute(transaction.getGatewayForRequest()),
-				session.getTimeout(),
-				session.getRetries(),
-				session.substitute(getRecipient()),
-				session.substitute(getText()),
-				transaction.getResponseMatcher(session));
-
+	private SmsTransaction createSmsTransaction( MobileSequenceConfig sequenceConfig,  MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgResponseMatcher match) {
+		return new SmsTransaction(sequenceConfig, transaction, session, getRecipient(), match);
 	}
 }
