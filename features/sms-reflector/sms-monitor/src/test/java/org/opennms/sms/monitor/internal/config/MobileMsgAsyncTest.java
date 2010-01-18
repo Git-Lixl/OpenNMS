@@ -226,14 +226,12 @@ public class MobileMsgAsyncTest {
     @Test
     public void testRawSmsPing() throws Exception {
         final long start = System.currentTimeMillis();
-        
-        
-        MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
-		MobileMsgSequence sequence = sequenceConfig.getSequence();
+
+        MobileMsgSequence sequence = new MobileSequenceConfig().getSequence();
         LatencyCallback cb = new LatencyCallback(start);
 		final MobileMsgResponseMatcher responseMatcher = and(smsFromRecipient(), textMatches("^[Pp]ong$"));
  
-        Async<MobileMsgResponse> async = new SmsAsync(m_tracker, sequenceConfig, "*", 1000L, 0,  PHONE_NUMBER, "ping", responseMatcher);
+        Async<MobileMsgResponse> async = new SmsAsync(m_tracker, sequence, "*", 1000L, 0,  PHONE_NUMBER, "ping", responseMatcher);
                                         
         Task t = m_coordinator.createTask(null, async, cb);
         t.schedule();
@@ -254,10 +252,9 @@ public class MobileMsgAsyncTest {
     public void testRawUssdMessage() throws Exception {
         final String gatewayId = "G";
         
-        MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
-		MobileMsgSequence sequence = sequenceConfig.getSequence();
+        MobileMsgSequence sequence = new MobileSequenceConfig().getSequence();
         LatencyCallback cb = new LatencyCallback(System.currentTimeMillis());
-        Async<MobileMsgResponse> async = new UssdAsync(m_tracker, sequenceConfig, 3000L, 0, new USSDRequest("#225#"), and(isUssd(), textMatches(TMOBILE_USSD_MATCH)));
+        Async<MobileMsgResponse> async = new UssdAsync(m_tracker, sequence, 3000L, 0, new USSDRequest("#225#"), and(isUssd(), textMatches(TMOBILE_USSD_MATCH)));
 
         Task t = m_coordinator.createTask(null, async, cb);
         t.schedule();

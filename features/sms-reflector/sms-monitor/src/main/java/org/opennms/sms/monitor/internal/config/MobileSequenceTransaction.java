@@ -12,28 +12,19 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.opennms.core.tasks.Async;
-import org.opennms.core.tasks.Callback;
-import org.opennms.core.tasks.DefaultTaskCoordinator;
-import org.opennms.core.tasks.SequenceTask;
-import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
 import org.opennms.sms.monitor.internal.MobileMsgTransaction;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
-import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="transaction")
 @XmlType(propOrder={"request", "responses"})
-public class MobileSequenceTransaction implements Comparable<MobileSequenceTransaction>, Callback<MobileMsgResponse> {
+public class MobileSequenceTransaction implements Comparable<MobileSequenceTransaction> {
 	private String m_label;
 	private String m_gatewayId;
 	private String m_defaultGatewayId;
 	private MobileSequenceRequest m_request;
 	private List<MobileSequenceResponse> m_responses = Collections.synchronizedList(new ArrayList<MobileSequenceResponse>());
-	private Long m_latency;
-	private Throwable m_error;
 
 	public MobileSequenceTransaction() {
 	}
@@ -115,55 +106,13 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 	}
 
 	public MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceSession session) throws SequencerException {
-		return getRequest().createTransaction(sequenceConfig, this, session);
-	}
 
-	public MobileMsgResponseMatcher getResponseMatcher(MobileSequenceSession session) {
-		MobileMsgResponseMatcher match = null;
+		MobileMsgResponseMatcher match =null;
 		for (MobileSequenceResponse r : getResponses()) {
 			match = r.getResponseMatcher(session.getProperties());
 		}
-		return match;
-	}
-
-	public void setLatency(Long latency) {
-		m_latency = latency;
-	}
-	
-	@XmlTransient
-	public Long getLatency() {
-		return m_latency;
-	}
-
-	public void setError(Throwable error) {
-		m_error = error;
-	}
-	
-	@XmlTransient
-	public Throwable getError() {
-		return m_error;
-	}
-
-	String getGatewayForRequest() {
-		return getRequest().getGatewayId(getDefaultGatewayId());
-	}
-
-	public Async<MobileMsgResponse> createAsync(MobileMsgTracker tracker, MobileSequenceSession session, MobileSequenceConfig sequenceConfig){
-		return getRequest().createAsync(tracker, session, sequenceConfig, this);
-	}
-
-	public void complete(MobileMsgResponse t) {
-		if (t != null) {
-			setLatency((t.getReceiveTime() - t.getRequest().getSentTime()));
-		}
-	}
-
-	public void handleException(Throwable t) {
-		setError(t);
-	}
-
-	public Task createTask(MobileMsgTracker tracker, DefaultTaskCoordinator coordinator, SequenceTask sequence, MobileSequenceSession session, MobileSequenceConfig sequenceConfig) {
-		return coordinator.createTask(sequence, createAsync(tracker, session, sequenceConfig), this);
+		
+		return getRequest().createTransaction(sequenceConfig, this, session, match);
 	}
 
 }
