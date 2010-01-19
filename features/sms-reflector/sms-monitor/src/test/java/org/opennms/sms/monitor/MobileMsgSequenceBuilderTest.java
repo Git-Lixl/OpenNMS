@@ -33,15 +33,9 @@ package org.opennms.sms.monitor;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.and;
-import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.isSms;
-import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.isUssd;
-import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.textMatches;
-import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.ussdStatusIs;
 
 import java.util.Date;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -51,10 +45,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.protocols.rt.Messenger;
-import org.opennms.sms.monitor.internal.MobileMsgSequence;
 import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
 import org.opennms.sms.monitor.internal.config.MobileSequenceRequest;
-import org.opennms.sms.monitor.internal.config.SequenceResponseMatcher;
 import org.opennms.sms.monitor.internal.config.SmsSequenceRequest;
 import org.opennms.sms.monitor.internal.config.SmsSequenceResponse;
 import org.opennms.sms.monitor.internal.config.TextResponseMatcher;
@@ -64,7 +56,6 @@ import org.opennms.sms.monitor.internal.config.UssdSessionStatusMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgTrackerImpl;
 import org.opennms.sms.reflector.smsservice.SmsResponse;
 import org.opennms.sms.reflector.smsservice.UssdResponse;
@@ -189,8 +180,7 @@ public class MobileMsgSequenceBuilderTest {
     TestMessenger m_messenger;
     MobileMsgTrackerImpl m_tracker;
 	DefaultTaskCoordinator m_coordinator;
-	@SuppressWarnings("unused")
-	private Properties m_session;
+	MobileSequenceSession m_session;
     
     @Before
     public void setUp() throws Exception {
@@ -198,7 +188,7 @@ public class MobileMsgSequenceBuilderTest {
         m_tracker = new MobileMsgTrackerImpl("test", m_messenger);
         m_tracker.start();
         
-        m_session = new Properties();
+        m_session = new MobileSequenceSession();
         
         m_coordinator = new DefaultTaskCoordinator(Executors.newSingleThreadExecutor());
 
@@ -229,11 +219,10 @@ public class MobileMsgSequenceBuilderTest {
 		smsRequest.setText("ping");
 		
 		sequenceConfig.createTransaction(smsRequest, response);
-        MobileMsgSequence sequence = sequenceConfig.getSequence();
-        System.err.println("sequence = " + sequence);
-        assertNotNull(sequence);
+		
+        sequenceConfig.start(m_session, m_tracker, m_coordinator);
 
-        sequence.execute(m_tracker, m_coordinator);
+        sequenceConfig.waitFor(m_session);
     }
 
     @Test
@@ -251,17 +240,14 @@ public class MobileMsgSequenceBuilderTest {
 		smsRequest.setText("ping");
 		
 		sequenceConfig.createTransaction(smsRequest, response);
-        MobileMsgSequence sequence = sequenceConfig.getSequence();
-        System.err.println("sequence = " + sequence);
-        assertNotNull(sequence);
-
-        sequence.start(m_tracker, m_coordinator);
-
+		
+        sequenceConfig.start(m_session, m_tracker, m_coordinator);
+        
         Thread.sleep(500);
         InboundMessage msg = new InboundMessage(new Date(), PHONE_NUMBER, "pong", 0, "0");
 		m_messenger.sendTestResponse(msg);
         
-        Map<String,Number> timing = sequence.getLatency();
+        Map<String,Number> timing = sequenceConfig.waitFor(m_session);
 
         assertNotNull(timing);
         assertTrue(timing.size() > 0);
@@ -285,16 +271,13 @@ public class MobileMsgSequenceBuilderTest {
 		
 		
 		sequenceConfig.createTransaction(ussdRequest, response);
-        MobileMsgSequence sequence = sequenceConfig.getSequence();
-        System.err.println("sequence = " + sequence);
-        assertNotNull(sequence);
+		
+		sequenceConfig.start(m_session, m_tracker, m_coordinator);
 
-        sequence.start(m_tracker, m_coordinator);
-
-        Thread.sleep(500);
+		Thread.sleep(500);
         sendTmobileUssdResponse("G");
         
-        Map<String,Number> timing = sequence.getLatency();
+        Map<String,Number> timing = sequenceConfig.waitFor(m_session);
 
         assertNotNull(timing);
         assertTrue(timing.size() > 0);
@@ -328,19 +311,17 @@ public class MobileMsgSequenceBuilderTest {
 		
 		
 		sequenceConfig.createTransaction(ussdRequest, ussdResponse);
-        MobileMsgSequence sequence = sequenceConfig.getSequence();
-        assertNotNull(sequence);
-        
-        sequence.start(m_tracker, m_coordinator);
-
-        Thread.sleep(100);
+		
+		sequenceConfig.start(m_session, m_tracker, m_coordinator);
+		
+		Thread.sleep(100);
         InboundMessage msg = new InboundMessage(new Date(), PHONE_NUMBER, "pong", 0, "0");
 		m_messenger.sendTestResponse(msg);
 		
         Thread.sleep(100);
         sendTmobileUssdResponse("G");
 
-        Map<String,Number> timing = sequence.getLatency();
+        Map<String,Number> timing = sequenceConfig.waitFor(m_session);
 
         assertNotNull(timing);
         assertTrue(timing.size() == 2);

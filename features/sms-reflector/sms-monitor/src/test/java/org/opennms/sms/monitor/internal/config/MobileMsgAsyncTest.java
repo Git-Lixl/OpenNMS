@@ -38,7 +38,6 @@ import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.sms
 import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.textMatches;
 
 import java.util.Date;
-import java.util.Properties;
 import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -52,22 +51,20 @@ import org.opennms.core.tasks.Callback;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.tasks.Task;
 import org.opennms.protocols.rt.Messenger;
-import org.opennms.sms.monitor.internal.MobileMsgSequence;
 import org.opennms.sms.monitor.internal.SmsAsync;
 import org.opennms.sms.monitor.internal.UssdAsync;
+import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgTrackerImpl;
+import org.opennms.sms.reflector.smsservice.SmsResponse;
+import org.opennms.sms.reflector.smsservice.UssdResponse;
 import org.smslib.InboundMessage;
 import org.smslib.USSDDcs;
 import org.smslib.USSDRequest;
 import org.smslib.USSDResponse;
 import org.smslib.USSDSessionStatus;
-
-import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
-import org.opennms.sms.reflector.smsservice.SmsResponse;
-import org.opennms.sms.reflector.smsservice.UssdResponse;
 
 /**
  * MobileMsgTrackerTeste
@@ -227,11 +224,12 @@ public class MobileMsgAsyncTest {
     public void testRawSmsPing() throws Exception {
         final long start = System.currentTimeMillis();
 
-        MobileMsgSequence sequence = new MobileSequenceConfig().getSequence();
+        MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
+
         LatencyCallback cb = new LatencyCallback(start);
 		final MobileMsgResponseMatcher responseMatcher = and(smsFromRecipient(), textMatches("^[Pp]ong$"));
  
-        Async<MobileMsgResponse> async = new SmsAsync(m_tracker, sequence, "*", 1000L, 0,  PHONE_NUMBER, "ping", responseMatcher);
+        Async<MobileMsgResponse> async = new SmsAsync(m_tracker, sequenceConfig, "*", 1000L, 0, PHONE_NUMBER,  "ping", responseMatcher);
                                         
         Task t = m_coordinator.createTask(null, async, cb);
         t.schedule();
@@ -252,9 +250,10 @@ public class MobileMsgAsyncTest {
     public void testRawUssdMessage() throws Exception {
         final String gatewayId = "G";
         
-        MobileMsgSequence sequence = new MobileSequenceConfig().getSequence();
+        MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
+
         LatencyCallback cb = new LatencyCallback(System.currentTimeMillis());
-        Async<MobileMsgResponse> async = new UssdAsync(m_tracker, sequence, 3000L, 0, new USSDRequest("#225#"), and(isUssd(), textMatches(TMOBILE_USSD_MATCH)));
+        Async<MobileMsgResponse> async = new UssdAsync(m_tracker, sequenceConfig, 3000L, 0, new USSDRequest("#225#"), and(isUssd(), textMatches(TMOBILE_USSD_MATCH)));
 
         Task t = m_coordinator.createTask(null, async, cb);
         t.schedule();
