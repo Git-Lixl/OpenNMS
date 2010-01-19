@@ -5,11 +5,11 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.opennms.core.tasks.Async;
 import org.opennms.sms.monitor.MobileSequenceSession;
-import org.opennms.sms.monitor.SequencerException;
-import org.opennms.sms.monitor.internal.MobileMsgTransaction;
-import org.opennms.sms.monitor.internal.MobileMsgTransaction.SmsTransaction;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.monitor.internal.SmsAsync;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
+import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="sms-request")
 public class SmsSequenceRequest extends MobileSequenceRequest {
@@ -45,11 +45,18 @@ public class SmsSequenceRequest extends MobileSequenceRequest {
 	}
 
 	@Override
-	public MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgResponseMatcher match) throws SequencerException {
-		return createSmsTransaction(sequenceConfig, transaction, session, match);
-	}
+    public Async<MobileMsgResponse> createAsync(MobileSequenceConfig sequenceConfig, MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgTracker tracker) {
+        return new SmsAsync(tracker, sequenceConfig, session.substitute(getGatewayId(transaction)), 
+    	        session.getTimeout(), 
+    	        session.getRetries(), 
+    	        session.substitute(getRecipient()), 
+    	        session.substitute(getText()), 
+    	        transaction.getResponseMatcher(session));
+    }
 
-	private SmsTransaction createSmsTransaction( MobileSequenceConfig sequenceConfig,  MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgResponseMatcher match) {
-		return new SmsTransaction(sequenceConfig, transaction, session, getRecipient(), match);
-	}
+    private String getGatewayId(MobileSequenceTransaction transaction) {
+        
+        return getGatewayId(transaction.getDefaultGatewayId());
+    }
+
 }

@@ -1,7 +1,5 @@
 package org.opennms.sms.monitor.internal.config;
 
-import static org.opennms.core.utils.LogUtils.tracef;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,26 +14,36 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
+import org.opennms.core.tasks.SequenceTask;
+import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
-import org.opennms.sms.monitor.internal.MobileMsgSequence;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
+import org.springframework.util.Assert;
 
 @XmlRootElement(name="mobile-sequence")
 public class MobileSequenceConfig implements Serializable, Comparable<MobileSequenceConfig> {
+    
 	private static final long serialVersionUID = 1L;
+	
 	private List<MobileSequenceTransaction> m_transactions = Collections.synchronizedList(new ArrayList<MobileSequenceTransaction>());
 	private List<SequenceSessionVariable> m_sessionVariables;
-	private MobileMsgSequence m_sequence;
+	private Task m_task;
 	
-	public MobileSequenceConfig(){
-		m_sequence = new MobileMsgSequence(this);
-	}
-	
+	/**
+     * @return the task
+     */
 	@XmlTransient
-	public MobileMsgSequence getSequence() {
-		return m_sequence;
-	}
+    public Task getTask() {
+        return m_task;
+    }
+
+    /**
+     * @param task the task to set
+     */
+    public void setTask(Task task) {
+        m_task = task;
+    }
 
 	public void addSessionVariable(SequenceSessionVariable var) {
 		getSessionVariables().add(var);
@@ -90,52 +98,73 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 		}
 	}
 
-	public void createTransaction(MobileSequenceRequest request, MobileSequenceResponse response)
-			throws SequencerException {
-		MobileSequenceTransaction t = new MobileSequenceTransaction();
+	public MobileSequenceTransaction createTransaction(MobileSequenceRequest request, MobileSequenceResponse response) {
+
+        MobileSequenceTransaction t = new MobileSequenceTransaction();
 		addTransaction(t);
 		
 		t.setRequest(request);
 		
 		t.addResponse(response);
-		
-		MobileSequenceSession session = new MobileSequenceSession(new HashMap<String, Object>());
-	
-		getSequence().addTransaction(t.createTransaction(this, session));
-	}
+        return t;
+    }
 
-	public MobileMsgSequence createSequence(MobileSequenceSession session) throws SequencerException {
-		computeDefaultGateways();
-	
-		for (MobileSequenceTransaction t : getTransactions()) {
-			getSequence().addTransaction(t.createTransaction(this, session));
-		}
-	
-		MobileMsgSequence seq = getSequence();
-		return seq;
-	}
-
-	public Map<String, Number> executeSequence(MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator) throws SequencerException,
-			Throwable {
-		tracef(this, "MobileMsgSequence = %s", createSequence(session));
-		long start = System.currentTimeMillis();
-		Map<String, Number> responseTimes = createSequence(session).execute(tracker, coordinator);
+	public Map<String, Number> executeSequence(MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator) throws SequencerException, Throwable {
+        long start = System.currentTimeMillis();
+	    start(session, tracker, coordinator);
+	    Map<String, Number> responseTimes = waitFor(session);
 		long end = System.currentTimeMillis();
+
 		responseTimes.put("response-time", Long.valueOf(end - start));
 		return responseTimes;
 	}
 
-}
+    public Map<String, Number> waitFor(MobileSequenceSession session) throws Throwable {
 
-/*
- * Sample XML (TODO):
- * 
- * <transactionTypes>
- *   <transactionType name="send-ussd" class="org.opennms.sms.monitor.internal.transactions.SendUssd" />
- *   <transactionType name="receive-ussd" class="org.opennms.sms.monitor.internal.transactions.ReceiveUssd" />
- *   <transactionType name="send-sms" class="org.opennms.sms.monitor.internal.transactions.SendSms" />
- *   <transactionType name="receive-sms" class="org.opennms.sms.monitor.internal.transactions.ReceiveSms" />
- * </transactionTypes>
- * 
- */
+        Task task = getTask();
+        if (task == null) {
+        	throw new IllegalStateException("getLatency called, but the sequence has never been started!");
+        }
+        task.waitFor();
+        
+        Map<String,Number> response = new HashMap<String,Number>();
+        for(MobileSequenceTransaction transaction : getTransactions()) {
+            if (transaction.getError() != null) {
+            	throw transaction.getError();
+            }
+            response.put(transaction.getLabel(session), transaction.getLatency());
+        }
+        return response;
+    }
+
+    public void start(MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator) throws SequencerException {
+        
+        Assert.notNull(tracker);
+        Assert.notNull(coordinator);
+
+        computeDefaultGateways();
+
+        SequenceTask sequence = coordinator.createSequence(null);
+        for(MobileSequenceTransaction transaction : getTransactions()) {
+            sequence.add(transaction.createTask(this, session, tracker, coordinator, sequence));
+        }
+        
+        sequence.schedule();
+        
+        setTask(sequence);
+
+    }
+
+    public boolean hasFailed() {
+    	
+        for (MobileSequenceTransaction transaction : getTransactions()) {
+            if (transaction.getError() != null) {
+                return true;
+            }
+    	}
+    	return false;
+    }
+
+
+}
 

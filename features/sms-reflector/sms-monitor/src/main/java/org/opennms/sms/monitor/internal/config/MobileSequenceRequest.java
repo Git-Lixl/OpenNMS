@@ -5,10 +5,12 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.opennms.core.tasks.Async;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
-import org.opennms.sms.monitor.internal.MobileMsgTransaction;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="request")
 public abstract class MobileSequenceRequest extends MobileSequenceOperation {
@@ -46,8 +48,6 @@ public abstract class MobileSequenceRequest extends MobileSequenceOperation {
 	}
 
 
-	public abstract MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgResponseMatcher match) throws SequencerException;
-
 	public String getGatewayId(String defaultGatewayId) {
 		return getGatewayId() == null? defaultGatewayId : getGatewayId();
 	}
@@ -55,4 +55,7 @@ public abstract class MobileSequenceRequest extends MobileSequenceOperation {
 	public String getLabel(String defaultLabel) {
 		return getLabel() == null ? defaultLabel : getLabel();
 	}
+
+    public abstract Async<MobileMsgResponse> createAsync(MobileSequenceConfig sequenceConfig, MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgTracker tracker);
+
 }

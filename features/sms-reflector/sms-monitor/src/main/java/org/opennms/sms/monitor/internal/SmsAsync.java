@@ -5,6 +5,7 @@ package org.opennms.sms.monitor.internal;
 
 import org.opennms.core.tasks.Async;
 import org.opennms.core.tasks.Callback;
+import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
 import org.opennms.sms.reflector.smsservice.MobileMsgCallbackAdapter;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
@@ -14,15 +15,15 @@ import org.smslib.OutboundMessage;
 
 public class SmsAsync implements Async<MobileMsgResponse> {
 	private final MobileMsgTracker m_tracker;
-	private final MobileMsgSequence m_sequence;
+    private MobileSequenceConfig m_sequenceConfig;
 	private final OutboundMessage m_message;
 	private final MobileMsgResponseMatcher m_responseMatcher;
 	private long m_timeout;
 	private int m_retries;
 
-	public SmsAsync(MobileMsgTracker tracker, MobileMsgSequence sequence, String gatewayId, long timeout, int retries, String recipient, String text, MobileMsgResponseMatcher responseMatcher) {
+	public SmsAsync(MobileMsgTracker tracker, MobileSequenceConfig sequenceConfig, String gatewayId, long timeout, int retries, String recipient, String text, MobileMsgResponseMatcher responseMatcher) {
 		this.m_tracker = tracker;
-		this.m_sequence = sequence;
+		this.m_sequenceConfig = sequenceConfig;
 		this.m_message = new OutboundMessage(recipient, text);
 		this.m_message.setGatewayId(gatewayId);
 		this.m_responseMatcher = responseMatcher;
@@ -31,7 +32,7 @@ public class SmsAsync implements Async<MobileMsgResponse> {
 	}
 
 	public void submit(final Callback<MobileMsgResponse> cb) {
-		if (m_sequence.hasFailed()) {
+		if (hasFailed()) {
 			cb.complete(null);
 		}
 		
@@ -44,4 +45,8 @@ public class SmsAsync implements Async<MobileMsgResponse> {
 		}
 		
 	}
+
+    private boolean hasFailed() {
+        return m_sequenceConfig.hasFailed();
+    }
 }

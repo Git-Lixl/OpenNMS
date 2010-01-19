@@ -12,25 +12,58 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.opennms.core.tasks.Async;
+import org.opennms.core.tasks.Callback;
+import org.opennms.core.tasks.DefaultTaskCoordinator;
+import org.opennms.core.tasks.SequenceTask;
+import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
-import org.opennms.sms.monitor.SequencerException;
-import org.opennms.sms.monitor.internal.MobileMsgTransaction;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="transaction")
 @XmlType(propOrder={"request", "responses"})
 public class MobileSequenceTransaction implements Comparable<MobileSequenceTransaction> {
+    
+    public static final class MobileMsgCallback implements Callback<MobileMsgResponse> {
+        
+        MobileSequenceTransaction m_transaction;
+        
+        public MobileMsgCallback(MobileSequenceTransaction transaction) {
+            m_transaction = transaction;
+        }
+        
+        private MobileSequenceTransaction getTransaction() {
+            return m_transaction;
+        }
+        
+        public void complete(MobileMsgResponse t) {
+            if (t != null) {
+                getTransaction().setLatency((t.getReceiveTime() - t.getRequest().getSentTime()));
+            }
+        }
+
+        public void handleException(Throwable t) {
+            getTransaction().setError(t);
+        }
+        
+    }
+
+
 	private String m_label;
 	private String m_gatewayId;
 	private String m_defaultGatewayId;
 	private MobileSequenceRequest m_request;
 	private List<MobileSequenceResponse> m_responses = Collections.synchronizedList(new ArrayList<MobileSequenceResponse>());
+	
+	private Long m_latency;
+	private Throwable m_error;
 
 	public MobileSequenceTransaction() {
 	}
 
 	public MobileSequenceTransaction(String label) {
-		this();
 		setLabel(label);
 	}
 	
@@ -105,14 +138,48 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 			.toString();
 	}
 
-	public MobileMsgTransaction createTransaction(MobileSequenceConfig sequenceConfig, MobileSequenceSession session) throws SequencerException {
-
-		MobileMsgResponseMatcher match =null;
+    public MobileMsgResponseMatcher getResponseMatcher(
+            MobileSequenceSession session) {
+        MobileMsgResponseMatcher match =null;
 		for (MobileSequenceResponse r : getResponses()) {
 			match = r.getResponseMatcher(session.getProperties());
 		}
-		
-		return getRequest().createTransaction(sequenceConfig, this, session, match);
-	}
+        return match;
+    }
+
+    public void setLatency(Long latency) {
+        m_latency = latency;
+    }
+
+    @XmlTransient
+    public Long getLatency() {
+        return m_latency;
+    }
+
+    public void setError(Throwable error) {
+        m_error = error;
+    }
+
+
+    @XmlTransient
+    public Throwable getError() {
+        return m_error;
+    }
+
+    public String getLabel(MobileSequenceSession session) {
+        return session.substitute(getRequest().getLabel(getLabel()));
+    }
+
+    public Callback<MobileMsgResponse> getCallback() {
+        return new MobileMsgCallback(this);
+    }
+
+    public Async<MobileMsgResponse> createAsync(MobileMsgTracker tracker, MobileSequenceConfig sequenceConfig, MobileSequenceSession session) {
+        return getRequest().createAsync(sequenceConfig, this, session, tracker);
+    }
+
+    public Task createTask(MobileSequenceConfig sequenceConfig, MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator, SequenceTask sequence) {
+        return coordinator.createTask(sequence, createAsync(tracker, sequenceConfig, session), getCallback());
+    }
 
 }
