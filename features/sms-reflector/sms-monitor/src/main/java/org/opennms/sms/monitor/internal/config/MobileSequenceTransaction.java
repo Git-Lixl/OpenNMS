@@ -24,33 +24,8 @@ import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="transaction")
 @XmlType(propOrder={"request", "responses"})
-public class MobileSequenceTransaction implements Comparable<MobileSequenceTransaction> {
+public class MobileSequenceTransaction implements Comparable<MobileSequenceTransaction>, Callback<MobileMsgResponse> {
     
-    public static final class MobileMsgCallback implements Callback<MobileMsgResponse> {
-        
-        MobileSequenceTransaction m_transaction;
-        
-        public MobileMsgCallback(MobileSequenceTransaction transaction) {
-            m_transaction = transaction;
-        }
-        
-        private MobileSequenceTransaction getTransaction() {
-            return m_transaction;
-        }
-        
-        public void complete(MobileMsgResponse t) {
-            if (t != null) {
-                getTransaction().setLatency((t.getReceiveTime() - t.getRequest().getSentTime()));
-            }
-        }
-
-        public void handleException(Throwable t) {
-            getTransaction().setError(t);
-        }
-        
-    }
-
-
 	private String m_label;
 	private String m_gatewayId;
 	private String m_defaultGatewayId;
@@ -72,7 +47,17 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 		setGatewayId(gatewayId);
 	}
 	
-	public void setDefaultGatewayId(String gatewayId) {
+    public void complete(MobileMsgResponse t) {
+        if (t != null) {
+            setLatency((t.getReceiveTime() - t.getRequest().getSentTime()));
+        }
+    }
+
+    public void handleException(Throwable t) {
+        setError(t);
+    }
+
+    public void setDefaultGatewayId(String gatewayId) {
 		m_defaultGatewayId = gatewayId;
 	}
 	
@@ -171,7 +156,7 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
     }
 
     public Callback<MobileMsgResponse> getCallback() {
-        return new MobileMsgCallback(this);
+        return this;
     }
 
     public Async<MobileMsgResponse> createAsync(MobileMsgTracker tracker, MobileSequenceConfig sequenceConfig, MobileSequenceSession session) {
