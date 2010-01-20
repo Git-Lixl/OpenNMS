@@ -119,24 +119,6 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 		return responseTimes;
 	}
 
-    public Map<String, Number> waitFor(MobileSequenceSession session) throws Throwable {
-
-        Task task = getTask();
-        if (task == null) {
-        	throw new IllegalStateException("getLatency called, but the sequence has never been started!");
-        }
-        task.waitFor();
-        
-        Map<String,Number> response = new HashMap<String,Number>();
-        for(MobileSequenceTransaction transaction : getTransactions()) {
-            if (transaction.getError() != null) {
-            	throw transaction.getError();
-            }
-            response.put(transaction.getLabel(session), transaction.getLatency());
-        }
-        return response;
-    }
-
     public void start(MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator) throws SequencerException {
         
         Assert.notNull(tracker);
@@ -155,6 +137,24 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 
     }
 
+    public Map<String, Number> waitFor(MobileSequenceSession session) throws Throwable {
+
+        Task task = getTask();
+        if (task == null) {
+            throw new IllegalStateException("getLatency called, but the sequence has never been started!");
+        }
+        task.waitFor();
+        
+        Map<String,Number> response = new HashMap<String,Number>();
+        for(MobileSequenceTransaction transaction : getTransactions()) {
+            if (transaction.getError() != null) {
+                throw transaction.getError();
+            }
+            response.put(transaction.getLabel(session), transaction.getLatency());
+        }
+        return response;
+    }
+
     public boolean hasFailed() {
     	
         for (MobileSequenceTransaction transaction : getTransactions()) {
@@ -163,6 +163,10 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
             }
     	}
     	return false;
+    }
+
+    public boolean hasTransactions() {
+        return getTransactions() != null && getTransactions().size() != 0;
     }
 
 
