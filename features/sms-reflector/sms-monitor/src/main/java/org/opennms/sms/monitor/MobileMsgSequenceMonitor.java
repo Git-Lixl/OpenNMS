@@ -18,6 +18,7 @@ import org.opennms.sms.monitor.internal.config.SequenceConfigFactory;
 import org.opennms.sms.phonebook.Phonebook;
 import org.opennms.sms.phonebook.PhonebookException;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
+import org.springframework.util.StringUtils;
 
 @Distributable(DistributionContext.DAEMON)
 public class MobileMsgSequenceMonitor extends IPv4Monitor {
@@ -34,7 +35,8 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
 	@Override
 	public void initialize(Map<String,Object> params) {
 		super.initialize(params);
-		String contextName =ParameterMap.getKeyedString(params, CONTEXT_KEY, DEFAULT_CONTEXT_NAME); 
+
+		String contextName = ParameterMap.getKeyedString(params, CONTEXT_KEY, DEFAULT_CONTEXT_NAME); 
 
 		m_phonebook = BeanUtils.getBean(contextName, "phonebook", Phonebook.class);
 		m_tracker = BeanUtils.getBean(contextName, "mobileMsgTracker", MobileMsgTracker.class);
@@ -45,39 +47,33 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
 	public PollStatus poll(MonitoredService svc, Map<String, Object> parameters) {
 
 	    try {
-	        
+
 	    	MobileSequenceSession session = new MobileSequenceSession(parameters);
-	    	
+
 	        session.setRecipient(m_phonebook.getTargetForAddress(svc.getIpAddr()));
 
-
 	        String config = ParameterMap.getKeyedString(parameters, "sequence", "");
-	        if (config == null || "".equals(config)) {
+
+	        if (!StringUtils.hasLength(config)) {
 	            return PollStatus.unavailable("Sequence configuration was empty.  You must specify a 'sequence' parameter in the SMSSequenceMonitor poller configuration!");
 	        }
 
-
-	        MobileSequenceConfig sequenceConfig = null;
-
 	        SequenceConfigFactory factory = SequenceConfigFactory.getInstance();
-	        sequenceConfig = factory.getSequenceForXml(config);
+	        MobileSequenceConfig sequenceConfig = factory.getSequenceForXml(config);
 
-
-	        // FIXME: Decide the validity of an empty sequence; is it a failure to configure?  Or passing because no transactions failed?
-	        if (sequenceConfig.getTransactions() == null || sequenceConfig.getTransactions().size() == 0) {
+	        if (!sequenceConfig.hasTransactions()) {
 	            log.warn("No transactions were configured for host " + svc.getIpAddr());
 	            return PollStatus.unavailable("No transactions were configured for host " + svc.getIpAddr());
 	        }
-	        
+
 			session.checkoutVariables(sequenceConfig.getSessionVariables());
-			
+
 			Map<String, Number> results = null;
 			try {
 				results = sequenceConfig.executeSequence(session, m_tracker, m_coordinator);
 			} finally {
 				session.checkinVariables();
 			}
-
 
 	        Map<String, Number> responseTimes = results;
 	        PollStatus response = PollStatus.available();
