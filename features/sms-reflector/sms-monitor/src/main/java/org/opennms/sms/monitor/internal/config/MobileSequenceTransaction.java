@@ -24,7 +24,7 @@ import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="transaction")
 @XmlType(propOrder={"request", "responses"})
-public class MobileSequenceTransaction implements Comparable<MobileSequenceTransaction>, Callback<MobileMsgResponse> {
+public class MobileSequenceTransaction implements Comparable<MobileSequenceTransaction> {
     
 	private String m_label;
 	private String m_gatewayId;
@@ -47,16 +47,6 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 		setGatewayId(gatewayId);
 	}
 	
-    public void complete(MobileMsgResponse t) {
-        if (t != null) {
-            setLatency((t.getReceiveTime() - t.getRequest().getSentTime()));
-        }
-    }
-
-    public void handleException(Throwable t) {
-        setError(t);
-    }
-
     public void setDefaultGatewayId(String gatewayId) {
 		m_defaultGatewayId = gatewayId;
 	}
@@ -155,8 +145,22 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
         return session.substitute(getRequest().getLabel(getLabel()));
     }
 
-    public Callback<MobileMsgResponse> getCallback() {
-        return this;
+    public Callback<MobileMsgResponse> getCallback(final MobileSequenceSession session) {
+        return new Callback<MobileMsgResponse>() {
+            public void complete(MobileMsgResponse t) {
+                if (t != null) {
+                    setLatency((t.getReceiveTime() - t.getRequest().getSentTime()));
+                }
+                
+                //session.setVariable()
+            }
+
+            public void handleException(Throwable t) {
+                setError(t);
+            }
+
+
+        };
     }
 
     public Async<MobileMsgResponse> createAsync(MobileMsgTracker tracker, MobileSequenceConfig sequenceConfig, MobileSequenceSession session) {
@@ -164,7 +168,7 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
     }
 
     public Task createTask(MobileSequenceConfig sequenceConfig, MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator, SequenceTask sequence) {
-        return coordinator.createTask(sequence, createAsync(tracker, sequenceConfig, session), getCallback());
+        return coordinator.createTask(sequence, createAsync(tracker, sequenceConfig, session), getCallback(session));
     }
 
 }

@@ -1,7 +1,7 @@
 package org.opennms.sms.monitor;
 
-import static org.opennms.core.utils.LogUtils.warnf;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,12 +16,17 @@ public class MobileSequenceSession {
 	private static final int DEFAULT_RETRIES = 0;
 	private static final long DEFAULT_TIMEOUT = 10000L;
 	
+    private List<SequenceSessionVariable> m_sessionVariables;
+	
 
     public MobileSequenceSession() {
-        this(new HashMap<String, Object>());
+        this(new HashMap<String, Object>(), Collections.<SequenceSessionVariable>emptyList());
     }
 
-    public MobileSequenceSession(Map<String, Object> parameters) {
+    public MobileSequenceSession(Map<String, Object> parameters, List<SequenceSessionVariable> sessionVariables) {
+        
+        m_sessionVariables = sessionVariables; 
+        
         if (parameters.get("retry") == null) {
             parameters.put("retry", String.valueOf(DEFAULT_RETRIES));
         }
@@ -66,29 +71,17 @@ public class MobileSequenceSession {
 	}
 
 	void checkinVariables() {
-		for (Map.Entry<String, SessionVariableGenerator> generator : getGenerators().entrySet()) {
-			generator.getValue().checkIn(getProperties().getProperty(generator.getKey()));
-		}
+	    
+	    for (SequenceSessionVariable var : m_sessionVariables) {
+	        var.checkIn(getProperties());
+	    }
+
 	}
 
-	void checkoutVariables(List<SequenceSessionVariable> sessionVariables)
-			throws ClassNotFoundException, InstantiationException,
-			IllegalAccessException {
-		for (SequenceSessionVariable var : sessionVariables) {
-			Class<?> c = Class.forName(var.getClassName());
-			
-			if (SessionVariableGenerator.class.isAssignableFrom(c)) {
-				SessionVariableGenerator generator = (SessionVariableGenerator)c.newInstance();
-				generator.setParameters(var.getParametersAsMap());
-				getGenerators().put(var.getName(), generator);
-				String value = generator.checkOut();
-				if (value == null) {
-					value = "";
-				}
-				getProperties().setProperty(var.getName(), value);
-			} else {
-			    warnf(this, "unable to get instance of session class: %s", c);
-			}
+    void checkoutVariables() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    
+	    for (SequenceSessionVariable var : m_sessionVariables) {
+			var.checkOut(getProperties());
 		}
 	}
 
