@@ -32,6 +32,7 @@
 package org.opennms.sms.reflector.smsservice;
 
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertEquals;
 import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.and;
 import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.isUssd;
 import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.textMatches;
@@ -41,6 +42,7 @@ import java.util.Properties;
 import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -138,6 +140,7 @@ public class MobileMsgTrackerTest {
     
     public static class TestCallback implements MobileMsgResponseCallback {
         
+        AtomicReference<String> m_calledMethods = new AtomicReference<String>();
         CountDownLatch m_latch = new CountDownLatch(1);
         AtomicReference<MobileMsgResponse> m_response = new AtomicReference<MobileMsgResponse>(null);
 
@@ -146,11 +149,26 @@ public class MobileMsgTrackerTest {
             m_latch.await();
             return m_response.get();
         }
+        
+        String getCalledMethods() {
+            return m_calledMethods.get();
+        }
+        
+        private void methodCalled(String methodName) {
+            while (true) {
+                String prevVal = m_calledMethods.get();
+                String newVal = (prevVal == null ? methodName : prevVal + " " + methodName);
+                if (m_calledMethods.compareAndSet(prevVal, newVal)) {
+                    return;
+                }
+            }
+        }
 
         /* (non-Javadoc)
          * @see org.opennms.sms.reflector.smsservice.SmsResponseCallback#handleError(org.opennms.sms.reflector.smsservice.SmsRequest, java.lang.Throwable)
          */
         public void handleError(MobileMsgRequest request, Throwable t) {
+            methodCalled("handleError");
             System.err.println("Error processing SmsRequest: " + request);
             m_latch.countDown();
         }
@@ -159,6 +177,7 @@ public class MobileMsgTrackerTest {
          * @see org.opennms.sms.reflector.smsservice.SmsResponseCallback#handleResponse(org.opennms.sms.reflector.smsservice.SmsRequest, org.opennms.sms.reflector.smsservice.SmsResponse)
          */
         public boolean handleResponse(MobileMsgRequest request, MobileMsgResponse response) {
+            methodCalled("handleResponse");
             m_response.set(response);
             m_latch.countDown();
             return true;
@@ -168,6 +187,7 @@ public class MobileMsgTrackerTest {
          * @see org.opennms.sms.reflector.smsservice.SmsResponseCallback#handleTimeout(org.opennms.sms.reflector.smsservice.SmsRequest)
          */
         public void handleTimeout(MobileMsgRequest request) {
+            methodCalled("handleTimeout");
             System.err.println("Timeout waiting for SmsRequest: " + request);
             m_latch.countDown();
         }
@@ -214,6 +234,31 @@ public class MobileMsgTrackerTest {
         System.err.println("=== STARTING TEST ===");
     }
 
+    @Test
+    public void testResponseButNotTimeout() throws Exception {
+        
+        long timeout = 1000L;
+        
+        OutboundMessage msg = new OutboundMessage("+19195552121", "ping");
+        
+        TestCallback cb = new TestCallback();
+        
+        m_tracker.sendSmsRequest(msg, timeout, 0, cb, new PingResponseMatcher());
+        
+        InboundMessage responseMsg = createInboundMessage("+19195552121", "pong");
+        
+        m_messenger.sendTestResponse(responseMsg);
+        
+        assertSame(responseMsg, cb.getMessage());
+        
+        assertEquals("handleResponse", cb.getCalledMethods());
+        
+        Thread.sleep(timeout);
+        
+        assertEquals("Expect no 'handleTimeout' since response was received", "handleResponse", cb.getCalledMethods());
+        
+    }
+    
     @Test
     public void testPing() throws Exception {
         
