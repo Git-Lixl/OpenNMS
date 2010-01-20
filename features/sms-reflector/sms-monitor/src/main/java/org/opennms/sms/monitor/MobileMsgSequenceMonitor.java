@@ -48,10 +48,6 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
 
 	    try {
 
-	    	MobileSequenceSession session = new MobileSequenceSession(parameters);
-
-	        session.setRecipient(m_phonebook.getTargetForAddress(svc.getIpAddr()));
-
 	        String config = ParameterMap.getKeyedString(parameters, "sequence", "");
 
 	        if (!StringUtils.hasLength(config)) {
@@ -66,7 +62,11 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
 	            return PollStatus.unavailable("No transactions were configured for host " + svc.getIpAddr());
 	        }
 
-			session.checkoutVariables(sequenceConfig.getSessionVariables());
+            MobileSequenceSession session = new MobileSequenceSession(parameters, sequenceConfig.getSessionVariables());
+
+            session.setRecipient(m_phonebook.getTargetForAddress(svc.getIpAddr()));
+
+			session.checkoutVariables();
 
 			Map<String, Number> results = null;
 			try {
