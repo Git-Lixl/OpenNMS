@@ -170,6 +170,8 @@ public class SequenceXmlTest {
     	m_unmarshaller.setEventHandler(handler);
     	MobileSequenceConfig s = (MobileSequenceConfig)m_unmarshaller.unmarshal(exampleFile);
     	System.err.println("sequence = " + s);
+    	
+        assertTransactionParentsSet(s);
     }
     
     @Test(expected=UnmarshalException.class)
@@ -179,6 +181,7 @@ public class SequenceXmlTest {
     	m_unmarshaller.setEventHandler(handler);
     	MobileSequenceConfig s = (MobileSequenceConfig)m_unmarshaller.unmarshal(exampleFile);
     	System.err.println("sequence = " + s);
+        assertTransactionParentsSet(s);
     }
     
     @Test()
@@ -188,6 +191,7 @@ public class SequenceXmlTest {
     	m_unmarshaller.setEventHandler(handler);
     	MobileSequenceConfig s = (MobileSequenceConfig)m_unmarshaller.unmarshal(exampleFile);
     	System.err.println("sequence = " + s);
+        assertTransactionParentsSet(s);
     }
     
     @Test
@@ -197,6 +201,13 @@ public class SequenceXmlTest {
     	m_unmarshaller.setEventHandler(handler);
     	MobileSequenceConfig s = (MobileSequenceConfig)m_unmarshaller.unmarshal(exampleFile);
     	System.err.println("sequence = " + s);
+        assertTransactionParentsSet(s);
+    }
+
+    private void assertTransactionParentsSet(MobileSequenceConfig s) {
+        for ( MobileSequenceTransaction t : s.getTransactions() ) {
+            assertEquals(s, t.getSequenceConfig());
+        }
     }
 
     @Test

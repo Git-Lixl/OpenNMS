@@ -1,7 +1,5 @@
 package org.opennms.sms.monitor.internal.config;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -26,12 +24,17 @@ import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 @XmlType(propOrder={"request", "responses"})
 public class MobileSequenceTransaction implements Comparable<MobileSequenceTransaction> {
     
-	private String m_label;
+    /* containing sequenceConfig */
+    private MobileSequenceConfig m_sequenceConfig;
+
+    /* attributes and sub elements */
+    private String m_label;
 	private String m_gatewayId;
-	private String m_defaultGatewayId;
 	private MobileSequenceRequest m_request;
-	private List<MobileSequenceResponse> m_responses = Collections.synchronizedList(new ArrayList<MobileSequenceResponse>());
+	private List<MobileSequenceResponse> m_responses;
 	
+    /* other data */
+	private String m_defaultGatewayId;
 	private Long m_latency;
 	private Throwable m_error;
 
@@ -47,15 +50,6 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 		setGatewayId(gatewayId);
 	}
 	
-    public void setDefaultGatewayId(String gatewayId) {
-		m_defaultGatewayId = gatewayId;
-	}
-	
-	@XmlTransient
-	public String getDefaultGatewayId() {
-		return m_defaultGatewayId;
-	}
-	
 	@XmlAttribute(name="label")
 	public String getLabel() {
 		return m_label;
@@ -65,13 +59,13 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 		m_label = label;
 	}
 
-	@XmlAttribute(name="gatewayId", required=false)
+    @XmlAttribute(name="gatewayId", required=false)
+    public String getGatewayId() {
+        return m_gatewayId;
+    }
+
 	public void setGatewayId(String gatewayId) {
 		m_gatewayId = gatewayId;
-	}
-
-	public String getGatewayId() {
-		return m_gatewayId;
 	}
 
 	@XmlElementRef
@@ -80,46 +74,74 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 	}
 	
 	public void setRequest(MobileSequenceRequest request) {
-		m_request = request;
+
+	    if (m_request != null) {
+	        m_request.setTransaction(null);
+	    }
+
+	    m_request = request;
+
+		if (request != null) {
+		    request.setTransaction(this);
+		}
+
 	}
 	
 	@XmlElementRef
 	public List<MobileSequenceResponse> getResponses() {
+	    if (m_responses == null) {
+	        m_responses = createResponsesList();
+	    }
 		return m_responses;
 	}
 
-	public synchronized void setResponses(List<MobileSequenceResponse> responses) {
+	private List<MobileSequenceResponse> createResponsesList() {
+	    return new TriggeredList<MobileSequenceResponse>() {
+
+            @Override
+            protected void onAdd(int index, MobileSequenceResponse element) {
+                element.setTransaction(MobileSequenceTransaction.this);
+            }
+
+            @Override
+            protected void onRemove(int index, MobileSequenceResponse element) {
+                element.setTransaction(null);
+            }
+	        
+	    };
+    }
+
+    public synchronized void setResponses(List<MobileSequenceResponse> responses) {
 		m_responses.clear();
 		m_responses.addAll(responses);
 	}
 	
 	public void addResponse(MobileSequenceResponse response) {
-		m_responses.add(response);
+		getResponses().add(response);
 		
 	}
-	public int compareTo(MobileSequenceTransaction o) {
-		return new CompareToBuilder()
-			.append(this.getRequest(), o.getRequest())
-			.append(this.getResponses(), o.getResponses())
-			.toComparison();
-	}
-	
-	public String toString() {
-		return new ToStringBuilder(this)
-			.append("label", getLabel())
-			.append("gatewayId", getGatewayId())
-			.append("request", getRequest())
-			.append("response(s)", getResponses())
-			.toString();
+
+	@XmlTransient
+	public MobileSequenceConfig getSequenceConfig() {
+	    return m_sequenceConfig;
 	}
 
-    public MobileMsgResponseMatcher getResponseMatcher(
-            MobileSequenceSession session) {
-        MobileMsgResponseMatcher match =null;
-		for (MobileSequenceResponse r : getResponses()) {
-			match = r.getResponseMatcher(session.getProperties());
-		}
-        return match;
+	public void setSequenceConfig(MobileSequenceConfig sequenceConfig) {
+	    m_sequenceConfig = sequenceConfig;
+	}
+	
+    @XmlTransient
+    public String getDefaultGatewayId() {
+        return m_defaultGatewayId;
+    }
+    
+    public void setDefaultGatewayId(String gatewayId) {
+        m_defaultGatewayId = gatewayId;
+    }
+    
+    @XmlTransient
+    public Long getLatency() {
+        return m_latency;
     }
 
     public void setLatency(Long latency) {
@@ -127,8 +149,8 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
     }
 
     @XmlTransient
-    public Long getLatency() {
-        return m_latency;
+    public Throwable getError() {
+        return m_error;
     }
 
     public void setError(Throwable error) {
@@ -136,16 +158,22 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
     }
 
 
-    @XmlTransient
-    public Throwable getError() {
-        return m_error;
-    }
-
     public String getLabel(MobileSequenceSession session) {
         return session.substitute(getRequest().getLabel(getLabel()));
     }
 
-    public Callback<MobileMsgResponse> getCallback(final MobileSequenceSession session) {
+    public MobileMsgResponseMatcher getResponseMatcher(MobileSequenceSession session) {
+        
+        MobileMsgResponseMatcher match =null;
+
+        for ( MobileSequenceResponse r : getResponses() ) {
+            match = r.getResponseMatcher( session.getProperties() );
+        }
+
+        return match;
+    }
+
+    private Callback<MobileMsgResponse> getCallback(final MobileSequenceSession session) {
         return new Callback<MobileMsgResponse>() {
             public void complete(MobileMsgResponse t) {
                 if (t != null) {
@@ -169,6 +197,22 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 
     public Task createTask(MobileSequenceConfig sequenceConfig, MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator, SequenceTask sequence) {
         return coordinator.createTask(sequence, createAsync(tracker, sequenceConfig, session), getCallback(session));
+    }
+
+    public int compareTo(MobileSequenceTransaction o) {
+        return new CompareToBuilder()
+            .append(this.getRequest(), o.getRequest())
+            .append(this.getResponses(), o.getResponses())
+            .toComparison();
+    }
+    
+    public String toString() {
+        return new ToStringBuilder(this)
+            .append("label", getLabel())
+            .append("gatewayId", getGatewayId())
+            .append("request", getRequest())
+            .append("response(s)", getResponses())
+            .toString();
     }
 
 }
