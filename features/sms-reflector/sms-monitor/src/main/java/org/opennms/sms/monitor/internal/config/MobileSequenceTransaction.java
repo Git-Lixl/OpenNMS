@@ -191,12 +191,12 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
         };
     }
 
-    public Async<MobileMsgResponse> createAsync(MobileMsgTracker tracker, MobileSequenceConfig sequenceConfig, MobileSequenceSession session) {
+    public Async<MobileMsgResponse> createAsync(MobileMsgTracker tracker, MobileSequenceSession session) {
         return getRequest().createAsync(session, tracker);
     }
 
-    public Task createTask(MobileSequenceConfig sequenceConfig, MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator, SequenceTask sequence) {
-        return coordinator.createTask(sequence, createAsync(tracker, sequenceConfig, session), getCallback(session));
+    public Task createTask(MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator, SequenceTask sequence) {
+        return coordinator.createTask(sequence, createAsync(tracker, session), getCallback(session));
     }
 
     public int compareTo(MobileSequenceTransaction o) {

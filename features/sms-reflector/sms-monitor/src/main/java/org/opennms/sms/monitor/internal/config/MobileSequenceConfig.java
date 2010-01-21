@@ -158,7 +158,7 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 
         SequenceTask sequence = coordinator.createSequence(null);
         for(MobileSequenceTransaction transaction : getTransactions()) {
-            sequence.add(transaction.createTask(this, session, tracker, coordinator, sequence));
+            sequence.add(transaction.createTask(session, tracker, coordinator, sequence));
         }
         
         sequence.schedule();
