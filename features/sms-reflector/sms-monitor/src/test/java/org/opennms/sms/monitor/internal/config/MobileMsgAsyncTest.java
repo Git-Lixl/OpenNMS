@@ -137,6 +137,20 @@ public class MobileMsgAsyncTest {
             sendTestResponse(new UssdResponse(gatewayId, response, System.currentTimeMillis()));
         }
 
+        void sendTestResponse(final String gatewayId, String content, USSDSessionStatus status) {
+            USSDResponse r = new USSDResponse();
+            r.setContent(content);
+            r.setUSSDSessionStatus(status);
+            r.setDcs(USSDDcs.UNSPECIFIED_7BIT);
+            
+            sendTestResponse(gatewayId, r);
+        }
+
+        void sendTestResponse(String recipient, String text) {
+            InboundMessage responseMsg = new InboundMessage(new Date(), recipient, text, 0, "0");
+            sendTestResponse(responseMsg);
+        }
+
     }
     
     public static class TestCallback implements MobileMsgResponseCallback {
@@ -244,15 +258,14 @@ public class MobileMsgAsyncTest {
         
         LatencyCallback cb = new LatencyCallback(start);
  
-        Async<MobileMsgResponse> async = request.createAsync(sequenceConfig, transaction, session, m_tracker);
+        Async<MobileMsgResponse> async = request.createAsync(session, m_tracker);
         
         Task t = m_coordinator.createTask(null, async, cb);
         t.schedule();
         
-        InboundMessage responseMsg = createInboundMessage(PHONE_NUMBER, "pong");
-        
         Thread.sleep(500);
-        m_messenger.sendTestResponse(responseMsg);
+
+        m_messenger.sendTestResponse(PHONE_NUMBER, "pong");
         
         t.waitFor();
 
@@ -260,7 +273,6 @@ public class MobileMsgAsyncTest {
         System.err.println("testRawSmsPing(): latency = " + cb.getLatency());
     }
 
-    
     @Test
     public void testRawUssdMessage() throws Exception {
         final String gatewayId = "G";
@@ -284,32 +296,18 @@ public class MobileMsgAsyncTest {
         sequenceConfig.addTransaction(transaction);
 
         LatencyCallback cb = new LatencyCallback(System.currentTimeMillis());
-        Async<MobileMsgResponse> async = request.createAsync(sequenceConfig, transaction, session, m_tracker);
+        Async<MobileMsgResponse> async = request.createAsync(session, m_tracker);
 
         Task t = m_coordinator.createTask(null, async, cb);
         t.schedule();
         
-        USSDResponse r = new USSDResponse();
-        r.setContent(TMOBILE_RESPONSE);
-        r.setUSSDSessionStatus(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED);
-        r.setDcs(USSDDcs.UNSPECIFIED_7BIT);
-        
         Thread.sleep(500);
-        m_messenger.sendTestResponse(gatewayId, r);
+
+        m_messenger.sendTestResponse(gatewayId, TMOBILE_RESPONSE, USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED);
         
         t.waitFor();
         assertNotNull(cb.getLatency());
         System.err.println("testRawUssdMessage(): latency = " + cb.getLatency());
-    }
-
-    /**
-     * @param originator
-     * @param text
-     * @return
-     */
-    private InboundMessage createInboundMessage(String originator, String text) {
-        InboundMessage msg = new InboundMessage(new Date(), originator, text, 0, "0");
-        return msg;
     }
     
 

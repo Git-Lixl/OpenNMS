@@ -7,9 +7,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.opennms.core.tasks.Callback;
 import org.opennms.core.utils.PropertiesUtils;
 import org.opennms.sms.monitor.internal.config.SequenceSessionVariable;
 import org.opennms.sms.monitor.session.SessionVariableGenerator;
+import org.opennms.sms.reflector.smsservice.MobileMsgCallbackAdapter;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
+import org.smslib.OutboundMessage;
+import org.smslib.USSDRequest;
 
 public class MobileSequenceSession {
 	
@@ -94,5 +102,31 @@ public class MobileSequenceSession {
 			var.checkOut(getProperties());
 		}
 	}
+
+    public void sendSms(MobileMsgTracker tracker, String gatewayId, String recipient, String text, MobileMsgResponseMatcher matcher, Callback<MobileMsgResponse> cb) {
+    
+        MobileMsgResponseCallback mmrc = new MobileMsgCallbackAdapter(cb);
+    
+    	try {
+            OutboundMessage msg = new OutboundMessage(substitute(recipient), substitute(text));
+            msg.setGatewayId(substitute(gatewayId));
+            tracker.sendSmsRequest(msg, getTimeout(), getRetries(), mmrc, matcher);
+    	} catch (Exception e) {
+    		cb.handleException(e);
+    	}
+    
+    }
+
+    public void sendUssd(MobileMsgTracker tracker, String gatewayId, String text, MobileMsgResponseMatcher matcher, final Callback<MobileMsgResponse> cb) {
+        MobileMsgResponseCallback mmrc = new MobileMsgCallbackAdapter(cb);
+    
+    	try {
+            USSDRequest ussdRequest = new USSDRequest(substitute(text));
+            ussdRequest.setGatewayId(substitute(gatewayId));
+            tracker.sendUssdRequest(ussdRequest, getTimeout(), getRetries(), mmrc, matcher);
+    	} catch (Exception e) {
+    		cb.handleException(e);
+    	}
+    }
 
 }
