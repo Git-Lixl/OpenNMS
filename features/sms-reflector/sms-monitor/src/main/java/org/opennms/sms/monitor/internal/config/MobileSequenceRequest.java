@@ -56,7 +56,11 @@ public abstract class MobileSequenceRequest extends MobileSequenceOperation {
 		return getLabel() == null ? defaultLabel : getLabel();
 	}
 
-    public abstract Async<MobileMsgResponse> createAsync(MobileSequenceConfig sequenceConfig, MobileSequenceTransaction transaction, MobileSequenceSession session, MobileMsgTracker tracker);
+    public abstract Async<MobileMsgResponse> createAsync(MobileSequenceSession session, MobileMsgTracker tracker);
+
+    protected String getGatewayIdForRequest() {
+        return getGatewayId(getTransaction().getDefaultGatewayId());
+    }
 
     public String toString() {
         return new ToStringBuilder(this)
