@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Properties;
 
 import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
@@ -15,6 +16,8 @@ import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 
 	private List<SequenceResponseMatcher> m_matchers = Collections.synchronizedList(new ArrayList<SequenceResponseMatcher>());
+	
+	private MobileSequenceTransaction m_transaction;
 
 	public MobileSequenceResponse() {
 		super();
@@ -42,15 +45,16 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 		m_matchers.add(matcher);
 	}
 	
-	public String toString() {
-		return new ToStringBuilder(this)
-			.append("gatewayId", getGatewayId())
-			.append("label", getLabel())
-			.append("matchers", getMatchers())
-			.toString();
-	}
+	@XmlTransient
+    public MobileSequenceTransaction getTransaction() {
+        return m_transaction;
+    }
 
-	public MobileMsgResponseMatcher getResponseMatcher(Properties session) {
+    public void setTransaction(MobileSequenceTransaction transaction) {
+        m_transaction = transaction;
+    }
+
+    public MobileMsgResponseMatcher getResponseMatcher(Properties session) {
 		List<MobileMsgResponseMatcher> matchers = new ArrayList<MobileMsgResponseMatcher>();
 		matchers.add(getResponseTypeMatcher());
 		
@@ -62,4 +66,13 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 	}
 
 	abstract protected MobileMsgResponseMatcher getResponseTypeMatcher();
+
+	public String toString() {
+        return new ToStringBuilder(this)
+            .append("gatewayId", getGatewayId())
+            .append("label", getLabel())
+            .append("matchers", getMatchers())
+            .toString();
+    }
+
 }

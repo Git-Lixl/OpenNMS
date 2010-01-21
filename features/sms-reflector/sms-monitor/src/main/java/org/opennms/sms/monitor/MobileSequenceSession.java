@@ -65,6 +65,16 @@ public class MobileSequenceSession {
 	public long getTimeout() {
 		return Long.parseLong(getProperties().getProperty("timeout", String.valueOf(DEFAULT_TIMEOUT)));
 	}
+	
+    public void setTimeout(long timeout) {
+        getProperties().setProperty("timeout", String.valueOf(timeout));
+    }
+
+    public void setRetries(int retries) {
+        getProperties().setProperty("retry", String.valueOf(retries));
+    }
+
+
 
 	public String substitute(String string) {
 		return PropertiesUtils.substitute(string, getProperties());
