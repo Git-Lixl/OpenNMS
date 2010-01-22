@@ -15,9 +15,11 @@ import org.opennms.sms.reflector.smsservice.MobileMsgCallbackAdapter;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 import org.smslib.OutboundMessage;
 import org.smslib.USSDRequest;
+import org.smslib.USSDSessionStatus;
 
 public class MobileSequenceSession {
 	
@@ -128,5 +130,26 @@ public class MobileSequenceSession {
     		cb.handleException(e);
     	}
     }
+
+	public boolean eqOrMatches(String expected, String actual) {
+		return MobileMsgResponseMatchers.isAMatch(substitute(expected), actual);
+	}
+
+	public boolean matches(String expected, String actual) {
+		return actual.matches(substitute(expected));
+	}
+
+	public boolean ussdStatusMatches(String expected, USSDSessionStatus actual) {
+		USSDSessionStatus status;
+	
+		try {
+			int statusVal = Integer.parseInt(substitute(expected));
+			status = USSDSessionStatus.getByNumeric(statusVal);
+		} catch (NumberFormatException e) {
+			status = USSDSessionStatus.valueOf(substitute(expected));
+		}
+		
+		return status.equals(actual);
+	}
 
 }
