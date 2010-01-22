@@ -167,13 +167,13 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
         MobileMsgResponseMatcher match =null;
 
         for ( MobileSequenceResponse r : getResponses() ) {
-            match = r.getResponseMatcher( session.getProperties() );
+            match = r.getResponseMatcher(session);
         }
 
         return match;
     }
 
-    private Callback<MobileMsgResponse> getCallback(final MobileSequenceSession session) {
+	private Callback<MobileMsgResponse> getCallback(final MobileSequenceSession session) {
         return new Callback<MobileMsgResponse>() {
             public void complete(MobileMsgResponse t) {
                 if (t != null) {

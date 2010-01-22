@@ -11,6 +11,9 @@ import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.opennms.sms.monitor.MobileSequenceSession;
+import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 
 public abstract class MobileSequenceResponse extends MobileSequenceOperation {
@@ -54,7 +57,17 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
         m_transaction = transaction;
     }
 
-    public MobileMsgResponseMatcher getResponseMatcher(Properties session) {
+	abstract protected MobileMsgResponseMatcher getResponseTypeMatcher();
+	
+	public String toString() {
+        return new ToStringBuilder(this)
+            .append("gatewayId", getGatewayId())
+            .append("label", getLabel())
+            .append("matchers", getMatchers())
+            .toString();
+    }
+
+	MobileMsgResponseMatcher getResponseMatcher( MobileSequenceSession session ) {
 		List<MobileMsgResponseMatcher> matchers = new ArrayList<MobileMsgResponseMatcher>();
 		matchers.add(getResponseTypeMatcher());
 		
@@ -64,15 +77,5 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 		
 		return and(matchers.toArray(new MobileMsgResponseMatcher[0]));
 	}
-
-	abstract protected MobileMsgResponseMatcher getResponseTypeMatcher();
-
-	public String toString() {
-        return new ToStringBuilder(this)
-            .append("gatewayId", getGatewayId())
-            .append("label", getLabel())
-            .append("matchers", getMatchers())
-            .toString();
-    }
 
 }
