@@ -231,7 +231,7 @@ public class MobileMsgAsyncTest {
     public void testRawSmsPing() throws Exception {
         final long start = System.currentTimeMillis();
         
-        MobileSequenceSession session = new MobileSequenceSession();
+        MobileSequenceSession session = new MobileSequenceSession(m_tracker);
         session.setTimeout(1000L);
         session.setRetries(0);
 
@@ -258,7 +258,7 @@ public class MobileMsgAsyncTest {
         
         LatencyCallback cb = new LatencyCallback(start);
  
-        Async<MobileMsgResponse> async = request.createAsync(session, m_tracker);
+        Async<MobileMsgResponse> async = request.createAsync(session);
         
         Task t = m_coordinator.createTask(null, async, cb);
         t.schedule();
@@ -277,7 +277,7 @@ public class MobileMsgAsyncTest {
     public void testRawUssdMessage() throws Exception {
         final String gatewayId = "G";
         
-        MobileSequenceSession session = new MobileSequenceSession();
+        MobileSequenceSession session = new MobileSequenceSession(m_tracker);
         session.setTimeout(3000L);
         session.setRetries(0);
 
@@ -296,7 +296,7 @@ public class MobileMsgAsyncTest {
         sequenceConfig.addTransaction(transaction);
 
         LatencyCallback cb = new LatencyCallback(System.currentTimeMillis());
-        Async<MobileMsgResponse> async = request.createAsync(session, m_tracker);
+        Async<MobileMsgResponse> async = request.createAsync(session);
 
         Task t = m_coordinator.createTask(null, async, cb);
         t.schedule();

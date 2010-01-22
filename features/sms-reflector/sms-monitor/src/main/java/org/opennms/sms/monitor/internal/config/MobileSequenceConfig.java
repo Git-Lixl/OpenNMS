@@ -18,7 +18,6 @@ import org.opennms.core.tasks.SequenceTask;
 import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
-import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 import org.springframework.util.Assert;
 
 @XmlRootElement(name="mobile-sequence")
@@ -139,9 +138,9 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
         return t;
     }
 
-	public Map<String, Number> executeSequence(MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator) throws SequencerException, Throwable {
+	public Map<String, Number> executeSequence(MobileSequenceSession session, DefaultTaskCoordinator coordinator) throws SequencerException, Throwable {
         long start = System.currentTimeMillis();
-	    start(session, tracker, coordinator);
+	    start(session, coordinator);
 	    Map<String, Number> responseTimes = waitFor(session);
 		long end = System.currentTimeMillis();
 
@@ -149,16 +148,15 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 		return responseTimes;
 	}
 
-    public void start(MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator) throws SequencerException {
+    public void start(MobileSequenceSession session, DefaultTaskCoordinator coordinator) throws SequencerException {
         
-        Assert.notNull(tracker);
         Assert.notNull(coordinator);
 
         computeDefaultGateways();
 
         SequenceTask sequence = coordinator.createSequence(null);
         for(MobileSequenceTransaction transaction : getTransactions()) {
-            sequence.add(transaction.createTask(session, tracker, coordinator, sequence));
+            sequence.add(transaction.createTask(session, coordinator, sequence));
         }
         
         sequence.schedule();

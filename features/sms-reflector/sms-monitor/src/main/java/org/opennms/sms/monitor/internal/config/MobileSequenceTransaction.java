@@ -18,7 +18,6 @@ import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
-import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="transaction")
 @XmlType(propOrder={"request", "responses"})
@@ -191,12 +190,12 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
         };
     }
 
-    public Async<MobileMsgResponse> createAsync(MobileMsgTracker tracker, MobileSequenceSession session) {
-        return getRequest().createAsync(session, tracker);
+    public Async<MobileMsgResponse> createAsync(MobileSequenceSession session) {
+        return getRequest().createAsync(session);
     }
 
-    public Task createTask(MobileSequenceSession session, MobileMsgTracker tracker, DefaultTaskCoordinator coordinator, SequenceTask sequence) {
-        return coordinator.createTask(sequence, createAsync(tracker, session), getCallback(session));
+    public Task createTask(MobileSequenceSession session, DefaultTaskCoordinator coordinator, SequenceTask sequence) {
+        return coordinator.createTask(sequence, createAsync(session), getCallback(session));
     }
 
     public int compareTo(MobileSequenceTransaction o) {

@@ -62,7 +62,7 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
 	            return PollStatus.unavailable("No transactions were configured for host " + svc.getIpAddr());
 	        }
 
-            MobileSequenceSession session = new MobileSequenceSession(parameters, sequenceConfig.getSessionVariables());
+            MobileSequenceSession session = new MobileSequenceSession(parameters, sequenceConfig.getSessionVariables(), m_tracker);
 
             session.setRecipient(m_phonebook.getTargetForAddress(svc.getIpAddr()));
 
@@ -70,7 +70,7 @@ public class MobileMsgSequenceMonitor extends IPv4Monitor {
 
 			Map<String, Number> results = null;
 			try {
-				results = sequenceConfig.executeSequence(session, m_tracker, m_coordinator);
+				results = sequenceConfig.executeSequence(session, m_coordinator);
 			} finally {
 				session.checkinVariables();
 			}

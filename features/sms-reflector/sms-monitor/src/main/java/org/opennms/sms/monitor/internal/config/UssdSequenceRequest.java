@@ -6,7 +6,6 @@ import org.opennms.core.tasks.Async;
 import org.opennms.core.tasks.Callback;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
-import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="ussd-request")
 public class UssdSequenceRequest extends MobileSequenceRequest {
@@ -23,7 +22,7 @@ public class UssdSequenceRequest extends MobileSequenceRequest {
 		super(gatewayId, label, text);
 	}
 
-	public Async<MobileMsgResponse> createAsync(final MobileSequenceSession session, final MobileMsgTracker tracker) {
+	public Async<MobileMsgResponse> createAsync(final MobileSequenceSession session) {
 
 	    return new Async<MobileMsgResponse>() {
 
@@ -32,7 +31,7 @@ public class UssdSequenceRequest extends MobileSequenceRequest {
                 	cb.complete(null);
                 }
                 
-                session.sendUssd(tracker, getGatewayIdForRequest(), getText(), getTransaction().getResponseMatcher(session), cb);
+                session.sendUssd(getGatewayIdForRequest(), getText(), getTransaction().getResponseMatcher(session), cb);
             }
 	        
 	    };

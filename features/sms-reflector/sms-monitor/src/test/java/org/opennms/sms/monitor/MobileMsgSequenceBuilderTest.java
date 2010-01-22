@@ -188,7 +188,7 @@ public class MobileMsgSequenceBuilderTest {
         m_tracker = new MobileMsgTrackerImpl("test", m_messenger);
         m_tracker.start();
         
-        m_session = new MobileSequenceSession();
+        m_session = new MobileSequenceSession(m_tracker);
         
         m_coordinator = new DefaultTaskCoordinator(Executors.newSingleThreadExecutor());
 
@@ -220,7 +220,7 @@ public class MobileMsgSequenceBuilderTest {
 		
 		sequenceConfig.createTransaction(smsRequest, response);
 		
-        sequenceConfig.start(m_session, m_tracker, m_coordinator);
+        sequenceConfig.start(m_session, m_coordinator);
 
         sequenceConfig.waitFor(m_session);
     }
@@ -241,7 +241,7 @@ public class MobileMsgSequenceBuilderTest {
 		
 		sequenceConfig.createTransaction(smsRequest, response);
 		
-        sequenceConfig.start(m_session, m_tracker, m_coordinator);
+        sequenceConfig.start(m_session, m_coordinator);
         
         Thread.sleep(500);
         InboundMessage msg = new InboundMessage(new Date(), PHONE_NUMBER, "pong", 0, "0");
@@ -272,7 +272,7 @@ public class MobileMsgSequenceBuilderTest {
 		
 		sequenceConfig.createTransaction(ussdRequest, response);
 		
-		sequenceConfig.start(m_session, m_tracker, m_coordinator);
+		sequenceConfig.start(m_session, m_coordinator);
 
 		Thread.sleep(500);
         sendTmobileUssdResponse("G");
@@ -312,7 +312,7 @@ public class MobileMsgSequenceBuilderTest {
 		
 		sequenceConfig.createTransaction(ussdRequest, ussdResponse);
 		
-		sequenceConfig.start(m_session, m_tracker, m_coordinator);
+		sequenceConfig.start(m_session, m_coordinator);
 		
 		Thread.sleep(100);
         InboundMessage msg = new InboundMessage(new Date(), PHONE_NUMBER, "pong", 0, "0");

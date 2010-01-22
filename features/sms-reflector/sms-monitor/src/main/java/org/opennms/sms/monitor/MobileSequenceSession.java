@@ -27,15 +27,17 @@ public class MobileSequenceSession {
 	private static final long DEFAULT_TIMEOUT = 10000L;
 	
     private List<SequenceSessionVariable> m_sessionVariables;
+	private MobileMsgTracker m_tracker;
 	
 
-    public MobileSequenceSession() {
-        this(new HashMap<String, Object>(), Collections.<SequenceSessionVariable>emptyList());
+    public MobileSequenceSession(MobileMsgTracker tracker) {
+        this(new HashMap<String, Object>(), Collections.<SequenceSessionVariable>emptyList(), tracker);
     }
 
-    public MobileSequenceSession(Map<String, Object> parameters, List<SequenceSessionVariable> sessionVariables) {
+    public MobileSequenceSession(Map<String, Object> parameters, List<SequenceSessionVariable> sessionVariables, MobileMsgTracker tracker) {
         
         m_sessionVariables = sessionVariables; 
+        m_tracker = tracker;
         
         if (parameters.get("retry") == null) {
             parameters.put("retry", String.valueOf(DEFAULT_RETRIES));
@@ -105,27 +107,27 @@ public class MobileSequenceSession {
 		}
 	}
 
-    public void sendSms(MobileMsgTracker tracker, String gatewayId, String recipient, String text, MobileMsgResponseMatcher matcher, Callback<MobileMsgResponse> cb) {
+    public void sendSms(String gatewayId, String recipient, String text, MobileMsgResponseMatcher matcher, Callback<MobileMsgResponse> cb) {
     
         MobileMsgResponseCallback mmrc = new MobileMsgCallbackAdapter(cb);
     
     	try {
             OutboundMessage msg = new OutboundMessage(substitute(recipient), substitute(text));
             msg.setGatewayId(substitute(gatewayId));
-            tracker.sendSmsRequest(msg, getTimeout(), getRetries(), mmrc, matcher);
+            m_tracker.sendSmsRequest(msg, getTimeout(), getRetries(), mmrc, matcher);
     	} catch (Exception e) {
     		cb.handleException(e);
     	}
     
     }
 
-    public void sendUssd(MobileMsgTracker tracker, String gatewayId, String text, MobileMsgResponseMatcher matcher, final Callback<MobileMsgResponse> cb) {
+    public void sendUssd(String gatewayId, String text, MobileMsgResponseMatcher matcher, final Callback<MobileMsgResponse> cb) {
         MobileMsgResponseCallback mmrc = new MobileMsgCallbackAdapter(cb);
     
     	try {
             USSDRequest ussdRequest = new USSDRequest(substitute(text));
             ussdRequest.setGatewayId(substitute(gatewayId));
-            tracker.sendUssdRequest(ussdRequest, getTimeout(), getRetries(), mmrc, matcher);
+            m_tracker.sendUssdRequest(ussdRequest, getTimeout(), getRetries(), mmrc, matcher);
     	} catch (Exception e) {
     		cb.handleException(e);
     	}

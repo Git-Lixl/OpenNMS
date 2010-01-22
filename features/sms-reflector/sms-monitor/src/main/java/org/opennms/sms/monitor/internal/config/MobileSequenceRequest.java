@@ -9,7 +9,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.core.tasks.Async;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
-import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 
 @XmlRootElement(name="request")
 public abstract class MobileSequenceRequest extends MobileSequenceOperation {
@@ -56,7 +55,7 @@ public abstract class MobileSequenceRequest extends MobileSequenceOperation {
 		return getLabel() == null ? defaultLabel : getLabel();
 	}
 
-    public abstract Async<MobileMsgResponse> createAsync(MobileSequenceSession session, MobileMsgTracker tracker);
+    public abstract Async<MobileMsgResponse> createAsync(MobileSequenceSession session);
 
     protected String getGatewayIdForRequest() {
         return getGatewayId(getTransaction().getDefaultGatewayId());
