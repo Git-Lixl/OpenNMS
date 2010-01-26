@@ -36,15 +36,15 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
-import org.opennms.protocols.rt.Messenger;
+import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder;
+import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder.MobileSequenceTransactionBuilder;
+import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder.SmsResponseBuilder;
+import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder.UssdResponseBuilder;
 import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
 import org.opennms.sms.monitor.internal.config.MobileSequenceRequest;
 import org.opennms.sms.monitor.internal.config.SmsSequenceRequest;
@@ -53,12 +53,7 @@ import org.opennms.sms.monitor.internal.config.TextResponseMatcher;
 import org.opennms.sms.monitor.internal.config.UssdSequenceRequest;
 import org.opennms.sms.monitor.internal.config.UssdSequenceResponse;
 import org.opennms.sms.monitor.internal.config.UssdSessionStatusMatcher;
-import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
 import org.opennms.sms.reflector.smsservice.MobileMsgTrackerImpl;
-import org.opennms.sms.reflector.smsservice.SmsResponse;
-import org.opennms.sms.reflector.smsservice.UssdResponse;
 import org.smslib.InboundMessage;
 import org.smslib.USSDDcs;
 import org.smslib.USSDResponse;
@@ -75,116 +70,16 @@ public class MobileMsgSequenceBuilderTest {
     public static final String TMOBILE_RESPONSE = "37.28 received on 08/31/09. For continued service through 10/28/09, please pay 79.56 by 09/28/09.    ";
     public static final String TMOBILE_USSD_MATCH = "^.*[\\d\\.]+ received on \\d\\d/\\d\\d/\\d\\d. For continued service through \\d\\d/\\d\\d/\\d\\d, please pay [\\d\\.]+ by \\d\\d/\\d\\d/\\d\\d.*$";
 
-	/**
-     * @author brozow
-     *
-     */
-    public class TestMessenger implements Messenger<MobileMsgRequest, MobileMsgResponse> {
-        
-        Queue<MobileMsgResponse> m_q;
-
-        /* (non-Javadoc)
-         * @see org.opennms.protocols.rt.Messenger#sendRequest(java.lang.Object)
-         */
-        public void sendRequest(MobileMsgRequest request) throws Exception {
-            // fake send this
-            request.setSendTimestamp(System.currentTimeMillis());
-        }
-
-        /* (non-Javadoc)
-         * @see org.opennms.protocols.rt.Messenger#start(java.util.Queue)
-         */
-        public void start(Queue<MobileMsgResponse> q) {
-            m_q = q;
-        }
-        
-        public void sendTestResponse(MobileMsgResponse response) {
-            m_q.offer(response);
-        }
-
-        /**
-         * @param msg1
-         */
-        public void sendTestResponse(InboundMessage msg) {
-            sendTestResponse(new SmsResponse(msg, System.currentTimeMillis()));
-        }
-
-        /**
-         * @param response
-         */
-        public void sendTestResponse(String gatewayId, USSDResponse response) {
-            sendTestResponse(new UssdResponse(gatewayId, response, System.currentTimeMillis()));
-        }
-
-    }
-    
-    public static class TestCallback implements MobileMsgResponseCallback {
-        
-        CountDownLatch m_latch = new CountDownLatch(1);
-        AtomicReference<MobileMsgResponse> m_response = new AtomicReference<MobileMsgResponse>(null);
-
-        
-        MobileMsgResponse getResponse() throws InterruptedException {
-            m_latch.await();
-            return m_response.get();
-        }
-
-        /* (non-Javadoc)
-         * @see org.opennms.sms.reflector.smsservice.SmsResponseCallback#handleError(org.opennms.sms.reflector.smsservice.SmsRequest, java.lang.Throwable)
-         */
-        public void handleError(MobileMsgRequest request, Throwable t) {
-            System.err.println("Error processing SmsRequest: " + request);
-            m_latch.countDown();
-        }
-
-        /* (non-Javadoc)
-         * @see org.opennms.sms.reflector.smsservice.SmsResponseCallback#handleResponse(org.opennms.sms.reflector.smsservice.SmsRequest, org.opennms.sms.reflector.smsservice.SmsResponse)
-         */
-        public boolean handleResponse(MobileMsgRequest request, MobileMsgResponse response) {
-            m_response.set(response);
-            m_latch.countDown();
-            return true;
-        }
-
-        /* (non-Javadoc)
-         * @see org.opennms.sms.reflector.smsservice.SmsResponseCallback#handleTimeout(org.opennms.sms.reflector.smsservice.SmsRequest)
-         */
-        public void handleTimeout(MobileMsgRequest request) {
-            System.err.println("Timeout waiting for SmsRequest: " + request);
-            m_latch.countDown();
-        }
-
-        /**
-         * @return
-         * @throws InterruptedException 
-         */
-        public InboundMessage getMessage() throws InterruptedException {
-            MobileMsgResponse response = getResponse();
-            if (response instanceof SmsResponse) {
-                return ((SmsResponse)response).getMessage();
-            }
-            return null;
-            
-        }
-        
-        public USSDResponse getUSSDResponse() throws InterruptedException{
-            MobileMsgResponse response = getResponse();
-            if (response instanceof UssdResponse) {
-                return ((UssdResponse)response).getMessage();
-            }
-            return null;
-        }
-        
-    }
-
-    TestMessenger m_messenger;
+	TestMessenger m_messenger;
     MobileMsgTrackerImpl m_tracker;
 	DefaultTaskCoordinator m_coordinator;
 	MobileSequenceSession m_session;
     
     @Before
     public void setUp() throws Exception {
+        
         m_messenger = new TestMessenger();
+        
         m_tracker = new MobileMsgTrackerImpl("test", m_messenger);
         m_tracker.start();
         
@@ -195,140 +90,101 @@ public class MobileMsgSequenceBuilderTest {
         System.err.println("=== STARTING TEST ===");
     }
 
-	private USSDResponse sendTmobileUssdResponse(String gatewayId) {
-		USSDResponse response = new USSDResponse();
-        response.setContent(TMOBILE_RESPONSE);
-        response.setUSSDSessionStatus(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED);
-        response.setDcs(USSDDcs.UNSPECIFIED_7BIT);
-        
-        m_messenger.sendTestResponse(gatewayId, response);
-		return response;
-	}
-
-    @Test(expected=java.net.SocketTimeoutException.class)
+	@Test(expected=java.net.SocketTimeoutException.class)
     public void testPingTimeoutWithBuilder() throws Throwable {
-        MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
+        MobileSequenceConfigBuilder bldr = new MobileSequenceConfigBuilder();
         
-        SmsSequenceResponse response = new SmsSequenceResponse();
-        response.addMatcher(new TextResponseMatcher("^pong$"));
+        ping(bldr);
 
-        SmsSequenceRequest smsRequest = new SmsSequenceRequest();
-		smsRequest.setLabel("SMS Ping");
-		smsRequest.setGatewayId("G");
-		smsRequest.setRecipient(PHONE_NUMBER);
-		smsRequest.setText("ping");
-		
-		sequenceConfig.createTransaction(smsRequest, response);
-		
-        sequenceConfig.start(m_session, m_coordinator);
+        bldr.getSequence().start(m_session, m_coordinator);
 
-        sequenceConfig.waitFor(m_session);
+        bldr.getSequence().waitFor(m_session);
     }
 
     @Test
     public void testPingWithBuilder() throws Throwable {
-        MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
+        MobileSequenceConfigBuilder bldr = new MobileSequenceConfigBuilder();
         
-        SmsSequenceResponse response = new SmsSequenceResponse();
-        response.addMatcher(new TextResponseMatcher("^pong$"));
+        ping(bldr);
 
-
-        SmsSequenceRequest smsRequest = new SmsSequenceRequest();
-		smsRequest.setLabel("SMS Ping");
-		smsRequest.setGatewayId("G");
-		smsRequest.setRecipient(PHONE_NUMBER);
-		smsRequest.setText("ping");
-		
-		sequenceConfig.createTransaction(smsRequest, response);
-		
-        sequenceConfig.start(m_session, m_coordinator);
+        bldr.getSequence().start(m_session, m_coordinator);
         
         Thread.sleep(500);
-        InboundMessage msg = new InboundMessage(new Date(), PHONE_NUMBER, "pong", 0, "0");
-		m_messenger.sendTestResponse(msg);
         
-        Map<String,Number> timing = sequenceConfig.waitFor(m_session);
+        sendPong();
+        
+        Map<String,Number> timing = bldr.getSequence().waitFor(m_session);
 
         assertNotNull(timing);
-        assertTrue(timing.size() > 0);
-        assertTrue(timing.get("SMS Ping").doubleValue() > 400);
+        assertTrue(latency(timing, "SMS Ping") > 400);
     }
 
     @Test
     public void testUssdWithBuilder() throws Throwable {
-    	MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
-    	
-        UssdSequenceResponse response = new UssdSequenceResponse();
-        response.addMatcher(new TextResponseMatcher(TMOBILE_USSD_MATCH));
-        response.addMatcher(new UssdSessionStatusMatcher(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED));
+        MobileSequenceConfigBuilder bldr = new MobileSequenceConfigBuilder();
 
-
-
-        MobileSequenceRequest ussdRequest = new UssdSequenceRequest();
-		ussdRequest.setLabel("USSD request");
-		ussdRequest.setGatewayId("G");
-		ussdRequest.setText("#225#");
+        balanceInquiry(bldr);
 		
-		
-		sequenceConfig.createTransaction(ussdRequest, response);
-		
-		sequenceConfig.start(m_session, m_coordinator);
+		bldr.getSequence().start(m_session, m_coordinator);
 
 		Thread.sleep(500);
-        sendTmobileUssdResponse("G");
+		
+        sendBalance();
         
-        Map<String,Number> timing = sequenceConfig.waitFor(m_session);
+        Map<String,Number> timing = bldr.getSequence().waitFor(m_session);
 
         assertNotNull(timing);
-        assertTrue(timing.size() > 0);
-        assertTrue(timing.get("USSD request").doubleValue() > 400);
+        assertTrue(latency(timing, "USSD request") > 400);
     }
 
     @Test
     public void testMultipleStepSequenceBuilder() throws Throwable {
-		MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
-    	
-        SmsSequenceResponse smsResponse = new SmsSequenceResponse();
-        smsResponse.addMatcher(new TextResponseMatcher("^pong$"));
+        MobileSequenceConfigBuilder bldr = new MobileSequenceConfigBuilder();
         
-        UssdSequenceResponse ussdResponse = new UssdSequenceResponse();
-        ussdResponse.addMatcher(new TextResponseMatcher(TMOBILE_USSD_MATCH));
-        ussdResponse.addMatcher(new UssdSessionStatusMatcher(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED));
+        ping(bldr);
+        balanceInquiry(bldr);
 
-    	
-        SmsSequenceRequest smsRequest = new SmsSequenceRequest();
-		smsRequest.setLabel("SMS Ping");
-		smsRequest.setGatewayId("G");
-		smsRequest.setRecipient(PHONE_NUMBER);
-		smsRequest.setText("ping");
-		
-		sequenceConfig.createTransaction(smsRequest, smsResponse);
-		
-        MobileSequenceRequest ussdRequest = new UssdSequenceRequest();
-		ussdRequest.setLabel("USSD request");
-		ussdRequest.setGatewayId("G");
-		ussdRequest.setText("#225#");
-		
-		
-		sequenceConfig.createTransaction(ussdRequest, ussdResponse);
-		
-		sequenceConfig.start(m_session, m_coordinator);
+		bldr.getSequence().start(m_session, m_coordinator);
 		
 		Thread.sleep(100);
-        InboundMessage msg = new InboundMessage(new Date(), PHONE_NUMBER, "pong", 0, "0");
-		m_messenger.sendTestResponse(msg);
+		
+		sendPong();
 		
         Thread.sleep(100);
-        sendTmobileUssdResponse("G");
 
-        Map<String,Number> timing = sequenceConfig.waitFor(m_session);
+        sendBalance();
+
+        Map<String,Number> timing = bldr.getSequence().waitFor(m_session);
 
         assertNotNull(timing);
+        assertTrue(latency(timing, "SMS Ping") > 50);
+        assertTrue(latency(timing, "USSD request") > 50);
         assertTrue(timing.size() == 2);
-        System.err.println(timing);
-        assertTrue(timing.get("SMS Ping").doubleValue() > 50);
-        assertTrue(timing.get("USSD request").doubleValue() > 50);
+    }
+
+    private double latency(Map<String, Number> timing, String label) {
+        Number latency = timing.get(label);
+        assertNotNull("no latency found for " + label, latency);
+        return latency.doubleValue();
+    }
+
+    private void ping(MobileSequenceConfigBuilder bldr) {
+        bldr.smsRequest("SMS Ping", "G", PHONE_NUMBER, "ping").expectSmsResponse().matching("^pong$");
+    }
+
+    private void sendPong() {
+        m_messenger.sendTestResponse(PHONE_NUMBER, "pong");
     }
     
+    private void balanceInquiry(MobileSequenceConfigBuilder bldr) {
+        bldr.ussdRequest("USSD request","G", "#225#").expectUssdResponse()
+            .matching(TMOBILE_USSD_MATCH)
+            .withSessionStatus(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED);
+    }
+
+    private void sendBalance() {
+        m_messenger.sendTestResponse("G", TMOBILE_RESPONSE, USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED);
+    }
+
 
 }

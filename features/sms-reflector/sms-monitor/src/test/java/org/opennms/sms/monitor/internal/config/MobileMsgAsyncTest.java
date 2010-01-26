@@ -33,12 +33,8 @@ package org.opennms.sms.monitor.internal.config;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Date;
-import java.util.Queue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,17 +42,10 @@ import org.opennms.core.tasks.Async;
 import org.opennms.core.tasks.Callback;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.tasks.Task;
-import org.opennms.protocols.rt.Messenger;
 import org.opennms.sms.monitor.MobileSequenceSession;
-import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
+import org.opennms.sms.monitor.TestMessenger;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
 import org.opennms.sms.reflector.smsservice.MobileMsgTrackerImpl;
-import org.opennms.sms.reflector.smsservice.SmsResponse;
-import org.opennms.sms.reflector.smsservice.UssdResponse;
-import org.smslib.InboundMessage;
-import org.smslib.USSDDcs;
-import org.smslib.USSDResponse;
 import org.smslib.USSDSessionStatus;
 
 /**
@@ -96,123 +85,7 @@ public class MobileMsgAsyncTest {
 		}
 	}
 
-	/**
-     * @author brozow
-     *
-     */
-    public class TestMessenger implements Messenger<MobileMsgRequest, MobileMsgResponse> {
-        
-        Queue<MobileMsgResponse> m_q;
-
-        /* (non-Javadoc)
-         * @see org.opennms.protocols.rt.Messenger#sendRequest(java.lang.Object)
-         */
-        public void sendRequest(MobileMsgRequest request) throws Exception {
-            // fake send this
-            request.setSendTimestamp(System.currentTimeMillis());
-        }
-
-        /* (non-Javadoc)
-         * @see org.opennms.protocols.rt.Messenger#start(java.util.Queue)
-         */
-        public void start(Queue<MobileMsgResponse> q) {
-            m_q = q;
-        }
-        
-        public void sendTestResponse(MobileMsgResponse response) {
-            m_q.offer(response);
-        }
-
-        /**
-         * @param msg1
-         */
-        public void sendTestResponse(InboundMessage msg) {
-            sendTestResponse(new SmsResponse(msg, System.currentTimeMillis()));
-        }
-
-        /**
-         * @param response
-         */
-        public void sendTestResponse(String gatewayId, USSDResponse response) {
-            sendTestResponse(new UssdResponse(gatewayId, response, System.currentTimeMillis()));
-        }
-
-        void sendTestResponse(final String gatewayId, String content, USSDSessionStatus status) {
-            USSDResponse r = new USSDResponse();
-            r.setContent(content);
-            r.setUSSDSessionStatus(status);
-            r.setDcs(USSDDcs.UNSPECIFIED_7BIT);
-            
-            sendTestResponse(gatewayId, r);
-        }
-
-        void sendTestResponse(String recipient, String text) {
-            InboundMessage responseMsg = new InboundMessage(new Date(), recipient, text, 0, "0");
-            sendTestResponse(responseMsg);
-        }
-
-    }
-    
-    public static class TestCallback implements MobileMsgResponseCallback {
-        
-        CountDownLatch m_latch = new CountDownLatch(1);
-        AtomicReference<MobileMsgResponse> m_response = new AtomicReference<MobileMsgResponse>(null);
-
-        
-        MobileMsgResponse getResponse() throws InterruptedException {
-            m_latch.await();
-            return m_response.get();
-        }
-
-        /* (non-Javadoc)
-         * @see org.opennms.sms.reflector.smsservice.SmsResponseCallback#handleError(org.opennms.sms.reflector.smsservice.SmsRequest, java.lang.Throwable)
-         */
-        public void handleError(MobileMsgRequest request, Throwable t) {
-            System.err.println("Error processing SmsRequest: " + request);
-            m_latch.countDown();
-        }
-
-        /* (non-Javadoc)
-         * @see org.opennms.sms.reflector.smsservice.SmsResponseCallback#handleResponse(org.opennms.sms.reflector.smsservice.SmsRequest, org.opennms.sms.reflector.smsservice.SmsResponse)
-         */
-        public boolean handleResponse(MobileMsgRequest request, MobileMsgResponse response) {
-            m_response.set(response);
-            m_latch.countDown();
-            return true;
-        }
-
-        /* (non-Javadoc)
-         * @see org.opennms.sms.reflector.smsservice.SmsResponseCallback#handleTimeout(org.opennms.sms.reflector.smsservice.SmsRequest)
-         */
-        public void handleTimeout(MobileMsgRequest request) {
-            System.err.println("Timeout waiting for SmsRequest: " + request);
-            m_latch.countDown();
-        }
-
-        /**
-         * @return
-         * @throws InterruptedException 
-         */
-        public InboundMessage getMessage() throws InterruptedException {
-            MobileMsgResponse response = getResponse();
-            if (response instanceof SmsResponse) {
-                return ((SmsResponse)response).getMessage();
-            }
-            return null;
-            
-        }
-        
-        public USSDResponse getUSSDResponse() throws InterruptedException{
-            MobileMsgResponse response = getResponse();
-            if (response instanceof UssdResponse) {
-                return ((UssdResponse)response).getMessage();
-            }
-            return null;
-        }
-        
-    }
-
-    TestMessenger m_messenger;
+	TestMessenger m_messenger;
     MobileMsgTrackerImpl m_tracker;
 	DefaultTaskCoordinator m_coordinator;
     
