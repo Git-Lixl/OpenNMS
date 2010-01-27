@@ -83,6 +83,12 @@ public class MobileMsgSequenceMonitorTest {
 				"</mobile-sequence>");
 
 	}
+	
+	@Test
+	public void handleNullToInit() {
+	    MobileMsgSequenceMonitor m = new MobileMsgSequenceMonitor();
+	    m.initialize((Map<String, Object>)null);
+	}
 
 	@Test
 	public void testParseConfiguration() throws Exception {
