@@ -34,12 +34,16 @@ import org.opennms.sms.monitor.internal.config.MobileSequenceRequest;
 import org.opennms.sms.monitor.internal.config.MobileSequenceResponse;
 import org.opennms.sms.monitor.internal.config.MobileSequenceTransaction;
 import org.opennms.sms.monitor.internal.config.SequenceResponseMatcher;
+import org.opennms.sms.monitor.internal.config.SequenceSessionVariable;
 import org.opennms.sms.monitor.internal.config.SmsSequenceRequest;
 import org.opennms.sms.monitor.internal.config.SmsSequenceResponse;
+import org.opennms.sms.monitor.internal.config.SmsSourceMatcher;
 import org.opennms.sms.monitor.internal.config.TextResponseMatcher;
 import org.opennms.sms.monitor.internal.config.UssdSequenceRequest;
 import org.opennms.sms.monitor.internal.config.UssdSequenceResponse;
 import org.opennms.sms.monitor.internal.config.UssdSessionStatusMatcher;
+import org.opennms.sms.monitor.session.SessionVariableGenerator;
+import org.opennms.sms.monitor.session.UniqueNumber;
 import org.smslib.USSDSessionStatus;
 
 /**
@@ -117,16 +121,34 @@ public class MobileSequenceConfigBuilder {
         }
 
         public SmsResponseBuilder expectSmsResponse() {
-            SmsSequenceResponse response = new SmsSequenceResponse();
+            return expectSmsResponse(null);
+        }
+
+        public SmsResponseBuilder expectSmsResponse(String label) {
+            SmsSequenceResponse response = new SmsSequenceResponse(label);
         
             addResponse(response);
             return new SmsResponseBuilder(response);
         }
 
         public UssdResponseBuilder expectUssdResponse() {
-            UssdSequenceResponse response = new UssdSequenceResponse();
+            return expectUssdResponse(null);
+        }
+
+        public UssdResponseBuilder expectUssdResponse(String label) {
+            UssdSequenceResponse response = new UssdSequenceResponse(label);
             addResponse(response);
             return new UssdResponseBuilder(response);
+        }
+
+        public MobileSequenceTransactionBuilder withTransactionLabel(String transactionLabel) {
+            m_transaction.setLabel(transactionLabel);
+            return this;
+        }
+        
+        public MobileSequenceTransactionBuilder withGatewayId(String gatewayId) {
+            m_transaction.setGatewayId(gatewayId);
+            return this;
         }
 
 
@@ -152,6 +174,16 @@ public class MobileSequenceConfigBuilder {
 
         public SmsResponseBuilder matching(String regex) {
             return addMatcher(new TextResponseMatcher(regex));
+        }
+        
+        public SmsResponseBuilder srcMatches(String originator) {
+            addMatcher(new SmsSourceMatcher(originator));
+            return this;
+        }
+
+        public SmsResponseBuilder onGateway(String gatewayId) {
+            m_response.setGatewayId(gatewayId);
+            return this;
         }
 
     }
@@ -183,6 +215,34 @@ public class MobileSequenceConfigBuilder {
             return addMatcher(new UssdSessionStatusMatcher(sessionStatus));
         }
 
+        public UssdResponseBuilder onGateway(String gatewayId) {
+            m_response.setGatewayId(gatewayId);
+            return this;
+        }
+
+    }
+
+
+
+    public SessionVariableBuilder variable(String name, Class<? extends SessionVariableGenerator> variableClass) {
+        SequenceSessionVariable var = new SequenceSessionVariable(name, variableClass.getName());
+        m_sequence.addSessionVariable(var);
+        return new SessionVariableBuilder(var);
+        
+    }
+    
+    public static class SessionVariableBuilder {
+        private SequenceSessionVariable m_var;
+
+        public SessionVariableBuilder(SequenceSessionVariable var) {
+            m_var = var;
+        }
+
+        public SessionVariableBuilder parameter(String key, Object val) {
+            m_var.addParameter(key, val == null ? null : val.toString());
+            return this;
+        }
+        
     }
 
     

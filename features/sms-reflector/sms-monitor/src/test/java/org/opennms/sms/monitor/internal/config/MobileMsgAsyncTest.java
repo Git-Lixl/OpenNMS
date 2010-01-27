@@ -44,6 +44,8 @@ import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.TestMessenger;
+import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder;
+import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder.MobileSequenceTransactionBuilder;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgTrackerImpl;
 import org.smslib.USSDSessionStatus;
@@ -107,31 +109,16 @@ public class MobileMsgAsyncTest {
         MobileSequenceSession session = new MobileSequenceSession(m_tracker);
         session.setTimeout(1000L);
         session.setRetries(0);
+        
+        MobileSequenceConfigBuilder bldr = new MobileSequenceConfigBuilder();
 
-        MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
+        MobileSequenceTransactionBuilder smsRequest = bldr.smsRequest("SMS ping", "*", PHONE_NUMBER, "ping");
+        smsRequest.expectSmsResponse().matching("^[Pp]ong$");
         
-        MobileSequenceTransaction transaction = new MobileSequenceTransaction();
-        
-        
-        SmsSequenceRequest request = new SmsSequenceRequest();
-        request.setGatewayId("*");
-        request.setRecipient(PHONE_NUMBER);
-        request.setText("ping");
-        
-        SequenceResponseMatcher pongMatcher = new TextResponseMatcher("^[Pp]ong$");
-        
-        SmsSequenceResponse response = new SmsSequenceResponse();
-        response.addMatcher(pongMatcher);
-        
-        transaction.setRequest(request);
-        
-        transaction.addResponse(response);
-        
-        sequenceConfig.addTransaction(transaction);
-        
+
         LatencyCallback cb = new LatencyCallback(start);
  
-        Async<MobileMsgResponse> async = request.createAsync(session);
+        Async<MobileMsgResponse> async = smsRequest.getTransaction().createAsync(session);
         
         Task t = m_coordinator.createTask(null, async, cb);
         t.schedule();
@@ -154,22 +141,14 @@ public class MobileMsgAsyncTest {
         session.setTimeout(3000L);
         session.setRetries(0);
 
-        MobileSequenceConfig sequenceConfig = new MobileSequenceConfig();
+        MobileSequenceConfigBuilder bldr = new MobileSequenceConfigBuilder();
         
-        UssdSequenceRequest request = new UssdSequenceRequest();
-        request.setText("#225#");
-        
-        UssdSequenceResponse response = new UssdSequenceResponse();
-        response.addMatcher(new TextResponseMatcher(TMOBILE_USSD_MATCH));
-        
-        MobileSequenceTransaction transaction = new MobileSequenceTransaction();
-        transaction.setRequest(request);
-        transaction.addResponse(response);
-        
-        sequenceConfig.addTransaction(transaction);
+        MobileSequenceTransactionBuilder transBldr = bldr.ussdRequest("USSD request", "*", "#225#");
+        transBldr.expectUssdResponse().matching(TMOBILE_USSD_MATCH);
 
         LatencyCallback cb = new LatencyCallback(System.currentTimeMillis());
-        Async<MobileMsgResponse> async = request.createAsync(session);
+        
+        Async<MobileMsgResponse> async = transBldr.getTransaction().createAsync(session);
 
         Task t = m_coordinator.createTask(null, async, cb);
         t.schedule();
