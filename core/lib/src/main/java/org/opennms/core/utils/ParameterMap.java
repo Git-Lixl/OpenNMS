@@ -57,7 +57,7 @@ public class ParameterMap extends Object {
      * 
      * @return The long value associated with the key.
      */
-	public static long getKeyedLong(final Map<String, Object> map, final String key, final long defValue) {
+	public static long getKeyedLong(final Map map, final String key, final long defValue) {
 	    
 	    if (map == null) return defValue;
 	    
@@ -88,7 +88,7 @@ public class ParameterMap extends Object {
      * 
      * @return The int value associated with the key.
      */
-    public static int getKeyedInteger(final Map<String, Object> map, final String key, final int defValue) {
+    public static int getKeyedInteger(final Map map, final String key, final int defValue) {
     	return new Long(ParameterMap.getKeyedLong(map, key, new Long(defValue))).intValue();
     }
 
@@ -100,7 +100,7 @@ public class ParameterMap extends Object {
      * 
      * @return The array of integer values associated with the key.
      */
-    public final static int[] getKeyedIntegerArray(final Map<String, Object> map, final String key, final int[] defValues) {
+    public final static int[] getKeyedIntegerArray(final Map map, final String key, final int[] defValues) {
         
         if (map == null) return defValues;
         
@@ -143,7 +143,7 @@ public class ParameterMap extends Object {
      * 
      * @return The String value associated with the key.
      */
-    public static String getKeyedString(final Map<String, Object> map, final String key, final String defValue) {
+    public static String getKeyedString(final Map map, final String key, final String defValue) {
         
         if (map == null) return defValue;
 
@@ -169,7 +169,7 @@ public class ParameterMap extends Object {
      *
      * @return The bool value associated with the key.
      */
-    public static boolean getKeyedBoolean(final Map<String, Object> map, final String key, final boolean defValue) {
+    public static boolean getKeyedBoolean(final Map map, final String key, final boolean defValue) {
         
         if (map == null) return defValue;
         
