@@ -53,12 +53,16 @@ public class MobileMsgTrackerImpl extends RequestTracker<MobileMsgRequest, Mobil
     }
     
     
-    public void sendSmsRequest(OutboundMessage msg, long timeout, int retries, MobileMsgResponseCallback cb, MobileMsgResponseMatcher matcher) throws Exception {
-        sendRequest(new SmsRequest(msg, timeout, retries, cb, matcher));
+    public MobileMsgRequest sendSmsRequest(OutboundMessage msg, long timeout, int retries, MobileMsgResponseCallback cb, MobileMsgResponseMatcher matcher) throws Exception {
+        SmsRequest request = new SmsRequest(msg, timeout, retries, cb, matcher);
+        sendRequest(request);
+        return request;
     }
 
-    public void sendUssdRequest(USSDRequest msg, long timeout, int retries, MobileMsgResponseCallback cb, MobileMsgResponseMatcher matcher) throws Exception {
-        sendRequest(new UssdRequest(msg, timeout, retries, cb, matcher));
+    public MobileMsgRequest sendUssdRequest(USSDRequest msg, long timeout, int retries, MobileMsgResponseCallback cb, MobileMsgResponseMatcher matcher) throws Exception {
+        UssdRequest request = new UssdRequest(msg, timeout, retries, cb, matcher);
+        sendRequest(request);
+        return request;
     }
 
 

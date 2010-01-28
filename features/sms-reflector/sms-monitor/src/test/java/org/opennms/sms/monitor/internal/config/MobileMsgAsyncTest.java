@@ -33,6 +33,7 @@ package org.opennms.sms.monitor.internal.config;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -64,6 +65,7 @@ public class MobileMsgAsyncTest {
     private final class LatencyCallback implements Callback<MobileMsgResponse> {
 		private final AtomicLong m_start = new AtomicLong();
 		private final AtomicLong m_end = new AtomicLong();
+		private final CountDownLatch m_latch = new CountDownLatch(1);
 
 		private LatencyCallback(long startTime) {
 			m_start.set(startTime);
@@ -73,12 +75,15 @@ public class MobileMsgAsyncTest {
 			if (t != null) {
 				m_end.set(System.currentTimeMillis());
 			}
+            m_latch.countDown();
 		}
 
 		public void handleException(Throwable t) {
+            m_latch.countDown();
 		}
 		
-		public Long getLatency() {
+		public Long getLatency() throws Exception {
+		    m_latch.await();
 			if (m_end.get() == 0) {
 				return null;
 			} else {
@@ -112,23 +117,18 @@ public class MobileMsgAsyncTest {
         
         MobileSequenceConfigBuilder bldr = new MobileSequenceConfigBuilder();
 
-        MobileSequenceTransactionBuilder smsRequest = bldr.smsRequest("SMS ping", "*", PHONE_NUMBER, "ping");
-        smsRequest.expectSmsResponse().matching("^[Pp]ong$");
+        MobileSequenceTransactionBuilder smsTransBldr = bldr.smsRequest("SMS ping", "*", PHONE_NUMBER, "ping");
+        smsTransBldr.expectSmsResponse().matching("^[Pp]ong$");
         
 
         LatencyCallback cb = new LatencyCallback(start);
- 
-        Async<MobileMsgResponse> async = smsRequest.getTransaction().createAsync(session);
         
-        Task t = m_coordinator.createTask(null, async, cb);
-        t.schedule();
+        smsTransBldr.getTransaction().getRequest().doSubmit(session, cb);
         
         Thread.sleep(500);
 
         m_messenger.sendTestResponse(PHONE_NUMBER, "pong");
         
-        t.waitFor();
-
         assertNotNull(cb.getLatency());
         System.err.println("testRawSmsPing(): latency = " + cb.getLatency());
     }
@@ -148,16 +148,12 @@ public class MobileMsgAsyncTest {
 
         LatencyCallback cb = new LatencyCallback(System.currentTimeMillis());
         
-        Async<MobileMsgResponse> async = transBldr.getTransaction().createAsync(session);
+        transBldr.getTransaction().getRequest().doSubmit(session, cb);
 
-        Task t = m_coordinator.createTask(null, async, cb);
-        t.schedule();
-        
         Thread.sleep(500);
 
         m_messenger.sendTestResponse(gatewayId, TMOBILE_RESPONSE, USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED);
         
-        t.waitFor();
         assertNotNull(cb.getLatency());
         System.err.println("testRawUssdMessage(): latency = " + cb.getLatency());
     }

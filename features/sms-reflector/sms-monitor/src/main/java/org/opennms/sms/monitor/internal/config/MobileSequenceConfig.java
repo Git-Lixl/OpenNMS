@@ -3,21 +3,19 @@ package org.opennms.sms.monitor.internal.config;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
-import org.opennms.core.tasks.SequenceTask;
-import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.SequencerException;
+import org.opennms.sms.monitor.internal.MobileSequenceExecution;
 import org.springframework.util.Assert;
 
 @XmlRootElement(name="mobile-sequence")
@@ -29,26 +27,7 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
 	private List<SequenceSessionVariable> m_sessionVariables;
     private List<MobileSequenceTransaction> m_transactions;
 
-    
-    /* other data */
-    private Task m_task;
 	
-	
-	/**
-     * @return the task
-     */
-	@XmlTransient
-    public Task getTask() {
-        return m_task;
-    }
-
-    /**
-     * @param task the task to set
-     */
-    public void setTask(Task task) {
-        m_task = task;
-    }
-
 	public void addSessionVariable(SequenceSessionVariable var) {
 		getSessionVariables().add(var);
 	}
@@ -139,48 +118,48 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
     }
 
 	public Map<String, Number> executeSequence(MobileSequenceSession session, DefaultTaskCoordinator coordinator) throws SequencerException, Throwable {
-        long start = System.currentTimeMillis();
-	    start(session, coordinator);
-	    Map<String, Number> responseTimes = waitFor(session);
-		long end = System.currentTimeMillis();
-
-		responseTimes.put("response-time", Long.valueOf(end - start));
-		return responseTimes;
+	    
+        MobileSequenceExecution execution = start(session, coordinator);
+        
+        waitFor(session, execution);
+		
+		return execution.getResponseTimes();
 	}
 
-    public void start(MobileSequenceSession session, DefaultTaskCoordinator coordinator) throws SequencerException {
+    public MobileSequenceExecution start(MobileSequenceSession session, DefaultTaskCoordinator coordinator) throws SequencerException {
         
         Assert.notNull(coordinator);
 
         computeDefaultGateways();
 
-        SequenceTask sequence = coordinator.createSequence(null);
-        for(MobileSequenceTransaction transaction : getTransactions()) {
-            sequence.add(transaction.createTask(session, coordinator, sequence));
-        }
+        MobileSequenceExecution execution = createMobileSequenceExecution(session, coordinator);
+
+        execution.start();
         
-        sequence.schedule();
-        
-        setTask(sequence);
+        return execution;
 
     }
 
-    public Map<String, Number> waitFor(MobileSequenceSession session) throws Throwable {
-
-        Task task = getTask();
-        if (task == null) {
-            throw new IllegalStateException("getLatency called, but the sequence has never been started!");
-        }
-        task.waitFor();
+    private MobileSequenceExecution createMobileSequenceExecution(MobileSequenceSession session, DefaultTaskCoordinator coordinator) {
+        MobileSequenceExecution execution = new MobileSequenceExecution(coordinator);
         
-        Map<String,Number> response = new HashMap<String,Number>();
+        for(MobileSequenceTransaction transaction : getTransactions()) {
+            execution.createTransactionExecution(session, transaction);
+        }
+        
+        return execution;
+    }
+
+    public void waitFor(MobileSequenceSession session, MobileSequenceExecution execution) throws InterruptedException, ExecutionException, Throwable {
+
+        execution.waitFor();
+
         for(MobileSequenceTransaction transaction : getTransactions()) {
             if (transaction.getError() != null) {
                 throw transaction.getError();
             }
-            response.put(transaction.getLabel(session), transaction.getLatency());
+            execution.getResponseTimes().put(transaction.getLabel(session), transaction.getLatency());
         }
-        return response;
     }
 
     public boolean hasFailed() {

@@ -31,10 +31,10 @@
  */
 package org.opennms.sms.monitor;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -42,21 +42,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder;
-import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder.MobileSequenceTransactionBuilder;
-import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder.SmsResponseBuilder;
-import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder.UssdResponseBuilder;
-import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
-import org.opennms.sms.monitor.internal.config.MobileSequenceRequest;
-import org.opennms.sms.monitor.internal.config.SmsSequenceRequest;
-import org.opennms.sms.monitor.internal.config.SmsSequenceResponse;
-import org.opennms.sms.monitor.internal.config.TextResponseMatcher;
-import org.opennms.sms.monitor.internal.config.UssdSequenceRequest;
-import org.opennms.sms.monitor.internal.config.UssdSequenceResponse;
-import org.opennms.sms.monitor.internal.config.UssdSessionStatusMatcher;
+import org.opennms.sms.monitor.internal.MobileSequenceExecution;
 import org.opennms.sms.reflector.smsservice.MobileMsgTrackerImpl;
-import org.smslib.InboundMessage;
-import org.smslib.USSDDcs;
-import org.smslib.USSDResponse;
 import org.smslib.USSDSessionStatus;
 
 /**
@@ -96,9 +83,10 @@ public class MobileMsgSequenceBuilderTest {
         
         ping(bldr);
 
-        bldr.getSequence().start(m_session, m_coordinator);
+        MobileSequenceExecution execution = bldr.getSequence().start(m_session, m_coordinator);
+        
+        bldr.getSequence().waitFor(m_session, execution);
 
-        bldr.getSequence().waitFor(m_session);
     }
 
     @Test
@@ -107,13 +95,14 @@ public class MobileMsgSequenceBuilderTest {
         
         ping(bldr);
 
-        bldr.getSequence().start(m_session, m_coordinator);
+        MobileSequenceExecution execution = bldr.getSequence().start(m_session, m_coordinator);
         
         Thread.sleep(500);
         
         sendPong();
+        bldr.getSequence().waitFor(m_session, execution);
         
-        Map<String,Number> timing = bldr.getSequence().waitFor(m_session);
+        Map<String,Number> timing = execution.getResponseTimes();
 
         assertNotNull(timing);
         assertTrue(latency(timing, "SMS Ping") > 400);
@@ -125,13 +114,15 @@ public class MobileMsgSequenceBuilderTest {
 
         balanceInquiry(bldr);
 		
-		bldr.getSequence().start(m_session, m_coordinator);
+		MobileSequenceExecution execution = bldr.getSequence().start(m_session, m_coordinator);
 
 		Thread.sleep(500);
 		
         sendBalance();
         
-        Map<String,Number> timing = bldr.getSequence().waitFor(m_session);
+        bldr.getSequence().waitFor(m_session, execution);
+        
+        Map<String,Number> timing = execution.getResponseTimes();
 
         assertNotNull(timing);
         assertTrue(latency(timing, "USSD request") > 400);
@@ -144,7 +135,7 @@ public class MobileMsgSequenceBuilderTest {
         ping(bldr);
         balanceInquiry(bldr);
 
-		bldr.getSequence().start(m_session, m_coordinator);
+		MobileSequenceExecution execution = bldr.getSequence().start(m_session, m_coordinator);
 		
 		Thread.sleep(100);
 		
@@ -153,13 +144,16 @@ public class MobileMsgSequenceBuilderTest {
         Thread.sleep(100);
 
         sendBalance();
+        
+        bldr.getSequence().waitFor(m_session, execution);
 
-        Map<String,Number> timing = bldr.getSequence().waitFor(m_session);
+        Map<String,Number> timing = execution.getResponseTimes();
 
         assertNotNull(timing);
+        assertTrue(latency(timing, "response-time") > 150);
         assertTrue(latency(timing, "SMS Ping") > 50);
         assertTrue(latency(timing, "USSD request") > 50);
-        assertTrue(timing.size() == 2);
+        assertEquals("Unexpected size for timing " + timing, 3, timing.size());
     }
 
     private double latency(Map<String, Number> timing, String label) {

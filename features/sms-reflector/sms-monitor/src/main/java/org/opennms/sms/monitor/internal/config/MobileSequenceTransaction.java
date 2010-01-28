@@ -11,10 +11,6 @@ import javax.xml.bind.annotation.XmlType;
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.core.tasks.Async;
-import org.opennms.core.tasks.Callback;
-import org.opennms.core.tasks.DefaultTaskCoordinator;
-import org.opennms.core.tasks.SequenceTask;
-import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
@@ -172,30 +168,8 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
         return match;
     }
 
-	private Callback<MobileMsgResponse> getCallback(final MobileSequenceSession session) {
-        return new Callback<MobileMsgResponse>() {
-            public void complete(MobileMsgResponse t) {
-                if (t != null) {
-                    setLatency((t.getReceiveTime() - t.getRequest().getSentTime()));
-                }
-                
-                //session.setVariable()
-            }
-
-            public void handleException(Throwable t) {
-                setError(t);
-            }
-
-
-        };
-    }
-
-    public Async<MobileMsgResponse> createAsync(MobileSequenceSession session) {
+	public Async<MobileMsgResponse> createAsync(MobileSequenceSession session) {
         return getRequest().createAsync(session);
-    }
-
-    public Task createTask(MobileSequenceSession session, DefaultTaskCoordinator coordinator, SequenceTask sequence) {
-        return coordinator.createTask(sequence, createAsync(session), getCallback(session));
     }
 
     public int compareTo(MobileSequenceTransaction o) {

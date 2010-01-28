@@ -5,10 +5,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.opennms.core.tasks.Async;
-import org.opennms.core.tasks.Callback;
 import org.opennms.sms.monitor.MobileSequenceSession;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
+import org.opennms.sms.reflector.smsservice.MobileMsgCallbackAdapter;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 
 @XmlRootElement(name="sms-request")
 public class SmsSequenceRequest extends MobileSequenceRequest {
@@ -34,20 +33,9 @@ public class SmsSequenceRequest extends MobileSequenceRequest {
 		m_recipient = recipient;
 	}
 
-	@Override
-    public Async<MobileMsgResponse> createAsync(final MobileSequenceSession session) {
-        return new Async<MobileMsgResponse>() {
-
-            public void submit(Callback<MobileMsgResponse> cb) {
-                
-                if (getTransaction().getSequenceConfig().hasFailed()) {
-                	cb.complete(null);
-                }
-                
-                session.sendSms(getGatewayIdForRequest(), getRecipient(), getText(), getTransaction().getResponseMatcher(session), cb);
-            }
-	        
-	    };
+    @Override
+    public void send(final MobileSequenceSession session, MobileMsgResponseMatcher responseMatcher, MobileMsgCallbackAdapter mmrc) {
+        session.sendSms(getGatewayIdForRequest(), getRecipient(), getText(), responseMatcher, mmrc);
     }
 
     public String toString() {
