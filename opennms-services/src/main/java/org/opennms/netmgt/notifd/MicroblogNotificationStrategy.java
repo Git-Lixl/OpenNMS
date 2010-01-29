@@ -91,7 +91,7 @@ public class MicroblogNotificationStrategy implements NotificationStrategy {
     public int send(List<Argument> arguments) {
         Twitter svc = buildUblogService(arguments);
         String messageBody = buildMessageBody(arguments);
-        TwitterResponse response;
+        StatusOrDM response;
         
         if (log().isDebugEnabled()) {
             log().debug("Dispatching microblog notification for user '" + svc.getUserId() + "' at base URL '" + svc.getBaseURL() + "' with message '" + messageBody + "'");
@@ -104,10 +104,10 @@ public class MicroblogNotificationStrategy implements NotificationStrategy {
         }
         
         log().info("Microblog notification succeeded");
-        if (response instanceof Status) {
-            log().info("Status update posted with ID=" + ((Status)response).getId());
-        } else if (response instanceof DirectMessage) {
-            log().info("Direct message sent with ID=" + ((DirectMessage)response).getId());
+        if (response.getResponse() instanceof Status) {
+            log().info("Status update posted with ID=" + response.getId());
+        } else if (response.getResponse() instanceof DirectMessage) {
+            log().info("Direct message sent with ID=" + response.getId());
         }
         
         return 0;
