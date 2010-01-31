@@ -10,9 +10,8 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.opennms.core.tasks.Async;
 import org.opennms.sms.monitor.MobileSequenceSession;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseHandler;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 
 @XmlRootElement(name="transaction")
@@ -30,8 +29,6 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 	
     /* other data */
 	private String m_defaultGatewayId;
-	private Long m_latency;
-	private Throwable m_error;
 
 	public MobileSequenceTransaction() {
 	}
@@ -134,32 +131,13 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
         m_defaultGatewayId = gatewayId;
     }
     
-    @XmlTransient
-    public Long getLatency() {
-        return m_latency;
-    }
-
-    public void setLatency(Long latency) {
-        m_latency = latency;
-    }
-
-    @XmlTransient
-    public Throwable getError() {
-        return m_error;
-    }
-
-    public void setError(Throwable error) {
-        m_error = error;
-    }
-
-
     public String getLabel(MobileSequenceSession session) {
         return session.substitute(getRequest().getLabel(getLabel()));
     }
 
     public MobileMsgResponseMatcher getResponseMatcher(MobileSequenceSession session) {
         
-        MobileMsgResponseMatcher match =null;
+        MobileMsgResponseMatcher match = null;
 
         for ( MobileSequenceResponse r : getResponses() ) {
             match = r.getResponseMatcher(session);
@@ -168,11 +146,7 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
         return match;
     }
 
-	public Async<MobileMsgResponse> createAsync(MobileSequenceSession session) {
-        return getRequest().createAsync(session);
-    }
-
-    public int compareTo(MobileSequenceTransaction o) {
+	public int compareTo(MobileSequenceTransaction o) {
         return new CompareToBuilder()
             .append(this.getRequest(), o.getRequest())
             .append(this.getResponses(), o.getResponses())
@@ -186,6 +160,10 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
             .append("request", getRequest())
             .append("response(s)", getResponses())
             .toString();
+    }
+
+    public void sendRequest(MobileSequenceSession session, MobileMsgResponseHandler responseHandler) {
+        getRequest().send(session, responseHandler);
     }
 
 }

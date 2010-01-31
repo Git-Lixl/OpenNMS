@@ -131,45 +131,24 @@ public class MobileSequenceConfig implements Serializable, Comparable<MobileSequ
         Assert.notNull(coordinator);
 
         computeDefaultGateways();
-
-        MobileSequenceExecution execution = createMobileSequenceExecution(session, coordinator);
-
-        execution.start();
+        
+        MobileSequenceExecution execution = createExecution();
+        
+        execution.start(session, coordinator);
         
         return execution;
 
     }
 
-    private MobileSequenceExecution createMobileSequenceExecution(MobileSequenceSession session, DefaultTaskCoordinator coordinator) {
-        MobileSequenceExecution execution = new MobileSequenceExecution(coordinator);
-        
-        for(MobileSequenceTransaction transaction : getTransactions()) {
-            execution.createTransactionExecution(session, transaction);
-        }
-        
-        return execution;
+    private MobileSequenceExecution createExecution() {
+        return new MobileSequenceExecution(this);
     }
 
     public void waitFor(MobileSequenceSession session, MobileSequenceExecution execution) throws InterruptedException, ExecutionException, Throwable {
 
         execution.waitFor();
 
-        for(MobileSequenceTransaction transaction : getTransactions()) {
-            if (transaction.getError() != null) {
-                throw transaction.getError();
-            }
-            execution.getResponseTimes().put(transaction.getLabel(session), transaction.getLatency());
-        }
-    }
-
-    public boolean hasFailed() {
-    	
-        for (MobileSequenceTransaction transaction : getTransactions()) {
-            if (transaction.getError() != null) {
-                return true;
-            }
-    	}
-    	return false;
+        execution.updateResults(session);
     }
 
     public boolean hasTransactions() {

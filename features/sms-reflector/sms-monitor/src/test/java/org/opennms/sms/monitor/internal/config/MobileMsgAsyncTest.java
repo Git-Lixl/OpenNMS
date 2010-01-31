@@ -31,23 +31,25 @@
  */
 package org.opennms.sms.monitor.internal.config;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.opennms.core.tasks.Async;
-import org.opennms.core.tasks.Callback;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
-import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.TestMessenger;
 import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder;
 import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder.MobileSequenceTransactionBuilder;
+import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseHandler;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgTrackerImpl;
 import org.smslib.USSDSessionStatus;
 
@@ -62,36 +64,57 @@ public class MobileMsgAsyncTest {
     public static final String TMOBILE_RESPONSE = "37.28 received on 08/31/09. For continued service through 10/28/09, please pay 79.56 by 09/28/09.    ";
     public static final String TMOBILE_USSD_MATCH = "^.*[\\d\\.]+ received on \\d\\d/\\d\\d/\\d\\d. For continued service through \\d\\d/\\d\\d/\\d\\d, please pay [\\d\\.]+ by \\d\\d/\\d\\d/\\d\\d.*$";
 
-    private final class LatencyCallback implements Callback<MobileMsgResponse> {
-		private final AtomicLong m_start = new AtomicLong();
-		private final AtomicLong m_end = new AtomicLong();
-		private final CountDownLatch m_latch = new CountDownLatch(1);
+    
+    private final class LatencyResponseHandler implements MobileMsgResponseHandler {
+        private final CountDownLatch m_latch = new CountDownLatch(1);
+        private final MobileMsgResponseMatcher m_matcher;
+        private final AtomicLong m_start = new AtomicLong();
+        private final AtomicLong m_end = new AtomicLong();
+        private final AtomicBoolean m_timedOut = new AtomicBoolean(false);
+        private final AtomicBoolean m_failed = new AtomicBoolean(false);
+        
+        public LatencyResponseHandler(MobileMsgResponseMatcher matcher) {
+            m_matcher = matcher;
+        }
 
-		private LatencyCallback(long startTime) {
-			m_start.set(startTime);
-		}
-
-		public void complete(MobileMsgResponse t) {
-			if (t != null) {
-				m_end.set(System.currentTimeMillis());
-			}
+        public void handleError(MobileMsgRequest request, Throwable t) {
+            m_failed.set(true);
             m_latch.countDown();
-		}
+        }
 
-		public void handleException(Throwable t) {
+        public boolean handleResponse(MobileMsgRequest request, MobileMsgResponse packet) {
+            m_start.set(request.getSentTime());
+            m_end.set(packet.getReceiveTime());
             m_latch.countDown();
-		}
-		
-		public Long getLatency() throws Exception {
-		    m_latch.await();
-			if (m_end.get() == 0) {
-				return null;
-			} else {
-				return m_end.get() - m_start.get();
-			}
-		}
-	}
+            return true;
+        }
 
+        public void handleTimeout(MobileMsgRequest request) {
+            m_timedOut.set(true);
+            m_latch.countDown();
+        }
+
+        public boolean matches(MobileMsgRequest request, MobileMsgResponse response) {
+            return m_matcher.matches(request, response);
+        }
+        
+        public boolean failed() throws InterruptedException {
+            m_latch.await();
+            return m_failed.get();
+        }
+        
+        public boolean timedOut() throws InterruptedException {
+            m_latch.await();
+            return m_timedOut.get();
+        }
+
+        public long getLatency() throws InterruptedException {
+            m_latch.await();
+            return m_end.get() - m_start.get();
+        }
+        
+    }
+    
 	TestMessenger m_messenger;
     MobileMsgTrackerImpl m_tracker;
 	DefaultTaskCoordinator m_coordinator;
@@ -109,7 +132,6 @@ public class MobileMsgAsyncTest {
 
     @Test
     public void testRawSmsPing() throws Exception {
-        final long start = System.currentTimeMillis();
         
         MobileSequenceSession session = new MobileSequenceSession(m_tracker);
         session.setTimeout(1000L);
@@ -120,17 +142,20 @@ public class MobileMsgAsyncTest {
         MobileSequenceTransactionBuilder smsTransBldr = bldr.smsRequest("SMS ping", "*", PHONE_NUMBER, "ping");
         smsTransBldr.expectSmsResponse().matching("^[Pp]ong$");
         
-
-        LatencyCallback cb = new LatencyCallback(start);
+        MobileSequenceTransaction transaction = smsTransBldr.getTransaction();
         
-        smsTransBldr.getTransaction().getRequest().doSubmit(session, cb);
+        LatencyResponseHandler handler = new LatencyResponseHandler(transaction.getResponseMatcher(session));
+
+        transaction.sendRequest(session, handler);
         
         Thread.sleep(500);
 
         m_messenger.sendTestResponse(PHONE_NUMBER, "pong");
-        
-        assertNotNull(cb.getLatency());
-        System.err.println("testRawSmsPing(): latency = " + cb.getLatency());
+   
+        assertFalse(handler.failed());
+        assertFalse(handler.timedOut());
+        assertTrue(handler.getLatency() > 400);
+        System.err.println("testRawSmsPing(): latency = " + handler.getLatency());
     }
 
     @Test
@@ -146,16 +171,20 @@ public class MobileMsgAsyncTest {
         MobileSequenceTransactionBuilder transBldr = bldr.ussdRequest("USSD request", "*", "#225#");
         transBldr.expectUssdResponse().matching(TMOBILE_USSD_MATCH);
 
-        LatencyCallback cb = new LatencyCallback(System.currentTimeMillis());
-        
-        transBldr.getTransaction().getRequest().doSubmit(session, cb);
+        MobileSequenceTransaction transaction = transBldr.getTransaction();
+
+        LatencyResponseHandler handler = new LatencyResponseHandler(transaction.getResponseMatcher(session));
+
+        transaction.sendRequest(session, handler);
 
         Thread.sleep(500);
 
         m_messenger.sendTestResponse(gatewayId, TMOBILE_RESPONSE, USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED);
         
-        assertNotNull(cb.getLatency());
-        System.err.println("testRawUssdMessage(): latency = " + cb.getLatency());
+        assertFalse(handler.failed());
+        assertFalse(handler.timedOut());
+        assertTrue(handler.getLatency() > 400);
+        System.err.println("testRawUssdMessage(): latency = " + handler.getLatency());
     }
     
 

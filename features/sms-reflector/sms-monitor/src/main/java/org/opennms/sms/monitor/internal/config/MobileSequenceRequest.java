@@ -6,12 +6,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.opennms.core.tasks.Async;
-import org.opennms.core.tasks.Callback;
 import org.opennms.sms.monitor.MobileSequenceSession;
-import org.opennms.sms.reflector.smsservice.MobileMsgCallbackAdapter;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseHandler;
 
 @XmlRootElement(name="request")
 public abstract class MobileSequenceRequest extends MobileSequenceOperation {
@@ -62,25 +58,6 @@ public abstract class MobileSequenceRequest extends MobileSequenceOperation {
         return getGatewayId(getTransaction().getDefaultGatewayId());
     }
 
-    public abstract void send(final MobileSequenceSession session, MobileMsgResponseMatcher responseMatcher, MobileMsgCallbackAdapter mmrc);
-
-    public Async<MobileMsgResponse> createAsync(final MobileSequenceSession session) {
-        return new Async<MobileMsgResponse>() {
-            public void submit(Callback<MobileMsgResponse> cb) {
-                doSubmit(session, cb);
-            }
-        };
-    }
-
-    public void doSubmit(final MobileSequenceSession session, Callback<MobileMsgResponse> cb) {
-    
-        if (getTransaction().getSequenceConfig().hasFailed()) {
-        	cb.complete(null);
-        }
-        
-        send(session, getTransaction().getResponseMatcher(session), new MobileMsgCallbackAdapter(cb));
-    }
-
     public String toString() {
         return new ToStringBuilder(this)
             .append("gatewayId", getGatewayId())
@@ -88,6 +65,8 @@ public abstract class MobileSequenceRequest extends MobileSequenceOperation {
             .append("text", getText())
             .toString();
     }
+
+    public abstract void send(MobileSequenceSession session, MobileMsgResponseHandler responseHandler);
 
 
 }

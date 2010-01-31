@@ -6,8 +6,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.sms.monitor.MobileSequenceSession;
-import org.opennms.sms.reflector.smsservice.MobileMsgCallbackAdapter;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseHandler;
 
 @XmlRootElement(name="sms-request")
 public class SmsSequenceRequest extends MobileSequenceRequest {
@@ -34,8 +33,8 @@ public class SmsSequenceRequest extends MobileSequenceRequest {
 	}
 
     @Override
-    public void send(final MobileSequenceSession session, MobileMsgResponseMatcher responseMatcher, MobileMsgCallbackAdapter mmrc) {
-        session.sendSms(getGatewayIdForRequest(), getRecipient(), getText(), responseMatcher, mmrc);
+    public void send(MobileSequenceSession session, MobileMsgResponseHandler responseHandler) {
+        session.sendSms(getGatewayIdForRequest(), getRecipient(), getText(), responseHandler);
     }
 
     public String toString() {

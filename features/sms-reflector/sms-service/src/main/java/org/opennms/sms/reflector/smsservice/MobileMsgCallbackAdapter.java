@@ -13,17 +13,21 @@ public class MobileMsgCallbackAdapter implements MobileMsgResponseCallback {
 	public MobileMsgCallbackAdapter(Callback<MobileMsgResponse> cb) {
 		this.cb = cb;
 	}
+	
+	public Callback<MobileMsgResponse> getCb() {
+	    return cb;
+	}
 
 	public void handleError(MobileMsgRequest request, Throwable t) {
-		cb.handleException(t);
+		getCb().handleException(t);
 	}
 
 	public boolean handleResponse(MobileMsgRequest request, MobileMsgResponse packet) {
-		cb.complete(packet);
+		getCb().complete(packet);
 		return true;
 	}
 
 	public void handleTimeout(MobileMsgRequest request) {
-		cb.handleException(new SocketTimeoutException("timed out processing request " + request));
+		getCb().handleException(new SocketTimeoutException("timed out processing request " + request));
 	}
 }

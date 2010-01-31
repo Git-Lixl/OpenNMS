@@ -29,7 +29,9 @@
  */
 package org.opennms.sms.monitor.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -39,8 +41,10 @@ import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.tasks.SequenceTask;
 import org.opennms.core.tasks.Task;
 import org.opennms.sms.monitor.MobileSequenceSession;
+import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
 import org.opennms.sms.monitor.internal.config.MobileSequenceTransaction;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
 
 /**
  * MobileSequenceExecution
@@ -52,15 +56,24 @@ public class MobileSequenceExecution {
     private Map<String, Number> m_responseTimes = new HashMap<String,Number>();
     private Long m_startTime;
     private SequenceTask m_task;
-    private DefaultTaskCoordinator m_coordinator;
+    private MobileSequenceConfig m_sequenceConfig;
+    private List<MobileTransactionExecution> m_transactionExecutions = new ArrayList<MobileTransactionExecution>();
 
-    public MobileSequenceExecution(DefaultTaskCoordinator coordinator) {
-        m_coordinator = coordinator;
-        createTask();
+    public MobileSequenceExecution(MobileSequenceConfig sequenceConfig) {
+        m_sequenceConfig = sequenceConfig;
+        
+        for(MobileSequenceTransaction transaction : sequenceConfig.getTransactions()) {
+            m_transactionExecutions.add(new MobileTransactionExecution(transaction));
+        }
+        
     }
     
-    public DefaultTaskCoordinator getTaskCoordinator() {
-        return m_coordinator;
+    public MobileSequenceConfig getSequenceConfig() {
+        return m_sequenceConfig;
+    }
+    
+    public List<MobileTransactionExecution> getTransactionExecutions() {
+        return m_transactionExecutions;
     }
 
     public Long getStartTime() {
@@ -80,6 +93,17 @@ public class MobileSequenceExecution {
     	getResponseTimes().put("response-time", Long.valueOf(end - (long) getStartTime()));
     }
 
+    public void waitFor() throws InterruptedException, ExecutionException {
+
+        Task task = getTask();
+        if (task == null) {
+            throw new IllegalStateException("attempting to wait for the sequence to complete but the sequence has never been started!");
+        }
+        task.waitFor();
+        
+        end();
+    }
+
     public SequenceTask getTask() {
         return m_task;
     }
@@ -88,52 +112,48 @@ public class MobileSequenceExecution {
         m_task = task;
     }
 
-    public void start() {
-        setStartTime(System.currentTimeMillis());
+    public void updateResults(MobileSequenceSession session) throws Throwable {
+        for(MobileTransactionExecution execution : getTransactionExecutions()) {
+            MobileSequenceTransaction transaction = execution.getTransaction();
+            if (execution.getError() != null) {
+                throw execution.getError();
+            }
+            getResponseTimes().put(transaction.getLabel(session), execution.getLatency());
+        }
+    }
+
+    public void start(MobileSequenceSession session, DefaultTaskCoordinator coordinator) {
+        
+        setTask(coordinator.createSequence(null));
+
+        for (MobileTransactionExecution execution : getTransactionExecutions()) {
+            getTask().add(createAsync(session, execution), null);
+        }
     
+        setStartTime(System.currentTimeMillis());
+        
         getTask().schedule();
     }
 
-    public void createTask() {
-        SequenceTask sequence = getTaskCoordinator().createSequence(null);
-        setTask(sequence);
-    }
-
-    public void createTransactionExecution(MobileSequenceSession session, MobileSequenceTransaction transaction) {
-        getTask().add(getTaskCoordinator().createTask(getTask(), createAsync(session, transaction), getCallback(transaction)));
-    }
-
-    private Async<MobileMsgResponse> createAsync(MobileSequenceSession session, MobileSequenceTransaction transaction) {
-        return transaction.createAsync(session);
-    }
-
-    private Callback<MobileMsgResponse> getCallback(final MobileSequenceTransaction transaction) {
-        return new Callback<MobileMsgResponse>() {
-            public void complete(MobileMsgResponse t) {
-                if (t != null) {
-                    transaction.setLatency((t.getReceiveTime() - t.getRequest().getSentTime()));
+    private Async<MobileMsgResponse> createAsync(final MobileSequenceSession session, final MobileTransactionExecution execution) {
+        return new Async<MobileMsgResponse>() {
+            public void submit(Callback<MobileMsgResponse> cb) {
+                if (hasFailed()) {
+                	cb.complete(null);
+                } else {
+                    execution.sendRequest(session, cb);
                 }
-                
-                //session.setVariable()
             }
-        
-            public void handleException(Throwable t) {
-                transaction.setError(t);
-            }
-        
-        
         };
     }
 
-    public void waitFor()
-            throws InterruptedException, ExecutionException {
-        Task task = getTask();
-        if (task == null) {
-            throw new IllegalStateException("waiting for the sequence to comlete but the sequence has never been started!");
+    private boolean hasFailed() {
+        for (MobileTransactionExecution execution : getTransactionExecutions()) {
+            if (execution.getError() != null) {
+                return true;
+            }
         }
-        task.waitFor();
-        
-        end();
+        return false;
     }
 
 }
