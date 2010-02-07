@@ -30,7 +30,7 @@
 package org.opennms.sms.monitor.internal;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -44,7 +44,6 @@ import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.monitor.internal.config.MobileSequenceConfig;
 import org.opennms.sms.monitor.internal.config.MobileSequenceTransaction;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
 
 /**
  * MobileSequenceExecution
@@ -53,7 +52,8 @@ import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
  */
 public class MobileSequenceExecution {
     
-    private Map<String, Number> m_responseTimes = new HashMap<String,Number>();
+    // Use a LinkedHashMap to ensure transaction latencies are ordered.
+    private Map<String, Number> m_responseTimes = new LinkedHashMap<String,Number>();
     private Long m_startTime;
     private SequenceTask m_task;
     private MobileSequenceConfig m_sequenceConfig;

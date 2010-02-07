@@ -6,8 +6,6 @@ import org.opennms.core.utils.LogUtils;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers;
 import org.opennms.sms.reflector.smsservice.UssdResponse;
 import org.smslib.USSDSessionStatus;
 
@@ -26,21 +24,14 @@ public class UssdSessionStatusMatcher extends SequenceResponseMatcher {
 	}
 
 	@Override
-	public MobileMsgResponseMatcher getMatcher(final MobileSequenceSession session) {
+    public boolean matches(MobileSequenceSession session, MobileMsgRequest request, MobileMsgResponse response) {
+        LogUtils.tracef(this, "ussdStatusIs(%s, %s)", getText(), request, response);
+        return response instanceof UssdResponse && session.ussdStatusMatches(getText(), ((UssdResponse)response).getSessionStatus());
+    }
 
-		return new MobileMsgResponseMatcher() {
-			
-			public boolean matches(MobileMsgRequest request, MobileMsgResponse response) {
-
-				LogUtils.tracef(this, "ussdStatusIs(%s, %s)", getText(), request, response);
-				return response instanceof UssdResponse && session.ussdStatusMatches(getText(), ((UssdResponse)response).getSessionStatus());
-				
-			}
-
-			public String toString() {
-				return "ussdStatusIs(" + getText() + ")";
-			}
-		};
-	}
+    @Override
+    public String toString() {
+        return "ussdStatusIs(" + getText() + ")";
+    }
 
 }

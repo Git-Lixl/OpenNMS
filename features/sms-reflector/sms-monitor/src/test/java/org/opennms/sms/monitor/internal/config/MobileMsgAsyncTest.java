@@ -49,7 +49,6 @@ import org.opennms.sms.monitor.internal.MobileSequenceConfigBuilder.MobileSequen
 import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseHandler;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgTrackerImpl;
 import org.smslib.USSDSessionStatus;
 
@@ -66,15 +65,19 @@ public class MobileMsgAsyncTest {
 
     
     private final class LatencyResponseHandler implements MobileMsgResponseHandler {
+        private final MobileSequenceSession m_session;
+        private final MobileSequenceTransaction m_transaction;
+
         private final CountDownLatch m_latch = new CountDownLatch(1);
-        private final MobileMsgResponseMatcher m_matcher;
+
         private final AtomicLong m_start = new AtomicLong();
         private final AtomicLong m_end = new AtomicLong();
         private final AtomicBoolean m_timedOut = new AtomicBoolean(false);
         private final AtomicBoolean m_failed = new AtomicBoolean(false);
         
-        public LatencyResponseHandler(MobileMsgResponseMatcher matcher) {
-            m_matcher = matcher;
+        public LatencyResponseHandler(MobileSequenceSession session, MobileSequenceTransaction transaction) {
+            m_session = session;
+            m_transaction = transaction;
         }
 
         public void handleError(MobileMsgRequest request, Throwable t) {
@@ -95,7 +98,7 @@ public class MobileMsgAsyncTest {
         }
 
         public boolean matches(MobileMsgRequest request, MobileMsgResponse response) {
-            return m_matcher.matches(request, response);
+            return m_transaction.matchesResponse(m_session, request, response);
         }
         
         public boolean failed() throws InterruptedException {
@@ -144,7 +147,7 @@ public class MobileMsgAsyncTest {
         
         MobileSequenceTransaction transaction = smsTransBldr.getTransaction();
         
-        LatencyResponseHandler handler = new LatencyResponseHandler(transaction.getResponseMatcher(session));
+        LatencyResponseHandler handler = new LatencyResponseHandler(session, transaction);
 
         transaction.sendRequest(session, handler);
         
@@ -173,7 +176,7 @@ public class MobileMsgAsyncTest {
 
         MobileSequenceTransaction transaction = transBldr.getTransaction();
 
-        LatencyResponseHandler handler = new LatencyResponseHandler(transaction.getResponseMatcher(session));
+        LatencyResponseHandler handler = new LatencyResponseHandler(session, transaction);
 
         transaction.sendRequest(session, handler);
 

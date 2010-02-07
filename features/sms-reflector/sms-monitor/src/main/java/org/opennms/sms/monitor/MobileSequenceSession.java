@@ -11,9 +11,7 @@ import org.opennms.core.utils.PropertiesUtils;
 import org.opennms.sms.monitor.internal.config.SequenceSessionVariable;
 import org.opennms.sms.monitor.session.SessionVariableGenerator;
 import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseCallback;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseHandler;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers;
 import org.opennms.sms.reflector.smsservice.MobileMsgTracker;
 import org.smslib.OutboundMessage;
@@ -127,11 +125,12 @@ public class MobileSequenceSession {
 		return status.equals(actual);
 	}
 
-    public void sendSms(String gatewayId, String recipient, String text, MobileMsgResponseHandler responseHandler) {
+    public void sendSms(String gatewayId, String recipient, String text, int validityPeriodInHours, MobileMsgResponseHandler responseHandler) {
         MobileMsgRequest request = null;
         try {
             OutboundMessage msg = new OutboundMessage(substitute(recipient), substitute(text));
             msg.setGatewayId(substitute(gatewayId));
+            msg.setValidityPeriod(validityPeriodInHours);
             request = m_tracker.sendSmsRequest(msg, getTimeout(), getRetries(), responseHandler, responseHandler);
         } catch (Exception e) {
         	responseHandler.handleError(request, e);

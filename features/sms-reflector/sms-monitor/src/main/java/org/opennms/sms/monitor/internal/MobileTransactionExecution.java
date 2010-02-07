@@ -33,12 +33,11 @@ import java.net.SocketTimeoutException;
 
 import org.opennms.core.tasks.Callback;
 import org.opennms.sms.monitor.MobileSequenceSession;
+import org.opennms.sms.monitor.internal.config.MobileSequenceResponse;
 import org.opennms.sms.monitor.internal.config.MobileSequenceTransaction;
-import org.opennms.sms.reflector.smsservice.MobileMsgCallbackAdapter;
 import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseHandler;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 
 /**
  * MobileTransactionExecution
@@ -113,12 +112,16 @@ public class MobileTransactionExecution {
 
     private MobileMsgResponseHandler getResponseHandler(final MobileSequenceSession session, final Callback<MobileMsgResponse> cb) {
 
-        final MobileMsgResponseMatcher responseMatcher = getTransaction().getResponseMatcher(session);
-        
         return new MobileMsgResponseHandler() {
             
             public boolean matches(MobileMsgRequest request, MobileMsgResponse response) {
-                return responseMatcher.matches(request, response);
+                boolean match = false;
+                
+                for ( MobileSequenceResponse r : getTransaction().getResponses() ) {
+                    match = r.matches(session, request, response);
+                }
+                
+                return match;
             }
             
             public void handleTimeout(MobileMsgRequest request) {

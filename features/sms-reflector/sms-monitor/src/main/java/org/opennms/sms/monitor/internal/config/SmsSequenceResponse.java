@@ -1,15 +1,15 @@
 package org.opennms.sms.monitor.internal.config;
 
-import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.isSms;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
+import org.opennms.sms.reflector.smsservice.SmsResponse;
 
 @XmlRootElement(name="sms-response")
 public class SmsSequenceResponse extends MobileSequenceResponse {
 	
-	public SmsSequenceResponse() {
+    public SmsSequenceResponse() {
 		super();
 	}
 	
@@ -21,7 +21,8 @@ public class SmsSequenceResponse extends MobileSequenceResponse {
 		super(gatewayId, label);
 	}
 
-	protected MobileMsgResponseMatcher getResponseTypeMatcher() {
-		return isSms();
-	}
+	@Override
+    protected boolean matchesResponseType(MobileMsgRequest request, MobileMsgResponse response) {
+        return response instanceof SmsResponse;
+    }
 }

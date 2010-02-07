@@ -11,13 +11,14 @@ import javax.xml.bind.annotation.XmlType;
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.sms.monitor.MobileSequenceSession;
+import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponseHandler;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 
 @XmlRootElement(name="transaction")
 @XmlType(propOrder={"request", "responses"})
 public class MobileSequenceTransaction implements Comparable<MobileSequenceTransaction> {
-    
+
     /* containing sequenceConfig */
     private MobileSequenceConfig m_sequenceConfig;
 
@@ -135,18 +136,7 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
         return session.substitute(getRequest().getLabel(getLabel()));
     }
 
-    public MobileMsgResponseMatcher getResponseMatcher(MobileSequenceSession session) {
-        
-        MobileMsgResponseMatcher match = null;
-
-        for ( MobileSequenceResponse r : getResponses() ) {
-            match = r.getResponseMatcher(session);
-        }
-
-        return match;
-    }
-
-	public int compareTo(MobileSequenceTransaction o) {
+    public int compareTo(MobileSequenceTransaction o) {
         return new CompareToBuilder()
             .append(this.getRequest(), o.getRequest())
             .append(this.getResponses(), o.getResponses())
@@ -164,6 +154,17 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 
     public void sendRequest(MobileSequenceSession session, MobileMsgResponseHandler responseHandler) {
         getRequest().send(session, responseHandler);
+    }
+
+    public boolean matchesResponse(MobileSequenceSession session, MobileMsgRequest request, MobileMsgResponse response) {
+        
+        boolean match = false;
+        
+        for ( MobileSequenceResponse r : getResponses() ) {
+            match = r.matches(session, request, response);
+        }
+        
+        return match;
     }
 
 }

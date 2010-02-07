@@ -11,6 +11,7 @@ import org.opennms.sms.reflector.smsservice.MobileMsgResponseHandler;
 @XmlRootElement(name="sms-request")
 public class SmsSequenceRequest extends MobileSequenceRequest {
 	private String m_recipient;
+	private int m_validityPeriodInHours = 1;
 
 	public SmsSequenceRequest() {
 	}
@@ -32,9 +33,18 @@ public class SmsSequenceRequest extends MobileSequenceRequest {
 		m_recipient = recipient;
 	}
 
+	@XmlAttribute(name="validity-in-hours", required=false)
+    public int getValidityPeriodInHours() {
+        return m_validityPeriodInHours;
+    }
+
+    public void setValidityPeriodInHours(int validityPeriodInHours) {
+        m_validityPeriodInHours = validityPeriodInHours;
+    }
+
     @Override
     public void send(MobileSequenceSession session, MobileMsgResponseHandler responseHandler) {
-        session.sendSms(getGatewayIdForRequest(), getRecipient(), getText(), responseHandler);
+        session.sendSms(getGatewayIdForRequest(), getRecipient(), getText(), getValidityPeriodInHours(), responseHandler);
     }
 
     public String toString() {

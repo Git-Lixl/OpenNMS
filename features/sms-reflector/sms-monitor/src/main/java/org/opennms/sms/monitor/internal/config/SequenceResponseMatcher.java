@@ -5,7 +5,8 @@ import javax.xml.bind.annotation.XmlValue;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.sms.monitor.MobileSequenceSession;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 
 public abstract class SequenceResponseMatcher {
 	// Forces this to be an XSD complexType instead of simpleType
@@ -37,6 +38,6 @@ public abstract class SequenceResponseMatcher {
 			.toString();
 	}
 
-	public abstract MobileMsgResponseMatcher getMatcher(MobileSequenceSession session);
+	public abstract boolean matches(MobileSequenceSession session, MobileMsgRequest request, MobileMsgResponse response);
 
 }

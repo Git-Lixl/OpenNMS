@@ -1,15 +1,15 @@
 package org.opennms.sms.monitor.internal.config;
 
-import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.isUssd;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
+import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
+import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
+import org.opennms.sms.reflector.smsservice.UssdResponse;
 
 @XmlRootElement(name="ussd-response")
 public class UssdSequenceResponse extends MobileSequenceResponse {
 
-	public UssdSequenceResponse() {
+    public UssdSequenceResponse() {
 		super();
 	}
 	
@@ -21,7 +21,8 @@ public class UssdSequenceResponse extends MobileSequenceResponse {
 		super(gatewayId, label);
 	}
 
-	protected MobileMsgResponseMatcher getResponseTypeMatcher() {
-		return isUssd();
-	}
+	@Override
+    protected boolean matchesResponseType(MobileMsgRequest request, MobileMsgResponse response) {
+        return response instanceof UssdResponse;
+    }
 }

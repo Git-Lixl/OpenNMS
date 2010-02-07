@@ -1,11 +1,8 @@
 package org.opennms.sms.monitor.internal.config;
 
-import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.and;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlTransient;
@@ -14,11 +11,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.sms.monitor.MobileSequenceSession;
 import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
-import org.opennms.sms.reflector.smsservice.MobileMsgResponseMatcher;
 
 public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 
-	private List<SequenceResponseMatcher> m_matchers = Collections.synchronizedList(new ArrayList<SequenceResponseMatcher>());
+    private List<SequenceResponseMatcher> m_matchers = Collections.synchronizedList(new ArrayList<SequenceResponseMatcher>());
 	
 	private MobileSequenceTransaction m_transaction;
 
@@ -57,8 +53,6 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
         m_transaction = transaction;
     }
 
-	abstract protected MobileMsgResponseMatcher getResponseTypeMatcher();
-	
 	public String toString() {
         return new ToStringBuilder(this)
             .append("gatewayId", getGatewayId())
@@ -67,15 +61,20 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
             .toString();
     }
 
-	MobileMsgResponseMatcher getResponseMatcher( MobileSequenceSession session ) {
-		List<MobileMsgResponseMatcher> matchers = new ArrayList<MobileMsgResponseMatcher>();
-		matchers.add(getResponseTypeMatcher());
-		
-		for (SequenceResponseMatcher m : getMatchers()) {
-			matchers.add(m.getMatcher(session));
-		}
-		
-		return and(matchers.toArray(new MobileMsgResponseMatcher[0]));
-	}
+	protected abstract boolean matchesResponseType(MobileMsgRequest request, MobileMsgResponse response);
+    
+    private boolean matchesCriteria(final MobileSequenceSession session, MobileMsgRequest request, MobileMsgResponse response) {
+
+        for (SequenceResponseMatcher m : getMatchers()) {
+            if (!m.matches(session, request, response)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean matches(final MobileSequenceSession session, MobileMsgRequest request, MobileMsgResponse response) {
+        return matchesResponseType(request, response) && matchesCriteria(session, request, response);
+    }
 
 }
