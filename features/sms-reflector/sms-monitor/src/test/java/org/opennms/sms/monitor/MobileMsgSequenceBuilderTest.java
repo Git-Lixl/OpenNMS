@@ -148,7 +148,11 @@ public class MobileMsgSequenceBuilderTest {
         bldr.getSequence().waitFor(m_session, execution);
 
         Map<String,Number> timing = execution.getResponseTimes();
-
+        
+        
+        assertNotNull(m_session);
+        assertEquals(PHONE_NUMBER, m_session.substitute("${SMS Pong.smsOriginator}"));
+        
         assertNotNull(timing);
         assertTrue(latency(timing, "response-time") > 150);
         assertTrue(latency(timing, "SMS Ping") > 50);
@@ -163,7 +167,7 @@ public class MobileMsgSequenceBuilderTest {
     }
 
     private void ping(MobileSequenceConfigBuilder bldr) {
-        bldr.smsRequest("SMS Ping", "G", PHONE_NUMBER, "ping").expectSmsResponse().matching("^pong$");
+        bldr.smsRequest("SMS Ping", "G", PHONE_NUMBER, "ping").expectSmsResponse("SMS Pong").matching("^pong$");
     }
 
     private void sendPong() {
@@ -171,7 +175,7 @@ public class MobileMsgSequenceBuilderTest {
     }
     
     private void balanceInquiry(MobileSequenceConfigBuilder bldr) {
-        bldr.ussdRequest("USSD request","G", "#225#").expectUssdResponse()
+        bldr.ussdRequest("USSD request","G", "#225#").expectUssdResponse("USSD response")
             .matching(TMOBILE_USSD_MATCH)
             .withSessionStatus(USSDSessionStatus.NO_FURTHER_ACTION_REQUIRED);
     }

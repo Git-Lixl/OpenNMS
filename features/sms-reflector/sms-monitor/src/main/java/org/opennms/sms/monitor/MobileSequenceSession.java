@@ -83,7 +83,9 @@ public class MobileSequenceSession {
         getProperties().setProperty("retry", String.valueOf(retries));
     }
 
-
+    public void setVariable(String varName, String value) {
+        getProperties().setProperty(varName, value);
+    }
 
 	public String substitute(String string) {
 		return PropertiesUtils.substitute(string, getProperties());

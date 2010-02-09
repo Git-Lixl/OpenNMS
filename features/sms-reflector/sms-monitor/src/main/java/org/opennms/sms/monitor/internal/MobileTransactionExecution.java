@@ -30,6 +30,10 @@
 package org.opennms.sms.monitor.internal;
 
 import java.net.SocketTimeoutException;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.opennms.core.tasks.Callback;
 import org.opennms.sms.monitor.MobileSequenceSession;
@@ -46,6 +50,71 @@ import org.opennms.sms.reflector.smsservice.MobileMsgResponseHandler;
  */
 public class MobileTransactionExecution {
     
+    /**
+     * TransactionResponseHandler
+     *
+     * @author brozow
+     */
+    private final class TransactionResponseHandler implements MobileMsgResponseHandler {
+        private final Callback<MobileMsgResponse> m_cb;
+        private final MobileSequenceSession m_session;
+        private final Set<MobileSequenceResponse> m_pendingResponses;
+
+        private TransactionResponseHandler(MobileSequenceSession session, Callback<MobileMsgResponse> cb) {
+            m_cb = cb;
+            m_session = session;
+            m_pendingResponses = Collections.synchronizedSet(new LinkedHashSet<MobileSequenceResponse>(getTransaction().getResponses()));
+        }
+
+        public boolean matches(MobileMsgRequest request, MobileMsgResponse response) {
+
+            synchronized (m_pendingResponses) {
+
+                for(MobileSequenceResponse r : m_pendingResponses) {
+                    if (r.matches(m_session, request, response)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        public void handleTimeout(MobileMsgRequest request) {
+            SocketTimeoutException err = new SocketTimeoutException("timed out processing request " + request);
+            setError(err);
+            m_cb.handleException(err);
+        }
+
+        public boolean handleResponse(MobileMsgRequest request, MobileMsgResponse response) {
+            if (request != null) setSendTime(request.getSentTime());
+            if (response != null) setReceiveTime(response.getReceiveTime());
+            
+            synchronized (m_pendingResponses) {
+                // remove processing response
+                for(Iterator<MobileSequenceResponse> it = m_pendingResponses.iterator(); it.hasNext(); ) {
+                    MobileSequenceResponse r = it.next();
+                    if (r.matches(m_session, request, response)) {
+                        
+                        r.processResponse(m_session, request, response);
+                        
+                        it.remove();
+                    }
+                }
+
+            }
+            m_cb.complete(response);
+            
+            // return true only if all of the expected responses have been processed
+            return !m_pendingResponses.isEmpty();
+        }
+
+        public void handleError(MobileMsgRequest request, Throwable t) {
+            setError(t);
+            m_cb.handleException(t);
+        }
+    }
+
     private MobileSequenceTransaction m_transaction;
     private Long m_sendTime;
     private Long m_receiveTime;
@@ -107,43 +176,7 @@ public class MobileTransactionExecution {
     }
 
     void sendRequest(MobileSequenceSession session, Callback<MobileMsgResponse> cb) {
-        getTransaction().sendRequest(session, getResponseHandler(session, cb));
-    }
-
-    private MobileMsgResponseHandler getResponseHandler(final MobileSequenceSession session, final Callback<MobileMsgResponse> cb) {
-
-        return new MobileMsgResponseHandler() {
-            
-            public boolean matches(MobileMsgRequest request, MobileMsgResponse response) {
-                boolean match = false;
-                
-                for ( MobileSequenceResponse r : getTransaction().getResponses() ) {
-                    match = r.matches(session, request, response);
-                }
-                
-                return match;
-            }
-            
-            public void handleTimeout(MobileMsgRequest request) {
-                SocketTimeoutException err = new SocketTimeoutException("timed out processing request " + request);
-                setError(err);
-                cb.handleException(err);
-            }
-            
-            public boolean handleResponse(MobileMsgRequest request, MobileMsgResponse packet) {
-                if (request != null) setSendTime(request.getSentTime());
-                if (packet != null) setReceiveTime(packet.getReceiveTime());
-                
-                cb.complete(packet);
-                return true;
-            }
-            
-            public void handleError(MobileMsgRequest request, Throwable t) {
-                setError(t);
-                cb.handleException(t);
-            }
-            
-        };
+        getTransaction().sendRequest(session, new TransactionResponseHandler(session, cb));
     }
 
 }

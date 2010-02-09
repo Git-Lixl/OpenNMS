@@ -44,7 +44,11 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 		m_matchers.add(matcher);
 	}
 	
-	@XmlTransient
+    public String getEffectiveLabel(MobileSequenceSession session) {
+        return getLabel() != null ? session.substitute(getLabel()) : getTransaction().getResponseLabel(session, this); 
+    }
+
+    @XmlTransient
     public MobileSequenceTransaction getTransaction() {
         return m_transaction;
     }
@@ -63,7 +67,7 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 
 	protected abstract boolean matchesResponseType(MobileMsgRequest request, MobileMsgResponse response);
     
-    private boolean matchesCriteria(final MobileSequenceSession session, MobileMsgRequest request, MobileMsgResponse response) {
+    private boolean matchesCriteria(MobileSequenceSession session, MobileMsgRequest request, MobileMsgResponse response) {
 
         for (SequenceResponseMatcher m : getMatchers()) {
             if (!m.matches(session, request, response)) {
@@ -73,8 +77,10 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
         return true;
     }
 
-    public boolean matches(final MobileSequenceSession session, MobileMsgRequest request, MobileMsgResponse response) {
+    public boolean matches(MobileSequenceSession session, MobileMsgRequest request, MobileMsgResponse response) {
         return matchesResponseType(request, response) && matchesCriteria(session, request, response);
     }
+
+    public abstract void processResponse(MobileSequenceSession session, MobileMsgRequest request, MobileMsgResponse response);
 
 }

@@ -125,7 +125,7 @@ public class MobileSequenceConfigBuilder {
         }
 
         public SmsResponseBuilder expectSmsResponse(String label) {
-            SmsSequenceResponse response = new SmsSequenceResponse(label);
+            MobileSequenceResponse response = new SmsSequenceResponse(label);
         
             addResponse(response);
             return new SmsResponseBuilder(response);
@@ -161,9 +161,9 @@ public class MobileSequenceConfigBuilder {
      * @author brozow
      */
     public static class SmsResponseBuilder {
-        private SmsSequenceResponse m_response;
+        private MobileSequenceResponse m_response;
 
-        public SmsResponseBuilder(SmsSequenceResponse response) {
+        public SmsResponseBuilder(MobileSequenceResponse response) {
             m_response = response;
         }
 

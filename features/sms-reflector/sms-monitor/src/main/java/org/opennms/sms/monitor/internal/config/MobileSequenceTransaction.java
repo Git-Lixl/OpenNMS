@@ -43,7 +43,7 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
 		setGatewayId(gatewayId);
 	}
 	
-	@XmlAttribute(name="label")
+	@XmlAttribute(name="label", required=true)
 	public String getLabel() {
 		return m_label;
 	}
@@ -165,6 +165,21 @@ public class MobileSequenceTransaction implements Comparable<MobileSequenceTrans
         }
         
         return match;
+    }
+
+    String getResponseLabel(MobileSequenceSession session, MobileSequenceResponse response) {
+        return session.substitute(getLabel()+".response"+getResponseIndex(response));
+    }
+
+    private int getResponseIndex(MobileSequenceResponse response) {
+        int index = 1;
+        for(MobileSequenceResponse r : getResponses()) {
+            if (r == response) {
+                return index;
+            }
+            index++;
+        }
+        throw new IllegalArgumentException("response not found in transaction!");
     }
 
 }
