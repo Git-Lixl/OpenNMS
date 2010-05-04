@@ -105,7 +105,7 @@ case "$1" in
 		if [ -x /sbin/start-stop-daemon ]; then
 			start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE $CHUID --startas /usr/sbin/opennms-remote-poller -- $JVM_ARGS -u "$URI" -l "$LOCATION" $EXTRA_ARGS >/dev/null
 		else
-			$SUDO_PREFIX $OPENNMS_HOME/bin/remote-poller.sh $JVM_ARGS -u "$URI" -l "$LOCATION" $EXTRA_ARGS
+			$SUDO_PREFIX $OPENNMS_HOME/bin/remote-poller.sh $JVM_ARGS -u "$URI" -l "$LOCATION" $EXTRA_ARGS >/dev/null
 			RETVAL="$?"
 			POLLER_PID="$!"
 			echo "$POLLER_PID" > "$PIDFILE"
