@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx" 
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+
+  <tx:annotation-driven />
+  
+  <context:annotation-config />
+
+  <bean id="locationMonitorConfigResourceLocation" class="java.lang.String">
+    <constructor-arg value="integration-test-webapp/monitoring-locations.xml" />
+  </bean>
+  
+  <bean id="pollerConfigDao" class="org.opennms.netmgt.config.DefaultPollerConfigDao">
+    <property name="configResource" value="integration-test-webapp/poller-configuration.xml"/>
+    <property name="localServer" value="nms1"/>
+    <property name="verifyServer" value="false"/>
+  </bean>
+
+  <bean id="pollerConfig" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+    <property name="targetObject" ref="pollerConfigDao"/>
+    <property name="targetMethod" value="getPollerConfig"/>
+  </bean>
+
+  <bean id="setupIpLike" class="java.lang.Boolean">
+    <constructor-arg><value>true</value></constructor-arg>
+  </bean>
+
+  <bean name="monitorDisconnectedTimeout" class="java.lang.Integer">
+    <constructor-arg><value>1000</value></constructor-arg>
+  </bean>
+
+  <bean name="monitorCheckInterval" class="java.lang.Long">
+    <constructor-arg><value>500</value></constructor-arg>
+  </bean>
+
+</beans>
