@@ -13,7 +13,6 @@ import org.opennms.netmgt.dao.db.JUnitTemporaryDatabase;
 import org.opennms.netmgt.dao.db.OpenNMSConfigurationExecutionListener;
 import org.opennms.netmgt.dao.db.TemporaryDatabaseExecutionListener;
 import org.opennms.netmgt.model.OnmsMonitoringLocationDefinition;
-import org.opennms.netmgt.poller.remote.PollerBackEnd;
 import org.opennms.netmgt.poller.remote.PollerFrontEnd;
 import org.opennms.test.mock.MockLogAppender;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +57,6 @@ public class IntegrationTest {
     public static void setUp() {
         Properties p = new Properties();
         p.put("log4j.logger.org.mortbay", "ERROR");
-        p.put("log4j.logger.org.mortbay", "ERROR");
         p.put("log4j.logger.org.quartz", "ERROR");
         p.put("log4j.logger.org.opennms.netmgt.config", "WARN");
         p.put("log4j.logger.org.opennms.netmgt.dao", "WARN");
@@ -73,9 +71,11 @@ public class IntegrationTest {
     @Test
     @Transactional
     public void testHttpFrontEnd() throws Exception {
+        System.err.println("starting");
         for (OnmsMonitoringLocationDefinition def : m_frontEnd.getMonitoringLocations()) {
             System.err.println("found def: " + def);
         }
+        System.err.println("finishing");
     }
 
 }

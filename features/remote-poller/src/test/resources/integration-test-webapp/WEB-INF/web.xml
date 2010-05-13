@@ -13,6 +13,7 @@
         /WEB-INF/applicationContext-common.xml
         /WEB-INF/applicationContext-spring-security.xml
         /WEB-INF/applicationContext-svclayer.xml
+        /applicationContext-integration.xml
     </param-value>
   </context-param>
 

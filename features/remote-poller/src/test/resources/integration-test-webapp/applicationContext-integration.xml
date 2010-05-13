@@ -12,11 +12,11 @@
   <context:annotation-config />
 
   <bean id="locationMonitorConfigResourceLocation" class="java.lang.String">
-    <constructor-arg value="integration-test-webapp/monitoring-locations.xml" />
+    <constructor-arg value="classpath:integration-test-webapp/monitoring-locations.xml" />
   </bean>
   
   <bean id="pollerConfigDao" class="org.opennms.netmgt.config.DefaultPollerConfigDao">
-    <property name="configResource" value="integration-test-webapp/poller-configuration.xml"/>
+    <property name="configResource" value="classpath:integration-test-webapp/poller-configuration.xml"/>
     <property name="localServer" value="nms1"/>
     <property name="verifyServer" value="false"/>
   </bean>
