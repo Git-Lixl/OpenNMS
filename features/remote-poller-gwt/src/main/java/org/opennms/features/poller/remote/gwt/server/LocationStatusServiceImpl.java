@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Level;
@@ -62,12 +63,13 @@ public class LocationStatusServiceImpl extends RemoteEventServiceServlet impleme
     public void start() {
         LogUtils.debugf(this, "starting location status service");
         initialize();
-        final EventExecutorService service = EventExecutorServiceFactory.getInstance().getEventExecutorService(
-                                                                                                               this.getRequest().getSession());
+        final EventExecutorService service = EventExecutorServiceFactory.getInstance().getEventExecutorService(this.getRequest().getSession());
 
         if (m_timer == null) {
             m_timer = new Timer();
             m_timer.schedule(new TimerTask() {
+                CountDownLatch m_latch = new CountDownLatch(5);
+
                 @Override
                 public void run() {
                     if (!m_initializationComplete.get()) {
@@ -78,16 +80,19 @@ public class LocationStatusServiceImpl extends RemoteEventServiceServlet impleme
                     }
                     LogUtils.debugf(this, "pushing monitor status updates");
                     final Date endDate = new Date();
-                    addEvent(RemotePollerPresenter.LOCATION_EVENT_DOMAIN,
-                             new LocationsUpdatedRemoteEvent(m_locationDataService.getUpdatedLocationsBetween(m_lastUpdated, endDate)));
+                    addEvent(RemotePollerPresenter.LOCATION_EVENT_DOMAIN, new LocationsUpdatedRemoteEvent(m_locationDataService.getUpdatedLocationsBetween(m_lastUpdated, endDate)));
                     LogUtils.debugf(this, "finished pushing monitor status updates");
 
-                    // final Collection<ApplicationHandler> appHandlers = new
-                    // ArrayList<ApplicationHandler>();
-                    // appHandlers.add(new
-                    // InitialApplicationHandler(m_locationDataService,
-                    // service, true));
-                    // m_locationDataService.handleAllApplications(appHandlers);
+                    // Every 5 minutes, update the application list too
+                    synchronized(m_latch) {
+                        m_latch.countDown();
+                        if (m_latch.getCount() == 0) {
+                            final Collection<ApplicationHandler> appHandlers = new ArrayList<ApplicationHandler>();
+                            appHandlers.add(new InitialApplicationHandler(m_locationDataService, service, true));
+                            m_locationDataService.handleAllApplications(appHandlers);
+                            m_latch = new CountDownLatch(5);
+                        }
+                    }
 
                     m_lastUpdated = endDate;
                 }
