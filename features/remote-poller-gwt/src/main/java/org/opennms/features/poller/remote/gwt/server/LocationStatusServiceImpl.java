@@ -18,8 +18,14 @@ import org.opennms.features.poller.remote.gwt.client.LocationStatusService;
 import org.opennms.features.poller.remote.gwt.client.RemotePollerPresenter;
 import org.opennms.features.poller.remote.gwt.client.location.LocationDetails;
 import org.opennms.features.poller.remote.gwt.client.location.LocationInfo;
+import org.opennms.features.poller.remote.gwt.client.remoteevents.LocationUpdatedRemoteEvent;
 import org.opennms.features.poller.remote.gwt.client.remoteevents.LocationsUpdatedRemoteEvent;
 import org.opennms.features.poller.remote.gwt.client.remoteevents.UpdateCompleteRemoteEvent;
+import org.opennms.netmgt.EventConstants;
+import org.opennms.netmgt.model.events.annotations.EventHandler;
+import org.opennms.netmgt.model.events.annotations.EventListener;
+import org.opennms.netmgt.xml.event.Event;
+import org.opennms.netmgt.xml.event.Parm;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -27,6 +33,7 @@ import de.novanic.eventservice.service.EventExecutorService;
 import de.novanic.eventservice.service.EventExecutorServiceFactory;
 import de.novanic.eventservice.service.RemoteEventServiceServlet;
 
+@EventListener(name="LocationStatusService")
 public class LocationStatusServiceImpl extends RemoteEventServiceServlet implements LocationStatusService {
     private static final long serialVersionUID = 1L;
 
@@ -135,20 +142,43 @@ public class LocationStatusServiceImpl extends RemoteEventServiceServlet impleme
         return m_locationDataService.getApplicationDetails(applicationName);
     }
 
-    @SuppressWarnings("unused")
-    private void pushUninitializedLocations(final EventExecutorService service) {
-        LogUtils.debugf(this, "pushing uninitialized locations");
-        final Collection<LocationDefHandler> locationHandlers = new ArrayList<LocationDefHandler>();
-        locationHandlers.add(new DefaultLocationDefHandler(m_locationDataService, service, false));
-        locationHandlers.add(new GeocodingHandler(m_locationDataService, service));
-        m_locationDataService.handleAllMonitoringLocationDefinitions(locationHandlers);
-        LogUtils.debugf(this, "finished pushing uninitialized locations");
+    @EventHandler(uei = EventConstants.LOCATION_MONITOR_STARTED_UEI)
+    public void locationMonitorStarted(final Event event) {
+        handleLocationEvent(event);
+    }
 
-        LogUtils.debugf(this, "pushing uninitialized applications");
-        final Collection<ApplicationHandler> appHandlers = new ArrayList<ApplicationHandler>();
-        appHandlers.add(new InitialApplicationHandler(m_locationDataService, service, false));
-        m_locationDataService.handleAllApplications(appHandlers);
-        LogUtils.debugf(this, "finished pushing uninitialized applications");
+    @EventHandler(uei = EventConstants.LOCATION_MONITOR_STOPPED_UEI)
+    public void locationMonitorStopped(final Event event) {
+        handleLocationEvent(event);
+    }
+
+    @EventHandler(uei = EventConstants.LOCATION_MONITOR_DISCONNECTED_UEI)
+    public void locationMonitorDisconnected(final Event event) {
+        handleLocationEvent(event);
+    }
+
+    @EventHandler(uei = EventConstants.LOCATION_MONITOR_RECONNECTED_UEI)
+    public void locationMonitorReconnected(final Event event) {
+        handleLocationEvent(event);
+    }
+
+    @EventHandler(uei = EventConstants.REMOTE_NODE_LOST_SERVICE_UEI)
+    public void nodeLostService(final Event event) {
+        handleLocationEvent(event);
+    }
+
+    @EventHandler(uei = EventConstants.REMOTE_NODE_REGAINED_SERVICE_UEI)
+    public void nodeRegainedService(final Event event) {
+        handleLocationEvent(event);
+    }
+
+    private void handleLocationEvent(final Event event) {
+        for (final Parm p : event.getParms().getParmCollection()) {
+            if (p.getParmName().equals(EventConstants.PARM_LOCATION_MONITOR_ID)) {
+                final LocationInfo info = m_locationDataService.getLocationInfoForMonitor(Integer.valueOf(p.getValue().getContent()));
+                addEvent(RemotePollerPresenter.LOCATION_EVENT_DOMAIN, new LocationUpdatedRemoteEvent(info));
+            }
+        }
     }
 
     private void pushInitializedLocations(final EventExecutorService service) {

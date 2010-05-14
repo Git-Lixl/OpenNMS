@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 
+import org.hibernate.criterion.Restrictions;
 import org.opennms.core.utils.LogUtils;
 import org.opennms.features.poller.remote.gwt.client.ApplicationDetails;
 import org.opennms.features.poller.remote.gwt.client.ApplicationInfo;
@@ -32,6 +33,7 @@ import org.opennms.netmgt.dao.ApplicationDao;
 import org.opennms.netmgt.dao.LocationMonitorDao;
 import org.opennms.netmgt.dao.MonitoredServiceDao;
 import org.opennms.netmgt.model.OnmsApplication;
+import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsLocationMonitor;
 import org.opennms.netmgt.model.OnmsLocationSpecificStatus;
 import org.opennms.netmgt.model.OnmsMonitoredService;
@@ -113,6 +115,19 @@ public class DefaultLocationDataService implements LocationDataService, Initiali
     @Transactional
     public LocationInfo getLocationInfo(final OnmsMonitoringLocationDefinition def, boolean includeStatus) {
         return includeStatus ? getLocationInfo(def, null) : getLocationInfo(def, StatusDetails.uninitialized());
+    }
+
+    @Transactional
+    public LocationInfo getLocationInfoForMonitor(Integer monitorId) {
+        final OnmsCriteria criteria = new OnmsCriteria(OnmsLocationMonitor.class).add(Restrictions.eq("id", monitorId));
+        final List<OnmsLocationMonitor> monitors = m_locationDao.findMatching(criteria);
+        if (monitors == null) return null;
+
+        final String definitionName = monitors.get(0).getDefinitionName();
+        final OnmsMonitoringLocationDefinition def = m_locationDao.findMonitoringLocationDefinition(definitionName);
+        if (def == null) return null;
+
+        return getLocationInfo(def, null);
     }
 
     @Transactional

@@ -24,4 +24,5 @@ public interface LocationDataService {
     public GWTLatLng getLatLng(final OnmsMonitoringLocationDefinition def, boolean geocode);
     public void handleAllMonitoringLocationDefinitions(final Collection<LocationDefHandler> handlers);
     public void handleAllApplications(final Collection<ApplicationHandler> appHandlers);
+    public LocationInfo getLocationInfoForMonitor(final Integer monitorId);
 }
