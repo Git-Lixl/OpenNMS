@@ -39,9 +39,7 @@ public class GoogleMapsPanel extends Composite implements MapPanel {
 
     private static GoogleMapsPanelUiBinder uiBinder = GWT.create(GoogleMapsPanelUiBinder.class);
 
-    interface GoogleMapsPanelUiBinder extends
-            UiBinder<Widget, GoogleMapsPanel> {
-    }
+    interface GoogleMapsPanelUiBinder extends UiBinder<Widget, GoogleMapsPanel> {}
     
     @UiField
     MapWidget m_mapWidget;
