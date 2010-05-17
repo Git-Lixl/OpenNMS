@@ -216,7 +216,6 @@ public class DefaultLocationManager implements LocationManager, RemotePollerPres
         final ArrayList<LocationInfo> visibleLocations = new ArrayList<LocationInfo>();
         for (final LocationInfo location : m_locations.values()) {
             final GWTMarkerState markerState = location.getMarkerState();
-            //FIXME: instead of checking the visibility of the marker we need to check if it is within the bounds of the map.
             GWTBounds mapBounds = m_mapPanel.getBounds();
             if (markerState.isSelected() && mapBounds.contains(markerState.getLatLng())) {
                 visibleLocations.add(location);
