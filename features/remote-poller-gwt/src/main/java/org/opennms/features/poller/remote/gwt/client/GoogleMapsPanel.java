@@ -98,7 +98,6 @@ public class GoogleMapsPanel extends Composite implements MapPanel {
         getMapWidget().setSize("100%", "100%");
         getMapWidget().setUIToDefault();
         getMapWidget().addControl(new LargeMapControl());
-        getMapWidget().setContinuousZoom(true);
         getMapWidget().setScrollWheelZoomEnabled(true);
       
         Window.addResizeHandler(new ResizeHandler() {
