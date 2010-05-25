@@ -43,17 +43,22 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 import org.joda.time.Duration;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opennms.core.concurrent.PausibleScheduledThreadPoolExecutor;
+import org.opennms.core.tasks.Task;
 import org.opennms.mock.snmp.JUnitSnmpAgent;
 import org.opennms.mock.snmp.JUnitSnmpAgentExecutionListener;
 import org.opennms.mock.snmp.MockSnmpAgent;
@@ -79,6 +84,7 @@ import org.opennms.netmgt.mock.MockVisitorAdapter;
 import org.opennms.netmgt.model.OnmsAssetRecord;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.provision.persist.ForeignSourceRepository;
+import org.opennms.netmgt.provision.persist.ForeignSourceRepositoryException;
 import org.opennms.netmgt.provision.persist.MockForeignSourceRepository;
 import org.opennms.netmgt.provision.persist.OnmsAssetRequisition;
 import org.opennms.netmgt.provision.persist.OnmsIpInterfaceRequisition;
@@ -95,6 +101,7 @@ import org.opennms.test.mock.MockLogAppender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.UrlResource;
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
@@ -166,6 +173,9 @@ public class ProvisionerTest implements MockSnmpAgentAware {
     @Autowired
     private PausibleScheduledThreadPoolExecutor m_pausibleExecutor;
     
+    @Autowired
+    private ImportScheduler m_importSchedule;
+    
     private EventAnticipator m_eventAnticipator;
 
     private ForeignSourceRepository m_foreignSourceRepository;
@@ -176,6 +186,12 @@ public class ProvisionerTest implements MockSnmpAgentAware {
     
     public void setMockSnmpAgent(MockSnmpAgent agent) {
         m_agent = agent;
+    }
+    
+    @Before
+    public void dwVerifyDnsUrlHandlerFactory() throws MalformedURLException {
+        new URL("dns://david:rocks@localhost:53/opennms");
+        assertNotNull("failed to wire the ImportSchedule class", m_importSchedule);
     }
     
     @BeforeClass
@@ -213,7 +229,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
     }
 
 
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testVisit() throws Exception {
 
@@ -222,8 +238,23 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         requisition.visit(visitor);
         verifyCounts(visitor);
     }
+    
+    /**
+     * We have to ignore this test until there is a DNS service available in the test harness
+     * 
+     * @throws ForeignSourceRepositoryException
+     * @throws MalformedURLException
+     */
+    @Test(timeout=300000)
+    @Ignore
+    public void dwImportDnsResourceRequisition() throws ForeignSourceRepositoryException, MalformedURLException {
+        Requisition r = m_foreignSourceRepository.importResourceRequisition(new UrlResource("dns://localhost/localhost"));
+        CountingVisitor v = new CountingVisitor();
+        r.visit(v);
+        verifyCounts2(v);
+    }
 
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testSendEventsOnImport() throws Exception {
         
@@ -262,7 +293,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
     }
     
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testNonSnmpImportAndScan() throws Exception {
         importFromResource("classpath:/import_localhost.xml");
@@ -272,11 +303,11 @@ public class ProvisionerTest implements MockSnmpAgentAware {
 
         NodeScan scan = m_provisioner.createNodeScan(node.getId(), node.getForeignSource(), node.getForeignId());
         
-        scan.run();
+        runScan(scan);
     }
     
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testFindQuery() throws Exception {
         importFromResource("classpath:/tec_dump.xml.smalltest");
@@ -286,7 +317,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         }
     }
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testBigImport() throws Exception {
         File file = new File("/tmp/tec_dump.xml.large");
@@ -300,7 +331,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         
     }
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     @JUnitSnmpAgent(host="127.0.0.1", port=9161, resource="classpath:snmpTestData1.properties")
     public void testPopulateWithSnmp() throws Exception {
@@ -329,10 +360,9 @@ public class ProvisionerTest implements MockSnmpAgentAware {
     // fail if we take more than five minutes
     @Test(timeout=300000)
     @Transactional
-    @JUnitSnmpAgent(host="127.0.0.1", port=9161, resource="classpath:snmpTestData1.properties")
+    @JUnitSnmpAgent(host="127.0.0.1", port=9161, resource="classpath:snmpTestData3.properties")
     public void testPopulateWithSnmpAndNodeScan() throws Exception {
-        
-        importFromResource("classpath:/requisition_then_scan.xml");
+        importFromResource("classpath:/requisition_then_scan2.xml");
 
         //Verify distpoller count
         assertEquals(1, getDistPollerDao().countAll());
@@ -357,8 +387,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         OnmsNode node = nodes.get(0);
 
         NodeScan scan = m_provisioner.createNodeScan(node.getId(), node.getForeignSource(), node.getForeignId());
-        
-        scan.run();
+        runScan(scan);
         
         //Verify distpoller count
         assertEquals(1, getDistPollerDao().countAll());
@@ -370,6 +399,63 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         assertEquals(2, getInterfaceDao().countAll());
         
         //Verify ifservices count - discover snmp service on other if
+        assertEquals("Unexpected number of services found: "+getMonitoredServiceDao().findAll(), 2, getMonitoredServiceDao().countAll());
+        
+        //Verify service count
+        assertEquals(1, getServiceTypeDao().countAll());
+
+        //Verify snmpInterface count
+        assertEquals(6, getSnmpInterfaceDao().countAll());
+        
+        
+        // Node Delete
+        importFromResource("classpath:/nonodes.xml");
+
+        //Verify node count
+        assertEquals(0, getNodeDao().countAll());
+        
+        
+    }
+
+    // fail if we take more than five minutes
+    @Test(timeout=300000)
+    @Transactional
+    @JUnitSnmpAgent(host="127.0.0.1", port=9161, resource="classpath:snmpTestData3.properties")
+    public void testPopulateWithoutSnmpAndNodeScan() throws Exception {
+        importFromResource("classpath:/requisition_then_scan_no_snmp_svc.xml");
+
+        //Verify distpoller count
+        assertEquals(1, getDistPollerDao().countAll());
+        
+        //Verify node count
+        assertEquals(1, getNodeDao().countAll());
+        
+        //Verify ipinterface count
+        assertEquals(1, getInterfaceDao().countAll());
+        
+        assertEquals(0, getSnmpInterfaceDao().countAll());
+
+        // Expect there to be no services since we are not provisioning one
+        assertEquals(0, getMonitoredServiceDao().countAll());
+        assertEquals(0, getServiceTypeDao().countAll());
+        
+        
+        List<OnmsNode> nodes = getNodeDao().findAll();
+        OnmsNode node = nodes.get(0);
+
+        NodeScan scan = m_provisioner.createNodeScan(node.getId(), node.getForeignSource(), node.getForeignId());
+        runScan(scan);
+        
+        //Verify distpoller count
+        assertEquals(1, getDistPollerDao().countAll());
+        
+        //Verify node count
+        assertEquals(1, getNodeDao().countAll());
+        
+        //Verify ipinterface count
+        assertEquals(2, getInterfaceDao().countAll());
+        
+        //Verify ifservices count - discover snmp service on both ifs
         assertEquals("Unexpected number of services found: "+getMonitoredServiceDao().findAll(), 2, getMonitoredServiceDao().countAll());
         
         //Verify service count
@@ -393,29 +479,29 @@ public class ProvisionerTest implements MockSnmpAgentAware {
     // fail if we take more than five minutes
     @Test(timeout=300000)
     @Transactional
-    @JUnitSnmpAgent(host="127.0.0.1", port=9161, resource="classpath:snmpTestData1.properties")
+    @JUnitSnmpAgent(host="127.0.0.1", port=9161, resource="classpath:snmpTestData3.properties")
     public void testImportAddrThenChangeAddr() throws Exception {
         
-        importFromResource("classpath:/requisition_then_scan.xml");
+        importFromResource("classpath:/requisition_then_scan2.xml");
 
         List<OnmsNode> nodes = getNodeDao().findAll();
         OnmsNode node = nodes.get(0);
 
         NodeScan scan = m_provisioner.createNodeScan(node.getId(), node.getForeignSource(), node.getForeignId());
         
-        scan.run();
+        runScan(scan);
         
         m_nodeDao.flush();
         
         assertEquals(2, getInterfaceDao().countAll());
 
-        m_agent.updateValuesFromResource(m_resourceLoader.getResource("classpath:snmpTestData2.properties"));
+        m_agent.updateValuesFromResource(m_resourceLoader.getResource("classpath:snmpTestData4.properties"));
         
         importFromResource("classpath:/requisition_primary_addr_changed.xml");
         
         NodeScan scan2 = m_provisioner.createNodeScan(node.getId(), node.getForeignSource(), node.getForeignId());
         
-        scan2.run();
+        runScan(scan2);
         
         m_nodeDao.flush();
 
@@ -434,7 +520,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         assertEquals("Unexpected number of services found: "+getMonitoredServiceDao().findAll(), 2, getMonitoredServiceDao().countAll());
         
         //Verify service count
-        assertEquals(1, getServiceTypeDao().countAll());
+        assertEquals("Unexpected number of service types found: " + getServiceTypeDao().findAll(), 1, getServiceTypeDao().countAll());
 
         //Verify snmpInterface count
         assertEquals(6, getSnmpInterfaceDao().countAll());
@@ -448,11 +534,17 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         
         
     }
+    
+    public void runScan(NodeScan scan) throws InterruptedException, ExecutionException {
+        Task t = scan.createTask();
+        t.schedule();
+        t.waitFor();
+    }
 
     
     
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testPopulate() throws Exception {
         
@@ -517,7 +609,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
      * 
      * @throws ModelImportException
      */
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testImportUtf8() throws Exception {
 
@@ -535,7 +627,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
      * 
      * @throws ModelImportException
      */
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testDelete() throws Exception {
         importFromResource("classpath:/tec_dump.xml.smalltest");
@@ -551,7 +643,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
      * This test makes sure that asset information is getting imported properly.
      * @throws Exception
      */
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testAssets() throws Exception {
         importFromResource("classpath:/tec_dump.xml");
@@ -563,7 +655,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
     }
     
     //Scheduler tests
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testProvisionServiceGetScheduleForNodesCount() throws Exception {
        //importFromResource("classpath:/tec_dump.xml.smalltest");
@@ -578,7 +670,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
        assertEquals(nodeCount, m_provisioner.getScheduleLength());
     }
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testProvisionServiceGetScheduleForNodesUponDelete() throws Exception {
        importFromResource("classpath:/tec_dump.xml.smalltest");
@@ -595,7 +687,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
        assertEquals(9, m_provisioner.getScheduleLength());
     }
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testProvisionerAddNodeToSchedule() throws Exception{
         
@@ -620,7 +712,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         
     }
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testProvisionerRescanWorking() throws Exception{
         importFromResource("classpath:/tec_dump.xml.smalltest");
@@ -629,7 +721,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         assertEquals(10, m_provisioner.getScheduleLength());
     }
 
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testProvisionerRemoveNodeInSchedule() throws Exception{
         importFromResource("classpath:/tec_dump.xml.smalltest");
@@ -652,7 +744,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         long now = System.currentTimeMillis();
         
         Date date = new Date();
-        date.setTime(System.currentTimeMillis() - 43200000);
+        date.setTime(now - 43200000);
         long lastPoll = date.getTime();
         long nextPoll = lastPoll + 86400000;
         long initialDelay = Math.max(0, nextPoll - now);
@@ -661,7 +753,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         
     }
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testProvisionerNodeRescanSchedule() throws Exception {
         importFromResource("classpath:/tec_dump.xml.smalltest");
@@ -675,7 +767,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         assertEquals(10, m_provisioner.getScheduleLength());
     }
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testProvisionerUpdateScheduleAfterImport() throws Exception {
         importFromResource("classpath:/tec_dump.xml.smalltest");
@@ -700,7 +792,7 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         
     }
     
-    @Test
+    @Test(timeout=300000)
     @Transactional
     public void testSaveCategoriesOnUpdateNodeAttributes() throws Exception {
         
@@ -751,6 +843,21 @@ public class ProvisionerTest implements MockSnmpAgentAware {
         m_nodeDao.save(node);
         m_nodeDao.flush();
         return node;
+    }
+    
+    private void verifyCounts2(CountingVisitor visitor) {
+        assertEquals(1, visitor.getModelImportCount());
+        assertEquals(1, visitor.getNodeCount());
+        assertEquals(0, visitor.getNodeCategoryCount());
+        assertEquals(1, visitor.getInterfaceCount());
+        assertEquals(2, visitor.getMonitoredServiceCount());
+        assertEquals(0, visitor.getServiceCategoryCount());
+        assertEquals(visitor.getModelImportCount(), visitor.getModelImportCompletedCount());
+        assertEquals(visitor.getNodeCount(), visitor.getNodeCompletedCount());
+        assertEquals(visitor.getNodeCategoryCount(), visitor.getNodeCategoryCompletedCount());
+        assertEquals(visitor.getInterfaceCount(), visitor.getInterfaceCompletedCount());
+        assertEquals(visitor.getMonitoredServiceCount(), visitor.getMonitoredServiceCompletedCount());
+        assertEquals(visitor.getServiceCategoryCount(), visitor.getServiceCategoryCompletedCount());
     }
     
     private void verifyCounts(CountingVisitor visitor) {

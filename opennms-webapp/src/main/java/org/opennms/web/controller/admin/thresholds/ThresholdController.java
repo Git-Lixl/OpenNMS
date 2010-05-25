@@ -39,6 +39,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +58,7 @@ import org.opennms.netmgt.config.threshd.Threshold;
 import org.opennms.netmgt.dao.ResourceDao;
 import org.opennms.netmgt.dao.support.GenericIndexResourceType;
 import org.opennms.netmgt.model.OnmsResourceType;
+import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.eventconf.Logmsg;
 import org.opennms.web.Util;
@@ -64,6 +66,9 @@ import org.opennms.web.WebSecurityUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.AbstractController;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
 
 /**
  * 
@@ -140,15 +145,30 @@ public class ThresholdController extends AbstractController implements Initializ
     }
     
     private void addStandardEditingBits(ModelAndView modelAndView) {
-        Collection<String> dsTypes=new ArrayList<String>();
-        dsTypes.add("node");
-        dsTypes.add("if"); // "interface" is a wrong word
+        Map<String,String> dsTypes=new LinkedHashMap<String,String>();
+        dsTypes.put("node", "Node");
+        dsTypes.put("if", "Interface"); // "interface" is a wrong word
         
         Collection<OnmsResourceType> resourceTypes = m_resourceDao.getResourceTypes();
+        Multimap<String,String> genericDsTypes = TreeMultimap.create();
         for (OnmsResourceType resourceType : resourceTypes) {
             if (resourceType instanceof GenericIndexResourceType)
-                dsTypes.add(resourceType.getName());
+                // Put these in by label to sort them, we'll get them out in a moment
+                genericDsTypes.put(resourceType.getLabel(), resourceType.getName());
         }
+
+        // Now get the resource types out of the TreeMultimap
+        for (String rtLabel : genericDsTypes.keys()) {
+            Collection<String> rtNames = genericDsTypes.get(rtLabel);
+            for (String rtName : rtNames) {
+                if (rtNames.size() > 1)
+                    dsTypes.put(rtName, rtLabel + " [" + rtName + "]");
+                else
+                    dsTypes.put(rtName, rtLabel);
+            }
+        }
+
+        // Finally, set the sorted resource types into the model
         modelAndView.addObject("dsTypes",dsTypes);
 
         Collection<String> thresholdTypes=new ArrayList<String>();
@@ -416,29 +436,31 @@ public class ThresholdController extends AbstractController implements Initializ
         return modelAndView;
     }
     
-    private void sendNotifEvent(String uei) throws ServletException {
-        Event event = new Event();
-        event.setSource("Web UI");
-        event.setUei(uei);
+    private EventBuilder createEventBuilder(String uei) {
+        EventBuilder ebldr = new EventBuilder(uei, "Web UI");
         try {
-                event.setHost(InetAddress.getLocalHost().getHostName());
+            ebldr.setHost(InetAddress.getLocalHost().getHostName());
         } catch (UnknownHostException uhE) {
-                event.setHost("unresolved.host");
+            ebldr.setHost("unresolved.host");
         }
-        
-        event.setTime(EventConstants.formatToString(new java.util.Date()));
+        return ebldr;
+    }
+    private void sendNotifEvent(Event event) throws ServletException {
         try {
-                Util.createEventProxy().send(event);
+            Util.createEventProxy().send(event);
         } catch (Exception e) {
-                throw new ServletException("Could not send event " + event.getUei(), e);
+            throw new ServletException("Could not send event " + event.getUei(), e);
         }
-       
+
     }
     private void saveChanges() throws ServletException {
         ThresholdingConfigFactory configFactory=ThresholdingConfigFactory.getInstance();
         try {
             configFactory.saveCurrent();
-            sendNotifEvent(EventConstants.THRESHOLDCONFIG_CHANGED_EVENT_UEI);
+            EventBuilder ebldr = createEventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_UEI);
+            ebldr.addParam(EventConstants.PARM_DAEMON_NAME, "Threshd");
+            ebldr.addParam(EventConstants.PARM_CONFIG_FILE_NAME, "thresholds.xml");
+            sendNotifEvent(ebldr.getEvent());
         } catch (Exception e) {
             throw new ServletException("Could not save the changes to the threshold because "+e.getMessage(),e);
         }
@@ -446,7 +468,7 @@ public class ThresholdController extends AbstractController implements Initializ
         if(eventConfChanged) {
             try {
                 EventconfFactory.getInstance().saveCurrent();
-                sendNotifEvent(EventConstants.EVENTSCONFIG_CHANGED_EVENT_UEI);
+                sendNotifEvent(createEventBuilder(EventConstants.EVENTSCONFIG_CHANGED_EVENT_UEI).getEvent());
             } catch (Exception e) {
                 throw new ServletException("Could not save the changes to the event configuration because "+e.getMessage(),e);
             }

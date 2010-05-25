@@ -53,7 +53,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.ThresholdingConfigFactory;
 import org.opennms.netmgt.config.threshd.Basethresholddef;
@@ -128,13 +127,6 @@ public final class SnmpThresholder implements ServiceThresholder {
         setupThresholdsDao();
         setupIfInfoGetter();
        
-        try {
-            RrdUtils.initialize();
-        } catch (RrdException e) {
-            log().error("initialize: Unable to initialize RrdUtils: " + e, e);
-            throw new RuntimeException("Unable to initialize RrdUtils: " + e, e);
-        }
-
         log().debug("initialize: successfully instantiated RRD subsystem");
        
         m_snmpThresholdNetworkInterfaces = Collections.synchronizedMap(new HashMap<NetworkInterface, SnmpThresholdNetworkInterface>()); 
@@ -849,7 +841,7 @@ public final class SnmpThresholder implements ServiceThresholder {
         return thresholdMap;
     }
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
     

@@ -5,10 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
+import org.opennms.netmgt.collectd.AliasedResource;
 import org.opennms.netmgt.collectd.CollectionAttribute;
 import org.opennms.netmgt.collectd.CollectionResource;
+import org.opennms.netmgt.collectd.IfInfo;
 import org.opennms.netmgt.dao.support.ResourceTypeUtils;
 import org.opennms.netmgt.model.RrdRepository;
 import org.opennms.netmgt.poller.LatencyCollectionResource;
@@ -28,7 +29,7 @@ public class CollectionResourceWrapper {
     /*
      * Holds last values for counter attributes (in order to calculate delta)
      */
-    static private Map<String, Double> s_cache = new ConcurrentHashMap<String,Double>();
+    static Map<String, Double> s_cache = new ConcurrentHashMap<String,Double>();
     
     /*
      * To avoid update static cache on every call of getAttributeValue.
@@ -46,7 +47,7 @@ public class CollectionResourceWrapper {
      * Holds collection interval step. Counter attributes values must be returned as rates.
      */
     private long m_interval;
-    
+        
     public CollectionResourceWrapper(long interval, int nodeId, String hostAddress, String serviceName, RrdRepository repository, CollectionResource resource, Map<String, CollectionAttribute> attributes) {
         m_interval = interval;
         m_nodeId = nodeId;
@@ -56,24 +57,33 @@ public class CollectionResourceWrapper {
         m_resource = resource;
         m_attributes = attributes;
         if (isAnInterfaceResource()) {
-            File resourceDir = getResourceDir();
-            if (resourceDir != null) {
+            if (resource instanceof AliasedResource) { // TODO What about AliasedResource's custom attributes?
+                m_iflabel = ((AliasedResource) resource).getLabel();
+                m_ifInfo = ((AliasedResource) resource).getIfInfo().getAttributesMap();
+                m_ifInfo.put("domain", ((AliasedResource) resource).getDomain());
+            }
+            if (resource instanceof IfInfo) {
+                m_iflabel = ((IfInfo) resource).getLabel();
+                m_ifInfo = ((IfInfo) resource).getAttributesMap();
+            }
+            if (resource instanceof LatencyCollectionResource) {
                 JdbcIfInfoGetter ifInfoGetter = new JdbcIfInfoGetter();
-                if (resource instanceof LatencyCollectionResource) {
-                    m_iflabel = ifInfoGetter.getIfLabel(getNodeId(), resourceDir.getName());
+                String ipAddress = ((LatencyCollectionResource) resource).getIpAddress();
+                m_iflabel = ifInfoGetter.getIfLabel(getNodeId(), ipAddress);
+                if (m_iflabel != null) { // See Bug 3488
+                    m_ifInfo = ifInfoGetter.getIfInfoForNodeAndLabel(getNodeId(), m_iflabel);
                 } else {
-                    m_iflabel = resourceDir.getName();
+                    log().info("Can't find ifLabel for latency resource " + resource.getInstance() + " on node " + getNodeId());                    
                 }
-                m_ifInfo = ifInfoGetter.getIfInfoForNodeAndLabel(getNodeId(), m_iflabel);
-                if (m_ifInfo != null) {
+            }
+            if (m_ifInfo != null) {
+                String ipaddr = m_ifInfo.get("ipaddr");
+                if (ipaddr != null) // Use default if ifInfo can't provide the address
                     m_hostAddress = m_ifInfo.get("ipaddr"); // See Bug 2711
-                    m_ifindex = m_ifInfo.get("snmpifindex");
-                } else {
-                    log().info("Can't find ifInfo for " + m_iflabel);
-                }
+                m_ifindex = m_ifInfo.get("snmpifindex");
             } else {
-                log().info("Can't find resource directory for " + m_resource);
-            }        
+                log().info("Can't find ifInfo for " + resource);
+            }
         }
     }    
     
@@ -109,10 +119,6 @@ public class CollectionResourceWrapper {
         return m_resource != null ? m_resource.getResourceTypeName() : null;
     }
     
-    public File getResourceDir() {
-        return m_resource != null ? m_resource.getResourceDir(m_repository) : null;
-    }
-    
     public String getIfLabel() {
         return m_iflabel;
     }
@@ -121,7 +127,7 @@ public class CollectionResourceWrapper {
         return m_ifindex;
     }
     
-    public String getIfInfoValue(String attribute) {
+    protected String getIfInfoValue(String attribute) {
         return m_ifInfo.get(attribute);
     }
     
@@ -145,7 +151,7 @@ public class CollectionResourceWrapper {
     }
 
     /*
-     * FIXME What happend with numeric fields from strings.properties ?
+     * FIXME What happen with numeric fields from strings.properties ?
      */ 
     public Double getAttributeValue(String ds) {
         if (m_attributes == null || m_attributes.get(ds) == null) {
@@ -161,7 +167,7 @@ public class CollectionResourceWrapper {
         Double current = Double.parseDouble(numValue);
         if (m_attributes.get(ds).getType().toLowerCase().startsWith("counter") == false) {
             if (log().isDebugEnabled()) {
-                log().debug("getAttributeValue: " + id + "(gauge) value= " + current);
+                log().debug("getAttributeValue: id=" + id + ", value= " + current);
             }
             return current;
         }
@@ -175,17 +181,28 @@ public class CollectionResourceWrapper {
         if (m_localCache.containsKey(id) == false) {
             Double last = s_cache.get(id);
             if (log().isDebugEnabled()) {
-                log().debug("getCounterValue: " + id + "(counter) last=" + last + ", current=" + current);
+                log().debug("getCounterValue: id=" + id + ", last=" + last + ", current=" + current);
             }
             s_cache.put(id, current);
             if (last == null) {
                 m_localCache.put(id, Double.NaN);
                 log().info("getCounterValue: unknown last value, ignoring current");
-            } else if (current < last) {
-                log().info("getCounterValue: counter reset detected, ignoring value");
-                m_localCache.put(id, Double.NaN);
-            } else {
-                m_localCache.put(id, current - last);
+            } else {                
+                Double delta = current.doubleValue() - last.doubleValue();
+                // wrapped counter handling(negative delta), rrd style
+                if (delta < 0) {
+                    double newDelta = delta.doubleValue();
+                    // 2-phase adjustment method
+                    // try 32-bit adjustment
+                    newDelta += Math.pow(2, 32);
+                    if (newDelta < 0) {
+                        // try 64-bit adjustment
+                        newDelta += Math.pow(2, 64) - Math.pow(2, 32);
+                    }
+                    log().info("getCounterValue: " + id + "(counter) wrapped counter adjusted last=" + last + ", current=" + current + ", olddelta=" + delta + ", newdelta=" + newDelta);
+                    delta = newDelta;
+                }
+                m_localCache.put(id, delta);
             }
         }
         return m_localCache.get(id) / m_interval;
@@ -197,9 +214,11 @@ public class CollectionResourceWrapper {
         if (log().isDebugEnabled()) {
             log().debug("getLabelValue: Getting Value for " + m_resource.getResourceTypeName() + "::" + ds);
         }
+        if ("iflabel".equals(ds))
+            return getIfLabel();
         String value = null;
         File resourceDirectory = m_resource.getResourceDir(m_repository);
-        if (ds.equals("ID")) {
+        if ("ID".equals(ds)) {
             return resourceDirectory.getName();
         }
         try {
@@ -220,7 +239,7 @@ public class CollectionResourceWrapper {
         return m_resource.toString();
     }
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 

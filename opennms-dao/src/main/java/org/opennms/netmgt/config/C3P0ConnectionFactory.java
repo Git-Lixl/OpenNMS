@@ -53,7 +53,6 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Category;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.ThreadCategory;
@@ -103,11 +102,8 @@ public class C3P0ConnectionFactory implements ClosableDataSource {
 
     protected C3P0ConnectionFactory(Reader rdr, String dsName) throws MarshalException, ValidationException, PropertyVetoException, SQLException {
         log().info("C3P0ConnectionFactory: setting up data sources from reader argument.");
-        try {
-            JdbcDataSource ds = marshalDataSourceFromConfig(rdr, dsName);
-            initializePool(ds);
-        } finally {
-        }
+        JdbcDataSource ds = marshalDataSourceFromConfig(rdr, dsName);
+        initializePool(ds);
     }
 
     protected C3P0ConnectionFactory(String configFile, String dsName) throws IOException, MarshalException, ValidationException, PropertyVetoException, SQLException {
@@ -147,7 +143,7 @@ public class C3P0ConnectionFactory implements ClosableDataSource {
         throw new IllegalArgumentException("C3P0ConnectionFactory: DataSource: "+dsName+" is not defined.");
     }
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 

@@ -50,7 +50,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.apache.log4j.Priority;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.core.utils.DBUtils;
@@ -165,19 +164,6 @@ final class LatencyThresholder implements ServiceThresholder {
                 log().warn("initialize: Unable to resolve local host name.", e);
             m_host = "unresolved.host";
         }
-
-        try {
-            RrdUtils.initialize();
-        } catch (RrdException e) {
-            if (log().isEnabledFor(Priority.ERROR))
-                log().error("initialize: Unable to initialize RrdUtils", e);
-            throw new RuntimeException("Unable to initialize RrdUtils", e);
-        }
-
-        if (log().isDebugEnabled())
-            log().debug("initialize: successfully instantiated JNI interface to RRD...");
-
-        return;
     }
 
     public void reinitialize() {
@@ -350,9 +336,9 @@ final class LatencyThresholder implements ServiceThresholder {
         //
         if (log().isDebugEnabled()) {
             log().debug("initialize: dumping interface thresholds defined for " + ipAddr.getHostAddress() + "/" + groupName + ":");
-            Iterator iter = thresholdMap.values().iterator();
+            Iterator<ThresholdEntity> iter = thresholdMap.values().iterator();
             while (iter.hasNext())
-                log().debug((ThresholdEntity) iter.next());
+                log().debug(iter.next().toString());
         }
 
         if (log().isDebugEnabled())
@@ -454,7 +440,7 @@ final class LatencyThresholder implements ServiceThresholder {
      * @throws ThresholdingException 
      */
     Events checkRrdDir(LatencyInterface latIface, LatencyParameters latParms) throws IllegalArgumentException, ThresholdingException {
-		Map thresholdMap = latIface.getThresholdMap();
+		Map<String,ThresholdEntity> thresholdMap = latIface.getThresholdMap();
 
         // Sanity Check
         if (latIface.getInetAddress() == null || thresholdMap == null) {
@@ -464,9 +450,9 @@ final class LatencyThresholder implements ServiceThresholder {
         Events events = new Events();
         Date date = new Date();
 
-        for (Iterator it = thresholdMap.keySet().iterator(); it.hasNext();) {
-            String datasource = (String) it.next();
-            ThresholdEntity threshold = (ThresholdEntity) thresholdMap.get(datasource);
+        for (Iterator<String> it = thresholdMap.keySet().iterator(); it.hasNext();) {
+            String datasource = it.next();
+            ThresholdEntity threshold = thresholdMap.get(datasource);
             if (threshold != null) {
                 Double dsValue = threshold.fetchLastValue(latIface, latParms);
                 Map<String, Double> dsValues=new HashMap<String, Double>();
@@ -499,7 +485,7 @@ final class LatencyThresholder implements ServiceThresholder {
         }
     }
 
-    public final Category log() {
+    public final ThreadCategory log() {
         return ThreadCategory.getInstance(LatencyThresholder.class);
     }
 }

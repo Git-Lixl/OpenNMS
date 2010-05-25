@@ -47,10 +47,10 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.model.PollStatus;
+import org.opennms.netmgt.ping.PingConstants;
 import org.opennms.netmgt.ping.Pinger;
 import org.opennms.netmgt.poller.Distributable;
 import org.opennms.netmgt.poller.DistributionContext;
@@ -108,7 +108,7 @@ final public class IcmpMonitor extends IPv4Monitor {
         if (iface.getType() != NetworkInterface.TYPE_IPV4)
             throw new NetworkInterfaceNotSupportedException("Unsupported interface type, only TYPE_IPV4 currently supported");
 
-        Category log = ThreadCategory.getInstance(this.getClass());
+        ThreadCategory log = ThreadCategory.getInstance(this.getClass());
         Long rtt = null;
         InetAddress host = (InetAddress) iface.getAddress();
 
@@ -116,8 +116,8 @@ final public class IcmpMonitor extends IPv4Monitor {
             
             // get parameters
             //
-            int retries = ParameterMap.getKeyedInteger(parameters, "retry", Pinger.DEFAULT_RETRIES);
-            long timeout = ParameterMap.getKeyedLong(parameters, "timeout", Pinger.DEFAULT_TIMEOUT);
+            int retries = ParameterMap.getKeyedInteger(parameters, "retry", PingConstants.DEFAULT_RETRIES);
+            long timeout = ParameterMap.getKeyedLong(parameters, "timeout", PingConstants.DEFAULT_TIMEOUT);
             
             rtt = Pinger.ping(host, timeout, retries);
         } catch (Exception e) {

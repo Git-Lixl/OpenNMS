@@ -65,9 +65,9 @@ public class Ping {
             try {
                 while (true) {
                     DatagramPacket pkt = m_socket.receive();
-                    org.opennms.netmgt.ping.Reply reply;
+                    org.opennms.netmgt.ping.PingReply reply;
                     try {
-                        reply = org.opennms.netmgt.ping.Reply.create(pkt);
+                        reply = org.opennms.netmgt.ping.PingReply.create(pkt);
                     } catch (Throwable t) {
                         // do nothing but skip this packet
                         continue;
@@ -148,7 +148,7 @@ public class Ping {
     short m_icmpId = 2;
     
         Ping.Stuff s = new Ping.Stuff(m_socket, m_icmpId);
-        Thread t = new Thread(s);
+        Thread t = new Thread(s, Ping.class.getSimpleName());
         t.start();
     
         for (long m_fiberId = 0; true; m_fiberId++) {

@@ -76,7 +76,6 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.DefaultHttpParams;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.apache.log4j.Category;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.ParameterMap;
@@ -131,7 +130,7 @@ public class HttpCollector implements ServiceCollector {
         return collectionSet;
     }
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
     
@@ -267,7 +266,8 @@ public class HttpCollector implements ServiceCollector {
         HttpCollectionResource m_resource;
         HttpCollectionAttributeType m_attribType;
         
-        HttpCollectionAttribute(HttpCollectionResource resource, HttpCollectionAttributeType attribType, String alias, String type, Number value) { 
+        HttpCollectionAttribute(HttpCollectionResource resource, HttpCollectionAttributeType attribType, String alias, String type, Number value) {
+            super();
             m_resource=resource;
             m_attribType=attribType;
             m_alias = alias;
@@ -276,6 +276,7 @@ public class HttpCollector implements ServiceCollector {
         }
 
         HttpCollectionAttribute(HttpCollectionResource resource, HttpCollectionAttributeType attribType, String alias, String type, String value) { 
+            super();
             m_resource=resource;
             m_attribType=attribType;
             m_alias = alias;
@@ -406,8 +407,11 @@ public class HttpCollector implements ServiceCollector {
                                                         num);
                         log().debug("processResponse: adding found numeric attribute: "+bute);
                         butes.add(bute);
+                    } catch (IndexOutOfBoundsException e) {
+                        log().error("IndexOutOfBoundsException thrown while trying to find regex group, your regex does not contain the following group index: " + attribDef.getMatchGroup());
+                        log().error("Regex statement: " + collectionSet.getUriDef().getUrl().getMatches());
                     } catch (ParseException e) {
-                        log().error("attribute "+attribDef.getAlias()+" failed to match a parsable number! Matched "+m.group(attribDef.getMatchGroup())+" instead.");
+                        log().error("attribute "+attribDef.getAlias()+" failed to match a parsable number! Matched \""+m.group(attribDef.getMatchGroup())+"\" instead.");
                     }
                 } else {
                     HttpCollectionAttribute bute =
@@ -428,9 +432,11 @@ public class HttpCollector implements ServiceCollector {
     }
 
     public class HttpCollectorException extends RuntimeException {
+        
         private static final long serialVersionUID = 1L;
         HttpClient m_client;
-        HttpCollectorException(String message, HttpClient client){
+        
+        HttpCollectorException(String message, HttpClient client) {
             super(message);
             m_client = client;
         }
@@ -441,44 +447,26 @@ public class HttpCollector implements ServiceCollector {
             buffer.append(super.toString());
             buffer.append(": client URL: ");
             final HostConfiguration hostConfiguration = m_client.getHostConfiguration();
-            buffer.append((hostConfiguration == null ? "null" : hostConfiguration.toString()));
+            
+            if (hostConfiguration != null) {
+                buffer.append(hostConfiguration.getHostURL() == null ? "null" : hostConfiguration.getHostURL());
+            }
+            
             return buffer.toString();
         }
     }
 
     private void persistResponse(final HttpCollectionSet collectionSet, HttpCollectionResource collectionResource, final HttpClient client, final HttpMethod method) throws IOException {
         List<HttpCollectionAttribute> butes = processResponse(method.getResponseBodyAsString(), collectionSet, collectionResource);
+        
         if (butes.isEmpty()) {
-            log().warn("doCollection: no attributes defined for collection were found in response text matching regular expression '" + collectionSet.getUriDef().getUrl().getMatches() + "'");
+            String url = client.getHostConfiguration() == null ? "null" : client.getHostConfiguration().getHostURL();
+            log().warn("doCollection: no attributes defined for the response from: "+url+" were found that match the expression: '" + collectionSet.getUriDef().getUrl().getMatches() + "'");
             throw new HttpCollectorException("No attributes specified were found: ", client);
         }
         
         //put the results into the collectionset for later
         collectionSet.storeResults(butes, collectionResource);
-        //String collectionName = collectionSet.getParameters().get("http-collection");
-        //RrdRepository rrdRepository = HttpCollectionConfigFactory.getInstance().getRrdRepository(collectionName);
-
-        /*ResourceIdentifier resource = new ResourceIdentifier() {
-
-            public String getOwnerName() {
-                return collectionSet.getAgent().getHostAddress();
-            }
-
-            public File getResourceDir(RrdRepository repository) {
-                return new File(repository.getRrdBaseDir(), Integer.toString(collectionSet.getAgent().getNodeId()));
-            }
-            
-        }; */
-        log().info("doCollection: persisting "+butes.size()+" attributes");
-        
-        // We don't persist here anymore - see CollectableService
-        /*for (HttpCollectionAttribute attribute : butes) {
-            PersistOperationBuilder builder = new PersistOperationBuilder(rrdRepository, resource, attribute.getName());
-            builder.declareAttribute(attribute);
-            log().debug("doCollection: setting attribute: "+attribute);
-            builder.setAttributeValue(attribute, attribute.getValueAsString());
-            builder.commit();
-        }*/
     }
 
     private void buildCredentials(final HttpCollectionSet collectionSet, final HttpClient client, final HttpMethod method) {
@@ -630,7 +618,6 @@ public class HttpCollector implements ServiceCollector {
     private void initializeRrdRepository() {
         log().debug("initializeRrdRepository: Initializing RRD repo from HttpCollector...");
         initializeRrdDirs();
-        initializeRrdInterface();
     }
 
     private void initializeRrdDirs() {
@@ -648,15 +635,6 @@ public class HttpCollector implements ServiceCollector {
                 log().error(sb.toString());
                 throw new RuntimeException(sb.toString());
             }
-        }
-    }
-
-    private void initializeRrdInterface() {
-        try {
-            RrdUtils.initialize();
-        } catch (RrdException e) {
-            log().error("initializeRrdInterface: Unable to initialize RrdUtils", e);
-            throw new RuntimeException("Unable to initialize RrdUtils", e);
         }
     }
 

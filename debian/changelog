@@ -1,3 +1,42 @@
+<<<<<<< HEAD
+=======
+opennms (1.7.90-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Benjamin Reed <ranger@opennms.org>  Thu, 20 May 2010 02:00:00 -0500
+
+opennms (1.7.10-4) unstable; urgency=low
+
+  * Fix PostgreSQL dependency
+
+ -- Benjamin Reed <ranger@opennms.org>  Thu, 06 May 2010 10:57:00 +0200
+
+opennms (1.7.10-3) unstable; urgency=low
+
+  * Include small fix for RXTX native libraries.
+
+ -- Benjamin Reed <ranger@opennms.org>  Thu, 18 Mar 2010 10:30:00 -0500
+
+opennms (1.7.10-2) unstable; urgency=low
+
+  * Fix jar filenames.
+
+ -- Benjamin Reed <ranger@opennms.org>  Tue, 11 Mar 2010 17:49:00 -0500
+
+opennms (1.7.10-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Benjamin Reed <ranger@opennms.org>  Tue, 11 Mar 2010 10:35:00 -0500
+
+opennms (1.7.9-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Benjamin Reed <ranger@opennms.org>  Thu, 11 Feb 2010 10:45:00 -0500
+
+>>>>>>> origin
 opennms (1.7.8-1) unstable; urgency=medium
 
   * New upstream release.
@@ -52,6 +91,21 @@ opennms (1.7.0-1) unstable; urgency=low
 
  -- Benjamin Reed <ranger@opennms.org>  Wed, 15 Oct 2008 21:38:55 -0500
 
+<<<<<<< HEAD
+=======
+opennms (1.6.9-1) stable; urgency=low
+
+  * Fix missing setup war.
+
+ -- Benjamin Reed <ranger@opennms.org>  Mon, 08 Feb 2010 15:16:00 -0500
+
+opennms (1.6.8-1) stable; urgency=low
+
+  * New upstream release.
+
+ -- Benjamin Reed <ranger@opennms.org>  Wed, 09 Dec 2009 22:05:00 -0500
+
+>>>>>>> origin
 opennms (1.6.7-1) stable; urgency=low
 
   * New upstream release.

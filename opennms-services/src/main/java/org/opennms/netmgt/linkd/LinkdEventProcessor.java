@@ -1,7 +1,7 @@
 //
 // This file is part of the OpenNMS(R) Application.
 //
-// OpenNMS(R) is Copyright (C) 2002-2005 The OpenNMS Group, Inc.  All rights reserved.
+// OpenNMS(R) is Copyright (C) 2002-2009 The OpenNMS Group, Inc.  All rights reserved.
 // OpenNMS(R) is a derivative work, containing both original code, included code and modified
 // code that was published under the GNU General Public License. Copyrights for modified 
 // and included code are below.
@@ -10,6 +10,7 @@
 //
 // Modifications:
 //
+// 2009 Oct 01: Add ability to update database when an interface is deleted. - ayres@opennms.org
 // 2003 Nov 11: Merged changes from Rackspace project
 // 2003 Jan 31: Cleaned up some unused imports.
 // 2004 Sep 08: Completely reorganize to clean up the delete code.
@@ -43,7 +44,6 @@ package org.opennms.netmgt.linkd;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Category;
 
 import org.opennms.core.utils.ThreadCategory;
 
@@ -114,6 +114,9 @@ final class LinkdEventProcessor implements EventListener, InitializingBean {
 
         // node regained service
         ueiList.add(EventConstants.NODE_REGAINED_SERVICE_EVENT_UEI);
+        
+        // interface deleted
+        ueiList.add(EventConstants.INTERFACE_DELETED_EVENT_UEI);
 
         getEventMgr().addEventListener(this, ueiList);
     }
@@ -154,6 +157,25 @@ final class LinkdEventProcessor implements EventListener, InitializingBean {
         getLinkd().deleteNode((int)event.getNodeid());
         // set to status = D in all the rows in table
         // atinterface, iprouteinterface, datalinkinterface,stpnode, stpinterface
+    }
+
+    /**
+     * Handle Interface Deleted Event
+     * 
+     * @param event
+     */
+    private void handleInterfaceDeleted(Event event) throws InsufficientInformationException {
+ 
+        EventUtils.checkNodeId(event);
+        EventUtils.checkInterfaceOrIfIndex(event);
+        int ifIndex = -1;
+        if(event.hasIfIndex()) {
+            ifIndex = event.getIfIndex();
+        }
+
+        getLinkd().deleteInterface((int)event.getNodeid(), event.getInterface(), ifIndex);
+        // set to status = D in all the rows in table
+        // atinterface, iprouteinterface, datalinkinterface, stpinterface
     }
 
     /**
@@ -207,7 +229,7 @@ final class LinkdEventProcessor implements EventListener, InitializingBean {
      * 
      */
     public void onEvent(Event event) {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
 
         try {
         	int eventid = event.getDbid();
@@ -225,6 +247,11 @@ final class LinkdEventProcessor implements EventListener, InitializingBean {
                     log.info("onEvent: calling handleNodeDeleted for event " + eventid);
                 }
                 handleNodeDeleted(event);
+            } else if (eventUei.equals(EventConstants.INTERFACE_DELETED_EVENT_UEI)) {
+                if (log.isInfoEnabled()) {
+                    log.info("onEvent: calling handleInterfaceDeleted for event " + eventid);
+                }
+                handleInterfaceDeleted(event);
             } else if (event.getUei().equals(EventConstants.NODE_LOST_SERVICE_EVENT_UEI)&& event.getService().equals("SNMP")) {
                 if (log.isInfoEnabled()) {
                     log.info("onEvent: calling handleNodeLostService for event " + eventid);

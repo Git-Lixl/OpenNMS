@@ -40,11 +40,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.core.utils.TimeoutTracker;
 import org.opennms.netmgt.model.PollStatus;
@@ -226,6 +226,10 @@ public class Ssh extends org.opennms.netmgt.protocols.AbstractPoll {
             log().debug("unable to parse server version", e);
             setError(e);
             disconnect();
+        } catch (ConnectException e) {
+            log().debug("connection failed: " + e.getMessage());
+            setError(e);
+            disconnect();
         } catch (Exception e) {
             log().debug("connection failed", e);
             setError(e);
@@ -290,7 +294,7 @@ public class Ssh extends org.opennms.netmgt.protocols.AbstractPoll {
         return ps;
     }
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 }

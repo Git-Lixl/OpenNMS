@@ -1,9 +1,16 @@
 <%--
 
 //
-// Copyright (C) 2002 Sortova Consulting Group, Inc.  All rights reserved.
-// Parts Copyright (C) 1999-2001 Oculan Corp.  All rights reserved.
+// This file is part of the OpenNMS(R) Application.
 //
+// OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
+//
+// Copyright (C) 2002-2009 The OpenNMS Group, Inc.  All rights reserved.
+//
+// Modifications:
+//
+// 2009 Aug 28: Restore search and display capabilities for non-ip interfaces
+// 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -16,12 +23,16 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+// Foundation, Inc.:
+// 51 Franklin Street
+// 5th Floor
+// Boston, MA 02110-1301
+// USA
 //
 // For more information contact:
 //      OpenNMS Licensing       <license@opennms.org>
 //      http://www.opennms.org/
-//      http://www.sortova.com/
+//      http://www.opennms.com/
 //
 
 --%>
@@ -38,18 +49,31 @@
 
 <%
     statusMap = new HashMap<Character, String>();
-  	statusMap.put( new Character('A'), "Active" );
+  	statusMap.put( new Character('A'), "Active - See Interface status" );
     statusMap.put( new Character(' '), "Unknown" );
+    statusMap.put( new Character('U'), "Unknown" );
     statusMap.put( new Character('D'), "Deleted" );
-    statusMap.put( new Character('N'), "Not Active" );
+    statusMap.put( new Character('N'), "Not Polled" );
+    statusMap.put( new Character('B'), "Bad" );
+    statusMap.put( new Character('G'), "Good" );
+    statusMap.put( new Character('X'), "Admin Down" );
 
-    Interface intf = ElementUtil.getInterfaceByParams(request);
 
-// find links
+    Interface intf = null;
+    DataLinkInterface[] dl_if = null;
+    String requestNode = request.getParameter("node");
+    String requestIntf = request.getParameter("intf");
+    String requestIfindex = request.getParameter("ifindex");
+    if(requestNode != null && requestIfindex != null && requestIntf == null) {
+        intf = ElementUtil.getSnmpInterfaceByParams(request);
+        dl_if = NetworkElementFactory.getDataLinksOnInterface(intf.getNodeId(), intf.getSnmpIfIndex());
+    } else {
+        intf = ElementUtil.getInterfaceByParams(request);
+        dl_if = NetworkElementFactory.getDataLinksOnInterface(intf.getNodeId(), intf.getIfIndex());
+    }
 
-    DataLinkInterface[] dl_if = NetworkElementFactory.getDataLinksOnInterface(intf.getNodeId(), intf.getIfIndex());
-	
 %>
+	
 <h3>Link Node/Interface</h3>
 <table>
  
@@ -68,29 +92,19 @@
   <% for( int i=0; i < dl_if.length; i++ ) { %>
     <% Interface iface = null; %>
     <tr>
-    <td class="standard"><a href="element/linkednode.jsp?node=<%=dl_if[i].get_nodeparentid()%>"><%=NetworkElementFactory.getNodeLabel(dl_if[i].get_nodeparentid())%></a></td>
-	<td class="standard">
-    <% if( "0.0.0.0".equals( dl_if[i].get_parentipaddr() )) { %>
-		<% if ( dl_if[i].get_parentifindex() == 0) {
-			iface = NetworkElementFactory.getInterface(dl_if[i].get_nodeparentid(),dl_if[i].get_parentipaddr());
-		 } else {
-		   iface = NetworkElementFactory.getInterface(dl_if[i].get_nodeparentid(),dl_if[i].get_parentipaddr(),dl_if[i].get_parentifindex());
-         }
-		%>
-<a href="element/interface.jsp?node=<%=dl_if[i].get_nodeparentid()%>&intf=<%=dl_if[i].get_parentipaddr()%>&ifindex=<%=dl_if[i].get_parentifindex()%>">Non-IP</a>
-<%=" (ifIndex: "+dl_if[i].get_parentifindex()+"-"+iface.getSnmpIfDescription()+")"%>
-    <% } else { %>  
-		<%if(dl_if[i].get_parentipaddr()!=null){%>
-<a href="element/interface.jsp?node=<%=dl_if[i].get_nodeparentid()%>&intf=<%=dl_if[i].get_parentipaddr()%>"><%=dl_if[i].get_parentipaddr()%></a>
-		<% }else{
-	   	out.print("&nbsp;");
-	   	}%>      
-   <% } %>
-   </td>
+      <td class="standard"><a href="element/linkednode.jsp?node=<%=dl_if[i].get_nodeparentid()%>"><%=NetworkElementFactory.getNodeLabel(dl_if[i].get_nodeparentid())%></a></td>
+      <td class="standard">
+      <% if( "0.0.0.0".equals( dl_if[i].get_parentipaddr() ) || dl_if[i].get_parentipaddr() == null ) {
+        iface = NetworkElementFactory.getSnmpInterface(dl_if[i].get_nodeparentid(),dl_if[i].get_parentifindex()); %>
+        <a href="element/snmpinterface.jsp?node=<%=dl_if[i].get_nodeparentid()%>&ifindex=<%=dl_if[i].get_parentifindex()%>"><%=iface.getSnmpIfDescription()%></a>
+      <% } else { %>  
+        <a href="element/interface.jsp?node=<%=dl_if[i].get_nodeparentid()%>&intf=<%=dl_if[i].get_parentipaddr()%>"><%=dl_if[i].get_parentipaddr()%></a>
+      <% } %>
+      </td>
 
-      <td><%=getStatusString(dl_if[i].get_status())%></td>
+      <td><%=(getStatusString(dl_if[i].get_status())==null) ? "&nbsp;" : getStatusString(dl_if[i].get_status())%></td>
       <td><%=dl_if[i].get_lastPollTime()%></td>
-     </tr>
+    </tr>
   <% } %>
 <% } %>
 

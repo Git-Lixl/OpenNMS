@@ -48,7 +48,6 @@ import java.util.TreeMap;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.BundleLists;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.ConfigFileConstants;
@@ -81,7 +80,7 @@ public class MapPropertiesFactory extends Object {
 	/**
 	 * The Log4J category for logging web authentication messages.
 	 */
-	protected Category log = null;
+	protected ThreadCategory log = null;
 
 //	protected Map[] propertiesMaps = null;
 
@@ -114,12 +113,20 @@ public class MapPropertiesFactory extends Object {
 	protected  String defaultMapIcon = null;
 	
     protected  int defaultMapElementDimension = 25;
+    
+    protected int maxLinks = 3;
+    
+    protected int summaryLink = -1;
+    
+    protected String summaryLinkColor = "yellow";
 
-	public static final  String MULTILINK_BEST_STATUS ="best"; 
+    public static final  String MULTILINK_BEST_STATUS ="best"; 
 	
 	public static final  String MULTILINK_WORST_STATUS ="worst";
 	
-	protected  String multilinkStatus = MULTILINK_BEST_STATUS;
+    public static final  String MULTILINK_IGNORE_STATUS ="ignore";
+
+    protected  String multilinkStatus = MULTILINK_BEST_STATUS;
 	
 	protected  int defaultLink = -1;
 
@@ -141,13 +148,14 @@ public class MapPropertiesFactory extends Object {
 	
 	protected  boolean contextMenuEnabled=true;
 	
+	protected boolean useSemaphore=true;
+	
 	protected  boolean reload=false;
 
 	protected  String severityMapAs = "avg"; 
 
 	protected  ContextMenu cmenu;
-	
-	
+		
 	public String getMapPropertiesFileString() {
 		return mapPropertiesFileString;
 	}
@@ -535,6 +543,8 @@ public class MapPropertiesFactory extends Object {
 			String width = props.getProperty("link." + links[i]+ ".width");
 			String dasharray = props.getProperty("link." + links[i]+ ".dash-array");			
 			String snmptype = props.getProperty("link." + links[i]+ ".snmptype");			
+            String multilinkwidth = props.getProperty("link." + links[i]+ ".multilink.width");
+            String multilinkdasharray = props.getProperty("link." + links[i]+ ".multilink.dash-array");            
 			if(id==null){
 				log.error("param id for link cannot be null in map.properties: skipping link...");
 				continue;
@@ -543,13 +553,13 @@ public class MapPropertiesFactory extends Object {
 				log.error("param text for link cannot be null in map.properties: skipping link...");
 				continue;
 			}
+            if(width==null){
+                log.error("param width for link cannot be null in map.properties: skipping link...");
+                continue;
+            }
 			if(speed==null){
-				log.error("param speed for link cannot be null in map.properties: skipping link...");
-				continue;
-			}
-			if(width==null){
-				log.error("param width for link cannot be null in map.properties: skipping link...");
-				continue;
+				log.info("param speed for link cannot be null in map.properties: skipping link...");
+				speed="Unknown";
 			}
 				
 			int dash_arr=-1;
@@ -560,7 +570,16 @@ public class MapPropertiesFactory extends Object {
 			if(snmptype!=null)
 				snmp_type=WebSecurityUtils.safeParseInt(snmptype);
 
-			Link lnk = new Link(WebSecurityUtils.safeParseInt(id), speed,text,width,dash_arr,snmp_type);
+			if (multilinkwidth==null) {
+			    multilinkwidth= width;
+			}
+
+			int multilink_dasharray=dash_arr;
+            if (multilinkdasharray!=null) {
+                multilink_dasharray=WebSecurityUtils.safeParseInt(multilinkdasharray);
+            }
+
+			Link lnk = new Link(WebSecurityUtils.safeParseInt(id), speed,text,width,dash_arr,snmp_type,multilinkwidth,multilink_dasharray);
 			
 			log.debug("found link " + links[i] + " with id=" + id
 					+ ", text=" + text+ ", speed=" + speed+ ", width=" + width+ ", dash-array=" + dasharray+ "snmp-type=" + snmp_type+". Adding it.");
@@ -592,13 +611,28 @@ public class MapPropertiesFactory extends Object {
 			LinkStatus ls = new LinkStatus(linkStatuses[i],color,flashBool);
 			linkStatusesMap.put(linkStatuses[i], ls);
 		}		
-		
+
+        if(props.getProperty("summarylink.id")!=null){
+            summaryLink = WebSecurityUtils.safeParseInt(props.getProperty("summarylink.id"));    
+        }
+        log.debug("found summarylink.id: "+summaryLink);
+
+        if(props.getProperty("summarylink.color")!=null){
+            summaryLinkColor = props.getProperty("summarylink.color");    
+        }
+        log.debug("found summarylink.color: "+summaryLinkColor);
+
+        if(props.getProperty("max.links")!=null){
+            maxLinks = WebSecurityUtils.safeParseInt(props.getProperty("max.links"));    
+        }
+        log.debug("found max.links: "+maxLinks);
+
 		
 		if(props.getProperty("multilink.status")!=null){
 			multilinkStatus = props.getProperty("multilink.status"); 	
 		}
-		if(!multilinkStatus.equals("best") && !multilinkStatus.equals("worst")){
-			log.error("multilink.status property must be 'best' or 'worst'... using default ('best')");
+		if(!multilinkStatus.equals(MULTILINK_BEST_STATUS) && !multilinkStatus.equals(MULTILINK_IGNORE_STATUS) && !multilinkStatus.equals(MULTILINK_WORST_STATUS)){
+			log.error("multilink.status property must be 'best' or 'worst' or 'ignore' ... using default ('best')");
 			multilinkStatus=MULTILINK_BEST_STATUS;
 		}
 		log.debug("found multilink.status:"+multilinkStatus);
@@ -707,12 +741,15 @@ public class MapPropertiesFactory extends Object {
 		}
 
 		// look up icons filenames
+		
 		String[] icons = BundleLists
 				.parseBundleList(props.getProperty("icons"));
 
 		for (int i = 0; i < icons.length; i++) {
-			String filename = props.getProperty("icon." + icons[i]
-					+ ".filename");
+			
+			String baseProperty = "icon." + icons[i] + ".";
+			
+			String filename =  props.getProperty(baseProperty + "filename");
 			log.debug("found icon " + icons[i] + " with filename=" + filename
 					+ ". Adding it.");
 			iconsMap.put(icons[i], filename);
@@ -742,13 +779,19 @@ public class MapPropertiesFactory extends Object {
 					"Required Default Icon Node not found.");
 		}
 		log.debug("default node icon: "+defaultNodeIcon);
-		
+				
 		String defaultMapElementDimensionString = props.getProperty("icon.default.mapelementdimension");
         if (defaultMapElementDimensionString != null) {
             defaultMapElementDimension = WebSecurityUtils.safeParseInt(defaultMapElementDimensionString);
         }
         log.debug("default map element dimension: "+defaultMapElementDimension);
 
+        String useSemaphoreString = props.getProperty("use.semaphore");
+        if (useSemaphoreString != null && useSemaphoreString.equalsIgnoreCase("false"))
+            useSemaphore=false;
+        else useSemaphore = true;
+        log.debug("use semaphore: "+useSemaphoreString);
+        
 		// look up background filenames
 		String[] bg = BundleLists
 				.parseBundleList(props.getProperty("bgimages"));
@@ -760,19 +803,13 @@ public class MapPropertiesFactory extends Object {
 					+ ". Adding it.");
 			bgImagesMap.put(bg[i], filename);
 		}
-
-//		propertiesMaps = new Map[] { severitiesMap, statusesMap, availsMap,
-//				iconsMap, bgImagesMap};
-
-//		return (propertiesMaps);
 	}
 
+	public String getSummaryLinkColor() {
+        return summaryLinkColor;
+    }
 
-	public Map<String,String> getIconsMap() {
-		return iconsMap;
-	}
-	
-	public Map<String,String> getIconsBySysoidMap() {
+    public Map<String,String> getIconsBySysoidMap() {
 	    return iconsBySysoidMap;
 	}
 
@@ -939,7 +976,7 @@ public class MapPropertiesFactory extends Object {
     }
     
     public java.util.Map<String,String> getIcons() throws MapsException{
-    	return getIconsMap();
+    	return iconsMap;
     }
     
     public java.util.Map<String,String> getIconsBySysoid() throws MapsException{
@@ -957,9 +994,9 @@ public class MapPropertiesFactory extends Object {
     public int getDefaultStatusId() {
     	return getDefaultStatus().getId();
     }
-    
-    public String getDefaultSemaphoreColorBy() {
-    	return MapsConstants.COLOR_SEMAPHORE_BY_SEVERITY;
+
+    public int getUnknownStatusId() {
+        return getUnknownStatus().getId();
     }
 
     public java.util.Map<String, String> getMapElementDimensions() {
@@ -981,7 +1018,15 @@ public class MapPropertiesFactory extends Object {
     	return defaultMapElementDimension;
     }
     
+    public int getMaxLinks() {
+        return maxLinks;
+    }
 
-
-
+    public int getSummaryLink() {
+        return summaryLink;
+    }
+    
+    public boolean isUseSemaphore() {
+        return useSemaphore;
+    }
 }

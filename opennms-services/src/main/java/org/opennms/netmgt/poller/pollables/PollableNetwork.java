@@ -38,7 +38,6 @@ package org.opennms.netmgt.poller.pollables;
 import java.net.InetAddress;
 import java.util.Date;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.xml.event.Event;
@@ -130,9 +129,9 @@ public class PollableNetwork extends PollableContainer {
     
     class DumpVisitor extends PollableVisitorAdaptor {
         
-        private Category m_log;
+        private ThreadCategory m_log;
 
-        public DumpVisitor(Category log) {
+        public DumpVisitor(ThreadCategory log) {
             m_log = log;
         }
         public void visitNode(PollableNode pNode) {
@@ -148,14 +147,19 @@ public class PollableNetwork extends PollableContainer {
         }
         
         private String getStatusString(PollableElement e) {
-            return (e.getStatus().isUp() ? e.getStatus().toString() : e.getStatus().toString()+"("+e.getCause().getEventId()+")");
+            PollStatus status = e.getStatus();
+            boolean up = status.isUp();
+            String statusDesc = status.toString();
+            PollEvent cause = e.getCause();
+            int eventId = cause == null ? 0 : cause.getEventId();
+            return (up ? statusDesc : statusDesc+"("+eventId+")");
         }
     }
 
 
     
     public void dump() {
-        final Category log = ThreadCategory.getInstance(getClass());
+        final ThreadCategory log = ThreadCategory.getInstance(getClass());
 
         DumpVisitor dumper = new DumpVisitor(log);
         visit(dumper);

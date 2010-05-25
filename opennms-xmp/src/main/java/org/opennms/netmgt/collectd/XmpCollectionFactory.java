@@ -71,6 +71,7 @@ import java.io.Reader;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.Unmarshaller;
 import org.exolab.castor.xml.ValidationException;
+import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.ConfigFileConstants;
 import org.opennms.netmgt.config.xmpDataCollection.XmpCollection;
 import org.opennms.netmgt.config.xmpDataCollection.XmpDatacollectionConfig;
@@ -109,11 +110,23 @@ public class XmpCollectionFactory {
 
         InputStream cfgIn = new FileInputStream(configFile);
 
-        config = (XmpDatacollectionConfig)Unmarshaller.unmarshal(XmpDatacollectionConfig.class,new InputStreamReader(cfgIn));
+        config = (XmpDatacollectionConfig)Unmarshaller.unmarshal(XmpDatacollectionConfig.class,new InputStreamReader(cfgIn, "UTF-8"));
 
         cfgIn.close();
 
         rrdPath = null;
+
+        // list out the collections I've found
+        XmpCollection[] collections = config.getXmpCollection();
+        XmpCollection theCollection = null;
+        for (XmpCollection coll: collections) {
+
+            log().debug("XmpCollectionFactory: found collection "+
+                        coll.getName());
+
+            //System.out.println("XmpCollectionFactory: found collection "+
+            //                    coll.getName());
+        }
 
         return; 
     }
@@ -129,6 +142,9 @@ public class XmpCollectionFactory {
     }
 
     /* private methods *********************************** */
+    private ThreadCategory log() {
+        return ThreadCategory.getInstance(getClass());
+    }
 
     /* public methods ************************************ */
 
@@ -150,6 +166,8 @@ public class XmpCollectionFactory {
     public RrdRepository getRrdRepository(String collectionName) 
     { 
         RrdRepository repo = new RrdRepository();
+
+        //log().debug("XmpCollectionFactory: getting rrd for "+collectionName);
 
         XmpCollection collection = getXmpCollection(collectionName);
 
@@ -180,7 +198,12 @@ public class XmpCollectionFactory {
         XmpCollection[] collections = config.getXmpCollection();
         XmpCollection theCollection = null;
 
+        //log().debug("XmpCollectionFactory: getting collection for "+collectionName);
+
         for (XmpCollection coll: collections) {
+
+            //log().debug("XmpCollectionFactory: checking collection "+
+            //           coll.getName());
 
             if (coll.getName().equalsIgnoreCase(collectionName)) {
                 theCollection = coll;

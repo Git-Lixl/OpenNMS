@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.config.ThresholdingConfigFactory;
@@ -193,7 +192,7 @@ final class BroadcastEventProcessor implements EventListener {
      * 
      */
     public void onEvent(Event event) {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
 
         // print out the uei
         //
@@ -293,7 +292,7 @@ final class BroadcastEventProcessor implements EventListener {
      */
     @SuppressWarnings("deprecation")
     private void reinitializePrimarySnmpInterfaceHandler(Event event) {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
 
         if (event.getInterface() == null) {
             log.error("reinitializePrimarySnmpInterface event is missing an interface.");
@@ -350,7 +349,7 @@ final class BroadcastEventProcessor implements EventListener {
      *            The event to process.
      */
     private void thresholdConfigurationChangedHandler(Event event) {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
         //Force a reload of the configuration, then tell the thresholders to reinitialize
         try {
             ThresholdingConfigFactory.reload();
@@ -417,7 +416,7 @@ final class BroadcastEventProcessor implements EventListener {
      */
     @SuppressWarnings("deprecation")
     private void primarySnmpInterfaceChangedHandler(Event event) {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
         if (log.isDebugEnabled())
             log.debug("primarySnmpInterfaceChangedHandler:  processing primary SNMP interface changed event...");
 
@@ -516,7 +515,7 @@ final class BroadcastEventProcessor implements EventListener {
      * 
      */
     private void interfaceReparentedHandler(Event event) {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
         if (log.isDebugEnabled())
             log.debug("interfaceReparentedHandler:  processing interfaceReparented event for " + event.getInterface());
 
@@ -578,9 +577,9 @@ final class BroadcastEventProcessor implements EventListener {
         //boolean isPrimarySnmpInterface = false;
         synchronized (m_thresholdableServices) {
             ThresholdableService tSvc = null;
-            Iterator iter = m_thresholdableServices.iterator();
+            Iterator<ThresholdableService> iter = m_thresholdableServices.iterator();
             while (iter.hasNext()) {
-                tSvc = (ThresholdableService) iter.next();
+                tSvc = iter.next();
 
                 InetAddress addr = (InetAddress) tSvc.getAddress();
                 if (addr.getHostAddress().equals(event.getInterface())) {
@@ -614,7 +613,7 @@ final class BroadcastEventProcessor implements EventListener {
      * 
      */
     private void nodeDeletedHandler(Event event) {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
 
         int nodeId = (int) event.getNodeid();
 
@@ -622,9 +621,9 @@ final class BroadcastEventProcessor implements EventListener {
         // which match the deleted nodeId for deletion.
         synchronized (m_thresholdableServices) {
             ThresholdableService tSvc = null;
-            ListIterator liter = m_thresholdableServices.listIterator();
+            ListIterator<ThresholdableService> liter = m_thresholdableServices.listIterator();
             while (liter.hasNext()) {
-                tSvc = (ThresholdableService) liter.next();
+                tSvc = liter.next();
 
                 // Only interested in entries with matching nodeId
                 if (!(tSvc.getNodeId() == nodeId))
@@ -660,7 +659,7 @@ final class BroadcastEventProcessor implements EventListener {
      * 
      */
     private void interfaceDeletedHandler(Event event) {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
 
         int nodeId = (int) event.getNodeid();
         String ipAddr = event.getInterface();
@@ -669,9 +668,9 @@ final class BroadcastEventProcessor implements EventListener {
         // which match the deleted nodeId/IP address pair for deletion
         synchronized (m_thresholdableServices) {
             ThresholdableService tSvc = null;
-            ListIterator liter = m_thresholdableServices.listIterator();
+            ListIterator<ThresholdableService> liter = m_thresholdableServices.listIterator();
             while (liter.hasNext()) {
-                tSvc = (ThresholdableService) liter.next();
+                tSvc = liter.next();
 
                 // Only interested in entries with matching nodeId and IP
                 // address
@@ -709,7 +708,7 @@ final class BroadcastEventProcessor implements EventListener {
      * 
      */
     private void serviceDeletedHandler(Event event) {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
 
         // Currently only support SNMP data thresholding.
         //
@@ -725,9 +724,9 @@ final class BroadcastEventProcessor implements EventListener {
         // for deletion.
         synchronized (m_thresholdableServices) {
             ThresholdableService tSvc = null;
-            ListIterator liter = m_thresholdableServices.listIterator();
+            ListIterator<ThresholdableService> liter = m_thresholdableServices.listIterator();
             while (liter.hasNext()) {
-                tSvc = (ThresholdableService) liter.next();
+                tSvc = liter.next();
 
                 // Only interested in entries with matching nodeId, IP address
                 // and service

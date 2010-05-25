@@ -53,7 +53,6 @@ import org.opennms.netmgt.model.OnmsAcknowledgment;
 import org.opennms.netmgt.model.acknowledgments.AckService;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.EventForwarder;
-import org.opennms.netmgt.model.events.EventSubscriptionService;
 import org.opennms.netmgt.model.events.annotations.EventHandler;
 import org.opennms.netmgt.model.events.annotations.EventListener;
 import org.opennms.netmgt.xml.event.Event;
@@ -66,13 +65,12 @@ import org.springframework.beans.factory.DisposableBean;
  * @author <a href="mailto:david@opennms.org">David Hustace</a>
  * @author <a href="mailto:jeffg@opennms.org">Jeff Gehlbach</a>
  */
-@EventListener(name="Ackd")
+@EventListener(name=Ackd.NAME)
 public class Ackd implements SpringServiceDaemon, DisposableBean {
     
-	private static final String NAME = "Ackd";
+	public static final String NAME = "Ackd";
 	private volatile AckdConfigurationDao m_configDao;
 
-    private volatile EventSubscriptionService m_eventSubscriptionService;
 	private volatile EventForwarder m_eventForwarder;
 	
     private volatile ScheduledThreadPoolExecutor m_executor;
@@ -128,18 +126,18 @@ public class Ackd implements SpringServiceDaemon, DisposableBean {
         log().info("startReaders: starting "+enabledReaderCount+" enabled readers of "+m_ackReaders.size()+" readers registered.");
         for (AckReader reader : m_ackReaders) {
             
-            log().debug("startReaders: starting reader: "+reader);
+            log().debug("startReaders: starting reader: "+reader.getName());
             List<AckReaderState> allowedStates = new ArrayList<AckReaderState>();
             allowedStates.add(AckReaderState.STOPPED);
             
             try {
                 adjustReaderState(reader, AckReaderState.STARTED, allowedStates, reloadConfig);
             } catch (Exception e) {
-                log().error("startReaders: Could not start reader: "+reader, e);
+                log().error("startReaders: Could not start reader: "+reader.getName(), e);
                 continue;
             }
             
-            log().debug("startReaders: reader: "+reader+" started.");
+            log().debug("startReaders: reader: "+reader.getName()+" started.");
         }
         log().info("startReaders: "+m_ackReaders.size()+" readers started.");
     }
@@ -147,7 +145,7 @@ public class Ackd implements SpringServiceDaemon, DisposableBean {
     protected void stopReaders() {
         log().info("stopReaders: stopping "+m_ackReaders.size()+" readers...");
         for (AckReader reader : m_ackReaders) {
-            log().debug("stopReaders: stopping reader: "+reader);
+            log().debug("stopReaders: stopping reader: "+reader.getName());
             List<AckReaderState> allowedStates = new ArrayList<AckReaderState>();
             allowedStates.add(AckReaderState.PAUSE_PENDING);
             allowedStates.add(AckReaderState.PAUSED);
@@ -160,10 +158,10 @@ public class Ackd implements SpringServiceDaemon, DisposableBean {
             try {
                 adjustReaderState(reader, AckReaderState.STOPPED, allowedStates, false);
             } catch (Exception e) {
-                log().error("startReaders: Could not stop reader: "+reader, e);
+                log().error("startReaders: Could not stop reader: "+reader.getName(), e);
             }
             
-            log().debug("stopReaders: reader: "+reader+" stopped.");
+            log().debug("stopReaders: reader: "+reader.getName()+" stopped.");
         }
         log().info("stopReaders: "+m_ackReaders.size()+" readers stopped.");
     }
@@ -177,7 +175,7 @@ public class Ackd implements SpringServiceDaemon, DisposableBean {
             try {
                 adjustReaderState(reader, AckReaderState.PAUSED, allowedStates, false);
             } catch (Exception e) {
-                log().error("startReaders: Could not pause reader: "+reader, e);
+                log().error("startReaders: Could not pause reader: "+reader.getName(), e);
             }
         }
     }
@@ -190,7 +188,7 @@ public class Ackd implements SpringServiceDaemon, DisposableBean {
             try {
                 adjustReaderState(reader, AckReaderState.RESUMED, allowedStates, false);
             } catch (Exception e) {
-                log().error("startReaders: Could not resume reader: "+reader, e);
+                log().error("startReaders: Could not resume reader: "+reader.getName(), e);
             }
         }
     }
@@ -219,7 +217,7 @@ public class Ackd implements SpringServiceDaemon, DisposableBean {
                     return;
                 }
                 
-                log().warn("adjustReaderState: Not adjustingReaderState, disabled reader: "+reader);
+                log().warn("adjustReaderState: Not adjustingReaderState, disabled reader: "+reader.getName());
                 return;
             }
     
@@ -322,6 +320,7 @@ public class Ackd implements SpringServiceDaemon, DisposableBean {
                                                              getName(), 
                                                              Calendar.getInstance().getTime());
                         bldr.addParam(EventConstants.PARM_DAEMON_NAME, getName());
+                        bldr.addParam(EventConstants.PARM_REASON, e.getLocalizedMessage().substring(0, 128));
                         m_eventForwarder.sendNow(bldr.getEvent());
                     }
                     
@@ -335,7 +334,7 @@ public class Ackd implements SpringServiceDaemon, DisposableBean {
         }
     }
 
-    private Logger log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getName());
     }
 
@@ -353,14 +352,6 @@ public class Ackd implements SpringServiceDaemon, DisposableBean {
 
     public void setEventForwarder(EventForwarder eventForwarder) {
         m_eventForwarder = eventForwarder;
-    }
-
-    public EventSubscriptionService getEventSubscriptionService() {
-        return m_eventSubscriptionService;
-    }
-
-    public void setEventSubscriptionService(EventSubscriptionService eventManager) {
-        m_eventSubscriptionService = eventManager;
     }
 
     protected List<AckReader> getAckReaders() {

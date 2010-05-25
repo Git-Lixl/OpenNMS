@@ -1,6 +1,7 @@
 --# create.sql -- SQL to build the initial tables for the OpenNMS Project
 --#
 --# Modifications:
+--# 2009 Sep 29: Added linkTypeId field in datalinkinterface table
 --# 2009 Mar 27: Added Users, Groups tables
 --# 2009 Jan 28: Added Acks tables - david@opennms.org
 --# 2007 Apr 10: Added statistics report tables - dj@opennms.org
@@ -86,6 +87,7 @@ drop sequence demandPollNxtId;
 drop sequence pollResultNxtId;
 drop sequence vulnNxtId;
 drop sequence reportNxtId;
+drop sequence reportCatalogNxtId;
 drop sequence mapNxtId;
 drop sequence opennmsNxtId;  --# should be used for all sequences, eventually
 
@@ -365,6 +367,9 @@ create unique index node_foreign_unique_idx on node(foreignSource, foreignId);
 --#                     : 'UC' means collect 'UN' means don't collect (user override)
 --#                       This has been moved from the isSnmpPrimary field in the
 --#                         ipinterface table
+--#  snmpLastCapsdPoll  : Date and time of last poll by capsd or provisiond
+--#  snmpPoll           : 'P' means polled 'N' means not polled (interface admin and oper status)
+--#  snmpLastSnmpPoll   : Date and time of last snmp poll 
 --#
 --# NOTE:  Although not marked as "not null" the snmpIfIndex field
 --#        should never be null.  This table is considered to be uniquely
@@ -389,6 +394,8 @@ create table snmpInterface (
 	snmpIfAlias		varchar(256),
     snmpLastCapsdPoll timestamp with time zone,
     snmpCollect     varchar(2) default 'N',
+    snmpPoll     varchar(1) default 'N',
+    snmpLastSnmpPoll timestamp with time zone,
 
     CONSTRAINT snmpinterface_pkey primary key (id),
 	constraint fk_nodeID2 foreign key (nodeID) references node ON DELETE CASCADE
@@ -429,7 +436,7 @@ create index snmpinterface_ipaddr_idx on snmpinterface(ipaddr);
 --#                    operational status (same as 'snmpIfOperStatus'
 --#                    field in the snmpInterface table).
 --#                      1 = Up, 2 = Down, 3 = Testing
---#  ipLastCapsdPoll : Date and time of last poll by capsd
+--#  ipLastCapsdPoll : Date and time of last poll by capsd or provisiond
 --#  isSnmpPrimary   : Character used as a boolean flag
 --#                      'P' - Primary SNMP
 --#                      'S' - Secondary SNMP
@@ -968,8 +975,6 @@ create index userid_notifyid_idx on usersNotified(userID, notifyID);
 --# suppressedTime : time the alarm was suppressed
 --# alarmAckUser : user that acknowledged the alarm
 --# alarmAckTime : time user Ack'd the alarm
---# clearUei	   : Populated if alarm is a resolving alarm and can used
---#             : to clear problem alarms.
 --########################################################################
 
 create table alarms (
@@ -999,7 +1004,6 @@ create table alarms (
 	suppressedTime          timestamp with time zone,
 	alarmAckUser            VARCHAR(256),
 	alarmAckTime            timestamp with time zone,
-	clearUei                VARCHAR(256),
 	managedObjectInstance   VARCHAR(512),
 	managedObjectType       VARCHAR(512),
 	applicationDN           VARCHAR(512),
@@ -1762,7 +1766,6 @@ create index iprouteinterface_rnh_idx on iprouteinterface(routenexthop);
 --#
 --# dataLinkInterface table -- This table maintains a record of data link info 
 --#                            among  the interfaces. 
---#                            Data is calculated using info from other tables
 --#
 --# This table provides the following information:
 --#
@@ -1775,21 +1778,26 @@ create index iprouteinterface_rnh_idx on iprouteinterface(routenexthop);
 --#                      'A' - Active
 --#                      'N' - Not Active
 --#                      'D' - Deleted
---#                      'K' - Unknown
+--#                      'U' - Unknown
+--#                      'G' - Good
+--#                      'B' - Bad
+--#                      'X' - Admin Down
+--#  linkTypeId        : An Integer (corresponding at iftype for cables links) indicating the type  
 --#  lastPollTime      : The last time when this information was retrived
 --#
 --########################################################################
 
 create table datalinkinterface (
-    id           integer default nextval('opennmsNxtId') not null,
-    nodeid	     integer not null,
+    id               integer default nextval('opennmsNxtId') not null,
+    nodeid	         integer not null,
     ifindex          integer not null,
     nodeparentid     integer not null,
 	parentIfIndex    integer not null,
-    status	     char(1) not null,
-    lastPollTime timestamp not null,
+    status	         char(1) not null,
+    linkTypeId       integer,
+    lastPollTime     timestamp not null,
 
-    constraint pk_datalinkinterface primary key (nodeid,ifindex),
+    constraint pk_datalinkinterface primary key (id),
 	constraint fk_ia_nodeID5 foreign key (nodeid) references node on delete cascade,
 	constraint fk_ia_nodeID6 foreign key (nodeparentid) references node (nodeid) ON DELETE CASCADE
 );
@@ -1798,6 +1806,41 @@ create index dlint_id_idx on datalinkinterface(id);
 create index dlint_node_idx on datalinkinterface(nodeid);
 create index dlint_nodeparent_idx on datalinkinterface(nodeparentid);
 create index dlint_nodeparent_paifindex_idx on datalinkinterface(nodeparentid,parentifindex);
+
+--########################################################################
+--#
+--# linkState table -- This table maintains the state of the link. 
+--#
+--# This table provides the following information:
+--#
+--#  nodeid            : Unique integer identifier for the linked node 
+--#  IfIndex           : SNMP index of interface connected to the link on the node, 
+--#                      is -1 if it doesn't support SNMP.
+--#  nodeparentid      : Unique integer identifier for linking node
+--#  parentIfIndex     : SNMP index of interface linked on the parent node.
+--#  status            : Flag indicating the status of the entry.
+--#                      'A' - Active
+--#                      'N' - Not Active
+--#                      'D' - Deleted
+--#                      'U' - Unknown
+--#                      'G' - Good
+--#                      'B' - Bad
+--#                      'X' - Admin Down
+--#  linkTypeId        : An Integer (corresponding at iftype for cables links) indicating the type  
+--#  lastPollTime      : The last time when this information was retrived
+--#
+--########################################################################
+
+create table linkstate (
+    id                      integer default nextval('opennmsNxtId') not null,
+    datalinkinterfaceid     integer not null, 
+    linkstate               varchar(30) default 'LINK_UP' not null,
+
+    constraint pk_linkstate primary key (id),
+    constraint fk_linkstate_datalinkinterface_id foreign key (datalinkinterfaceid) references datalinkinterface (id) on delete cascade
+);
+
+create unique index linkstate_datalinkinterfaceid_index on linkstate (datalinkinterfaceid);
 
 --########################################################################
 --#
@@ -1856,6 +1899,7 @@ create index inventory_status_idx on inventory(status);
 --#  mapType           : Flag indicating the type of the map.
 --#                      'A' - Map generated automatically
 --#                      'U' - Map generated by user
+--#                      'S' - Map Static means that is an Automatic map Saved by a user
 --#                      'D' - Map deleted // FOR FUTURE USE
 --#  mapWidth		   : Width of the map
 --#  mapHeight		   : Height of the map
@@ -1950,6 +1994,34 @@ create table reportLocator (
 --#          sequence,   column, table
 --# install: reportNxtId reportId reportLocator
 create sequence reportNxtId minvalue 1;
+
+--########################################################################
+--#
+--# reportcatalog table     -- report catalog data
+--#                            reports and their location on disk
+--#					
+--# This table provides the following information:
+--#
+--#  id                	: Unique integer identifier for the report
+--#  reportId			: Name of the report category
+--#  title				: display title
+--#  date				: when the report was run
+--#  location			: where on disk we put the report
+--#
+--########################################################################
+
+create table reportCatalog (
+    id			 		integer not null,
+    reportId			varchar(256) not null,
+    title				varchar(256) not null,
+	date				timestamp with time zone not null,
+    location			varchar(256) not null
+);
+
+--# Sequence for the reportId column in the reportLocator table
+--#          sequence,   column, table
+--# install: reportCatalogNxtId id reportCatalog
+create sequence reportCatalogNxtId minvalue 1;
 
 
 --########################################################################
@@ -2241,11 +2313,19 @@ CREATE TABLE qrtz_locks
     constraint pk_qrtz_locks PRIMARY KEY (LOCK_NAME)
 );
 
-
-INSERT INTO qrtz_locks values('TRIGGER_ACCESS');
-INSERT INTO qrtz_locks values('JOB_ACCESS');
-INSERT INTO qrtz_locks values('CALENDAR_ACCESS');
-INSERT INTO qrtz_locks values('STATE_ACCESS');
-INSERT INTO qrtz_locks values('MISFIRE_ACCESS');
+--##################################################################
+--# The following command should populate the qrtz_locks table
+--# are no categories in the category table
+--##################################################################
+--# criteria: SELECT count(*) = 0 from qrtz_locks
+insert into qrtz_locks values('TRIGGER_ACCESS');
+--# criteria: SELECT count(*) = 0 from qrtz_locks
+insert into qrtz_locks values('JOB_ACCESS');
+--# criteria: SELECT count(*) = 0 from qrtz_locks
+insert into qrtz_locks values('CALENDAR_ACCESS');
+--# criteria: SELECT count(*) = 0 from qrtz_locks
+insert into qrtz_locks values('STATE_ACCESS');
+--# criteria: SELECT count(*) = 0 from qrtz_locks
+insert into qrtz_locks values('MISFIRE_ACCESS');
 
 --# End Quartz persistence tables

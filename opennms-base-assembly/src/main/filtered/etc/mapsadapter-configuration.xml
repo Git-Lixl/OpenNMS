@@ -6,7 +6,7 @@
   </package>
   <!-- uncomment this to add all element to a map -->
   <cmaps>
-  	<cmap mapName="AllTheNetwork" mapOwner="Admin" mapAccess="RW" mapWidth="1024" mapHeight="768">
+  	<cmap mapName="AllTheNetwork" mapOwner="Admin" mapAccess="RW" mapWidth="800" mapHeight="600">
   		<celement package="example1"/>
   	</cmap>
   </cmaps>

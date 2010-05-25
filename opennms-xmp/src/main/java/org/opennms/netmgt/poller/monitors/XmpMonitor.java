@@ -39,7 +39,6 @@ package org.opennms.netmgt.poller.monitors;
 import java.net.InetAddress;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.apache.regexp.RE;
 import org.apache.regexp.RESyntaxException;
 import org.krupczak.Xmp.SocketOpts;
@@ -149,8 +148,8 @@ public class XmpMonitor extends IPv4Monitor {
         PollStatus status = PollStatus.unavailable();
         InetAddress ipaddr = (InetAddress) iface.getAddress();
 
-        Category log = ThreadCategory.getInstance(getClass());
-        XmpConfig protoConfig = XmpConfigFactory.getXmpConfig();
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
+        XmpConfig protoConfig = XmpConfigFactory.getInstance().getXmpConfig();
         XmpSession session;
         SocketOpts sockopts = new SocketOpts();
         // TODO how to apply timeout and retry to XMP operations?

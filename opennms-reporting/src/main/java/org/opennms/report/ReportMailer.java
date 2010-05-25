@@ -37,12 +37,10 @@ package org.opennms.report;
 
 import java.io.IOException;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 
 import org.opennms.javamail.JavaMailer;
 import org.opennms.javamail.JavaMailerException;
-import org.opennms.report.availability.AvailabilityReport;
 
 /**
  * 
@@ -52,7 +50,7 @@ public class ReportMailer {
 	
 	private static final String LOG4J_CATEGORY = "OpenNMS.Report";
 	
-	private Category log;
+	private ThreadCategory log;
 	
 	private String m_filename;
 	
@@ -62,7 +60,7 @@ public class ReportMailer {
 	
 	public ReportMailer() {
 		ThreadCategory.setPrefix(LOG4J_CATEGORY);
-		log = ThreadCategory.getInstance(AvailabilityReport.class);
+		log = ThreadCategory.getInstance(ReportMailer.class);
 	}
 	
 	
@@ -71,7 +69,7 @@ public class ReportMailer {
 		this.m_filename = filename;
 		this.m_subject = subject;
 		ThreadCategory.setPrefix(LOG4J_CATEGORY);
-		log = ThreadCategory.getInstance(AvailabilityReport.class);
+		log = ThreadCategory.getInstance(ReportMailer.class);
 	}
 	
 	public void send() throws IOException {

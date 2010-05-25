@@ -40,7 +40,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.common.Range;
@@ -178,7 +177,7 @@ final class MergeableDefinition {
         }
     }
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
     
@@ -292,7 +291,7 @@ final class MergeableDefinition {
      * 
      * @param range
      * @return the state of having updated any ranges in the definition 
-     *   due to being effected by the new range.
+     *   due to being affected by the new range.
      */
     public boolean mergeOverlappingRanges(final Range range) {
         boolean overlapped = false;

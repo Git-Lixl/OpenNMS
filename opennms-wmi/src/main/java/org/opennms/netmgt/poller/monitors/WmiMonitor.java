@@ -8,8 +8,10 @@
 //
 // OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
 //
-// Original code base Copyright (C) 1999-2001 Oculan Corp.  All rights reserved.
-//
+// Modifications:
+// 12 Feb 2010: Start with service status unavailable, going to unresponsive only
+//              once we have established a WMI session. - jeffg@opennms.org
+// 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -35,7 +37,6 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.core.utils.TimeoutTracker;
@@ -108,7 +109,7 @@ public class WmiMonitor extends IPv4Monitor {
 		// Holds the response reason.
 		String reason = null;
 		// Used to exit the retry loop early, if possible.
-		int serviceStatus = PollStatus.SERVICE_UNRESPONSIVE;
+		int serviceStatus = PollStatus.SERVICE_UNAVAILABLE;
 		// This will hold the data the server sends back.
 		WmiResult response = null;
 		// Used to track how long the request took.
@@ -117,7 +118,7 @@ public class WmiMonitor extends IPv4Monitor {
 		// Get the address we're going to poll.
 		InetAddress ipv4Addr = (InetAddress) iface.getAddress();
 		
-		Category log = ThreadCategory.getInstance(getClass());
+		ThreadCategory log = ThreadCategory.getInstance(getClass());
 
 		// Validate the interface type.
 		if (iface.getType() != NetworkInterface.TYPE_IPV4) {
@@ -199,6 +200,9 @@ public class WmiMonitor extends IPv4Monitor {
 
                 if (log().isDebugEnabled())
                         log().debug("Completed initializing WmiManager object.");
+                
+                // We are connected, so upgrade status to unresponsive
+                serviceStatus = PollStatus.SERVICE_UNRESPONSIVE;
 
                 // Set up the parameters the client will use to validate the response.
                 // Note: We will check and see if we were provided with a WQL string.

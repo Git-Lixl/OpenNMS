@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.opennms.core.utils.LogUtils;
 import org.opennms.netmgt.model.events.annotations.EventExceptionHandler;
 import org.opennms.netmgt.model.events.annotations.EventHandler;
 import org.opennms.netmgt.model.events.annotations.EventListener;
@@ -109,7 +110,11 @@ public class AnnotationBasedEventListenerAdapter implements StoppableEventListen
         Method method = m_ueiToHandlerMap.get(event.getUei());
         
         if (method == null) {
-            throw new IllegalArgumentException("Received an event for which we have no handler!");
+            // Try to get a catch-all event handler
+            method = m_ueiToHandlerMap.get(EventHandler.ALL_UEIS);
+            if (method == null) {
+                throw new IllegalArgumentException("Received an event for which we have no handler!");
+            }
         }
         
         try {
@@ -150,18 +155,21 @@ public class AnnotationBasedEventListenerAdapter implements StoppableEventListen
     
 
     protected void handleException(Event event, Throwable cause) {
+        
         for(Method method : m_exceptionHandlers) {
             if (ClassUtils.isAssignableValue(method.getParameterTypes()[1], cause)) {
                 try {
                     method.invoke(m_annotatedListener, event, cause);
                     
                     // we found the correct handler to we are done
-                    break;
+                    return;
                 } catch (Exception e) {
                     throw new UndeclaredThrowableException(e);
                 }
             }
         }
+        
+        LogUtils.debugf(this, cause, "Caught an unhandled exception while processing event %s, for listener %s. Add EventExceptionHandler annotation to the listener", event.getUei(), m_annotatedListener);
     }
 
     public void setAnnotatedListener(Object annotatedListener) {
@@ -187,17 +195,22 @@ public class AnnotationBasedEventListenerAdapter implements StoppableEventListen
         
         populatePostProcessorList();
         
-        populateExeptionHandlersSet();
-        
-        m_subscriptionService.addEventListener(this, new HashSet<String>(m_ueiToHandlerMap.keySet()));
+        populateExceptionHandlersSet();
 
+        // If we only have one EventHandler that is intended to be used as a handler for any UEI, then
+        // register this class as an EventListener for all UEIs
+        if (m_ueiToHandlerMap.size() == 1 && EventHandler.ALL_UEIS.equals(m_ueiToHandlerMap.keySet().toArray()[0])) {
+            m_subscriptionService.addEventListener(this);
+        } else {
+            m_subscriptionService.addEventListener(this, new HashSet<String>(m_ueiToHandlerMap.keySet()));
+        }
     }
 
-    private EventListener findEventListenerAnnotation(Object annotatedListener) {
+    private static EventListener findEventListenerAnnotation(Object annotatedListener) {
         return annotatedListener.getClass().getAnnotation(EventListener.class);
     }
 
-    private void populateExeptionHandlersSet() {
+    private void populateExceptionHandlersSet() {
         
         Method[] methods = m_annotatedListener.getClass().getMethods();
         for(Method method : methods) {
@@ -210,10 +223,10 @@ public class AnnotationBasedEventListenerAdapter implements StoppableEventListen
 
     }
     
-    private void validateMethodAsEventExceptionHandler(Method method) {
+    private static void validateMethodAsEventExceptionHandler(Method method) {
         Assert.state(method.getParameterTypes().length == 2, "Invalid number of paremeters. EventExceptionHandler methods must take 2 arguments with types (Event, ? extends Throwable)");
-        Assert.state(ClassUtils.isAssignable(Event.class, method.getParameterTypes()[0]), "First parameter of incorrent type. EventExceptionHandler first paramenter must be of type Event");
-        Assert.state(ClassUtils.isAssignable(Throwable.class, method.getParameterTypes()[1]), "Second parameter of incorrent type. EventExceptionHandler second paramenter must be of type ? extends Throwable");
+        Assert.state(ClassUtils.isAssignable(Event.class, method.getParameterTypes()[0]), "First parameter of incorrect type. EventExceptionHandler first paramenter must be of type Event");
+        Assert.state(ClassUtils.isAssignable(Throwable.class, method.getParameterTypes()[1]), "Second parameter of incorrect type. EventExceptionHandler second paramenter must be of type ? extends Throwable");
     }
 
     private static class ClassComparator<T> implements Comparator<Class<? extends T>> {
@@ -287,7 +300,7 @@ public class AnnotationBasedEventListenerAdapter implements StoppableEventListen
 
     }
 
-    private void validateMethodAsEventHandler(Method method) {
+    private static void validateMethodAsEventHandler(Method method) {
         Assert.state(method.getParameterTypes().length == 1, "Invalid number of paremeters for method "+method+". EventHandler methods must take a single event argument");
         Assert.state(method.getParameterTypes()[0].isAssignableFrom(Event.class), "Parameter of incorrent type for method "+method+". EventHandler methods must take a single event argument");
     }

@@ -45,7 +45,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Category;
 
 import org.opennms.core.utils.ThreadCategory;
 
@@ -65,7 +64,7 @@ import org.springframework.web.servlet.mvc.Controller;
  * 
  */
 public class AddMapsController implements Controller {
-	Category log;
+	ThreadCategory log;
 
 	private Manager manager;
 	
@@ -82,68 +81,42 @@ public class AddMapsController implements Controller {
 		
 		ThreadCategory.setPrefix(MapsConstants.LOG4J_CATEGORY);
 		log = ThreadCategory.getInstance(this.getClass());
-		String action = request.getParameter("action");
 		String elems = request.getParameter("elems");
-		log.debug("Adding Maps; action:"+action+", elems="+elems );
+		log.debug("Adding Maps: elems="+elems );
 		
-		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()));
+		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(response.getOutputStream(), "UTF-8"));
 		try {
-			if (!request.isUserInRole(org.opennms.web.springframework.security.Authentication.ADMIN_ROLE)) {
-				log.warn(request.getRemoteUser() +": Cannot add maps because user role is:" + MapsConstants.ROLE_USER);
-				throw new MapsException(request.getRemoteUser() +": Cannot add maps because user role is:" + MapsConstants.ROLE_USER);
-			}
 			VMap map = manager.openMap();
-			if(log.isDebugEnabled())
-				log.debug("Got map from manager "+map);
+            List<VElement> velems = new ArrayList<VElement>();
+            // response for addElement
+            List<Integer> mapsWithLoop = new ArrayList<Integer>();
+			log.debug("Got map from manager "+map);
 			
-			Integer[] mapids = null;
-			String type = VElement.MAP_TYPE;
+			log.debug("Adding maps by id: "+ elems);
+			String[] smapids = elems.split(",");
 
-			boolean actionfound = false;
-			
-			if (action.equals(MapsConstants.ADDMAPS_ACTION)) {
-				log.debug("Adding maps by id: "+ elems);
-				actionfound = true;
-				String[] smapids = elems.split(",");
-				mapids = new Integer[smapids.length];
-				for (int i = 0; i<smapids.length;i++) {
-					mapids[i] = new Integer(smapids[i]);
-				}
-			}
-			
-			List<VElement> velems = new ArrayList<VElement>();
-			List<VLink> links = new ArrayList<VLink>();
-			// response for addElement
-			List<Integer> mapsWithLoop = new ArrayList<Integer>();
-			if (actionfound) {
-				
-				for (int i = 0; i < mapids.length; i++) {
-					int elemId = mapids[i].intValue();
-					if (map.containsElement(elemId, type)) {
-						log.debug("Action: " + action + " . Map Contains Element: " + elemId+type);
-						continue;
-						
-					}
-					boolean foundLoop = manager.foundLoopOnMaps(map,elemId);
+			for (int i = 0; i<smapids.length;i++) {
+			    Integer id = new Integer(smapids[i]);
+				if (map.containsElement(id, MapsConstants.MAP_TYPE)) {
+					log.debug(" Map Contains Element: " + id+MapsConstants.MAP_TYPE);
+					continue;
 					
-
-					if(foundLoop)
-						mapsWithLoop.add(elemId);
-					else
-						velems.add(manager.newElement(elemId, type));
-				} // end for
-
-				//get links and add elements to map
-				if (velems != null) {
-					map.addElements(velems);
-					links = manager.getLinks(map.getAllElements());
 				}
-				log.debug("After getting/adding links");
-			} 				
-			bw.write(ResponseAssembler.getAddMapsResponse(action, mapsWithLoop,velems, links));
+				boolean foundLoop = manager.foundLoopOnMaps(map,id);
+
+				if(foundLoop) {
+					mapsWithLoop.add(id);
+				} else {
+				    velems.add(manager.newElement(map.getId(),id, MapsConstants.MAP_TYPE));
+				}
+			} // end for
+
+			//get map
+			map = manager.addElements(map, velems);
+			bw.write(ResponseAssembler.getAddElementResponse(mapsWithLoop,velems,map.getLinks().values()));
 		} catch (Exception e) {
-			log.error("Error while adding Maps for action: "+action,e);
-			bw.write(ResponseAssembler.getMapErrorResponse(action));
+			log.error("Error while adding Maps: ",e);
+			bw.write(ResponseAssembler.getMapErrorResponse(MapsConstants.ADDMAPS_ACTION));
 		} finally {
 			bw.close();
 		}

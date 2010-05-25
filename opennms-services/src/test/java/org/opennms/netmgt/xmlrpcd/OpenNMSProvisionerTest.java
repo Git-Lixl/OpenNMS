@@ -49,9 +49,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
-import org.easymock.EasyMock;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.junit.After;
@@ -74,7 +72,6 @@ import org.opennms.netmgt.mock.MockDatabase;
 import org.opennms.netmgt.mock.MockEventIpcManager;
 import org.opennms.netmgt.mock.MockEventUtil;
 import org.opennms.netmgt.mock.TestCapsdConfigManager;
-import org.opennms.netmgt.rrd.RrdConfig;
 import org.opennms.netmgt.rrd.RrdStrategy;
 import org.opennms.netmgt.rrd.RrdUtils;
 import org.opennms.test.ConfigurationTestUtils;
@@ -152,9 +149,6 @@ public class OpenNMSProvisionerTest {
         MockLogAppender.setupLogging();
         MockDatabase db = new MockDatabase();
         DataSourceFactory.setInstance(db);
-        
-        Properties properties = new Properties();
-        RrdConfig.setProperties(properties);
 
         RrdUtils.setStrategy(m_strategy);
         
@@ -199,11 +193,6 @@ public class OpenNMSProvisionerTest {
         m_syncer.syncServices();
         m_provisioner.setCapsdDbSyncer(m_syncer);
 
-    }
-
-    private void expectRrdInitialize() throws Exception {
-        m_strategy.initialize();
-        EasyMock.expectLastCall().anyTimes();
     }
 
     @After
@@ -343,7 +332,6 @@ public class OpenNMSProvisionerTest {
     @Test
     public void testAddServiceDatabase() throws Exception {
         expectUpdateEvent();
-        expectRrdInitialize();
         m_mocks.replayAll();
 
         m_provisioner.addServiceDatabase("MyDB", 13, 2001, 54321, 71, 23456, "dbuser", "dbPasswd", "org.mydb.MyDriver", "jdbc://mydbhost:2");
@@ -356,7 +344,6 @@ public class OpenNMSProvisionerTest {
     @Test
     public void testAddServiceDNS() throws Exception {
         expectUpdateEvent();
-        expectRrdInitialize();
         m_mocks.replayAll();
 
         m_provisioner.addServiceDNS("MyDNS", 11, 1111, 11111, 111, 111111, 101, "www.opennms.org");
@@ -369,7 +356,6 @@ public class OpenNMSProvisionerTest {
     @Test
     public void testAddServiceHTTP() throws Exception {
         expectUpdateEvent();
-        expectRrdInitialize();
         m_mocks.replayAll();
 
         m_provisioner.addServiceHTTP("MyHTTP", 22, 2222, 22222, 222, 222222, "opennms.com", 212, "200-203", "Home", "/index.html", "user", "passwd", null);
@@ -382,7 +368,6 @@ public class OpenNMSProvisionerTest {
     @Test
     public void testAddServiceHTTPNoResponseCode() throws Exception {
         expectUpdateEvent();
-        expectRrdInitialize();
         m_mocks.replayAll();
 
         m_provisioner.addServiceHTTP("MyHTTP", 22, 2222, 22222, 222, 222222, "opennms.com", 212, "", "Home", "/index.html", "user", "pw", "");
@@ -408,7 +393,6 @@ public class OpenNMSProvisionerTest {
     @Test
     public void testAddServiceHTTPS() throws Exception {
         expectUpdateEvent();
-        expectRrdInitialize();
         m_mocks.replayAll();
 
         m_provisioner.addServiceHTTPS("MyHTTPS", 33, 3333, 33333, 333, 333333, "opennms.com", 313, "303", "Secure", "/secure.html", "user", "pw", "");
@@ -425,7 +409,6 @@ public class OpenNMSProvisionerTest {
     @Test
     public void testAddServiceTCP() throws Exception {
         expectUpdateEvent();
-        expectRrdInitialize();
         m_mocks.replayAll();
 
         m_provisioner.addServiceTCP("MyTCP", 4, 44, 444, 4444, 44444, 404, "HELO");
@@ -436,7 +419,7 @@ public class OpenNMSProvisionerTest {
     }
     
     private void expectUpdateEvent() {
-        m_eventManager.getEventAnticipator().anticipateEvent(MockEventUtil.createEvent("Test", EventConstants.SCHEDOUTAGES_CHANGED_EVENT_UEI));
+        m_eventManager.getEventAnticipator().anticipateEvent(MockEventUtil.createEventBuilder("Test", EventConstants.SCHEDOUTAGES_CHANGED_EVENT_UEI).getEvent());
     }
 
     private void verifyEvents() {

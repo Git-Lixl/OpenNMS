@@ -41,7 +41,6 @@ package org.opennms.netmgt.rtc.utils;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.rtc.DataManager;
@@ -92,7 +91,7 @@ public class EuiLevelMapper extends Object {
         // get the rolling window
         long rWindow = RTCManager.getRollingWindow();
 
-        Category log = ThreadCategory.getInstance(EuiLevelMapper.class);
+        ThreadCategory log = ThreadCategory.getInstance(EuiLevelMapper.class);
         if (log.isDebugEnabled()) {
             log.debug("curdate: " + curDate);
         }
@@ -107,7 +106,7 @@ public class EuiLevelMapper extends Object {
         org.opennms.netmgt.xml.rtc.Category levelCat = new org.opennms.netmgt.xml.rtc.Category();
 
         // get a handle to data
-        DataManager rtcDataMgr = (DataManager) RTCManager.getDataManager();
+        DataManager rtcDataMgr = RTCManager.getDataManager();
         synchronized (rtcDataMgr) {
             // category label
             levelCat.setCatlabel(rtcCat.getLabel());

@@ -55,7 +55,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.core.utils.DBUtils;
 import org.opennms.core.utils.ThreadCategory;
@@ -169,16 +168,6 @@ public abstract class JMXThresholder implements ServiceThresholder {
      * 
      */
     public void initialize(Map parameters) {
-        try {
-            RrdUtils.initialize();
-        } catch (RrdException e) {
-            log().error("initialize: Unable to initialize RrdUtils: " + e, e);
-            throw new RuntimeException("Unable to initialize RrdUtils: " + e, e);
-        }
-
-        log().debug("initialize: successfully instantiated RRD strategy");
-
-        return;
     }
 
     public void reinitialize() {
@@ -238,8 +227,8 @@ public abstract class JMXThresholder implements ServiceThresholder {
         // for a single datasource a warning messages is generated. Only
         // the first threshold in such a scenario will be used for thresholding.
         //
-        Map nodeMap   = new HashMap();
-        Map baseIfMap = new HashMap();
+        Map<String, ThresholdEntity> nodeMap   = new HashMap<String, ThresholdEntity>();
+        Map<String, ThresholdEntity> baseIfMap = new HashMap<String, ThresholdEntity>();
         try {
             for (Basethresholddef thresh : ThresholdingConfigFactory.getInstance().getThresholds(groupName)) {
                 // See if map entry already exists for this datasource
@@ -249,9 +238,9 @@ public abstract class JMXThresholder implements ServiceThresholder {
                 try {
                     BaseThresholdDefConfigWrapper wrapper=BaseThresholdDefConfigWrapper.getConfigWrapper(thresh);
                     if (wrapper.getDsType().equals("node")) {
-                        thresholdEntity = (ThresholdEntity) nodeMap.get(wrapper.getDatasourceExpression());
+                        thresholdEntity = nodeMap.get(wrapper.getDatasourceExpression());
                     } else if (wrapper.getDsType().equals("if")) {
-                        thresholdEntity = (ThresholdEntity) baseIfMap.get(wrapper.getDatasourceExpression());
+                        thresholdEntity = baseIfMap.get(wrapper.getDatasourceExpression());
                     }
     
                     // Found entry?
@@ -294,7 +283,7 @@ public abstract class JMXThresholder implements ServiceThresholder {
         // This map will be keyed by the interface's iflabel and will
         // contain as a value a map of ThresholdEntity objects keyed
         // by datasource name.
-        iface.setAttribute(ALL_IF_THRESHOLD_MAP_KEY, new HashMap());
+        iface.setAttribute(ALL_IF_THRESHOLD_MAP_KEY, new HashMap<String,Map<String,ThresholdEntity>>());
 
         final DBUtils d = new DBUtils(getClass());
         // Get database connection in order to retrieve the nodeid and
@@ -355,15 +344,15 @@ public abstract class JMXThresholder implements ServiceThresholder {
         // Debug
         if (log().isDebugEnabled()) {
             log().debug("initialize: dumping node thresholds defined for " + ipAddr.getHostAddress() + "/" + groupName + ":");
-            Iterator iter = nodeMap.values().iterator();
+            Iterator<ThresholdEntity> iter = nodeMap.values().iterator();
             while (iter.hasNext()) {
-                log().debug((ThresholdEntity) iter.next());
+                log().debug(iter.next().toString());
             }
 
             log().debug("initialize: dumping interface thresholds defined for " + ipAddr.getHostAddress() + "/" + groupName + ":");
             iter = baseIfMap.values().iterator();
             while (iter.hasNext()) {
-                log().debug((ThresholdEntity) iter.next());
+                log().debug(iter.next().toString());
             }
         }
 
@@ -397,7 +386,7 @@ public abstract class JMXThresholder implements ServiceThresholder {
      *            belongs.
      */
     public int check(ThresholdNetworkInterface iface, EventProxy eproxy, Map parameters) {
-        Category log = log();
+        ThreadCategory log = log();
         String dsDir = serviceName;
 
         String port         = ParameterMap.getKeyedString( parameters, "port",           null);
@@ -428,9 +417,9 @@ public abstract class JMXThresholder implements ServiceThresholder {
         Integer nodeId = (Integer) iface.getAttribute(NODE_ID_KEY);
 
         // node and interface ThresholdEntity map attributes
-        Map nodeMap   = (Map) iface.getAttribute(NODE_THRESHOLD_MAP_KEY);
-        Map baseIfMap = (Map) iface.getAttribute(BASE_IF_THRESHOLD_MAP_KEY);
-        Map allIfMap  = (Map) iface.getAttribute(ALL_IF_THRESHOLD_MAP_KEY);
+        Map<Object,ThresholdEntity> nodeMap   = (Map<Object,ThresholdEntity>) iface.getAttribute(NODE_THRESHOLD_MAP_KEY);
+        Map<String,ThresholdEntity> baseIfMap = (Map<String,ThresholdEntity>) iface.getAttribute(BASE_IF_THRESHOLD_MAP_KEY);
+        Map<String,Map<String,ThresholdEntity>> allIfMap  = (Map<String, Map<String, ThresholdEntity>>)iface.getAttribute(ALL_IF_THRESHOLD_MAP_KEY);
 
         // -----------------------------------------------------------
         // 
@@ -499,7 +488,7 @@ public abstract class JMXThresholder implements ServiceThresholder {
     }
     
     private Map<String, Double> getThresholdValues(File directory, int range, int interval, Collection<String> requiredDatasources) {
-        Category log = log();
+        ThreadCategory log = log();
         Map<String, Double> values=new HashMap<String,Double>();
         for(String ds: requiredDatasources) {
             File dsFile=new File(directory,ds+RrdUtils.getExtension());
@@ -557,8 +546,8 @@ public abstract class JMXThresholder implements ServiceThresholder {
      * @throws IllegalArgumentException
      *             if path parameter is not a directory.
      */
-    private void checkNodeDir(File directory, Integer nodeId, InetAddress primary, int interval, int range,  Date date, Map thresholdMap, Events events) throws IllegalArgumentException {
-        Category log = log();
+    private void checkNodeDir(File directory, Integer nodeId, InetAddress primary, int interval, int range,  Date date, Map<Object,ThresholdEntity> thresholdMap, Events events) throws IllegalArgumentException {
+        ThreadCategory log = log();
 
         // Sanity Check
         if (directory == null || nodeId == null || primary == null || date == null || thresholdMap == null || events == null) {
@@ -570,7 +559,7 @@ public abstract class JMXThresholder implements ServiceThresholder {
         }
         
         for(Object threshKey  :thresholdMap.keySet()) {
-            ThresholdEntity threshold = (ThresholdEntity) thresholdMap.get(threshKey);
+            ThresholdEntity threshold = thresholdMap.get(threshKey);
             Collection<String> requiredDatasources=threshold.getRequiredDatasources();
             Map<String, Double> values=getThresholdValues(directory, range, interval, requiredDatasources);
             if(values==null) {
@@ -616,7 +605,7 @@ public abstract class JMXThresholder implements ServiceThresholder {
      * @throws IllegalArgumentException
      *             if path parameter is not a directory.
      */
-    private void checkIfDir(File directory, Integer nodeId, InetAddress primary, int interval, int range, Date date, Map baseIfThresholdMap, Map allIfThresholdMap, Events events) throws IllegalArgumentException {
+    private void checkIfDir(File directory, Integer nodeId, InetAddress primary, int interval, int range, Date date, Map<String,ThresholdEntity> baseIfThresholdMap, Map<String,Map<String,ThresholdEntity>> allIfThresholdMap, Events events) throws IllegalArgumentException {
         // Sanity Check
         if (directory == null || nodeId == null || primary == null || date == null || baseIfThresholdMap == null || allIfThresholdMap == null || events == null) {
             throw new IllegalArgumentException("Null parameters not permitted.");
@@ -642,20 +631,20 @@ public abstract class JMXThresholder implements ServiceThresholder {
 
         // Attempt to retrieve the threshold map for this interface
         // using the ifLabel for the interface
-        Map thresholdMap = (Map) allIfThresholdMap.get(ifLabel);
+        Map<String, ThresholdEntity> thresholdMap = allIfThresholdMap.get(ifLabel);
         if (thresholdMap == null) {
             // Doesn't exist yet, go ahead and create it
             // Must maintain a separate threshold map for
             // each interface.
-            thresholdMap = new HashMap();
+            thresholdMap = new HashMap<String, ThresholdEntity>();
 
             // Iterate over base interface threshold map and clone each
             // ThresholdEntity object and add it to the threshold map.
             // for this interface.
             // 
-            Iterator iter = baseIfThresholdMap.values().iterator();
+            Iterator<ThresholdEntity> iter = baseIfThresholdMap.values().iterator();
             while (iter.hasNext()) {
-                ThresholdEntity entity = (ThresholdEntity) iter.next();
+                ThresholdEntity entity = iter.next();
                 thresholdMap.put(entity.getDataSourceExpression(), entity.clone());
             }
 
@@ -666,7 +655,7 @@ public abstract class JMXThresholder implements ServiceThresholder {
         
         Map<String, String> ifDataMap = new HashMap<String, String>();
         for(Object threshKey  :thresholdMap.keySet()) {
-            ThresholdEntity threshold = (ThresholdEntity) thresholdMap.get(threshKey);
+            ThresholdEntity threshold = thresholdMap.get(threshKey);
             Collection<String> requiredDatasources=threshold.getRequiredDatasources();
             Map<String, Double> values=getThresholdValues(directory, range, interval, requiredDatasources);
             if(values==null) {
@@ -726,7 +715,7 @@ public abstract class JMXThresholder implements ServiceThresholder {
         
     }
 
-    private final Category log() {
+    private final ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 

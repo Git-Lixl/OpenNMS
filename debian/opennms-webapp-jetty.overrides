@@ -1,2 +1,6 @@
 opennms-webapp-jetty: file-in-usr-marked-as-conffile
 opennms-webapp-jetty: package-contains-empty-directory usr/share/opennms/jetty-webapps/opennms/WEB-INF/classes/
+<<<<<<< HEAD
+=======
+opennms-webapp-jetty: package-contains-empty-directory usr/share/opennms/jetty-webapps/opennms-remoting/WEB-INF/classes/
+>>>>>>> origin

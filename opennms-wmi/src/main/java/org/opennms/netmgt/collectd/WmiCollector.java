@@ -40,7 +40,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.ThreadCategory;
@@ -87,11 +86,10 @@ public class WmiCollector implements ServiceCollector {
     private HashMap<String, AttributeGroupType> m_groupTypeList = new HashMap<String, AttributeGroupType>();
     private HashMap<String, WmiCollectionAttributeType> m_attribTypeList = new HashMap<String, WmiCollectionAttributeType>();
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 
-    @SuppressWarnings("unchecked")
     public CollectionSet collect(CollectionAgent agent, EventProxy eproxy, Map<String, String> parameters) {
 
         String collectionName = parameters.get("collection");
@@ -288,7 +286,6 @@ public class WmiCollector implements ServiceCollector {
     private void initializeRrdRepository() {
         log().debug("initializeRrdRepository: Initializing RRD repo from WmiCollector...");
         initializeRrdDirs();
-        initializeRrdInterface();
     }
 
     private void initializeRrdDirs() {
@@ -301,15 +298,6 @@ public class WmiCollector implements ServiceCollector {
             if (!f.mkdirs()) {
                 throw new RuntimeException("Unable to create RRD file " + "repository.  Path doesn't already exist and could not make directory: " + DataCollectionConfigFactory.getInstance().getRrdPath());
             }
-        }
-    }
-
-    private void initializeRrdInterface() {
-        try {
-            RrdUtils.initialize();
-        } catch (RrdException e) {
-            log().error("initializeRrdInterface: Unable to initialize RrdUtils", e);
-            throw new RuntimeException("Unable to initialize RrdUtils", e);
         }
     }
 

@@ -33,19 +33,6 @@ function replaceSpecialChars(myString) {
 		return myString;
 }
 
-function assArrayPopulate(arrayKeys,arrayValues) {
-	var returnArray = new Array();
-	if (arrayKeys.length != arrayValues.length) {
-		alert("Error: arrays do not have same length");
-	}
-	else {
-		for (i=0;i<arrayKeys.length;i++) {
-			returnArray[arrayKeys[i]] = arrayValues[i];
-		}
-	}
-	return returnArray;
-}
-
 function httpRequest()
 {
     var xmlhttp;
@@ -86,10 +73,13 @@ function parseUri(sourceUri){
     return uri;
 }
 
-function postMapRequest(url,data,handler,type,enc){
-	postMapRequestAll(url,"GET", data,handler,type,enc, true);
+function getMapRequest(url,data,handler,type,enc){
+	postMapRequestAll(url,"GET", "",handler,type,enc, true);
 }
 
+function postMapRequest(url,data,handler,type,enc){
+	postMapRequestAll(url,"POST", data,handler,type,enc, true);
+}
 function postMapRequestAll(url,method,data,handler,type,enc,async){
 	   var uriObj = parseUri(document.URL);
 	   var appdomain = uriObj.protocol+"://"+uriObj.authority;
@@ -98,6 +88,11 @@ function postMapRequestAll(url,method,data,handler,type,enc,async){
        if (xmlhttp) {
            try{
 	            xmlhttp.open(method, appContext+url, async);
+	            if (method == 'POST') {
+	            	xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	            	xmlhttp.setRequestHeader("Content-length", data.length);
+	            	xmlhttp.setRequestHeader("Connection", "close");
+	            }
 	            xmlhttp.onreadystatechange = function() {
 	                if (xmlhttp.readyState == 4) {
 	                    handler({status:xmlhttp.status, content:xmlhttp.responseText, contentType:xmlhttp.getResponseHeader("Content-Type")});
@@ -190,13 +185,6 @@ function trimAll(sString)
 	return sString;
 }
 
-function testResponse(action, response){
-		var tmpStr=response.substring(0,action.length+2);
-		if(tmpStr==(action+"OK"))
-			return true;
-		return false;
-}
-
 function openLink( link, params){
            var uriObj = parseUri(unescape(link));
 	   if ( uriObj.protocol =='' ) {
@@ -204,6 +192,10 @@ function openLink( link, params){
 	   	var appdomain = uriObj.protocol+"://"+uriObj.authority;
        		open(appdomain+appContext+unescape(link), '', params);	
            } else {
-       		open(unescape(link), '', params);	
+		if ( uriObj.protocol =='telnet' || uriObj.protocol == 'ssh' ) {
+			window.location=unescape(link);
+		} else {
+       			open(unescape(link), '', params);	
+		}
            }	
 }

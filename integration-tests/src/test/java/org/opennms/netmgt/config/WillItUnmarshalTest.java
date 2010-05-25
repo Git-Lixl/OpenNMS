@@ -75,6 +75,7 @@ import org.opennms.netmgt.config.charts.ChartConfiguration;
 import org.opennms.netmgt.config.collectd.CollectdConfiguration;
 import org.opennms.netmgt.config.collectd.JmxDatacollectionConfig;
 import org.opennms.netmgt.config.common.JavamailConfiguration;
+import org.opennms.netmgt.config.databaseReports.DatabaseReports;
 import org.opennms.netmgt.config.datacollection.DatacollectionConfig;
 import org.opennms.netmgt.config.destinationPaths.DestinationPaths;
 import org.opennms.netmgt.config.dhcpd.DhcpdConfiguration;
@@ -96,7 +97,11 @@ import org.opennms.netmgt.config.nsclient.NsclientDatacollectionConfig;
 import org.opennms.netmgt.config.opennmsDataSources.DataSourceConfiguration;
 import org.opennms.netmgt.config.poller.Outages;
 import org.opennms.netmgt.config.poller.PollerConfiguration;
+import org.opennms.netmgt.config.provisiond.ProvisiondConfiguration;
 import org.opennms.netmgt.config.rancid.adapter.RancidConfiguration;
+import org.opennms.netmgt.config.reporting.jasperReports.JasperReports;
+import org.opennms.netmgt.config.reporting.opennms.OpennmsReports;
+import org.opennms.netmgt.config.reportd.ReportdConfiguration;
 import org.opennms.netmgt.config.rtc.RTCConfiguration;
 import org.opennms.netmgt.config.rws.RwsConfiguration;
 import org.opennms.netmgt.config.scriptd.ScriptdConfiguration;
@@ -128,6 +133,7 @@ import org.opennms.netmgt.xml.eventconf.Events;
 import org.opennms.test.ConfigurationTestUtils;
 import org.opennms.test.mock.MockLogAppender;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 
 /**
@@ -164,7 +170,9 @@ public class WillItUnmarshalTest {
     public void testGoodOrdering() throws Exception {
         LocalConfiguration.getInstance().getProperties().remove(CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY);
 
-        CastorUtils.unmarshal(Events.class, ConfigurationTestUtils.getSpringResourceForResource(this, "eventconf-good-ordering.xml"));
+        Resource resource = ConfigurationTestUtils.getSpringResourceForResource(this, "eventconf-good-ordering.xml");
+        System.out.println("Unmarshalling: " + resource.getURI());
+        CastorUtils.unmarshal(Events.class, resource);
     }
 
     /**
@@ -175,7 +183,9 @@ public class WillItUnmarshalTest {
     public void testLenientOrdering() throws Exception {
         LocalConfiguration.getInstance().getProperties().put(CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY, "true");
 
-        CastorUtils.unmarshal(Events.class, ConfigurationTestUtils.getSpringResourceForResource(this, "eventconf-bad-ordering.xml"));
+        Resource resource = ConfigurationTestUtils.getSpringResourceForResource(this, "eventconf-bad-ordering.xml");
+        System.out.println("Unmarshalling: " + resource.getURI());
+        CastorUtils.unmarshal(Events.class, resource);
     }
 
     /**
@@ -184,7 +194,9 @@ public class WillItUnmarshalTest {
      */
     @Test
     public void testLenientOrderingAsDefault() throws Exception {
-        CastorUtils.unmarshal(Events.class, ConfigurationTestUtils.getSpringResourceForResource(this, "eventconf-bad-ordering.xml"));
+        Resource resource = ConfigurationTestUtils.getSpringResourceForResource(this, "eventconf-bad-ordering.xml");
+        System.out.println("Unmarshalling: " + resource.getURI());
+        CastorUtils.unmarshal(Events.class, resource);
     }
     
     /**
@@ -217,16 +229,16 @@ public class WillItUnmarshalTest {
         unmarshal("ami-config.xml", AmiConfig.class);
     }
     @Test
+    public void testAvailabilityReportsConfiguration() throws Exception {
+        unmarshal("availability-reports.xml", OpennmsReports.class);
+    }
+    @Test
     public void testCapsdConfiguration() throws Exception {
         unmarshal("capsd-configuration.xml", CapsdConfiguration.class);
     }
     @Test
     public void testExampleCapsdConfiguration() throws Exception {
         unmarshalExample("capsd-configuration.xml", CapsdConfiguration.class);
-    }
-    @Test
-    public void testExampleHypericCapsdConfiguration() throws Exception {
-        unmarshalExample("hyperic-integration/capsd-configuration.xml", CapsdConfiguration.class);
     }
     @Test
     public void testCategories() throws Exception {
@@ -243,6 +255,10 @@ public class WillItUnmarshalTest {
     @Test
     public void testExampleCollectdConfiguration() throws Exception {
         unmarshalExample("collectd-configuration.xml", CollectdConfiguration.class);
+    }
+    @Test
+    public void testDatabaseReportsConfiguration() throws Exception {
+        unmarshal("database-reports.xml", DatabaseReports.class);
     }
     @Test
     public void testDatabaseSchema() throws Exception {
@@ -277,14 +293,6 @@ public class WillItUnmarshalTest {
         unmarshal("eventconf.xml", Events.class);
     }
     @Test
-    public void testExampleHypericEventconf() throws Exception {
-        unmarshalExample("hyperic-integration/eventconf.xml", Events.class);
-    }
-    @Test
-    public void testExampleHypericEvents() throws Exception {
-        unmarshalExample("hyperic-integration/Hyperic.events.xml", Events.class);
-    }
-    @Test
     public void testEventsArchiverConfiguration() throws Exception {
         unmarshal("events-archiver-configuration.xml", EventsArchiverConfiguration.class);
     }
@@ -303,6 +311,10 @@ public class WillItUnmarshalTest {
     @Test
     public void testExampleHttpDataCollectionConfiguration() throws Exception {
         unmarshalExample("devices/motorola_cpei_150_wimax_gateway/http-datacollection-config.xml", HttpDatacollectionConfig.class);
+    }
+    @Test
+    public void testJasperReportsConfiguration() throws Exception {
+        unmarshal("jasper-reports.xml", JasperReports.class);
     }
     @Test
     public void testJmxDataCollectionConfiguration() throws Exception {
@@ -397,10 +409,6 @@ public class WillItUnmarshalTest {
         unmarshalExample("poller-configuration.xml", PollerConfiguration.class);
     }
     @Test
-    public void testExampleHypericPollerConfiguration() throws Exception {
-        unmarshalExample("hyperic-integration/poller-configuration.xml", PollerConfiguration.class);
-    }
-    @Test
     public void testRtcConfiguration() throws Exception {
         unmarshal("rtc-configuration.xml", RTCConfiguration.class);
     }
@@ -481,14 +489,6 @@ public class WillItUnmarshalTest {
         unmarshal("translator-configuration.xml", EventTranslatorConfiguration.class);
     }
     @Test
-    public void testExampleTranslatorConfiguration() throws Exception {
-        unmarshalExample("translator-configuration.xml", EventTranslatorConfiguration.class);
-    }
-    @Test
-    public void testExampleHypericTranslatorConfiguration() throws Exception {
-        unmarshalExample("hyperic-integration/translator-configuration.xml", EventTranslatorConfiguration.class);
-    }
-    @Test
     public void testTrapdonfiguration() throws Exception {
         unmarshal("trapd-configuration.xml", TrapdConfiguration.class);
     }
@@ -547,6 +547,14 @@ public class WillItUnmarshalTest {
     @Test
     public void testAckdConfiguration() throws Exception {
         unmarshal("ackd-configuration.xml", AckdConfiguration.class);
+    }
+    @Test
+    public void provisiondConfiguration() throws Exception {
+        unmarshal("provisiond-configuration.xml", ProvisiondConfiguration.class);
+    }
+    @Test
+    public void testReportdConfiguration() throws Exception {
+        unmarshal("reportd-configuration.xml", ReportdConfiguration.class);
     }
     @Test
     public void testRwsConfiguration() throws Exception {
@@ -661,7 +669,9 @@ public class WillItUnmarshalTest {
             try {
                 // Be conservative about what we ship, so don't be lenient
                 LocalConfiguration.getInstance().getProperties().remove(CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY);
-                CastorUtils.unmarshal(Events.class, new FileSystemResource(includedEventFile));
+                Resource resource = new FileSystemResource(includedEventFile);
+                System.out.println("Unmarshalling: " + resource.getURI());
+                CastorUtils.unmarshal(Events.class, resource);
             } catch (Throwable t) {
                 throw new RuntimeException("Failed to unmarshal " + includedEventFile + ": " + t, t);
             }
@@ -702,7 +712,9 @@ public class WillItUnmarshalTest {
         // Be conservative about what we ship, so don't be lenient
         LocalConfiguration.getInstance().getProperties().remove(CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY);
         
-        T config = CastorUtils.unmarshal(clazz, new FileSystemResource(file));
+        Resource resource = new FileSystemResource(file);
+        System.out.println("Unmarshalling: " + resource.getURI());
+        T config = CastorUtils.unmarshal(clazz, resource);
         
         assertNotNull("unmarshalled object should not be null after unmarshalling from " + file.getAbsolutePath(), config);
         testedSet.add(fileName);

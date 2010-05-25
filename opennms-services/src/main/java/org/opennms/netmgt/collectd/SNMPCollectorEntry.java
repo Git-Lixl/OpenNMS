@@ -43,7 +43,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.MibObject;
 import org.opennms.netmgt.snmp.AbstractSnmpStore;
@@ -76,6 +75,7 @@ public final class SNMPCollectorEntry extends AbstractSnmpStore {
     private SnmpCollectionSet m_collectionSet;
 
     public SNMPCollectorEntry(Collection<SnmpAttributeType> attrList, SnmpCollectionSet collectionSet) {
+        super();
         if (attrList == null) {
             throw new NullPointerException("attrList is null!");
         }
@@ -84,7 +84,7 @@ public final class SNMPCollectorEntry extends AbstractSnmpStore {
     }
 
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
     

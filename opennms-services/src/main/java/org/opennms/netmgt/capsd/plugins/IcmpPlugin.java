@@ -38,10 +38,10 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.capsd.AbstractPlugin;
+import org.opennms.netmgt.ping.PingConstants;
 import org.opennms.netmgt.ping.Pinger;
 
 /**
@@ -59,12 +59,6 @@ public final class IcmpPlugin extends AbstractPlugin {
      * The name of the protocol that is supported by this plugin
      */
     private static final String PROTOCOL_NAME = "ICMP";
-
-    /**
-     * Constructs a new monitor.
-     */
-    public IcmpPlugin() throws IOException {
-    }
 
     /**
      * Returns the name of the protocol that this plugin checks on the target
@@ -92,7 +86,7 @@ public final class IcmpPlugin extends AbstractPlugin {
 	    		return true;
 	    	}
 		} catch (Exception e) {
-	        Category log = ThreadCategory.getInstance(this.getClass());
+	        ThreadCategory log = ThreadCategory.getInstance(this.getClass());
 			log.warn("Pinger failed to ping " + address, e);
 		}
 		return false;
@@ -118,18 +112,18 @@ public final class IcmpPlugin extends AbstractPlugin {
 
     	try {
     		if (qualifiers != null) {
-    			retries = ParameterMap.getKeyedInteger(qualifiers, "retry", Pinger.DEFAULT_RETRIES);
-    			timeout = ParameterMap.getKeyedLong(qualifiers, "timeout", Pinger.DEFAULT_TIMEOUT);
+    			retries = ParameterMap.getKeyedInteger(qualifiers, "retry", PingConstants.DEFAULT_RETRIES);
+    			timeout = ParameterMap.getKeyedLong(qualifiers, "timeout", PingConstants.DEFAULT_TIMEOUT);
     		} else {
-    			retries = Pinger.DEFAULT_RETRIES;
-    			timeout = Pinger.DEFAULT_TIMEOUT;
+    			retries = PingConstants.DEFAULT_RETRIES;
+    			timeout = PingConstants.DEFAULT_TIMEOUT;
     		}
     		Long retval = Pinger.ping(address, timeout, retries);
     		if (retval != null) {
     			return true;
     		}
     	} catch (Exception e) {
-	        Category log = ThreadCategory.getInstance(this.getClass());
+	        ThreadCategory log = ThreadCategory.getInstance(this.getClass());
 			log.warn("Pinger failed to ping " + address, e);
         }
     	

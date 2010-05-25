@@ -21,7 +21,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.ThreadCategory;
@@ -48,7 +47,7 @@ public class NSClientCollector implements ServiceCollector {
     // copy and the key won't require the service name as part of the key.
     private final HashMap<Integer, NSClientAgentState> m_scheduledNodes = new HashMap<Integer, NSClientAgentState>();
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 
@@ -87,6 +86,7 @@ public class NSClientCollector implements ServiceCollector {
         CollectionAttributeType m_attribType;
         
         NSClientCollectionAttribute(NSClientCollectionResource resource, CollectionAttributeType attribType, String alias, String value) {
+            super();
             m_resource=resource;
             m_attribType=attribType;
             m_alias = alias;
@@ -325,7 +325,6 @@ public class NSClientCollector implements ServiceCollector {
     private void initializeRrdRepository() {
         log().debug("initializeRrdRepository: Initializing RRD repo from NSClientCollector...");
         initializeRrdDirs();
-        initializeRrdInterface();
     }
 
     private void initializeRrdDirs() {
@@ -338,15 +337,6 @@ public class NSClientCollector implements ServiceCollector {
             if (!f.mkdirs()) {
                 throw new RuntimeException("Unable to create RRD file " + "repository.  Path doesn't already exist and could not make directory: " + DataCollectionConfigFactory.getInstance().getRrdPath());
             }
-        }
-    }
-
-    private void initializeRrdInterface() {
-        try {
-            RrdUtils.initialize();
-        } catch (RrdException e) {
-            log().error("initializeRrdInterface: Unable to initialize RrdUtils", e);
-            throw new RuntimeException("Unable to initialize RrdUtils", e);
         }
     }
 

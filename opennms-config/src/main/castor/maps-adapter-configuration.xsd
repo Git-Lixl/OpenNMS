@@ -34,7 +34,6 @@
           <documentation>The Element dimension in pixel.</documentation>
         </annotation>
       </attribute>
-
     </complexType>
   </element>
 

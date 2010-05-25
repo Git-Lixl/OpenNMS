@@ -57,7 +57,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.DhcpdConfigFactory;
 import org.opennms.netmgt.utils.IpValidator;
@@ -227,7 +226,7 @@ final class Poller {
      *             daemon.
      */
     private Poller(long timeout) throws IOException {
-        Category log = ThreadCategory.getInstance(this.getClass());
+        ThreadCategory log = ThreadCategory.getInstance(this.getClass());
         DhcpdConfigFactory dcf = DhcpdConfigFactory.getInstance();
         try {
             if (log.isDebugEnabled()) {
@@ -277,7 +276,7 @@ final class Poller {
      *             if the socket close() method fails.
      */
     public void close() {
-        Category log = ThreadCategory.getInstance(Poller.class);
+        ThreadCategory log = ThreadCategory.getInstance(Poller.class);
         try {
             if (log.isDebugEnabled()) {
                 log.debug("Closing connection");
@@ -326,7 +325,7 @@ final class Poller {
      *         otherwise.
      */
     static long isServer(InetAddress host, long timeout, int retries) throws IOException {
-        Category log = ThreadCategory.getInstance(Poller.class);
+        ThreadCategory log = ThreadCategory.getInstance(Poller.class);
 
         boolean isDhcpServer = false;
         // List of DHCP queries to try. The default when extended
@@ -335,37 +334,34 @@ final class Poller {
         String[] typeName = { "DISCOVER", "INFORM", "REQUEST" };
         DhcpdConfigFactory dcf = DhcpdConfigFactory.getInstance();
         if (!paramsChecked) {
-            if (extendedMode == null) {
-                String s_extendedMode = dcf.getExtendedMode();
-                if (s_extendedMode == null) {
-                    extendedMode = false;
-                } else {
-                    extendedMode = Boolean.parseBoolean(s_extendedMode);
-                }
-                if (log.isDebugEnabled()) {
-                    log.debug("isServer: DHCP extended mode is " + extendedMode);
-                }
+            String s_extendedMode = dcf.getExtendedMode();
+            if (s_extendedMode == null) {
+                extendedMode = false;
+            } else {
+                extendedMode = Boolean.parseBoolean(s_extendedMode);
             }
-            if (s_hwAddress == null) {
-                String hwAddressStr = dcf.getMacAddress();
-                if (log.isDebugEnabled()) {
-                    log.debug("isServer: DHCP query hardware/MAC address is " + hwAddressStr);
-                }
-                setHwAddress(hwAddressStr);
+            if (log.isDebugEnabled()) {
+                log.debug("isServer: DHCP extended mode is " + extendedMode);
             }
-            if (s_myIpAddress == null) {
-                String myIpStr = dcf.getMyIpAddress();
-                if (log.isDebugEnabled()) {
-                    log.debug("isServer: DHCP relay agent address is " + myIpStr);
-                }
-                if (myIpStr == null || myIpStr.equals("") || myIpStr.equalsIgnoreCase("broadcast")) {
-                    // do nothing
-                } else if (IpValidator.isIpValid(myIpStr)) {
-                    s_myIpAddress = setIpAddress(myIpStr);
-                    relayMode = true;
-                }
+            
+            String hwAddressStr = dcf.getMacAddress();
+            if (log.isDebugEnabled()) {
+                log.debug("isServer: DHCP query hardware/MAC address is " + hwAddressStr);
             }
-            if (s_requestIpAddress == null && extendedMode == true) {
+            setHwAddress(hwAddressStr);
+            
+            String myIpStr = dcf.getMyIpAddress();
+            if (log.isDebugEnabled()) {
+                log.debug("isServer: DHCP relay agent address is " + myIpStr);
+            }
+            if (myIpStr == null || myIpStr.equals("") || myIpStr.equalsIgnoreCase("broadcast")) {
+                // do nothing
+            } else if (IpValidator.isIpValid(myIpStr)) {
+                s_myIpAddress = setIpAddress(myIpStr);
+                relayMode = true;
+            }
+            
+            if (extendedMode == true) {
                 String requestStr = dcf.getRequestIpAddress();
                 if (log.isDebugEnabled()) {
                     log.debug("isServer: REQUEST query target is " + requestStr);
@@ -498,7 +494,7 @@ final class Poller {
     // Converts the provided hardware address string (format=00:00:00:00:00:00)
     // to an array of bytes which can be passed in a DHCP DISCOVER packet.
     private static void setHwAddress(String hwAddressStr) {
-        Category log = ThreadCategory.getInstance(Poller.class);
+        ThreadCategory log = ThreadCategory.getInstance(Poller.class);
         // initialize the address
         s_hwAddress = DEFAULT_MAC_ADDRESS;
 

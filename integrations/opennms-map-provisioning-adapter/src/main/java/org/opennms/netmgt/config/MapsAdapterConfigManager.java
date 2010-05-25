@@ -37,7 +37,7 @@
 package org.opennms.netmgt.config;
 
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -45,9 +45,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.exolab.castor.xml.MarshalException;
-import org.exolab.castor.xml.Unmarshaller;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.IPSorter;
 import org.opennms.core.utils.IpListFromUrl;
@@ -55,11 +53,11 @@ import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.map.adapter.Celement;
 import org.opennms.netmgt.config.map.adapter.Cmap;
 import org.opennms.netmgt.config.map.adapter.Csubmap;
-import org.opennms.netmgt.config.map.adapter.Package;
-import org.opennms.netmgt.config.map.adapter.MapsAdapterConfiguration;
 import org.opennms.netmgt.config.map.adapter.ExcludeRange;
 import org.opennms.netmgt.config.map.adapter.IncludeRange;
-
+import org.opennms.netmgt.config.map.adapter.MapsAdapterConfiguration;
+import org.opennms.netmgt.config.map.adapter.Package;
+import org.opennms.netmgt.dao.castor.CastorUtils;
 import org.opennms.netmgt.filter.FilterDaoFactory;
 
 /**
@@ -79,7 +77,7 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
      * @throws ValidationException
      * @throws IOException
      */
-   public MapsAdapterConfigManager(Reader reader,String serverName, boolean verifyServer) throws MarshalException, ValidationException, IOException {
+   public MapsAdapterConfigManager(InputStream reader,String serverName, boolean verifyServer) throws MarshalException, ValidationException, IOException {
         m_localServer = serverName;
         m_verifyServer = verifyServer;
         reloadXML(reader);
@@ -114,7 +112,7 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
     private Map<Package, List<String>> m_pkgIpMap;
 
     /**
-     * A mapping of the configured submaps to a list of maps
+     * A mapping of the configured sub-maps to a list of maps
      */
     private Map<String,List<String>> m_submapNameMapNameMap;
     
@@ -129,8 +127,8 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
      }
     
 
-    protected synchronized void reloadXML(Reader reader) throws MarshalException, ValidationException, IOException {
-        m_config = (MapsAdapterConfiguration) Unmarshaller.unmarshal(MapsAdapterConfiguration.class, reader);
+    protected synchronized void reloadXML(InputStream reader) throws MarshalException, ValidationException, IOException {
+        m_config = CastorUtils.unmarshal(MapsAdapterConfiguration.class, reader);
         createUrlIpMap();
         createPackageIpListMap();
         createSubMapMapMap();
@@ -144,7 +142,7 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
     }
     /**
      * Go through the maps adapter configuration and build a mapping of each
-     * configured mapname to container cmap.
+     * configured map name to container cmap.
      * 
      */
 
@@ -163,7 +161,7 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
     
     /**
      * Go through the maps adapter configuration and build a mapping of each
-     * configured submap to container map.
+     * configured sub-map to container map.
      * 
      */
     
@@ -268,12 +266,12 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
      * which, the iplist is selected per package via the configured filter rules
      * from the database.
      */
-    private void createPackageIpListMap() {
+    private synchronized void createPackageIpListMap() {
         m_pkgIpMap = new HashMap<Package, List<String>>();
         
         for(Package pkg : packages()) {
     
-            // Get a list of ipaddress per package agaist the filter rules from
+            // Get a list of IP addresses per package against the filter rules from
             // database and populate the package, IP list map.
             //
             try {
@@ -322,7 +320,7 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
      *         otherwise.
      */
     private synchronized boolean interfaceInPackage(String iface, Package pkg) {
-        Category log = log();
+        ThreadCategory log = log();
     
         boolean filterPassed = false;
     
@@ -397,7 +395,7 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
 
     /**
      * This method is used to determine if the named interface is included in
-     * the passed package's url includes. If the interface is found in any of
+     * the passed package's URL includes. If the interface is found in any of
      * the URL files, then a value of true is returned, else a false value is
      * returned.
      * 
@@ -419,9 +417,9 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
      * @param addr
      *            The interface to test against the package's URL
      * @param url
-     *            The url file to read
+     *            The URL file to read
      * 
-     * @return True if the interface is included in the url, false otherwise.
+     * @return True if the interface is included in the URL, false otherwise.
      */
     private boolean interfaceInUrl(String addr, String url) {
         boolean bRet = false;
@@ -439,7 +437,7 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
      * Returns a list of package names that the ip belongs to, null if none.
      *                
      * <strong>Note: </strong>Evaluation of the interface against a package
-     * filter will only work if the IP is alrady in the database.
+     * filter will only work if the IP is already in the database.
      *
      * @param ipaddr
      *            the interface to check
@@ -481,7 +479,7 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
 
     
  
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(this.getClass());
     }
 
@@ -586,11 +584,11 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
     }
 
     /**
-     * This method is used to rebuild the package agaist iplist mapping when
+     * This method is used to rebuild the package against IP list mapping when
      * needed. When a node gained service event occurs, poller has to determine
-     * which package the ip/service combination is in, but if the interface is a
-     * newly added one, the package iplist should be rebuilt so that poller
-     * could know which package this ip/service pair is in.
+     * which package the IP/service combination is in, but if the interface is a
+     * newly added one, the package IP list should be rebuilt so that poller
+     * could know which package this IP/service pair is in.
      */
     public synchronized void rebuildPackageIpListMap() {
         createPackageIpListMap();

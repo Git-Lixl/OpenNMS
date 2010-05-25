@@ -1,7 +1,7 @@
 //
 // This file is part of the OpenNMS(R) Application.
 //
-// OpenNMS(R) is Copyright (C) 2002-2003 The OpenNMS Group, Inc.  All rights reserved.
+// OpenNMS(R) is Copyright (C) 2002-2009 The OpenNMS Group, Inc.  All rights reserved.
 // OpenNMS(R) is a derivative work, containing both original code, included code and modified
 // code that was published under the GNU General Public License. Copyrights for modified 
 // and included code are below.
@@ -10,6 +10,7 @@
 //
 // Modifications:
 //
+// 2009 Oct 01: test for null interface in handleInerfaceDeleted. - ayres@opennms.org
 // 2003 Oct 21: Fixed typo in variable name.
 // 2003 Jan 31: Cleaned up some unused imports.
 //
@@ -40,7 +41,6 @@
 package org.opennms.netmgt.discovery;
 
 import java.io.IOException;
-import java.lang.reflect.UndeclaredThrowableException;
 import java.net.InetAddress;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -48,10 +48,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.exolab.castor.xml.MarshalException;
+import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.DBUtils;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.config.DataSourceFactory;
@@ -60,10 +63,14 @@ import org.opennms.netmgt.daemon.AbstractServiceDaemon;
 import org.opennms.netmgt.eventd.EventIpcManagerFactory;
 import org.opennms.netmgt.model.discovery.IPPollAddress;
 import org.opennms.netmgt.model.events.AnnotationBasedEventListenerAdapter;
+import org.opennms.netmgt.model.events.EventBuilder;
+import org.opennms.netmgt.model.events.EventForwarder;
 import org.opennms.netmgt.model.events.annotations.EventHandler;
 import org.opennms.netmgt.model.events.annotations.EventListener;
 import org.opennms.netmgt.ping.Pinger;
 import org.opennms.netmgt.xml.event.Event;
+import org.opennms.netmgt.xml.event.Parm;
+import org.springframework.util.Assert;
 
 /**
  * This class is the main interface to the OpenNMS discovery service. The class
@@ -77,11 +84,6 @@ import org.opennms.netmgt.xml.event.Event;
  */
 @EventListener(name="OpenNMS.Discovery")
 public class Discovery extends AbstractServiceDaemon {
-
-    /**
-     * The singular instance of the discovery service.
-     */
-    private static final Discovery m_singleton = new Discovery();
 
     /**
      * The callback that sends newSuspect events upon successful ping response.
@@ -108,18 +110,43 @@ public class Discovery extends AbstractServiceDaemon {
     private Timer m_timer;
 
     private int m_xstatus = PING_IDLE;
+    
+    private volatile EventForwarder m_eventForwarder;
+
+    public void setEventForwarder(EventForwarder eventForwarder) {
+        m_eventForwarder = eventForwarder;
+    }
+
+    public EventForwarder getEventForwarder() {
+        return m_eventForwarder;
+    }
+    
+    public void setDiscoveryFactory(DiscoveryConfigFactory discoveryFactory) {
+        m_discoveryFactory = discoveryFactory;
+    }
+
+    public DiscoveryConfigFactory getDiscoveryFactory() {
+        return m_discoveryFactory;
+    }
 
     /**
      * Constructs a new discovery instance.
      */
-    private Discovery() {
+    public Discovery() {
         super("OpenNMS.Discovery");
     }
 
-    protected void onInit() {
+    protected void onInit() throws IllegalStateException {
 
-        initializeConfiguration();
-        EventIpcManagerFactory.init();
+        Assert.state(m_eventForwarder != null, "must set the eventForwarder property");
+        
+        try {
+            initializeConfiguration();
+            EventIpcManagerFactory.init();
+        } catch (Exception e) {
+            log().debug("onInit: initialization failed: "+e, e);
+            throw new IllegalStateException("Could not initialize discovery configuration.", e);
+        }
         
         @SuppressWarnings("unused")
         // TODO: Is this doing some kind of wacky initialization?  Or is it ignored?
@@ -127,32 +154,31 @@ public class Discovery extends AbstractServiceDaemon {
 
     }
 
-    private void initializeConfiguration() {
-        try {
-            DiscoveryConfigFactory.reload();
-            m_discoveryFactory = DiscoveryConfigFactory.getInstance();
-
-        } catch (Exception e) {
-            fatalf(e, "Unable to initialize the discovery configuration factory");
-            throw new UndeclaredThrowableException(e);
-        }
+    private void initializeConfiguration() throws MarshalException, ValidationException, IOException {
+        DiscoveryConfigFactory.reload();
+        setDiscoveryFactory(DiscoveryConfigFactory.getInstance());
     }
 
-    protected void doPings() {
+    private void doPings() {
         debugf("starting ping sweep");
-        initializeConfiguration();
+        
+        try {
+            initializeConfiguration();
+        } catch (Exception e) {
+            log().error("doPings: could not re-init configuration, continuing with in memory configuration."+e, e);
+        }
 
 
         m_xstatus = PING_RUNNING;
 
-        for (IPPollAddress pollAddress : m_discoveryFactory.getConfiguredAddresses()) {
+        for (IPPollAddress pollAddress : getDiscoveryFactory().getConfiguredAddresses()) {
             if (m_xstatus == PING_FINISHING || m_timer == null) {
                 m_xstatus = PING_IDLE;
                 return;
             }
             ping(pollAddress);
             try {
-                Thread.sleep(m_discoveryFactory.getIntraPacketDelay());
+                Thread.sleep(getDiscoveryFactory().getIntraPacketDelay());
             } catch (InterruptedException e) {
                 break;
             }
@@ -168,7 +194,7 @@ public class Discovery extends AbstractServiceDaemon {
             if (!isAlreadyDiscovered(address)) {
                 try {
                     Pinger.ping(address, pollAddress.getTimeout(), pollAddress.getRetries(), (short) 1, cb);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     debugf(e, "error pinging %s", address.getAddress());
                 }
             }
@@ -180,13 +206,6 @@ public class Discovery extends AbstractServiceDaemon {
             return true;
         }
         return false;
-    }
-
-    /**
-     * Returns the singular instance of the discovery process
-     */
-    public static Discovery getInstance() {
-        return m_singleton;
     }
 
     private void startTimer() {
@@ -207,7 +226,7 @@ public class Discovery extends AbstractServiceDaemon {
             }
 
         };
-        m_timer.scheduleAtFixedRate(task, m_discoveryFactory.getInitialSleepTime(), m_discoveryFactory.getRestartSleepTime());
+        m_timer.scheduleAtFixedRate(task, getDiscoveryFactory().getInitialSleepTime(), getDiscoveryFactory().getRestartSleepTime());
 
     }
 
@@ -274,17 +293,70 @@ public class Discovery extends AbstractServiceDaemon {
 
     @EventHandler(uei=EventConstants.DISCOVERYCONFIG_CHANGED_EVENT_UEI)
     public void handleDiscoveryConfigurationChanged(Event event) {
-        initializeConfiguration();
-        this.stop();
-        this.start();
+        log().info("handleDiscoveryConfigurationChanged: handling message that a change to configuration happened...");
+        reloadAndReStart();
+    }
+
+    private void reloadAndReStart() {
+        EventBuilder ebldr = null;
+        try {
+            initializeConfiguration();
+            ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_SUCCESSFUL_UEI, getName());
+            ebldr.addParam(EventConstants.PARM_DAEMON_NAME, "Discovery");
+            this.stop();
+            this.start();
+        } catch (MarshalException e) {
+            fatalf(e, "Unable to initialize the discovery configuration factory");
+            ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_FAILED_UEI, getName());
+            ebldr.addParam(EventConstants.PARM_DAEMON_NAME, "Discovery");
+            ebldr.addParam(EventConstants.PARM_REASON, e.getLocalizedMessage().substring(0, 128));
+        } catch (ValidationException e) {
+            fatalf(e, "Unable to initialize the discovery configuration factory");
+            ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_FAILED_UEI, getName());
+            ebldr.addParam(EventConstants.PARM_DAEMON_NAME, "Discovery");
+            ebldr.addParam(EventConstants.PARM_REASON, e.getLocalizedMessage().substring(0, 128));
+        } catch (IOException e) {
+            fatalf(e, "Unable to initialize the discovery configuration factory");
+            ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_FAILED_UEI, getName());
+            ebldr.addParam(EventConstants.PARM_DAEMON_NAME, "Discovery");
+            ebldr.addParam(EventConstants.PARM_REASON, e.getLocalizedMessage().substring(0, 128));
+        }
+        m_eventForwarder.sendNow(ebldr.getEvent());
+    }
+    
+    @EventHandler(uei=EventConstants.RELOAD_DAEMON_CONFIG_UEI)
+    public void reloadDaemonConfig(Event e) {
+        log().info("reloadDaemonConfig: processing reload daemon event...");
+        if (isReloadConfigEventTarget(e)) {
+            reloadAndReStart();
+        }
+        log().info("reloadDaemonConfig: reload daemon event processed.");
+    }
+    
+    private boolean isReloadConfigEventTarget(Event event) {
+        boolean isTarget = false;
+        
+        List<Parm> parmCollection = event.getParms().getParmCollection();
+
+        for (Parm parm : parmCollection) {
+            if (EventConstants.PARM_DAEMON_NAME.equals(parm.getParmName()) && "Discovery".equalsIgnoreCase(parm.getValue().getContent())) {
+                isTarget = true;
+                break;
+            }
+        }
+        
+        log().debug("isReloadConfigEventTarget: discovery was target of reload event: "+isTarget);
+        return isTarget;
     }
 
     @EventHandler(uei=EventConstants.INTERFACE_DELETED_EVENT_UEI)
     public void handleInterfaceDeleted(Event event) {
-        // remove from known nodes
-        m_alreadyDiscovered.remove(event.getInterface());
+        if(event.getInterface() != null) {
+            // remove from known nodes
+            m_alreadyDiscovered.remove(event.getInterface());
 
-        debugf("Removed %s from known node list", event.getInterface());
+            debugf("Removed %s from known node list", event.getInterface());
+        }
     }
 
     @EventHandler(uei=EventConstants.DISC_RESUME_EVENT_UEI)

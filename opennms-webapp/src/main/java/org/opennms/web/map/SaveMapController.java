@@ -33,17 +33,16 @@ package org.opennms.web.map;
 
 
 import java.io.BufferedWriter;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 
 import org.opennms.web.WebSecurityUtils;
-import org.opennms.web.map.db.Element;
 
 import org.opennms.web.map.view.*;
 
@@ -54,12 +53,12 @@ import java.util.*;
 
 /**
  * @author mmigliore
- * 
+ * @author antonio@opennms.it
  */
 
 public class SaveMapController implements Controller {
 
-	Category log;
+	ThreadCategory log;
 
 	private Manager manager;
 
@@ -80,14 +79,7 @@ public class SaveMapController implements Controller {
 		ThreadCategory.setPrefix(MapsConstants.LOG4J_CATEGORY);
 		log = ThreadCategory.getInstance(this.getClass());
 		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(response
-				.getOutputStream()));
-		if (!request.isUserInRole(org.opennms.web.springframework.security.Authentication.ADMIN_ROLE)) {
-			log.warn("User is not in Admin mode, cannot save");
-			bw.write(ResponseAssembler.getMapErrorResponse(MapsConstants.SAVEMAP_ACTION));
-			bw.close();
-			return null;
-			
-		}
+				.getOutputStream(), "UTF-8"));
 			
 		String mapName = request.getParameter("MapName");
 		String mapBackground = request.getParameter("MapBackground");
@@ -96,22 +88,15 @@ public class SaveMapController implements Controller {
 		
 		String query = request.getQueryString();
 		String queryNodes = request.getParameter("Nodes");
-		String packetStr = request.getParameter("packet");
-		String totalPacketsStr = request.getParameter("totalPackets");
 		
-		if (log.isDebugEnabled())
-			log.debug("Saving map " + mapName + " the query received is '" + query + "'");
-		
+		log.debug("Saving map " + mapName + " the query received is '" + query + "'");
+        log.debug("Saving map " + mapName + " the data received is '" + queryNodes + "'");
 
 		try {
 			VMap map = manager.openMap();
 
-			if ((packetStr == null && totalPacketsStr == null)
-					|| (packetStr.equals("1"))) {
-				if (log.isDebugEnabled())
-					log.debug("Instantiating new elems ArrayList");
-				elems = new ArrayList<VElement>();
-			}
+			log.debug("Instantiating new elems ArrayList");
+			elems = new ArrayList<VElement>();
 
 			StringTokenizer st = new StringTokenizer(queryNodes, "*");
 			while (st.hasMoreTokens()) {
@@ -119,7 +104,7 @@ public class SaveMapController implements Controller {
 				StringTokenizer nodeST = new StringTokenizer(nodeToken, ",");
 				int counter = 1;
 				String icon = "";
-				String type = Element.NODE_TYPE;
+				String type = MapsConstants.NODE_TYPE;
 
 				int id = 0, x = 0, y = 0;
 				while (nodeST.hasMoreTokens()) {
@@ -141,47 +126,57 @@ public class SaveMapController implements Controller {
 					}
 					counter++;
 				}
-				VElement ve = null;
-				if (!type.equals(Element.NODE_TYPE)
-						&& !type.equals(Element.MAP_TYPE)) {
+				if (!type.equals(MapsConstants.NODE_TYPE)
+						&& !type.equals(MapsConstants.MAP_TYPE)) {
 					throw new MapsException("Map element type " + type
 							+ " not valid! Valid values are:"
-							+ Element.NODE_TYPE + " and "
-							+ Element.MAP_TYPE);
+							+ MapsConstants.NODE_TYPE + " and "
+							+ MapsConstants.MAP_TYPE);
 				}
-				log.debug("adding map element to map with id " + id
-						+ " and type " + type);
-				ve = manager.newElement(map.getId(), id, type, icon, x, y);
+				
+				String label=null;
+                if (map.getElement(id, type) != null && map.getElement(id, type).getLabel() != null) {
+                    log.debug("preserving the label: " + map.getElement(id, type).getLabel());
+                    label = map.getElement(id, type).getLabel();
+                }                
+                
+                VElement ve = manager.newElement(map.getId(), id, type, icon, x, y);
+                if (label != null )
+                    ve.setLabel(label);                    
+                
+                log.debug("adding map element to map with id: " +id+type + " and label: " + ve.getLabel());
 				elems.add(ve);
 			}
-			// add elements and save if is a no-packet session or if is the
-			// last packet
-			if ((packetStr == null && totalPacketsStr == null)
-					|| (packetStr.equals(totalPacketsStr))) {
+
+			map.removeAllLinks();
+			map.removeAllElements();
 				
-				log.info("SaveMap: removing all links and elements.");
-				map.removeAllLinks();
-				map.removeAllElements();
-				log.info("SaveMap: saving all elements.");
+			map.addElements(elems);
+
 				
-				Iterator<VElement> it = elems.iterator();
-				while (it.hasNext()) {
-					map.addElement(it.next());
-				}
-				
-				map.setUserLastModifies(request.getRemoteUser());
-				map.setName(mapName);
-				map.setBackground(mapBackground);
-				map.setWidth(mapWidth);
-				map.setHeight(mapHeight);
-				
-				if (map.isNew())
-					map.setType(VMap.USER_GENERATED_MAP);
-				manager.save(map);
-				
-				log.info("Map saved");
+			map.setUserLastModifies(request.getRemoteUser());
+			map.setName(mapName);
+			map.setBackground(mapBackground);
+			map.setWidth(mapWidth);
+			map.setHeight(mapHeight);
+			
+			if (map.isNew()) {
+			    log.debug("Map is New Map");
+				map.setType(MapsConstants.USER_GENERATED_MAP);
+				map.setAccessMode(MapsConstants.ACCESS_MODE_ADMIN);
 			}
-			bw.write(ResponseAssembler.getSaveMapResponse(MapsConstants.SAVEMAP_ACTION, map, packetStr, totalPacketsStr));
+			else if (map.getType().trim().equalsIgnoreCase(MapsConstants.AUTOMATICALLY_GENERATED_MAP)) {
+                log.debug("Map is Automated Map, saving as Static");
+                map.setType(MapsConstants.AUTOMATIC_SAVED_MAP);
+			}
+			int mapId = manager.save(map);
+
+	        log.info(map.getName() + " Map saved. " + "With map id: " + mapId);
+
+			if (map.isNew()) 
+			    map.setId(mapId);
+
+			bw.write(ResponseAssembler.getSaveMapResponse(map));
 		} catch (Exception e) {
 			log.error("Map save error: " + e,e);
 			bw.write(ResponseAssembler.getMapErrorResponse(MapsConstants.SAVEMAP_ACTION));
@@ -191,6 +186,5 @@ public class SaveMapController implements Controller {
 		}
 		return null;
 	}
-
 
 }

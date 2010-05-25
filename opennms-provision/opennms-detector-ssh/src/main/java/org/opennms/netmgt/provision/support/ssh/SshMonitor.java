@@ -102,7 +102,7 @@ final public class SshMonitor extends IPv4Monitor {
             try {
                 ps = ssh.poll(tracker);
             } catch (InsufficientParametersException e) {
-                log().error(e);
+                log().error(e.getMessage());
                 break;
             }
 
@@ -118,6 +118,10 @@ final public class SshMonitor extends IPv4Monitor {
                 return ps;
             } else {
                 String response = ssh.getServerBanner();
+
+                if (response == null) {
+                    return PollStatus.unavailable("server closed connection before banner was recieved.");
+                }
 
                 if (regex.match(response)) {
                     if (log().isDebugEnabled()) {

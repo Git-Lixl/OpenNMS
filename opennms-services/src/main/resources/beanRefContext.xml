@@ -70,7 +70,8 @@
      <constructor-arg>
        <list>
          <value>META-INF/opennms/applicationContext-pollerBackEnd.xml</value>
-         <value>META-INF/opennms/applicationContext-exportedPollerBackEnd.xml</value>
+         <value>META-INF/opennms/applicationContext-exportedPollerBackEnd-rmi.xml</value>
+         <value>META-INF/opennms/applicationContext-exportedPollerBackEnd-http.xml</value>
        </list>
      </constructor-arg>
      <constructor-arg ref="commonContext" />
@@ -134,6 +135,15 @@
      <constructor-arg>
        <list>
          <value>META-INF/opennms/applicationContext-tl1Daemon.xml</value>
+       </list>
+     </constructor-arg>
+     <constructor-arg ref="commonContext" />
+   </bean>
+    
+   <bean id="discoveryContext" class="org.springframework.context.support.ClassPathXmlApplicationContext">
+     <constructor-arg>
+       <list>
+         <value>META-INF/opennms/applicationContext-discovery.xml</value>
        </list>
      </constructor-arg>
      <constructor-arg ref="commonContext" />

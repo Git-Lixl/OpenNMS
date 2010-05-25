@@ -4,7 +4,7 @@ MapElement.superclass = MoveableSVGElement.prototype;
 
 /*
 id=the id of the element 
-iconName=the name of the icon 
+iconUrl=the Url of the icon 
 labelText= the label of the element
 semaphoreColor=the color of the semaphore (rgb or 'white','yellow' ecc.)
 x=x position
@@ -13,67 +13,116 @@ status=the element status at the moment of the creation
 avail=availability of the element at the moment of the creation
 */
 
-function MapElement(id,iconName, labelText, semaphoreColor, semaphoreFlash, x, y, dimension, status, avail, severity)
+function MapElement(id,icon, labelText, semaphoreColor, semaphoreFlash, x, y, dimension, status, avail, severity,usesemaphore)
 {
-	if ( arguments.length == 11 )
+	if ( arguments.length == 12 )
 	{
-	   	this.init(id,iconName, labelText, semaphoreColor, semaphoreFlash, x, y, dimension, status, avail, severity);
+	   	this.init(id,icon, labelText, semaphoreColor, semaphoreFlash, x, y, dimension, status, avail, severity,usesemaphore);
 	}
 	else
 		alert("MapElement constructor call error");
 }
 
-MapElement.prototype.init = function(id,iconName, labelText, semaphoreColor, semaphoreFlash, x, y, dimension, status, avail, severity)
+MapElement.prototype.init = function(id,icon, labelText, semaphoreColor, semaphoreFlash, x, y, dimension, status, avail, severity,usesemaphore)
 {
+
 	MapElement.superclass.init.call(this, "x", "y", x, y);
 	this.id = new String(id);
+	
 	this.width = dimension;
-	this.height = dimension*4/3;
-	this.icon = iconName;
+	this.height = dimension*6/5;
+	this.radius = dimension/2*1562/1000;
+   	this.cx=x+this.width/2;
+	this.cy=y+this.height/2;
+	
+	
+	this.icon = icon;
 	this.avail = avail;
 	this.status = status;
 	this.severity = severity;
+	
+	this.usesemaphore=usesemaphore;
 	
 	//mantains the number of links on this elements
 	this.numOfLinks=0;
 	// renderize element
 	this.svgNode = document.createElementNS(svgNS,"g");
 	this.svgNode.setAttributeNS(null,"id", this.id);
+
 	// renderize icon
 	this.image = document.createElementNS(svgNS,"image");
 	this.image.setAttributeNS(null,"width", this.width);
 	this.image.setAttributeNS(null,"height", this.height);
-	this.image.setAttributeNS(null,this.attributeX, dimension/10);
+	this.image.setAttributeNS(null,this.attributeX, dimension/20);
 	this.image.setAttributeNS(null,this.attributeY, 0);
 	this.image.setAttributeNS(null,"preserveAspectRatio", "xMinYMin");
 	this.image.setAttributeNS(null,"cursor", "pointer");
-	this.image.setAttributeNS(xlinkNS, "xlink:href", MEIconsSortAss[this.icon]);
+	this.image.setAttributeNS(xlinkNS, "xlink:href",this.icon.getUrl());
 	this.image.addEventListener("click", this.onClick, false);
 	this.image.addEventListener("mousedown", this.onMouseDown, false);
 	this.image.addEventListener("mousemove", this.onMouseMove, false);
 	this.image.addEventListener("mouseup", this.onMouseUp, false);
+	this.image.addEventListener("mouseover", this.onMouseOver, false);
+	this.image.addEventListener("mouseout", this.onMouseOut, false);
+	
+	var labelx = Math.round(this.width/2);
+	var labely = this.height + dimension*0.7;
+	var labelSize = dimension/2;
+	var labelAnchor = "middle";
+
+    this.label = new Label(labelText, labelx, labely, labelSize, labelAnchor);
+	
+	//renderize status with semaphore or inline
+	var r,cx,cy;
+	if ( this.usesemaphore ) {
+		r=this.width/4;
+    	cx=this.width+r+2;
+ 		cy=this.height-r;
+	} else {
+		r=this.radius;
+    	cx=this.width/2;
+		cy=this.height/2;
+	}
+	this.semaphore = new Semaphore(r, cx, cy, semaphoreColor, "black");
+	this.semaphore.flash(semaphoreFlash);
+
+	this.svgNode.appendChild(this.semaphore.getSvgNode());
 	this.svgNode.appendChild(this.image);
-	this.label = new Label(labelText, Math.round(this.width/3), this.height + dimension*0.5, dimension/2,null);
 	this.svgNode.appendChild(this.label.getSvgNode());
 	
-	//renderize semaphore
-	var r=dimension/4;
-	this.semaphore = new Semaphore(r, this.width + r, this.height-r, semaphoreColor, "black");
-	this.semaphore.flash(semaphoreFlash);
-	this.svgNode.appendChild(this.semaphore.getSvgNode());
 	this.svgNode.setAttributeNS(null,"transform", "translate(" + this.x + "," + this.y + ")");
 	this.svgNode.setAttributeNS(null,"opacity", "0.9");
 }
 
 
-MapElement.prototype.setDimension = function(newDimension){
-	this.width = newDimension;
-	this.height = newDimension*4/3;
+MapElement.prototype.setDimension = function(dimension) {
+
+	this.width = dimension;
+	this.height = dimension*6/5;
+	this.radius = dimension/2*1562/1000;
+   	this.cx=this.x+this.width/2;
+	this.cy=this.y+this.height/2;
+
 	this.image.setAttributeNS(null,"width", this.width);
 	this.image.setAttributeNS(null,"height", this.height);	
-	this.label.setFontSize(newDimension/2);
 	
-	this.semaphore.setDimension(newDimension/4);
+	var labelx = Math.round(this.width/2);
+	var labely = this.height + dimension*0.7;
+	var labelSize = dimension/2;
+	
+	this.label.setFontSize(labelx,labely,labelSize);
+	
+	var r,cx,cy;
+	if ( this.usesemaphore ) {
+		r=this.width/4;
+    	cx=this.width+r+2;
+ 		cy=this.height-r;
+	} else {
+		r=this.radius;
+    	cx=this.width/2;
+		cy=this.height/2;
+	}
+	this.semaphore.setDimension(r,cx,cy);
 }
 
 MapElement.prototype.getMapId = function() {
@@ -115,7 +164,7 @@ MapElement.prototype.getY = function(){
 }
 
 MapElement.prototype.setSemaphoreColor = function(semaphoreColor){
-	this.semaphore.svgNode.setAttributeNS(null,"fill", semaphoreColor);
+	this.semaphore.setFillColor(semaphoreColor);
 }
 
 MapElement.prototype.setSemaphoreFlash = function(flag)
@@ -132,99 +181,72 @@ MapElement.prototype.move = function(x, y)
 {	
 	this.x = x;
 	this.y = y;
+   	this.cx=this.x+this.width/2;
+	this.cy=this.y+this.height/2;
 	this.svgNode.setAttributeNS(null,"transform", "translate(" + this.x + "," + this.y + ")");
+}
+
+MapElement.prototype.getIcon = function()
+{
+	return this.icon.name;
+}
+
+MapElement.prototype.setIcon = function(icon)
+{
+	this.icon = icon;
+	this.image.setAttributeNS(xlinkNS, "xlink:href", this.icon.getUrl());	
+}
+
+MapElement.prototype.useSemaphore = function(usesemaphore)
+{
+	if ( this.usesemaphore == usesemaphore ) return;	
+	this.usesemaphore = usesemaphore;
+	var r,cx,cy;
+	if ( this.usesemaphore ) {
+		r=this.width/4;
+    	cx=this.width+r+2;
+ 		cy=this.height-r;
+	} else {
+		r=this.radius;
+    	cx=this.width/2;
+		cy=this.height/2;
+	}
+	this.semaphore.setDimension(r,cx,cy);
 }
 
 MapElement.prototype.getLabel = function()
 {
-return this.label.text;
+	return this.label.text;
 }
 
-MapElement.prototype.getInfo = function()
+MapElement.prototype.getSeverity = function()
 {
+	return this.severity;
+}
 
-    var severityColor=getSeverityColor(this.severity)
-	var statusColor=getStatusColor(this.status);
+MapElement.prototype.getStatus = function()
+{
+	return this.status;
+}
 
-    var severityLabel = SEVERITIES_LABEL[this.severity];
-	var status = STATUSES_TEXT[this.status];
-	
-	var availColor = getAvailColor(this.avail);
+MapElement.prototype.getAvail = function()
+{
+	return this.avail;
+}
 
-	var avail;
+MapElement.prototype.getRadius = function()
+{
+	return this.radius;
+}
 
-	if(this.avail<0){
-		avail="Unknown";
-	}else{	
-		avail = (""+this.avail).substring(0,6)+"%";
-	}
+MapElement.prototype.getCX = function()
+{
+	return this.cx;
+}
 
-	if(availColor=='white')
-		availColor='black';
-	if(statusColor=='white')
-		statusColor='black';		
-
-	var text = document.createElementNS(svgNS,"text");
-	text.setAttributeNS(null, "x","3");
-	text.setAttributeNS(null, "dy","15");
-	text.setAttributeNS(null, "id","topInfoTextTitle");
-	
-	var textLabel = document.createTextNode("Map Element info");
-	text.appendChild(textLabel);
-	
-	var tspan = document.createElementNS(svgNS,"tspan");
-	tspan.setAttributeNS(null, "x","3");
-	tspan.setAttributeNS(null, "dy","20");
-	
-	var tspanContent = document.createTextNode(this.label.text);
-	tspan.appendChild(tspanContent);
-	text.appendChild(tspan);
-
-	if(this.isMap()){
-		tspan = document.createElementNS(svgNS,"tspan");
-		tspan.setAttributeNS(null, "x","3");
-		tspan.setAttributeNS(null, "dy","15");
-		tspanContent = document.createTextNode("Id: "+ this.getMapId() + "  (Map)");
-		tspan.appendChild(tspanContent);
-		text.appendChild(tspan);
-	}
-
-	if(this.isNode()){
-		tspan = document.createElementNS(svgNS,"tspan");
-		tspan.setAttributeNS(null, "x","3");
-		tspan.setAttributeNS(null, "dy","15");
-		tspan.setAttributeNS(null, "id","TopInfoLabelText");
-		tspanContent = document.createTextNode("Id: "+ this.getNodeId() + "  (Node)");
-		tspan.appendChild(tspanContent);
-		text.appendChild(tspan);	
-	}
-
-	tspan = document.createElementNS(svgNS,"tspan");
-	tspan.setAttributeNS(null, "x","3");
-	tspan.setAttributeNS(null, "dy","15");
-	tspan.setAttributeNS(null, "fill",statusColor);
-	tspanContent = document.createTextNode("Status: " + status);
-	tspan.appendChild(tspanContent);
-	text.appendChild(tspan);	
-		
-	tspan = document.createElementNS(svgNS,"tspan");
-	tspan.setAttributeNS(null, "x","3");
-	tspan.setAttributeNS(null, "dy","15");
-	tspan.setAttributeNS(null, "fill",availColor);
-	tspanContent = document.createTextNode("Availability: " + avail );
-	tspan.appendChild(tspanContent);
-	text.appendChild(tspan);
-	
-	tspan = document.createElementNS(svgNS,"tspan");
-	tspan.setAttributeNS(null, "x","3");
-	tspan.setAttributeNS(null, "dy","15");
-	tspan.setAttributeNS(null, "fill",severityColor);
-	tspanContent = document.createTextNode("Severity: " + severityLabel );
-	tspan.appendChild(tspanContent);
-	text.appendChild(tspan);		
-
-	// get info 	
-	return text;
+MapElement.prototype.getCY = function()
+{
+	return this.cy;
 }
 
 MapElement.prototype.getNumberOfLink = function()
@@ -236,3 +258,5 @@ MapElement.prototype.onMouseDown = onMouseDownOnMapElement;
 MapElement.prototype.onMouseMove = onMouseMove;
 MapElement.prototype.onMouseUp   = onMouseUp;
 MapElement.prototype.onClick     = onClickMapElement;
+MapElement.prototype.onMouseOver = onMouseOverMapElement;
+MapElement.prototype.onMouseOut  = onMouseOutMapElement;

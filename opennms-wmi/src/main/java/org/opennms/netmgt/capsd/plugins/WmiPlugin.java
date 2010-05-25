@@ -8,7 +8,8 @@
 //
 // OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
 //
-// Original code base Copyright (C) 1999-2001 Oculan Corp.  All rights reserved.
+// Modifications:
+// 12 Feb 2010: Avoid an NPE when isServer returns a null (bug 3555) - jeffg@opennms.org
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,7 +35,6 @@ package org.opennms.netmgt.capsd.plugins;
 import java.net.InetAddress;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.capsd.AbstractPlugin;
@@ -193,7 +193,7 @@ public class WmiPlugin extends AbstractPlugin {
 				agentConfig.getRetries(), agentConfig.getTimeout(), clientParams);
 
 		// Only fail on critical and unknown returns.
-		if (result.getResultCode() != WmiResult.RES_STATE_CRIT
+		if (result != null && result.getResultCode() != WmiResult.RES_STATE_CRIT
 				&& result.getResultCode() != WmiResult.RES_STATE_UNKNOWN) {
 
 			return true;
@@ -280,7 +280,7 @@ public class WmiPlugin extends AbstractPlugin {
 		return result;
 	}
 
-    private Category log() {
+    private ThreadCategory log() {
 		return ThreadCategory.getInstance(getClass());
 	}
 }

@@ -34,7 +34,8 @@ package org.opennms.netmgt.provision.service.lifecycle;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import org.opennms.netmgt.provision.service.tasks.DefaultTaskCoordinator;
+import org.opennms.core.tasks.BatchTask;
+import org.opennms.core.tasks.DefaultTaskCoordinator;
 
 /**
  * LifeCycle
@@ -57,7 +58,7 @@ public interface LifeCycleInstance {
 
     <T> T getAttribute(String key, T defaultValue);
 
-    LifeCycleInstance createNestedLifeCycle(Phase currentPhase, String lifeCycleName);
+    LifeCycleInstance createNestedLifeCycle(BatchTask currentPhase, String lifeCycleName);
 
     void trigger();
 

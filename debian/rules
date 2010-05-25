@@ -44,7 +44,11 @@ $(STAMP_BUILD):
 	rm -rf debian/temp/integrations/*-tests.jar
 	rm -rf debian/temp/integrations/*-xsds.jar
 	cp integrations/opennms-link-provisioning-adapter/src/main/resources/link-adapter-configuration.xml debian/temp/integrations/
+<<<<<<< HEAD
 	cp integrations/opennms-link-provisioning-adapter/src/main/resources/endpoint-configuration.xml debian/temp/integrations/
+=======
+	cp integrations/opennms-link-provisioning-adapter/src/main/resources/endpoint-configuration.xml     debian/temp/integrations/
+>>>>>>> origin
 	cp integrations/opennms-map-provisioning-adapter/src/main/resources/mapsadapter-configuration.xml   debian/temp/integrations/
 	find debian/temp -type d -name .svn -exec rm -rf {} \;
 	touch $(STAMP_BUILD)
@@ -53,6 +57,10 @@ clean:
 	dh_testdir
 	dh_testroot
 	sh ./build.sh -Dbuild=all -Duser.home=$(HOME) -Ddist.dir=$(CURDIR)/debian -Ddist.name=temp clean
+<<<<<<< HEAD
+=======
+	rm -f opennms-remote-poller.{init,default}
+>>>>>>> origin
 	dh_clean
 	rm -f $(STAMP_BUILD)
 
@@ -82,6 +90,10 @@ install: build
 	find debian/opennms-common/usr/share/opennms/bin -type f -execdir chmod 755 {} \;
 	mv debian/temp/etc/* debian/opennms-common/etc/opennms/
 	find debian/opennms-common/etc/opennms -type f -execdir chmod 644 {} \;
+<<<<<<< HEAD
+=======
+	rm -rf debian/opennms-common/etc/opennms/{link-adapter,endpoint,mapsadapter}-configuration.xml
+>>>>>>> origin
 
 	# Adjust permissions for config files containing sensitive information
 	install -m 644 debian/opennms-common.overrides debian/opennms-common/usr/share/lintian/overrides/opennms-common
@@ -113,23 +125,46 @@ install: build
 	##
 	## Setup the opennms-remote-poller package
 	##
+<<<<<<< HEAD
 	install -m 755 debian/opennms-remote-poller.bin debian/opennms-remote-poller/usr/sbin/opennms-remote-poller
 	install -m 644 features/remote-poller/target/*remote-poller-*-signed-jar-with-dependencies.jar \
 		debian/opennms-remote-poller/usr/share/java/opennms-remote-poller.jar
+=======
+	install -d -m 755 debian/opennms-remote-poller/usr/share/opennms/bin debian/opennms-remote-poller/usr/sbin
+	install -m 755 debian/opennms-remote-poller.bin debian/opennms-remote-poller/usr/sbin/opennms-remote-poller
+	mv debian/opennms-common/usr/share/opennms/bin/remote-poller.* debian/opennms-remote-poller/usr/share/opennms/bin/
+	install -m 755 debian/temp/contrib/remote-poller/remote-poller.init debian/opennms-remote-poller.init
+	install -m 640 debian/temp/contrib/remote-poller/remote-poller.sysconfig debian/opennms-remote-poller.default
+	rm -rf debian/temp/contrib/remote-poller
+>>>>>>> origin
 
 	##
 	## Setup the opennms-webapp-jetty package
 	##
 	install -m 644 debian/opennms-webapp-jetty.overrides debian/opennms-webapp-jetty/usr/share/lintian/overrides/opennms-webapp-jetty
+<<<<<<< HEAD
 	mv debian/temp/jetty-webapps/opennms/* debian/opennms-webapp-jetty/usr/share/opennms/jetty-webapps/opennms/
 	find debian/opennms-webapp-jetty/usr/share/opennms/jetty-webapps/opennms -type f -execdir chmod 644 {} \;
+=======
+	install -d -m 755 debian/opennms-webapp-jetty/usr/share/opennms/jetty-webapps/{opennms,opennms-remoting}
+	mv debian/temp/jetty-webapps/opennms/* debian/opennms-webapp-jetty/usr/share/opennms/jetty-webapps/opennms/
+	mv debian/temp/jetty-webapps/opennms-remoting/* debian/opennms-webapp-jetty/usr/share/opennms/jetty-webapps/opennms-remoting/
+	find debian/opennms-webapp-jetty/usr/share/opennms/jetty-webapps/opennms* -type f -execdir chmod 644 {} \;
+>>>>>>> origin
 
 	##
 	## Setup the opennms-webapp-standalone package
 	##
 	install -m 644 debian/opennms-webapp-standalone.overrides debian/opennms-webapp-standalone/usr/share/lintian/overrides/opennms-webapp-standalone
+<<<<<<< HEAD
 	mv debian/temp/webapps/opennms/* debian/opennms-webapp-standalone/usr/share/opennms/webapps/opennms/
 	find debian/opennms-webapp-standalone/usr/share/opennms/webapps/opennms -type f -execdir chmod 644 {} \;
+=======
+	install -d -m 755 debian/opennms-webapp-standalone/usr/share/opennms/webapps/{opennms,opennms-remoting}
+	mv debian/temp/webapps/opennms/* debian/opennms-webapp-standalone/usr/share/opennms/webapps/opennms/
+	mv debian/temp/webapps/opennms-remoting/* debian/opennms-webapp-standalone/usr/share/opennms/webapps/opennms-remoting/
+	find debian/opennms-webapp-standalone/usr/share/opennms/webapps/opennms* -type f -execdir chmod 644 {} \;
+>>>>>>> origin
 	install -m 644 debian/opennms-webapp-standalone.policy debian/opennms-webapp-standalone/etc/tomcat5.5/policy.d/99opennms.policy
 
 	# Adjust the port numbers in the default post-back URLs to account for
@@ -166,7 +201,11 @@ install: build
 	mv debian/temp/integrations/opennms-map-provisioning-adapter*.jar  debian/opennms-plugin-provisioning-map/usr/share/java/opennms/
 	mv debian/temp/integrations/opennms-rancid*.jar                    debian/opennms-plugin-provisioning-rancid/usr/share/java/opennms/
 	mv debian/temp/integrations/link-adapter-configuration.xml         debian/opennms-plugin-provisioning-link/etc/opennms/
+<<<<<<< HEAD
 	mv debian/temp/integrations/endpoint-configuration.xml         debian/opennms-plugin-provisioning-link/etc/opennms/
+=======
+	mv debian/temp/integrations/endpoint-configuration.xml             debian/opennms-plugin-provisioning-link/etc/opennms/
+>>>>>>> origin
 	mv debian/temp/integrations/mapsadapter-configuration.xml          debian/opennms-plugin-provisioning-map/etc/opennms/
 
 # Build architecture-independent files here.

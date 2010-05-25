@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.collectd.AbstractCollectionSetVisitor;
 import org.opennms.netmgt.collectd.CollectionAttribute;
@@ -64,18 +63,18 @@ public class ThresholdingVisitor extends AbstractCollectionSetVisitor {
     /*
      * Holds thresholds configuration for a node/interface/service
      */
-    private CollectorThresholdingSet m_thresholdingSet;
+    CollectorThresholdingSet m_thresholdingSet;
     
     /*
      * Holds required attribute from CollectionResource to evaluate thresholds.
      */
-    private Map<String, CollectionAttribute> m_attributesMap;
+    Map<String, CollectionAttribute> m_attributesMap;
     
     /*
      * Is static because successful creation depends on thresholding-enabled parameter.
      */
     public static ThresholdingVisitor create(int nodeId, String hostAddress, String serviceName, RrdRepository repo, Map<String,String> params, long interval) {
-        Category log = ThreadCategory.getInstance(ThresholdingVisitor.class);
+        ThreadCategory log = ThreadCategory.getInstance(ThresholdingVisitor.class);
 
         String enabled = params.get("thresholding-enabled");
         if (enabled == null || !enabled.equals("true")) {
@@ -100,12 +99,18 @@ public class ThresholdingVisitor extends AbstractCollectionSetVisitor {
     }
     
     /*
+     * Get a list of thresholds groups (for junit only at this time)
+     */
+    public List<ThresholdGroup> getThresholdGroups() {
+        return m_thresholdingSet.m_thresholdGroups;
+    }
+    
+    /*
      * Force reload thresholds configuration, and merge threshold states
      */
     public void reload() {
         m_thresholdingSet.reinitialize();
     }
-    
     
     /*
      *  Initialize required attributes map (m_attributesMap)
@@ -142,7 +147,7 @@ public class ThresholdingVisitor extends AbstractCollectionSetVisitor {
     @Override
     public void completeResource(CollectionResource resource) {
         List<Event> eventList = m_thresholdingSet.applyThresholds(resource, m_attributesMap);
-        ThresholdingEventProxy proxy = new ThresholdingEventProxy();
+        ThresholdingEventProxy proxy = ThresholdingEventProxyFactory.getFactory().getProxy();
         proxy.add(eventList);
         proxy.sendAllEvents();
     }
@@ -152,7 +157,7 @@ public class ThresholdingVisitor extends AbstractCollectionSetVisitor {
         return "ThresholdingVisitor for " + m_thresholdingSet;
     }
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
     

@@ -47,7 +47,6 @@ import java.io.OutputStreamWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.web.WebSecurityUtils;
 import org.springframework.web.servlet.ModelAndView;
@@ -62,7 +61,7 @@ import org.springframework.web.servlet.mvc.Controller;
  * 
  */
 public class ExecCommandController implements Controller {
-	Category log;
+	ThreadCategory log;
 
 	public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
    		ThreadCategory.setPrefix(MapsConstants.LOG4J_CATEGORY);
@@ -111,6 +110,19 @@ public class ExecCommandController implements Controller {
 		    } else {
                 commandToExec = commandToExec + " " + address;		        
 		    }
+		} else if (command.equals("ipmitool")) {
+		    String ipmiCommand = request.getParameter("ipmiCommand");
+		    String ipmiUserName = request.getParameter("ipmiUser");
+		    String ipmiPassword = request.getParameter("ipmiPassword");
+		    String ipmiProtocol = request.getParameter("ipmiProtocol");
+		    
+		    if(ipmiCommand !=null && ipmiUserName != null &&  ipmiPassword != null ){
+		        commandToExec = commandToExec + " -I "+ipmiProtocol+" -U " 
+		        + ipmiUserName +" -P " + ipmiPassword + " -H " + address +" " + ipmiCommand;
+		    }
+		    else
+		        throw new IllegalStateException("IPMITool requires Protocol, Command, Usernane and Password");
+		       
 		} else {
 		    throw new IllegalStateException("Command "+ command+" not supported.");   
 		}
@@ -118,10 +130,10 @@ public class ExecCommandController implements Controller {
 	    log.info("Executing "+commandToExec);
         response.setBufferSize(0);
         response.setContentType("text/html");
-        response.setHeader("pragma","no-Chache");
+        response.setHeader("pragma","no-Cache");
         response.setHeader("Expires","0");
-        response.setHeader("Chache-Control","no-Chache");
-        final OutputStreamWriter os = new OutputStreamWriter(response.getOutputStream());
+        response.setHeader("Cache-Control","no-Cache");
+        final OutputStreamWriter os = new OutputStreamWriter(response.getOutputStream(), "UTF-8");
         os.write("<html>"); 
 
         try {
@@ -136,7 +148,7 @@ public class ExecCommandController implements Controller {
 			"<div width='100%' align='right'>" +
 			"<input type='button' value='Close' onclick='window.close();'/>" +
 			"</div>" +
-    		"<h3><font face='courier,arial'>Executing "+comm+" for the ip address "+address+"</h3>");
+    		"<h3><font face='courier,arial'>Executing "+comm+" for the IP address "+address+"</h3>");
 			new Thread(new Runnable()
 			{
 			    public void run()
@@ -154,14 +166,14 @@ public class ExecCommandController implements Controller {
 			            
 			        }
 			        catch(IOException io){
-			        	log.warn(io);
+			        	log.warn(io.getMessage());
 			        }
 			    }
-			}).start();
+			}, this.getClass().getSimpleName()).start();
 			try{
 				p.waitFor();
 			}catch(Exception e){
-				log.warn(e);
+				log.warn(e.getMessage());
 			}
 
 		} catch (Exception e) {
@@ -185,7 +197,7 @@ public class ExecCommandController implements Controller {
 	    
 	    public Command(String command) throws IOException, IllegalStateException
 	    {
-	    	if(command.startsWith("traceroute") || command.startsWith("ping")){
+	    	if(command.startsWith("traceroute") || command.startsWith("ping") || command.startsWith("ipmitool")){
 	    		 p = Runtime.getRuntime().exec(command);
 	 	        out = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    	}else{

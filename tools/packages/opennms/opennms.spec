@@ -28,12 +28,16 @@
 
 %{!?jdk:%define jdk jdk >= 1:1.5}
 
+%{!?extrainfo:%define extrainfo }
+%{!?extrainfo2:%define extrainfo2 }
+
 # keep RPM from making an empty debug package
 %define debug_package %{nil}
 # don't do a bunch of weird redhat post-stuff  :)
 %define __os_install_post %{nil}
 %define __find_requires %{nil}
 %define __perl_requires %{nil}
+%global _binaries_in_noarch_packages_terminate_build 0
 
 %define with_tests	0%{nil}
 %define with_docs	1%{nil}
@@ -50,9 +54,9 @@ Source:			%{name}-source-%{version}-%{releasenumber}.tar.gz
 URL:			http://www.opennms.org/
 BuildRoot:		%{_tmppath}/%{name}-%{version}-root
 
-Requires:		opennms-webui     >= %{version}-%{release}
-Requires:		opennms-core      = %{version}-%{release}
-Requires:		postgresql-server >= 7.4
+Requires:		opennms-webui      >= %{version}-%{release}
+Requires:		opennms-core        = %{version}-%{release}
+Requires:		postgresql-server  >= 7.4
 
 # don't worry about buildrequires, the shell script will bomb quick  =)
 BuildRequires:		%{jdk}
@@ -83,6 +87,9 @@ web UI:
   of Jetty, which runs in the same JVM as OpenNMS.  This is the recommended
   version unless you have specific needs otherwise.
 
+%{extrainfo}
+%{extrainfo2}
+
 %package core
 Summary:	The core OpenNMS backend.
 Group:		Applications/System
@@ -108,6 +115,9 @@ option, like so:
 
   rpm -i --relocate %{logdir}=/mnt/netapp/opennms-logs opennms-core.rpm
 
+%{extrainfo}
+%{extrainfo2}
+
 %if %{with_docs}
 %package docs
 Summary:	Documentation for the OpenNMS network management platform
@@ -116,6 +126,9 @@ Group:		Applications/System
 %description docs
 This package contains the API and user documentation
 for OpenNMS.
+
+%{extrainfo}
+%{extrainfo2}
 %endif
 
 %package remote-poller
@@ -126,6 +139,9 @@ Requires:	%{jdk}
 %description remote-poller
 The OpenNMS distributed monitor.  For details, see:
   http://www.opennms.org/index.php/Distributed_Monitoring
+
+%{extrainfo}
+%{extrainfo2}
 
 %package webapp-jetty
 Summary:	Embedded web interface for OpenNMS
@@ -138,6 +154,9 @@ Obsoletes:	opennms-webapp < 1.3.11
 The web UI for OpenNMS.  This is the Jetty version, which runs
 embedded in the main OpenNMS core process.
 
+%{extrainfo}
+%{extrainfo2}
+
 %package webapp-standalone
 Summary:	Standalone web interface for OpenNMS
 Group:		Applications/System
@@ -148,6 +167,73 @@ Obsoletes:	opennms-webapp < 1.3.11
 %description webapp-standalone
 The web UI for OpenNMS.  This is the standalone version, suitable for
 use with Tomcat or another servlet container.
+
+%{extrainfo}
+%{extrainfo2}
+
+%package plugins
+Summary:	All Plugins for OpenNMS
+Group:		Applications/System
+Requires:	opennms-plugin-provisioning-dns
+Requires:	opennms-plugin-provisioning-link
+Requires:	opennms-plugin-provisioning-map
+Requires:	opennms-plugin-provisioning-rancid
+Requires:	opennms-plugin-ticketer-centric
+
+%description plugins
+This installs all optional plugins for OpenNMS.
+
+%{extrainfo}
+%{extrainfo2}
+
+%package plugin-provisioning-dns
+Summary:	DNS Provisioning Adapter for OpenNMS
+Group:		Applications/System
+Requires:	opennms-core = %{version}-%{release}
+
+%description plugin-provisioning-dns
+The DNS provisioning adapter allows for updating dynamic DNS records based on
+provisioned nodes.
+
+%{extrainfo}
+%{extrainfo2}
+
+%package plugin-provisioning-link
+Summary:	Link Provisioning Adapter for OpenNMS
+Group:		Applications/System
+Requires:	opennms-core = %{version}-%{release}
+
+%description plugin-provisioning-link
+The link provisioning adapter creates links between provisioned nodes based on naming
+conventions defined in the link-adapter-configuration.xml file.  It also updates the
+status of the map links based on data link events.
+
+%{extrainfo}
+%{extrainfo2}
+
+%package plugin-provisioning-map
+Summary:	Map Provisioning Adapter for OpenNMS
+Group:		Applications/System
+Requires:	opennms-core = %{version}-%{release}
+
+%description plugin-provisioning-map
+The map provisioning adapter will automatically create maps when nodes are provisioned
+in OpenNMS.
+
+%{extrainfo}
+%{extrainfo2}
+
+%package plugin-provisioning-rancid
+Summary:	RANCID Provisioning Adapter for OpenNMS
+Group:		Applications/System
+Requires:	opennms-core = %{version}-%{release}
+
+%description plugin-provisioning-rancid
+The RANCID provisioning adapter coordinates with the RANCID Web Service by updating
+RANCID's device database when OpenNMS provisions nodes.
+
+%{extrainfo}
+%{extrainfo2}
 
 %prep
 
@@ -186,19 +272,18 @@ EXTRA_TARGETS="$EXTRA_TARGETS test"
 EXTRA_TARGETS="$EXTRA_TARGETS docs"
 %endif
 
+if [ -e "settings.xml" ]; then
+	SETTINGS_XML="-s `pwd`/settings.xml"
+fi
+
 echo "=== RUNNING INSTALL ==="
 
-sh ./build.sh -Dbuild=all -Dinstall.version="%{version}-%{release}" -Ddist.name=$RPM_BUILD_ROOT \
+sh ./build.sh $SETTINGS_XML -Dbuild=all -Dinstall.version="%{version}-%{release}" -Ddist.name=$RPM_BUILD_ROOT \
     -Dopennms.home=%{instprefix} install assembly:attached
 
 pushd opennms-tools
-    sh ../build.sh -N -Dinstall.version="%{version}-%{release}" -Ddist.name=$RPM_BUILD_ROOT \
+    sh ../build.sh $SETTINGS_XML -N -Dinstall.version="%{version}-%{release}" -Ddist.name=$RPM_BUILD_ROOT \
         -Dopennms.home=%{instprefix} install
-popd
-
-pushd features/remote-poller
-    sh ../../build.sh -Dinstall.version="%{version}-%{release}" -Ddist.name=$RPM_BUILD_ROOT \
-        -Dopennms.home=%{instprefix} package
 popd
 
 echo "=== INSTALL COMPLETED ==="
@@ -227,10 +312,6 @@ export OPENNMS_HOME PATH
 
 END
 
-### install the remote poller jar
-
-install -c -m 644 features/remote-poller/target/*-jar-with-dependencies.jar $RPM_BUILD_ROOT%{instprefix}/bin/remote-poller.jar
-
 %if %{with_docs}
 
 mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
@@ -249,6 +330,14 @@ install -d -m 755 $RPM_BUILD_ROOT%{logdir}/{controller,daemon,webapp}
 install -d -m 755 $RPM_BUILD_ROOT%{sharedir}
 mv $RPM_BUILD_ROOT%{instprefix}/share/* $RPM_BUILD_ROOT%{sharedir}/
 rm -rf $RPM_BUILD_ROOT%{instprefix}/share
+
+rsync -avr --exclude=examples $RPM_BUILD_ROOT%{instprefix}/etc/ $RPM_BUILD_ROOT%{sharedir}/etc-pristine/
+chmod -R go-w $RPM_BUILD_ROOT%{sharedir}/etc-pristine/
+
+install -d -m 755 $RPM_BUILD_ROOT%{_initrddir} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig
+install -m 755 $RPM_BUILD_ROOT%{instprefix}/contrib/remote-poller/remote-poller.init      $RPM_BUILD_ROOT%{_initrddir}/opennms-remote-poller
+install -m 640 $RPM_BUILD_ROOT%{instprefix}/contrib/remote-poller/remote-poller.sysconfig $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/opennms-remote-poller
+rm -rf $RPM_BUILD_ROOT%{instprefix}/contrib/remote-poller
 
 pushd $RPM_BUILD_ROOT
 
@@ -290,6 +379,21 @@ find $RPM_BUILD_ROOT%{webappsdir} -type d | \
 
 popd
 
+# provisioning adapters
+
+cp integrations/opennms-dns-provisioning-adapter/target/*.jar  $RPM_BUILD_ROOT%{instprefix}/lib/
+cp integrations/opennms-link-provisioning-adapter/target/*.jar $RPM_BUILD_ROOT%{instprefix}/lib/
+cp integrations/opennms-map-provisioning-adapter/target/*.jar  $RPM_BUILD_ROOT%{instprefix}/lib/
+cp integrations/opennms-rancid/target/*.jar                    $RPM_BUILD_ROOT%{instprefix}/lib/
+rm -rf $RPM_BUILD_ROOT%{instprefix}/lib/*-sources.jar
+rm -rf $RPM_BUILD_ROOT%{instprefix}/lib/*-tests.jar
+rm -rf $RPM_BUILD_ROOT%{instprefix}/lib/*-xsds.jar
+
+# config files, this should be more automated  :P
+cp integrations/opennms-link-provisioning-adapter/src/main/resources/link-adapter-configuration.xml $RPM_BUILD_ROOT%{instprefix}/etc/
+cp integrations/opennms-link-provisioning-adapter/src/main/resources/endpoint-configuration.xml $RPM_BUILD_ROOT%{instprefix}/etc/
+cp integrations/opennms-map-provisioning-adapter/src/main/resources/mapsadapter-configuration.xml   $RPM_BUILD_ROOT%{instprefix}/etc/
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -317,6 +421,8 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %files remote-poller
+%attr(755,root,root) %config %{_initrddir}/opennms-remote-poller
+%attr(755,root,root) %config(noreplace) %{_sysconfdir}/sysconfig/opennms-remote-poller
 %attr(755,root,root) %{bindir}/remote-poller.sh
 %{instprefix}/bin/remote-poller.jar
 
@@ -324,12 +430,33 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644 root root 755)
 %{instprefix}/jetty-webapps
 %config %{jettydir}/%{servletdir}/WEB-INF/*.xml
+%config %{jettydir}/opennms-remoting/WEB-INF/*.xml
 %config %{jettydir}/%{servletdir}/WEB-INF/*.properties
+%config %{jettydir}/opennms-remoting/WEB-INF/*.properties
 
 %files webapp-standalone -f %{_tmppath}/files.webapp
 %defattr(644 root root 755)
 %config %{webappsdir}/%{servletdir}/WEB-INF/*.xml
+%config %{webappsdir}/opennms-remoting/WEB-INF/*.xml
 %config %{webappsdir}/%{servletdir}/WEB-INF/*.properties
+%config %{webappsdir}/opennms-remoting/WEB-INF/*.properties
+
+%files plugins
+
+%files plugin-provisioning-dns
+%attr(664,root,root) %{instprefix}/lib/opennms-dns-provisioning-adapter*.jar
+
+%files plugin-provisioning-link
+%attr(664,root,root) %{instprefix}/lib/opennms-link-provisioning-adapter*.jar
+%attr(664,root,root) %{instprefix}/etc/link-adapter-configuration.xml
+%attr(664,root,root) %{instprefix}/etc/endpoint-configuration.xml
+
+%files plugin-provisioning-map
+%attr(664,root,root) %{instprefix}/lib/opennms-map-provisioning-adapter*.jar
+%attr(664,root,root) %{instprefix}/etc/mapsadapter-configuration.xml
+
+%files plugin-provisioning-rancid
+%attr(664,root,root) %{instprefix}/lib/opennms-rancid*.jar
 
 %post docs
 printf -- "- making symlink for $RPM_INSTALL_PREFIX0/docs... "
@@ -445,6 +572,9 @@ if [ "$1" = 0 ]; then
 fi
 
 %changelog
+* Tue Sep 29 2009 Benjamin Reed <ranger@opennms.org>
+- Add provisioning adapters as optional packages.
+
 * Mon Oct 29 2007 Benjamin Reed <ranger@opennms.org>
 - Make sure the postinstall happens in opennms-core, not opennms.
 

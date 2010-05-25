@@ -323,6 +323,11 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
     public void setIsSnmpPrimary(PrimaryType issnmpprimary) {
         m_isSnmpPrimary = PrimaryType.getCanonical(issnmpprimary);
     }
+    
+    @Transient
+    public boolean isPrimary(){
+        return m_isSnmpPrimary.equals(PrimaryType.PRIMARY);
+    }
 
     @ManyToOne(optional=false, fetch=FetchType.LAZY)
     @JoinColumn(name="nodeId")
@@ -343,7 +348,7 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
     @OneToMany(mappedBy="ipInterface")
     @org.hibernate.annotations.Cascade( {
         org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
         public Set<OnmsMonitoredService> getMonitoredServices() {
         return m_monitoredServices ;
     }
@@ -371,7 +376,7 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
     public String toString() {
         return new ToStringCreator(this)
         .append("ipaddr", getIpAddress())
-        .append("ifindex", getIfIndex())
+        //.append("ifindex", getIfIndex())
         .append("iphostname", getIpHostName())
         .append("ismanaged", getIsManaged())
         .append("iplastcapsdpoll", getIpLastCapsdPoll())

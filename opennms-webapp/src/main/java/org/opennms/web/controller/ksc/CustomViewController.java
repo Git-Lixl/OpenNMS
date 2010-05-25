@@ -10,6 +10,8 @@
 //
 // Modifications:
 //
+// 2010 Feb 10: Catch exception when referenced resource's parent node is missing.
+//              Addresses bug 3535. - jeffg@opennms.org
 // 2009 Jan 26: Modified handleRequestInternal - part of ksc performance improvement. - ayres@opennms.org
 // 2008 Oct 22: Lots of cleanup.  - dj@opennms.org
 // 2008 Sep 28: Handle XSS security issues. - ranger@opennms.org
@@ -57,7 +59,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.KSC_PerformanceReportFactory;
 import org.opennms.netmgt.config.kscReports.Graph;
@@ -134,6 +135,7 @@ public class CustomViewController extends AbstractController implements Initiali
         // Get the list of available prefabricated graph options 
         HashMap<String, OnmsResource> resourceMap = new HashMap<String, OnmsResource>();
         Set<PrefabGraph> prefabGraphs = new TreeSet<PrefabGraph>();
+        removeBrokenGraphsFromReport(report);
         List<Graph> graphCollection = report.getGraphCollection();
         if (!graphCollection.isEmpty()) {
             List<OnmsResource> resources = getKscReportService().getResourcesFromGraphs(graphCollection);
@@ -268,9 +270,28 @@ public class CustomViewController extends AbstractController implements Initiali
         
         return modelAndView;
     }
+    
+    private void removeBrokenGraphsFromReport(Report report) {
+        List<Graph> badGraphs = new ArrayList<Graph>();
+        for (Graph graph : report.getGraphCollection()) {
+            try {
+                getKscReportService().getResourceFromGraph(graph);
+            } catch (ObjectRetrievalFailureException orfe) {
+                badGraphs.add(graph);
+            }
+        }
+        
+        for (Graph badGraph : badGraphs) {
+            log().error("Removing graph '" + badGraph.getTitle() + "' in KSC report '" + report.getTitle() + "' because the resource it refers to could not be found. Perhaps resource '"+ badGraph.getResourceId() + "' (or its ancestor) referenced by this graph no longer exists?");
+            report.removeGraph(badGraph);
+        }
+    }
 
     private void promoteResourceAttributesIfNecessary(final OnmsResource resource) {
-        boolean needToSchedule = m_resourcesPendingPromotion.add(resource.getId());
+        boolean needToSchedule = false;
+        if(resource != null && resource.getId() != null) {
+            needToSchedule = m_resourcesPendingPromotion.add(resource.getId());
+        }
         if (needToSchedule) {
             m_executor.execute(new Runnable() {
 
@@ -284,7 +305,7 @@ public class CustomViewController extends AbstractController implements Initiali
         
     }
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 

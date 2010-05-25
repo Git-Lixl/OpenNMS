@@ -43,7 +43,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.apache.log4j.Level;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.Marshaller;
@@ -140,7 +139,7 @@ public abstract class ThreshdConfigManager {
      * rules from the database.
      */
     protected void createPackageIpListMap() {
-        Category log = ThreadCategory.getInstance(this.getClass());
+        ThreadCategory log = ThreadCategory.getInstance(this.getClass());
     
         m_pkgIpMap = new HashMap<Package, List<String>>();
     
@@ -284,7 +283,7 @@ public abstract class ThreshdConfigManager {
      *         otherwise.
      */
     public synchronized boolean interfaceInPackage(String iface, org.opennms.netmgt.config.threshd.Package pkg) {
-        Category log = ThreadCategory.getInstance(this.getClass());
+        ThreadCategory log = ThreadCategory.getInstance(this.getClass());
     
         boolean filterPassed = false;
     
@@ -313,7 +312,7 @@ public abstract class ThreshdConfigManager {
         long addr = IPSorter.convertToLong(iface);
         Enumeration<IncludeRange> eincs = pkg.enumerateIncludeRange();
         while (!has_range_include && eincs.hasMoreElements()) {
-            IncludeRange rng = (IncludeRange) eincs.nextElement();
+            IncludeRange rng = eincs.nextElement();
             long start = IPSorter.convertToLong(rng.getBegin());
             if (addr > start) {
                 long end = IPSorter.convertToLong(rng.getEnd());
@@ -334,7 +333,7 @@ public abstract class ThreshdConfigManager {
 
         Enumeration<String> eurl = pkg.enumerateIncludeUrl();
         while (!has_specific && eurl.hasMoreElements()) {
-            has_specific = interfaceInUrl(iface, (String) eurl.nextElement());
+            has_specific = interfaceInUrl(iface, eurl.nextElement());
         }
     
         Enumeration<ExcludeRange> eex = pkg.enumerateExcludeRange();

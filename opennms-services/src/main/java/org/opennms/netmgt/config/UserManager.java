@@ -814,7 +814,7 @@ public abstract class UserManager {
      * @throws MarshalException
      * @throws ValidationException
      */
-    protected abstract void update() throws IOException, FileNotFoundException, MarshalException, ValidationException;
+    public abstract void update() throws IOException, FileNotFoundException, MarshalException, ValidationException;
 
     public String[] getUsersWithRole(String roleid) throws IOException, MarshalException, ValidationException {
         update();
@@ -830,7 +830,7 @@ public abstract class UserManager {
             }
         }
         
-        return (String[]) usersWithRole.toArray(new String[usersWithRole.size()]);
+        return usersWithRole.toArray(new String[usersWithRole.size()]);
         
     }
     

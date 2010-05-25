@@ -1,9 +1,16 @@
 <%--
 
 //
-// Copyright (C) 2002 Sortova Consulting Group, Inc.  All rights reserved.
-// Parts Copyright (C) 1999-2001 Oculan Corp.  All rights reserved.
+// This file is part of the OpenNMS(R) Application.
 //
+// OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
+//
+// Copyright (C) 2002-2009 The OpenNMS Group, Inc.  All rights reserved.
+//
+// Modifications:
+//
+// 2009 Aug 28: Restore search and display capabilities for non-ip interfaces
+// 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -16,12 +23,16 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+// Foundation, Inc.:
+// 51 Franklin Street
+// 5th Floor
+// Boston, MA 02110-1301
+// USA
 //
 // For more information contact:
 //      OpenNMS Licensing       <license@opennms.org>
 //      http://www.opennms.org/
-//      http://www.sortova.com/
+//      http://www.opennms.com/
 //
 
 --%>
@@ -38,10 +49,19 @@
 
 <%
     
-    Interface intf = ElementUtil.getInterfaceByParams(request);
+    Interface intf = null;
+    StpInterface[] stpifs = null;
+    String requestNode = request.getParameter("node");
+    String requestIntf = request.getParameter("intf");
+    String requestIfindex = request.getParameter("ifindex");
+    if(requestNode != null && requestIfindex != null && requestIntf == null) {
+        intf = ElementUtil.getSnmpInterfaceByParams(request);
+        stpifs = NetworkElementFactory.getStpInterface(intf.getNodeId(), intf.getSnmpIfIndex());
+    } else {
+        intf = ElementUtil.getInterfaceByParams(request);
+        stpifs = NetworkElementFactory.getStpInterface(intf.getNodeId(), intf.getIfIndex());
+    }
 
-// find STP interface info
-    StpInterface[] stpifs = NetworkElementFactory.getStpInterface(intf.getNodeId(), intf.getIfIndex());
 
 %>
 <h3>Interface Spanning Tree Protocol Info</h3>
@@ -72,7 +92,7 @@
 	<% if (stpifs[i].get_stprootnodeid() != 0) { 
 	Node node = NetworkElementFactory.getNode(stpifs[i].get_stprootnodeid());
 	%>
-	<td><a href="element/node.jsp?node=<%=stpifs[i].get_stprootnodeid()%>"><%=node.getLabel()%></a><br>(<strong><%=stpifs[i].get_stpdesignatedroot()%></strong>)</td>
+	<td><a href="element/node.jsp?node=<%=stpifs[i].get_stprootnodeid()%>"><%=node.getLabel()%></a><br/>(<strong><%=stpifs[i].get_stpdesignatedroot()%></strong>)</td>
 	<% } else { %>
 	<td><%=stpifs[i].get_stpdesignatedroot()%></td>
 	<% } %>
@@ -82,7 +102,7 @@
 	<% if (stpifs[i].get_stpbridgenodeid() != 0) { 
 	Node node = NetworkElementFactory.getNode(stpifs[i].get_stpbridgenodeid());
 	%>
-	<td><a href="element/node.jsp?node=<%=stpifs[i].get_stpbridgenodeid()%>"><%=node.getLabel()%></a><br>(<strong><%=stpifs[i].get_stpdesignatedbridge()%></strong>)</td>
+	<td><a href="element/node.jsp?node=<%=stpifs[i].get_stpbridgenodeid()%>"><%=node.getLabel()%></a><br/>(<strong><%=stpifs[i].get_stpdesignatedbridge()%></strong>)</td>
 	<% } else {%>
 	<td><%=stpifs[i].get_stpdesignatedbridge()%></td>
 	<% } %>

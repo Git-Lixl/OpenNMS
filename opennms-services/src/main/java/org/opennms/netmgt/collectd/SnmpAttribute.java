@@ -36,7 +36,6 @@
 
 package org.opennms.netmgt.collectd;
 
-import org.apache.log4j.Category;
 import org.apache.log4j.Level;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.snmp.SnmpValue;
@@ -48,6 +47,7 @@ public class SnmpAttribute extends AbstractCollectionAttribute {
     private SnmpValue m_val;
 
     public SnmpAttribute(CollectionResource resource, SnmpAttributeType type, SnmpValue val) {
+        super();
         m_resource = resource;
         m_type = type;
         m_val = val;
@@ -77,7 +77,7 @@ public class SnmpAttribute extends AbstractCollectionAttribute {
         return m_type;
     }
 
-    public Category log() {
+    public ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 
@@ -123,7 +123,7 @@ public class SnmpAttribute extends AbstractCollectionAttribute {
             try {
                 return Double.valueOf(getValue().toString()).toString();
             } catch(NumberFormatException e) {
-                log().log(Level.TRACE, "Unable to process data received for attribute " + this + " maybe this is not a number? See bug 1473 for more information. Skipping.");
+                log().trace("Unable to process data received for attribute " + this + " maybe this is not a number? See bug 1473 for more information. Skipping.");
                 return null;
             }
         }

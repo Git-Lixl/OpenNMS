@@ -35,11 +35,8 @@ package org.opennms.netmgt.snmpinterfacepoller;
 
 import java.util.List;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.model.PollStatus;
-import org.opennms.netmgt.poller.Distributable;
-import org.opennms.netmgt.poller.DistributionContext;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpUtils;
@@ -54,58 +51,22 @@ import org.opennms.netmgt.snmpinterfacepoller.pollable.PollableSnmpInterface.Snm
  * plug-ins by the service poller framework.
  * </P>
  * 
- * @author <A HREF="mailto:tarus@opennms.org">Tarus Balog </A>
- * @author <A HREF="mailto:mike@opennms.org">Mike Davidson </A>
- * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
+ * @author <a href="mailto:antonio@opennms.it">Antonio Russo</a>
  * 
  */
 
-//this does snmp and there relies on the snmp configuration so it is not distributable
-@Distributable(DistributionContext.DAEMON)
 public class SnmpPollInterfaceMonitor {
 
     /**
-     * Default object to collect if "oid" property not available.
+     * ifAdminStatus table from MIB-2.
      */
-    private static final String IF_ADMIN_STATUS_OID = ".1.3.6.1.2.1.2.2.1.7."; // MIB-II
-                                                                                // System
-                                                                                // Object
-                                                                                // Id
-
-    private static final String IF_OPER_STATUS_OID = ".1.3.6.1.2.1.2.2.1.8."; // MIB-II
-    // System
-    // Object
-    // Id
-
-//    private List<>
+    private static final String IF_ADMIN_STATUS_OID = ".1.3.6.1.2.1.2.2.1.7.";
+    
     /**
-     * <P>
-     * Called by the poller framework when an interface is being added to the
-     * scheduler. Here we perform any necessary initialization to prepare the
-     * NetworkInterface object for polling.
-     * </P>
-     * 
-     * @exception RuntimeException
-     *                Thrown if an unrecoverable error occurs that prevents the
-     *                interface from being monitored.
+     * ifOperStatus table from MIB-2.
      */
+    private static final String IF_OPER_STATUS_OID = ".1.3.6.1.2.1.2.2.1.8.";
 
-    /**
-     * <P>
-     * The poll() method is responsible for polling the specified address for
-     * SNMP service availability.
-     * </P>
-     * @param parameters
-     *            The package parameters (timeout, retry, etc...) to be used for
-     *            this poll.
-     * @param iface
-     *            The network interface to test the service on.
-     * @return The availability of the interface and if a transition event
-     *         should be supressed.
-     * 
-     * @exception RuntimeException
-     *                Thrown for any uncrecoverable errors.
-     */
     public List<SnmpMinimalPollInterface> poll(SnmpAgentConfig agentConfig, List<SnmpMinimalPollInterface> mifaces) {
 
         if (mifaces == null ) {
@@ -161,76 +122,10 @@ public class SnmpPollInterfaceMonitor {
             log().error("Unexpected exception during SNMP poll of interface " + agentConfig, t);
         }
         
-
-        // Establish SNMP session with interface
-        //
-        /*
-    	SnmpValue[] totalresults = new SnmpValue[2 * mifaces.size()];
-
-    	try {
-
-        	if (maxVarsPerPdu > oids.length) {
-        		
-        		totalresults = SnmpUtils.get(agentConfig, oids);
-        		log().debug("got " + totalresults.length +" SnmpValues");
-            } else {
-            	int remaining = 2 * mifaces.size();
-            	while (remaining > maxVarsPerPdu) {
-            		SnmpObjId[] curoids = new SnmpObjId[maxVarsPerPdu];
-            		log().debug("max-var=per-pdu: " +  maxVarsPerPdu);
-            		for (int j=0; j< maxVarsPerPdu; j++) {
-            			curoids[j]= oids[2*mifaces.size() - remaining + j];
-            		}
-        			SnmpValue[] results = SnmpUtils.get(agentConfig, curoids);
-            		log().debug("got " + results.length +" SnmpValues");
-            		for (int j=0; j< maxVarsPerPdu; j++) {
-            			totalresults[2* mifaces.size() - remaining + j]= results[j];
-            		}
-        			remaining = remaining - maxVarsPerPdu;
-            	}
-            	if (remaining > 0 ) {
-            		SnmpObjId[] curoids = new SnmpObjId[remaining];
-            		for (int j=0; j< maxVarsPerPdu; j++) {
-            			curoids[j]= oids[2*mifaces.size() - remaining + j];
-            		}
-        			SnmpValue[] results = SnmpUtils.get(agentConfig, curoids);
-            		log().debug("got " + results.length +" SnmpValues");
-            		for (int j=0; j< remaining; j++) {
-            			totalresults[2*mifaces.size() - remaining + j]= results[j];
-            		}
-            	}
-            }
-
-        } catch (NumberFormatException e) {
-            log().error("Number operator used on a non-number " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            log().error("Invalid Snmp Criteria: " + e.getMessage());
-        } catch (Throwable t) {
-            log().error("Unexpected exception during SNMP poll of interface " + agentConfig, t);
-        }
-        
-        int i=0;
-        for(SnmpValue result : totalresults) {
-            if (result != null) {
-                log().debug("Snmp Value is "+ result.toInt() + " for oid: " + oids[i]);
-                if (i< mifaces.size()) {
-                    SnmpMinimalPollInterface miface = mifaces.get(i);
-                    miface.setStatus(PollStatus.up());
-                    miface.setAdminstatus(result.toInt());
-                } else {
-                    SnmpMinimalPollInterface miface = mifaces.get(i-mifaces.size());
-                    miface.setStatus(PollStatus.up());
-                    miface.setOperstatus(result.toInt());
-                }
-            } else {
-                log().error("Snmp Value is null for oid: " + oids[i]);
-            }
-            i++;
-        } */
         return mifaces;
     }
     
-    protected Category log() {
+    protected ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 

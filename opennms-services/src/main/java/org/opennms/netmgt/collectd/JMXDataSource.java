@@ -40,7 +40,6 @@ package org.opennms.netmgt.collectd;
 import java.io.File;
 import java.util.List;
 
-import org.apache.log4j.Category;
 import org.apache.log4j.Level;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.DataCollectionConfigFactory;
@@ -68,7 +67,7 @@ public class JMXDataSource  {
 	public static final String RRD_ERROR = "RRD_ERROR";
 
     /**
-     * Defines the list of supported (MIB) object types whic may be mapped to
+     * Defines the list of supported (MIB) object types which may be mapped to
      * one of the supported RRD data source types. Currently the only two
      * supported RRD data source types are: COUNTER & GAUGE. A simple string
      * comparison is performed against this list of supported types to determine
@@ -201,7 +200,7 @@ public class JMXDataSource  {
                 
                 m_collectionName = collectionName;
                 
-                Category log = ThreadCategory.getInstance(getClass());
+                ThreadCategory log = ThreadCategory.getInstance(getClass());
 
                 // Assign heartbeat using formula (2 * step) and hard code
                 // min & max values to "U" ("unknown").

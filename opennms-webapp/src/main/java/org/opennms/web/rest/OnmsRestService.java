@@ -1,3 +1,39 @@
+
+//
+//This file is part of the OpenNMS(R) Application.
+//
+// OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
+//
+// Copyright (C) 2009 The OpenNMS Group, Inc.  All rights reserved.
+//
+// Modifications:
+//
+// 2009 Oct 09: fix error with setFirstResult. - ayres@opennms.org
+// 
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc.:
+// 51 Franklin Street
+// 5th Floor
+// Boston, MA 02110-1301
+// USA
+//
+// For more information contact:
+//      OpenNMS Licensing       <license@opennms.org>
+//      http://www.opennms.org/
+//      http://www.opennms.com/
+//
+
 package org.opennms.web.rest;
 
 import java.util.ArrayList;
@@ -10,13 +46,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.apache.log4j.Category;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.opennms.core.utils.LogUtils;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.provision.persist.StringXmlCalendarPropertyEditor;
@@ -30,6 +66,8 @@ public class OnmsRestService {
 	protected enum ComparisonOperation { EQ, NE, ILIKE, LIKE, GT, LT, GE, LE, CONTAINS }
 
 	private List<Order> m_ordering = new ArrayList<Order>();
+	private Integer m_limit = null;
+	private Integer m_offset = null;
 
 	public OnmsRestService() {
 		super();
@@ -44,7 +82,11 @@ public class OnmsRestService {
 		setLimitOffset(params, criteria, 10);  //Default limit is 10
 	}
 	
-	/**
+    protected void setLimitOffset(MultivaluedMap<java.lang.String, java.lang.String> params, OnmsCriteria criteria, int defaultLimit) {
+        setLimitOffset(params, criteria, defaultLimit, true);
+    }
+
+    /**
 	 * Uses parameters in params to setup criteria with standard limit and offset parameters.  
 	 * If "limit" is in params, is used, otherwise default limit is used.  If limit is 0, then no limit is set
 	 * If "offset" is in params, is set as the offset into the result set
@@ -53,28 +95,41 @@ public class OnmsRestService {
 	 * @param criteria The Criteria that will be modified with the limit and offset
 	 * @param defaultLimit A limit to use if none is specified in the params
 	 */
-	protected void setLimitOffset(MultivaluedMap<java.lang.String, java.lang.String> params, OnmsCriteria criteria, int defaultLimit) {
-		int limit=defaultLimit;
-		boolean hasOffset = false;
+	protected void setLimitOffset(MultivaluedMap<java.lang.String, java.lang.String> params, OnmsCriteria criteria, int defaultLimit, boolean addImmediately) {
+		Integer limit=defaultLimit;
 		if(params.containsKey("limit")) {
-			limit=Integer.parseInt(params.getFirst("limit"));
+		    limit = Integer.valueOf(params.getFirst("limit"));
 			params.remove("limit");
 		}
-		if(limit!=0) {
-			criteria.setMaxResults(limit);
+		if(limit != null && limit != 0) {
+		    if (addImmediately) {
+		        criteria.setMaxResults(limit);
+		    } else {
+		        m_limit = limit;
+		    }
 		}
-	
+
+		Integer offset = null;
 		if(params.containsKey("offset")) {
-			criteria.setFirstResult(Integer.parseInt(params.getFirst("offset")));
+		    offset = Integer.valueOf(params.getFirst("offset"));
 			params.remove("offset");
-			hasOffset = true;
 		}
 		
 		//added for the ExtJS will remove once it gets working with the offset
-		if(params.containsKey("start") && !hasOffset){
-		    criteria.setFirstResult(Integer.parseInt(params.getFirst("start")));
+		if(params.containsKey("start") && offset == null){
+		    offset = Integer.valueOf(params.getFirst("start"));
 		    params.remove("start");
 		}
+		
+		if (offset != null && offset != 0) {
+		    if (addImmediately) {
+		        criteria.setFirstResult(offset);
+		    } else {
+		        m_offset = offset;
+		    }
+		}
+		
+		
 	}
 
 	/**
@@ -254,7 +309,7 @@ public class OnmsRestService {
         throw new WebApplicationException(Response.status(status).type(MediaType.TEXT_PLAIN).entity(msg).build());
     }
     
-    protected Category log() {
+    protected ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 
@@ -298,11 +353,17 @@ public class OnmsRestService {
                                    )
                                )
                            );
-
+        LogUtils.infof(this, "**** m_offset: " + m_offset + " ****");
         OnmsCriteria rootCriteria = new OnmsCriteria(clazz);
         rootCriteria.add(Subqueries.propertyIn("id", criteria.getDetachedCriteria()));
         for (Order o : m_ordering) {
             rootCriteria.addOrder(o);
+        }
+        if (m_limit != null) {
+            rootCriteria.setMaxResults(m_limit);
+        }
+        if (m_offset != null) {
+            rootCriteria.setFirstResult(m_offset);
         }
         return rootCriteria;
     }

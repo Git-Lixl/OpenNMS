@@ -571,7 +571,15 @@ public class EventConstants {
     public static final String RELOAD_DAEMON_CONFIG_FAILED_UEI = "uei.opennms.org/internal/reloadDaemonConfigFailed";
     public static final String RELOAD_DAEMON_CONFIG_SUCCESSFUL_UEI = "uei.opennms.org/internal/reloadDaemonConfigSuccessful";
     public static final String PARM_DAEMON_NAME = "daemonName";
+    public static final String PARM_CONFIG_FILE_NAME = "configFile";
 
+    /**
+     * Reportd UEIs
+     */
+    
+    public static final String REPORTD_RUN_REPORT = "uei.opennms.org/reportd/runReport";
+    public static final String PARM_REPORT_NAME = "reportName";
+    
     public static final String REMOTE_NODE_LOST_SERVICE_UEI = "uei.opennms.org/remote/nodes/nodeLostService";
     public static final String REMOTE_NODE_REGAINED_SERVICE_UEI = "uei.opennms.org/remote/nodes/nodeRegainedService";
     public static final String LOCATION_MONITOR_REGISTERED_UEI="uei.opennms.org/remote/locationMonitorRegistered";
@@ -589,6 +597,7 @@ public class EventConstants {
     public static final String PROVISIONING_ADAPTER_FAILED = "uei.opennms.org/provisioner/provisioningAdapterFailed";
 
     public static final String PROVISION_SCAN_COMPLETE_UEI="uei.opennms.org/internal/provisiond/nodeScanCompleted";
+    public static final String PROVISION_SCAN_ABORTED_UEI="uei.opennms.org/internal/provisiond/nodeScanAborted";
     
     public static final String PARM_FAILURE_MESSAGE = "failureMessage";
 
@@ -600,7 +609,6 @@ public class EventConstants {
     public static final String PARM_ALARM_UEI = "alarmUei";
     public static final String PARM_TROUBLE_TICKET = "troubleTicket";
 
-
     public final static String TROUBLETICKET_CREATE_UEI = "uei.opennms.org/troubleTicket/create";
     public final static String TROUBLETICKET_UPDATE_UEI = "uei.opennms.org/troubleTicket/update";
     public final static String TROUBLETICKET_CLOSE_UEI = "uei.opennms.org/troubleTicket/close";
@@ -611,6 +619,10 @@ public class EventConstants {
     public final static String RANCID_DOWNLOAD_SUCCESS_UEI="uei.opennms.org/standard/rancid/traps/rancidTrapDownloadSuccess";
     public final static String RANCID_DOWNLOAD_FAILURE_UEI="uei.opennms.org/standard/rancid/traps/rancidTrapDownloadFailure";
     public final static String RANCID_GROUP_PROCESSING_COMPLETED_UEI="uei.opennms.org/standard/rancid/traps/rancidTrapGroupProcessingCompleted";
+
+    public static final String DATA_LINK_FAILED_EVENT_UEI = "uei.opennms.org/internal/linkd/dataLinkFailed";
+    public static final String DATA_LINK_RESTORED_EVENT_UEI = "uei.opennms.org/internal/linkd/dataLinkRestored";
+    public static final String DATA_LINK_UNMANAGED_EVENT_UEI = "uei.opennms.org/internal/linkd/dataLinkUnmanaged";
 
    
     //
@@ -985,6 +997,23 @@ public class EventConstants {
      * UEI used for indicating a change management event
      */
     public static final String NODE_CONFIG_CHANGE_UEI = "uei.opennms.org/internal/translator/entityConfigChanged";
+
+    /**
+     * Used for indicating a reason message in an event or alarm.
+     */
+    public static final String PARM_REASON = "reason";
+    
+    /**
+     * Used for indication the first endpoint to a map link
+     */
+    public static final String PARM_ENDPOINT1 = "endPoint1";
+    
+    /**
+     * Used for indication the second endpoint to a map link
+     */
+    public static final String PARM_ENDPOINT2 = "endPoint2";
+
+   
 
 
     /**

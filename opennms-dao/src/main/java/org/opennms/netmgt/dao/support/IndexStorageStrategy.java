@@ -8,8 +8,6 @@
 //
 // OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
 //
-// Original code base Copyright (C) 1999-2001 Oculan Corp.  All rights reserved.
-//
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -32,9 +30,12 @@
 package org.opennms.netmgt.dao.support;
 
 import java.io.File;
+import java.util.List;
 
+import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.StorageStrategyService;
 import org.opennms.netmgt.config.StorageStrategy;
+import org.opennms.netmgt.config.datacollection.Parameter;
 
 public class IndexStorageStrategy implements StorageStrategy {
     private String m_resourceTypeName;
@@ -70,5 +71,13 @@ public class IndexStorageStrategy implements StorageStrategy {
 
     public void setStorageStrategyService(StorageStrategyService agent) {
         m_storageStrategyService = agent;
+    }
+
+    public void setParameters(List<Parameter> parameterCollection) {
+        // Empty method, this strategy takes no parameters
+    }
+    
+    protected ThreadCategory log() {
+        return ThreadCategory.getInstance(getClass());
     }
 }

@@ -30,30 +30,34 @@
 
 package org.opennms.netmgt.threshd;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.log4j.Category;
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.easymock.EasyMock;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.resource.Vault;
 import org.opennms.core.utils.ThreadCategory;
+import org.opennms.netmgt.collectd.AliasedResource;
 import org.opennms.netmgt.collectd.AttributeGroupType;
 import org.opennms.netmgt.collectd.CollectionAgent;
 import org.opennms.netmgt.collectd.GenericIndexResource;
@@ -70,10 +74,13 @@ import org.opennms.netmgt.collectd.SnmpAttributeType;
 import org.opennms.netmgt.collectd.SnmpCollectionResource;
 import org.opennms.netmgt.collectd.SnmpIfData;
 import org.opennms.netmgt.config.DataSourceFactory;
+import org.opennms.netmgt.config.DatabaseSchemaConfigFactory;
 import org.opennms.netmgt.config.MibObject;
 import org.opennms.netmgt.config.ThreshdConfigFactory;
+import org.opennms.netmgt.config.ThreshdConfigManager;
 import org.opennms.netmgt.config.ThresholdingConfigFactory;
 import org.opennms.netmgt.dao.FilterDao;
+import org.opennms.netmgt.dao.support.JdbcFilterDao;
 import org.opennms.netmgt.dao.support.ResourceTypeUtils;
 import org.opennms.netmgt.eventd.EventIpcManager;
 import org.opennms.netmgt.eventd.EventIpcManagerFactory;
@@ -102,14 +109,20 @@ import org.opennms.test.mock.MockLogAppender;
 public class ThresholdingVisitorTest {
 
     Level m_defaultErrorLevelToCheck;
-    ThresholdingVisitor m_visitor;
     FilterDao m_filterDao;
     EventAnticipator m_anticipator;
     List<Event> m_anticipatedEvents;
+    private Comparator<Parm> m_parmComparator;
+    private Comparator<Event> m_eventComparator;
     
     @Before
     public void setUp() throws Exception {
+        // Resets Counters Cache Data
+        System.setProperty("org.opennms.thresholds.filtersReloadEnabled", "false");
+        CollectionResourceWrapper.s_cache.clear();
+        
         m_defaultErrorLevelToCheck = Level.WARN;
+        System.setProperty("mock.logLevel", "DEBUG");
         MockLogAppender.setupLogging();
 
         m_filterDao = EasyMock.createMock(FilterDao.class);
@@ -126,9 +139,80 @@ public class ThresholdingVisitorTest {
         
         initFactories("/threshd-configuration.xml","/test-thresholds.xml");
         m_anticipatedEvents = new ArrayList<Event>();
+        
+        m_parmComparator = new Comparator<Parm>() {
+
+            public int compare(Parm o1, Parm o2) {
+                if (o1 == null && o2 == null) return 0;
+                if (o1 == null && o2 != null) return 1;
+                if (o1 != null && o2 == null) return -1;
+
+                int retVal = o1.getParmName().compareTo(o2.getParmName());
+                if (retVal == 0) {
+                    String c1 = o1.getValue().getContent();
+                    String c2 = o2.getValue().getContent();
+                    if (c1 == null && c2 == null) return 0;
+                    if (c1 == null && c2 != null) return 1;
+                    if (c1 != null && c2 == null) return -1;
+                    
+                    retVal = c1.compareTo(c2);
+                }
+                return retVal;
+            }
+        };
+
+        m_eventComparator = new Comparator<Event>() {
+
+            private int compareStrings(String s1, String s2) {
+                if (s1 == null && s2 == null) return 0;
+                if (s1 == null && s2 != null) return 1;
+                if (s1 != null && s2 == null) return -1;
+                return (s1.compareTo(s2));
+            }
+
+            public int compare(Event e1, Event e2) {
+                if (e1 == null && e2 == null) return 0;
+                if (e1 == null && e2 != null) return 1;
+                if (e1 != null && e2 == null) return -1;
+
+                int retVal = compareStrings(e1.getUei(), e2.getUei());
+                if (retVal == 0) {
+                    retVal = compareStrings(e1.getInterface(), e2.getInterface());
+                }
+                if (retVal == 0) {
+                    retVal = compareStrings(e1.getService(), e2.getService());
+                }
+                if (retVal == 0) {
+                    List<Parm> anticipatedParms = e1.getParms().getParmCollection();
+                    List<Parm> receivedParms = e2.getParms().getParmCollection();
+                    Collections.sort(anticipatedParms, m_parmComparator);
+                    Collections.sort(receivedParms, m_parmComparator);
+                    if (anticipatedParms.size() != receivedParms.size()) {
+                        retVal = Integer.valueOf(anticipatedParms.size()).compareTo(Integer.valueOf(receivedParms.size()));
+                    }
+                    if (retVal == 0) {
+                        for (int i = 0; i < anticipatedParms.size(); i++) {
+                            Parm anticipated = anticipatedParms.get(i);
+                            Parm received = receivedParms.get(i);
+                            
+                            retVal = compareStrings(anticipated.getParmName(), received.getParmName());
+                            if (retVal == 0) {
+                                retVal = compareStrings(anticipated.getValue().getContent(), received.getValue().getContent());
+                            }
+                            if (retVal != 0) {
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                return retVal;
+            }
+        };
     }
 
     private void initFactories(String threshd, String thresholds) throws Exception {
+        log().info("Initialize Threshold Factories");
         ThresholdingConfigFactory.setInstance(new ThresholdingConfigFactory(getClass().getResourceAsStream(thresholds)));
         ThreshdConfigFactory.setInstance(new ThreshdConfigFactory(getClass().getResourceAsStream(threshd),"127.0.0.1", false));
     }
@@ -147,10 +231,12 @@ public class ThresholdingVisitorTest {
     @Test
     public void testCreateVisitorWithoutProperEnabledIt() {
         Map<String,String> params = new HashMap<String,String>();
+        // The time interval is usually taken from the configuration parameters of the service on collectd-configuration.xml
+        // The interval from threshd-configuration.xml is ignored.
         ThresholdingVisitor visitor = ThresholdingVisitor.create(1, "127.0.0.1", "SNMP", getRepository(), params, 300000);
         assertNull(visitor);
     }
-
+    
     /*
      * This test uses this files from src/test/resources:
      * - thresd-configuration.xml
@@ -169,7 +255,7 @@ public class ThresholdingVisitorTest {
      * - thresd-configuration.xml
      * - test-thresholds.xml
      * 
-     * Updated to reflect the fact that counter are treated as rates.
+     * Updated to reflect the fact that counter are treated as rates (counter wrap is not checked here anymore).
      */
     @Test
     public void testResourceCounterData() throws Exception {
@@ -200,16 +286,6 @@ public class ThresholdingVisitorTest {
         resource.setAttributeValue(attributeType, SnmpUtils.getValueFactory().getCounter32(6100));
         resource.visit(visitor);
 
-        // Collect Step 3 : Reset counter (bad value). last=6100, current=10
-        resource = new NodeInfo(resourceType, agent);
-        resource.setAttributeValue(attributeType, SnmpUtils.getValueFactory().getCounter32(10));
-        resource.visit(visitor);
-
-        // Collect Step 3 : Normal. last=10, current=1000 => (1000-10)/300=3.3
-        resource = new NodeInfo(resourceType, agent);
-        resource.setAttributeValue(attributeType, SnmpUtils.getValueFactory().getCounter32(1010));
-        resource.visit(visitor);
-
         EasyMock.verify(agent);
         verifyEvents(0);
     }
@@ -223,10 +299,12 @@ public class ThresholdingVisitorTest {
      */
     @Test
     public void testInterfaceResourceWithDBAttributeFilter() throws Exception {
-        setupSnmpInterfaceDatabase("127.0.0.1", "wlan0");
-        addHighThresholdEvent(1, 90, 50, 120, "Unknown", "1", "ifOutOctets", "wlan0", "1");
-        addHighThresholdEvent(1, 90, 50, 120, "Unknown", "1", "ifInOctets", "wlan0", "1");
-        runInterfaceResource("127.0.0.1", "wlan0", 10000, 46000); // real value = (46000 - 10000)/300 = 120
+        Integer ifIndex = 1;
+        Long ifSpeed = 10000000l;
+        String ifName = "wlan0";
+        addHighThresholdEvent(1, 90, 50, 120, "Unknown", ifIndex.toString(), "ifOutOctets", ifName, ifIndex.toString());
+        addHighThresholdEvent(1, 90, 50, 120, "Unknown", ifIndex.toString(), "ifInOctets", ifName, ifIndex.toString());
+        runInterfaceResource(createVisitor(), "127.0.0.1", ifName, ifSpeed, ifIndex, 10000, 46000); // real value = (46000 - 10000)/300 = 120
         verifyEvents(0);
     }
 
@@ -239,18 +317,20 @@ public class ThresholdingVisitorTest {
      */
     @Test
     public void testInterfaceResourceWithStringAttributeFilter() throws Exception {
-        setupSnmpInterfaceDatabase("127.0.0.1", "sis0");
-        addHighThresholdEvent(1, 90, 50, 120, "Unknown", "1", "ifOutOctets", "sis0", "1");
-        addHighThresholdEvent(1, 90, 50, 120, "Unknown", "1", "ifInOctets", "sis0", "1");
+        Integer ifIndex = 1;
+        Long ifSpeed = 10000000l;
+        String ifName = "sis0";
+        addHighThresholdEvent(1, 90, 50, 120, "Unknown", ifIndex.toString(), "ifOutOctets", ifName, ifIndex.toString());
+        addHighThresholdEvent(1, 90, 50, 120, "Unknown", ifIndex.toString(), "ifInOctets", ifName, ifIndex.toString());
 
-        File resourceDir = new File(getRepository().getRrdBaseDir(), "1/sis0");
+        File resourceDir = new File(getRepository().getRrdBaseDir(), "1/" + ifName);
         resourceDir.deleteOnExit();
         resourceDir.mkdirs();
         Properties p = new Properties();
         p.put("myMockParam", "myMockValue");
         ResourceTypeUtils.saveUpdatedProperties(new File(resourceDir, "strings.properties"), p);
         
-        runInterfaceResource("127.0.0.1", "sis0", 10000, 46000); // real value = (46000 - 10000)/300 = 120
+        runInterfaceResource(createVisitor(), "127.0.0.1", ifName, ifSpeed, ifIndex, 10000, 46000); // real value = (46000 - 10000)/300 = 120
         verifyEvents(0);
         deleteDirectory(new File(getRepository().getRrdBaseDir(), "1"));
     }
@@ -499,7 +579,7 @@ public class ThresholdingVisitorTest {
         addHighThresholdEvent(1, 100, 90, 110, "Unknown", null, "myCounter", null, null);
         addHighThresholdEvent(1, 70, 60, 80, "Unknown", null, "myCounter - 30", null, null);
         addHighRearmEvent(1, 100, 90, 40, "Unknown", null, "myCounter", null, null);
-        addHighRearmEvent(1, 70, 60, 10, "Unknown", null, "myCounter - 30", null, null);
+        addHighRearmEvent(1, 70, 60, 10, "Unknown", null, "myCounter - 30", null, null);            
 
         // Collect Step 1 : First Data: Last should be NaN
         SnmpCollectionResource resource = new NodeInfo(resourceType, agent);
@@ -534,11 +614,13 @@ public class ThresholdingVisitorTest {
      */
     @Test
     public void testBug2711_noIpAddress() throws Exception {
+        Integer ifIndex = 2;
+        Long ifSpeed = 10000000l;
+        String ifName = "wlan0";
         initFactories("/threshd-configuration.xml","/test-thresholds-2.xml");
-        setupSnmpInterfaceWithoutIpDatabase("wlan0", 2, false);
-        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "0.0.0.0", "SNMP", 1, 90, 50, 120, "Unknown", "1", "ifOutOctets", "wlan0", "2");
-        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "0.0.0.0", "SNMP", 1, 90, 50, 120, "Unknown", "1", "ifInOctets", "wlan0", "2");
-        runInterfaceResource("0.0.0.0", "wlan0", 10000, 46000); // real value = (46000 - 10000)/300 = 120
+        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "0.0.0.0", "SNMP", 1, 90, 50, 120, "Unknown", ifIndex.toString(), "ifOutOctets", ifName, ifIndex.toString());
+        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "0.0.0.0", "SNMP", 1, 90, 50, 120, "Unknown", ifIndex.toString(), "ifInOctets", ifName, ifIndex.toString());
+        runInterfaceResource(createVisitor(), "0.0.0.0", ifName, ifSpeed, ifIndex, 10000, 46000); // real value = (46000 - 10000)/300 = 120
         verifyEvents(0);
     }
 
@@ -550,29 +632,14 @@ public class ThresholdingVisitorTest {
      * Updated to reflect the fact that counter are treated as rates.
      */
     @Test
-    public void testBug2711_noIP_noSnmpIfInfo() throws Exception {
-        initFactories("/threshd-configuration.xml","/test-thresholds-2.xml");
-        setupSnmpInterfaceWithoutIpDatabase("wlan0", 2, true);
-        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "10.10.0.1", "SNMP", 1, 90, 50, 120, "Unknown", "1", "ifOutOctets", "wlan0", "2");
-        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "10.10.0.1", "SNMP", 1, 90, 50, 120, "Unknown", "1", "ifInOctets", "wlan0", "2");
-        runInterfaceResource("10.10.0.1", "wlan0", 10000, 46000); // real value = (46000 - 10000)/300 = 120
-        verifyEvents(2);
-    }
-
-    /*
-     * This test uses this files from src/test/resources:
-     * - thresd-configuration.xml
-     * - test-thresholds-2.xml
-     * 
-     * Updated to reflect the fact that counter are treated as rates.
-     */
-    @Test
     public void testBug2711_noIP_badIfIndex() throws Exception {
+        Integer ifIndex = -100;
+        Long ifSpeed = 10000000l;
+        String ifName = "wlan0";
         initFactories("/threshd-configuration.xml","/test-thresholds-2.xml");
-        setupSnmpInterfaceWithoutIpDatabase("wlan0", -100, false);
-        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "0.0.0.0", "SNMP", 1, 90, 50, 120, "Unknown", "1", "ifOutOctets", "wlan0", "2");
-        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "0.0.0.0", "SNMP", 1, 90, 50, 120, "Unknown", "1", "ifInOctets", "wlan0", "2");
-        runInterfaceResource("0.0.0.0", "wlan0", 10000, 46000); // real value = (46000 - 10000)/300 = 120
+        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "0.0.0.0", "SNMP", 1, 90, 50, 120, "Unknown", ifIndex.toString(), "ifOutOctets", ifName, ifIndex.toString());
+        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "0.0.0.0", "SNMP", 1, 90, 50, 120, "Unknown", ifIndex.toString(), "ifInOctets", ifName, ifIndex.toString());
+        runInterfaceResource(createVisitor(), "0.0.0.0", ifName, ifSpeed, ifIndex, 10000, 46000); // real value = (46000 - 10000)/300 = 120
         verifyEvents(2);
     }
 
@@ -589,24 +656,8 @@ public class ThresholdingVisitorTest {
     public void testBug3227() throws Exception {
         initFactories("/threshd-configuration.xml","/test-thresholds-bug3227.xml");
         ThresholdingVisitor visitor = createVisitor();
-
         CollectionAgent agent = createCollectionAgent();
-        MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();        
-        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, String>()), dataCollectionConfig);
-
-        // Creating DataCollection ResourceType
-        org.opennms.netmgt.config.datacollection.ResourceType type = new org.opennms.netmgt.config.datacollection.ResourceType();
-        type.setName("frCircuitIfIndex");
-        type.setLabel("Frame-Relay (RFC1315)");
-        org.opennms.netmgt.config.datacollection.StorageStrategy strategy = new org.opennms.netmgt.config.datacollection.StorageStrategy();
-        strategy.setClazz("org.opennms.netmgt.dao.support.IndexStorageStrategy");
-        type.setStorageStrategy(strategy);
-        org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy pstrategy = new org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy();
-        pstrategy.setClazz("org.opennms.netmgt.collectd.PersistAllSelectorStrategy");
-        type.setPersistenceSelectorStrategy(pstrategy);
-        
-        // Creating Generic ResourceType
-        GenericIndexResourceType resourceType = new GenericIndexResourceType(agent, collection, type);
+        GenericIndexResourceType resourceType = createGenericIndexResourceType(agent, "frCircuitIfIndex");
 
         // Creating Resource
         SnmpInstId inst = new SnmpInstId(100);
@@ -616,17 +667,397 @@ public class ThresholdingVisitorTest {
         
         /*
          * Run Visitor
-         * I must receive 3 warnings because getEntityMap should be called 3 times.
+         * I must receive 2 special info events because getEntityMap should be called 2 times.
          * One for each attribute and one for each resource.
          * Original code will throw a NullPointerException after call getEntityMap.
+         * Original code expects WARNs, but this message is now an INFO.
          */
-        m_defaultErrorLevelToCheck = Level.ERROR;
         resource.visit(visitor);
-        LoggingEvent[] events = MockLogAppender.getEventsGreaterOrEqual(Level.WARN);
-        Assert.assertEquals(3, events.length);
+        LoggingEvent[] events = MockLogAppender.getEventsGreaterOrEqual(Level.INFO);
+        int count = 0;
+        String expectedMsg = "getEntityMap: No thresholds configured for resource type frCircuitIfIndex. Not processing this collection.";
         for (LoggingEvent e : events) {
-            Assert.assertEquals("getEntityMap: No thresholds configured for resource type frCircuitIfIndex. Not processing this collection.", e.getMessage());
+            if (e.getMessage().equals(expectedMsg))
+                count++;
         }
+        assertEquals("expecting 2 events", 2, count);
+    }
+
+    /*
+     * Testing 32-bit counter wrapping on ifOutOctets
+     */
+    @Test
+    public void testBug3194_32bits() throws Exception {
+        runCounterWrapTest(32, 200);
+    }
+
+    /*
+     * Testing 64-bit counter wrapping on ifOutOctets
+     */
+    @Test
+    public void testBug3194_64bits() throws Exception {
+        runCounterWrapTest(64, 201.6);
+    }
+
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration.xml
+     * - test-thresholds-6.xml
+     */
+    @Test
+    public void testBug3333() throws Exception {
+        initFactories("/threshd-configuration.xml","/test-thresholds-bug3333.xml");
+        ThresholdingVisitor visitor = createVisitor();
+        String expression = "hrStorageSize-hrStorageUsed";
+
+        // Trigger Low Threshold
+        addEvent("uei.opennms.org/threshold/lowThresholdExceeded", "127.0.0.1", "SNMP", 1, 10, 15, 5, "/opt", "1", expression, null, null);
+        runFileSystemDataTest(visitor, 1, "/opt", 95, 100);
+        verifyEvents(0);
+
+        // Rearm Low Threshold and Trigger High Threshold
+        addEvent("uei.opennms.org/threshold/lowThresholdRearmed", "127.0.0.1", "SNMP", 1, 10, 15, 60, "/opt", "1", expression, null, null);
+        addHighThresholdEvent(1, 50, 45, 60, "/opt", "1", expression, null, null);
+        runFileSystemDataTest(visitor, 1, "/opt", 40, 100);
+        verifyEvents(0);
+    }
+    
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration-bug3390.xml
+     * - test-thresholds-bug3390.xml
+     * 
+     * The idea is to define many threshold-group parameters on a service inside a package
+     */
+    @Test
+    public void testBug3390() throws Exception {
+        initFactories("/threshd-configuration-bug3390.xml","/test-thresholds-bug3390.xml");
+        
+        // Validating threshd-configuration.xml
+        ThreshdConfigManager configManager = ThreshdConfigFactory.getInstance();
+        assertEquals(1, configManager.getConfiguration().getPackageCount());
+        org.opennms.netmgt.config.threshd.Package pkg = configManager.getConfiguration().getPackage(0);
+        assertEquals(1, pkg.getServiceCount());
+        org.opennms.netmgt.config.threshd.Service svc = pkg.getService(0);
+        assertEquals(5, svc.getParameterCount());
+        int count = 0;
+        for (org.opennms.netmgt.config.threshd.Parameter parameter : svc.getParameter()) {
+            if (parameter.getKey().equals("thresholding-group"))
+                count++;
+        }
+        assertEquals(5, count);
+
+        // Validating Thresholding Set
+        ThresholdingVisitor visitor = createVisitor();
+        assertEquals(5, visitor.m_thresholdingSet.m_thresholdGroups.size());
+    }
+
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration-bug3554.xml
+     * - test-thresholds-bug3554.xml
+     */
+    @Test
+    public void testBug3554_withMockFilterDao() throws Exception {
+        initFactories("/threshd-configuration-bug3554.xml","/test-thresholds-bug3554.xml");
+        
+        // Visitor with Mock FilterDao
+        ThresholdingVisitor visitor = createVisitor();
+        
+        // Do nothing, just to check visitor
+        runInterfaceResource(visitor, "127.0.0.1", "eth0", 10000000l, 1, 10000, 46000); // real value = (46000 - 10000)/300 = 120
+        
+        // Do nothing, just to check visitor
+        runGaugeDataTest(visitor, 12000);
+        
+        // Do nothing, just to check visitor
+        CollectionAgent agent = createCollectionAgent();
+        GenericIndexResourceType resourceType = createGenericIndexResourceType(agent, "ciscoEnvMonTemperatureStatusIndex");
+        SnmpCollectionResource resource = new GenericIndexResource(resourceType, "ciscoEnvMonTemperatureStatusIndex", new SnmpInstId(45));
+        resource.visit(visitor);
+        EasyMock.verify(agent);
+    }
+
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration-bug3554.xml
+     * - test-thresholds-bug3554.xml
+     * 
+     * The problem is that every time we create a ThresholdingVisitor instance, the method
+     * ThreshdConfigFactory.interfaceInPackage is called. This methods uses JdbcFilterDao
+     * to evaluate node filter.
+     * 
+     * This filter evaluation is the reason of why collectd take too much to initialize on
+     * large networks when in-line thresholding is enabled.
+     * 
+     * From test log, you can see that JdbcFilterDao is invoked on each visitor creation
+     * iteration.
+     */
+    @Test
+    public void testBug3554_withDBFilterDao() throws Exception {
+        runTestForBug3554();
+
+        // Validate FilterDao Calls
+        int numOfPackages = ThreshdConfigFactory.getInstance().getConfiguration().getPackage().length;
+        LoggingEvent[] events = MockLogAppender.getEventsGreaterOrEqual(Level.DEBUG);
+        int count = 0;
+        String expectedMsgHeader = "createPackageIpMap: package ";
+        for (LoggingEvent e : events) {
+            if (e.getMessage().toString().startsWith(expectedMsgHeader))
+                count++;
+        }
+        assertEquals("expecting " + numOfPackages + " events", numOfPackages, count);
+    }
+
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration-bug3554.xml
+     * - test-thresholds-bug3554.xml
+     * 
+     * This test demonstrate that we can force filter auto-reload.
+     */
+    @Test
+    public void testBug3720() throws Exception {
+        System.setProperty("org.opennms.thresholds.filtersReloadEnabled", "true");
+        runTestForBug3554();
+        
+        // Validate FilterDao Calls
+        int numOfPackages = ThreshdConfigFactory.getInstance().getConfiguration().getPackage().length;
+        int expectedCalls = numOfPackages * 26; // Not sure why is 5^2+1
+        LoggingEvent[] events = MockLogAppender.getEventsGreaterOrEqual(Level.DEBUG);
+        int count = 0;
+        String expectedMsgHeader = "createPackageIpMap: package ";
+        for (LoggingEvent e : events) {
+            if (e.getMessage().toString().startsWith(expectedMsgHeader))
+                count++;
+        }
+        assertEquals("expecting " + expectedCalls + " events", expectedCalls, count);
+        
+        // Validate number of re-initializations
+        expectedCalls = 25; // 5 nodes => 5^2 times
+        events = MockLogAppender.getEventsGreaterOrEqual(Level.INFO);
+        count = 0;
+        expectedMsgHeader = "getThresholdGroupNames: re-initializing filters.";
+        for (LoggingEvent e : events) {
+            if (e.getMessage().toString().equals(expectedMsgHeader))
+                count++;
+        }
+        assertEquals("expecting " + expectedCalls + " events", expectedCalls, count);
+    }
+
+    private void runTestForBug3554() throws Exception {
+        MockLogAppender.resetEvents();
+        System.err.println("----------------------------------------------------------------------------------- begin test");
+
+        String baseIpAddress = "10.0.0.";
+        int numOfNodes = 5;
+
+        // Initialize Mock Network
+
+        MockNetwork network = new MockNetwork();
+        network.setCriticalService("ICMP");
+
+        for (int i=1; i<=numOfNodes; i++) {
+            String ipAddress = baseIpAddress + i;
+            network.addNode(i, "testNode-" + ipAddress);
+            network.addInterface(ipAddress);
+            network.setIfAlias("eth0");
+            network.addService("ICMP");
+            network.addService("SNMP");
+        }
+
+        MockDatabase db = new MockDatabase();
+        db.populate(network);
+        db.update("insert into categories (categoryid, categoryname) values (?, ?)", 10, "IPRA");
+        db.update("insert into categories (categoryid, categoryname) values (?, ?)", 11, "NAS");
+        for (int i=1; i<=numOfNodes; i++) {
+            db.update("update snmpinterface set snmpifname=?, snmpifdescr=? where id=?", "eth0", "eth0", i);
+            db.update("update node set nodesysoid=? where nodeid=?", ".1.3.6.1.4.1.9.1.222", i);
+            db.update("insert into category_node values (?, ?)", 10, i);
+            db.update("insert into category_node values (?, ?)", 11, i);
+        }
+        DataSourceFactory.setInstance(db);
+
+        // Initialize Filter DAO
+
+        System.setProperty("opennms.home", "src/test/resources");
+        DatabaseSchemaConfigFactory.init();
+        JdbcFilterDao jdbcFilterDao = new JdbcFilterDao();
+        jdbcFilterDao.setDataSource(db);
+        jdbcFilterDao.setDatabaseSchemaConfigFactory(DatabaseSchemaConfigFactory.getInstance());
+        jdbcFilterDao.afterPropertiesSet();
+        FilterDaoFactory.setInstance(jdbcFilterDao);
+
+        // Initialize Factories
+
+        initFactories("/threshd-configuration-bug3554.xml","/test-thresholds-bug3554.xml");
+
+        // Initialize Thresholding Visitors
+
+        Map<String,String> params = new HashMap<String,String>();
+        params.put("thresholding-enabled", "true");
+
+        for (int i=1; i<=numOfNodes; i++) {
+            System.err.println("----------------------------------------------------------------------------------- visitor #" + i);
+            String ipAddress = baseIpAddress + i;
+            ThresholdingVisitor visitor = ThresholdingVisitor.create(1, ipAddress, "SNMP", getRepository(), params, 300000);
+            assertNotNull(visitor);
+            assertEquals(4, visitor.getThresholdGroups().size()); // mib2, cisco, ciscoIPRA, ciscoNAS
+        }
+        System.err.println("----------------------------------------------------------------------------------- end");
+    }
+
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration-bug3487.xml
+     * - test-thresholds.xml
+     */
+    @Test
+    public void testBug3487() throws Exception {
+        initFactories("/threshd-configuration-bug3487.xml","/test-thresholds.xml");
+        assertNotNull(createVisitor());
+        m_defaultErrorLevelToCheck = Level.FATAL;
+        LoggingEvent[] events = MockLogAppender.getEventsGreaterOrEqual(Level.ERROR);
+        assertEquals("expecting 1 event", 1, events.length);
+        assertEquals("initialize: Can't process threshold group SMS_Dieta", events[0].getMessage());
+    }
+
+    /*
+     * Testing custom ThresholdingSet implementation for in-line Latency thresholds processing (Bug 3448)
+     */
+    @Test
+    public void testBug3488() throws Exception {
+        String ipAddress = "127.0.0.1";
+        setupSnmpInterfaceDatabase(ipAddress, null);
+        LatencyThresholdingSet thresholdingSet = new LatencyThresholdingSet(1, ipAddress, "HTTP", getRepository(), 0);
+        assertTrue(thresholdingSet.hasThresholds()); // Global Test
+        Map<String, Double> attributes = new HashMap<String, Double>();
+        attributes.put("http", 200.0);
+        assertTrue(thresholdingSet.hasThresholds(attributes)); // Datasource Test
+
+        m_defaultErrorLevelToCheck = Level.ERROR;
+        List<Event> triggerEvents = new ArrayList<Event>();
+        for (int i=0; i<5; i++)
+            triggerEvents.addAll(thresholdingSet.applyThresholds("http", attributes));
+        LoggingEvent[] events = MockLogAppender.getEventsGreaterOrEqual(Level.WARN);
+        assertEquals("expecting 5 events", 5, events.length);
+        for (LoggingEvent e : events)
+            assertEquals("Interface (nodeId/ipAddr=1/127.0.0.1) has no ifName and no ifDescr...setting to label to 'no_ifLabel'.", e.getMessage());
+        assertTrue(triggerEvents.size() == 1);
+
+        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "127.0.0.1", "HTTP", 5, 100, 50, 200, "Unknown", "127.0.0.1[http]", "http", "no_ifLabel", null);
+        ThresholdingEventProxy proxy = new ThresholdingEventProxy();
+        proxy.add(triggerEvents);
+        proxy.sendAllEvents();
+        verifyEvents(0);
+    }
+
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration-bug3575.xml
+     * - test-thresholds-bug3575.xml
+     */
+    @Test
+    public void testBug3575() throws Exception {
+        initFactories("/threshd-configuration-bug3575.xml","/test-thresholds-bug3575.xml");
+        String ipAddress = "127.0.0.1";
+        setupSnmpInterfaceDatabase(ipAddress, "eth0");
+        LatencyThresholdingSet thresholdingSet = new LatencyThresholdingSet(1, ipAddress, "StrafePing", getRepository(), 0);
+        assertTrue(thresholdingSet.hasThresholds());
+        Map<String, Double> attributes = new HashMap<String, Double>();
+        for (double i=1; i<21; i++)
+            attributes.put("ping" + i, 2 * i);
+        attributes.put("loss", 60.0);
+        attributes.put("response-time", 100.0);
+        attributes.put("median", 100.0);
+        assertTrue(thresholdingSet.hasThresholds(attributes));
+        List<Event> triggerEvents = thresholdingSet.applyThresholds("StrafePing", attributes);
+        assertTrue(triggerEvents.size() == 1);
+        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "127.0.0.1", "StrafePing", 1, 50, 25, 60, "Unknown", "127.0.0.1[StrafePing]", "loss", "eth0", null);
+        ThresholdingEventProxy proxy = new ThresholdingEventProxy();
+        proxy.add(triggerEvents);
+        proxy.sendAllEvents();
+        verifyEvents(0);
+    }
+
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration.xml
+     * - test-thresholds-bug3428.xml
+     * 
+     * Updated to reflect the fact that counter are treated as rates.
+     */
+    @Test
+    public void testBug3428_noMatch() throws Exception {
+        initFactories("/threshd-configuration.xml","/test-thresholds-bug3428.xml");
+        Integer ifIndex = 1;
+        Long ifSpeed = 10000000l; // 10Mbps - Bad Speed
+        String ifName = "wlan0";
+        addHighThresholdEvent(1, 90, 50, 120, "Unknown", ifIndex.toString(), "ifInOctets", ifName, ifIndex.toString());
+        runInterfaceResource(createVisitor(), "127.0.0.1", ifName, ifSpeed, ifIndex, 10000, 46000); // real value = (46000 - 10000)/300 = 120
+        verifyEvents(1);
+    }
+
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration.xml
+     * - test-thresholds-bug3428.xml
+     * 
+     * Updated to reflect the fact that counter are treated as rates.
+     */
+    @Test
+    public void testBug3428_match() throws Exception {
+        initFactories("/threshd-configuration.xml","/test-thresholds-bug3428.xml");
+        Integer ifIndex = 1;
+        Long ifSpeed = 100000000l; // 100Mbps - Correct Speed!
+        String ifName = "wlan0";
+        addHighThresholdEvent(1, 90, 50, 120, "Unknown", ifIndex.toString(), "ifInOctets", ifName, ifIndex.toString());
+        runInterfaceResource(createVisitor(), "127.0.0.1", ifName, ifSpeed, ifIndex, 10000, 46000); // real value = (46000 - 10000)/300 = 120
+        verifyEvents(0);
+    }
+
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration.xml
+     * - test-thresholds-bug3664.xml
+     * 
+     * Updated to reflect the fact that counter are treated as rates.
+     */
+    @Test
+    public void testBug3664() throws Exception {
+        initFactories("/threshd-configuration.xml","/test-thresholds-bug3664.xml");
+        Integer ifIndex = 1;
+        Long ifSpeed = 10000000l;
+        String ifName = "wlan0";
+        String domain = "myDomain";
+        String ifAlias = ifName;
+        String ifAliasComment = "#";
+
+        String label = domain + "/" + ifAlias;
+        addHighThresholdEvent(1, 90, 50, 120, "Unknown", null, "ifOutOctets", label, ifIndex.toString());
+        addHighThresholdEvent(1, 90, 50, 120, "Unknown", null, "ifInOctets", label, ifIndex.toString());
+
+        ThresholdingVisitor visitor = createVisitor();
+        SnmpIfData ifData = createSnmpIfData("127.0.0.1", ifName, ifSpeed, ifIndex);
+        CollectionAgent agent = createCollectionAgent();
+        IfResourceType resourceType = createInterfaceResourceType(agent);
+
+        // Step 1
+        IfInfo ifInfo = new IfInfo(resourceType, agent, ifData);
+        addAttributeToCollectionResource(ifInfo, resourceType, "ifInOctets", "counter", "ifIndex", 10000);
+        addAttributeToCollectionResource(ifInfo, resourceType, "ifOutOctets", "counter", "ifIndex", 10000);
+        AliasedResource resource = new AliasedResource(resourceType, domain, ifInfo, ifAliasComment, ifAlias);
+        resource.visit(visitor);
+
+        // Step 2 - Increment Counters
+        ifInfo = new IfInfo(resourceType, agent, ifData);
+        addAttributeToCollectionResource(ifInfo, resourceType, "ifInOctets", "counter", "ifIndex", 46000);
+        addAttributeToCollectionResource(ifInfo, resourceType, "ifOutOctets", "counter", "ifIndex", 46000);
+        resource = new AliasedResource(resourceType, domain, ifInfo, ifAliasComment, ifAlias);
+        resource.visit(visitor);
+
+        EasyMock.verify(agent);
+        verifyEvents(0);
     }
 
     /*
@@ -637,14 +1068,15 @@ public class ThresholdingVisitorTest {
      */
     @Test    
     public void testLatencyThresholdingSet() throws Exception {
-        setupSnmpInterfaceDatabase("127.0.0.1", "lo0");
+        Integer ifIndex = 1;
+        String ifName = "lo0";
+        setupSnmpInterfaceDatabase("127.0.0.1", ifName);
 
         LatencyThresholdingSet thresholdingSet = new LatencyThresholdingSet(1, "127.0.0.1", "HTTP", getRepository(), 0);
         assertTrue(thresholdingSet.hasThresholds()); // Global Test
-        assertTrue(thresholdingSet.hasThresholds("http")); // Datasource Test
-        Map<String, Double> attributes = new HashMap<String, Double>();        
-
+        Map<String, Double> attributes = new HashMap<String, Double>();
         attributes.put("http", 90.0);
+        assertTrue(thresholdingSet.hasThresholds(attributes)); // Datasource Test
         List<Event> triggerEvents = thresholdingSet.applyThresholds("http", attributes);
         assertTrue(triggerEvents.size() == 0);
 
@@ -652,12 +1084,12 @@ public class ThresholdingVisitorTest {
         attributes.put("http", 200.0);
         for (int i = 1; i < 5; i++) {
             log().debug("testLatencyThresholdingSet: run number " + i);
-            if (thresholdingSet.hasThresholds("http")) {
+            if (thresholdingSet.hasThresholds(attributes)) {
                 triggerEvents = thresholdingSet.applyThresholds("http", attributes);
                 assertTrue(triggerEvents.size() == 0);
             }
         }
-        if (thresholdingSet.hasThresholds("http")) {
+        if (thresholdingSet.hasThresholds(attributes)) {
             log().debug("testLatencyThresholdingSet: run number 5");
             triggerEvents = thresholdingSet.applyThresholds("http", attributes);
             assertTrue(triggerEvents.size() == 1);
@@ -665,15 +1097,15 @@ public class ThresholdingVisitorTest {
         
         // Test Rearm
         List<Event> rearmEvents = null;
-        if (thresholdingSet.hasThresholds("http")) {
+        if (thresholdingSet.hasThresholds(attributes)) {
             attributes.put("http", 40.0);
             rearmEvents = thresholdingSet.applyThresholds("http", attributes);
             assertTrue(rearmEvents.size() == 1);
         }
 
         // Validate Events
-        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "127.0.0.1", "HTTP", 5, 100, 50, 200, "Unknown", "127.0.0.1[http]", "http", "lo0", "1");
-        addEvent("uei.opennms.org/threshold/highThresholdRearmed", "127.0.0.1", "HTTP", 5, 100, 50, 40, "Unknown", "127.0.0.1[http]", "http", "lo0", "1");
+        addEvent("uei.opennms.org/threshold/highThresholdExceeded", "127.0.0.1", "HTTP", 5, 100, 50, 200, "Unknown", "127.0.0.1[http]", "http", ifName, ifIndex.toString());
+        addEvent("uei.opennms.org/threshold/highThresholdRearmed", "127.0.0.1", "HTTP", 5, 100, 50, 40, "Unknown", "127.0.0.1[http]", "http", ifName, ifIndex.toString());
         ThresholdingEventProxy proxy = new ThresholdingEventProxy();
         proxy.add(triggerEvents);
         proxy.add(rearmEvents);
@@ -694,7 +1126,7 @@ public class ThresholdingVisitorTest {
      * If we forgot it, /opt01 will not pass threshold filter
      */
     @Test
-    public void testThresholsFilters() throws Exception {
+    public void testThresholsFiltersOnGenericResource() throws Exception {
         ThresholdingVisitor visitor = createVisitor();
         
         String highExpression = "(((hrStorageAllocUnits*hrStorageUsed)/(hrStorageAllocUnits*hrStorageSize))*100)";
@@ -705,6 +1137,50 @@ public class ThresholdingVisitorTest {
         runFileSystemDataTest(visitor, 2, "/opt01", 60, 100);
         runFileSystemDataTest(visitor, 3, "/home", 70, 100);
         
+        verifyEvents(0);
+    }
+
+    /*
+     * This test uses this files from src/test/resources:
+     * - thresd-configuration.xml
+     * - test-thresholds-5.xml
+     */
+    @Test
+    public void testThresholsFiltersOnNodeResource() throws Exception {
+        initFactories("/threshd-configuration.xml","/test-thresholds-5.xml");
+        ThresholdingVisitor visitor = createVisitor();
+        
+        // Adding Expected Thresholds
+        addHighThresholdEvent(1, 30, 25, 50, "/home", null, "(hda1_hrStorageUsed/hda1_hrStorageSize)*100", null, null);
+        addHighThresholdEvent(1, 50, 45, 60, "/opt", null, "(hda2_hrStorageUsed/hda2_hrStorageSize)*100", null, null);
+
+        // Creating Node ResourceType
+        CollectionAgent agent = createCollectionAgent();
+        MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();        
+        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, String>()), dataCollectionConfig);
+        NodeResourceType resourceType = new NodeResourceType(agent, collection);
+
+        // Creating strings.properties file
+        Properties p = new Properties();
+        p.put("hda1_hrStorageDescr", "/home");
+        p.put("hda2_hrStorageDescr", "/opt");
+        p.put("hda3_hrStorageDescr", "/usr");
+        File f = new File(getRepository().getRrdBaseDir(), "1/strings.properties");
+        ResourceTypeUtils.saveUpdatedProperties(f, p);
+        
+        // Creating Resource
+        SnmpCollectionResource resource = new NodeInfo(resourceType, agent);
+        addAttributeToCollectionResource(resource, resourceType, "hda1_hrStorageUsed", "gauge", "node", 50);
+        addAttributeToCollectionResource(resource, resourceType, "hda1_hrStorageSize", "gauge", "node", 100);
+        addAttributeToCollectionResource(resource, resourceType, "hda2_hrStorageUsed", "gauge", "node", 60);
+        addAttributeToCollectionResource(resource, resourceType, "hda2_hrStorageSize", "gauge", "node", 100);
+        addAttributeToCollectionResource(resource, resourceType, "hda3_hrStorageUsed", "gauge", "node", 70);
+        addAttributeToCollectionResource(resource, resourceType, "hda3_hrStorageSize", "gauge", "node", 100);
+
+        // Run Visitor and Verify Events
+        resource.visit(visitor);
+        EasyMock.verify(agent);
+        f.delete();
         verifyEvents(0);
     }
 
@@ -725,10 +1201,8 @@ public class ThresholdingVisitorTest {
         EasyMock.verify(agent);
     }
 
-    private void runInterfaceResource(String ipAddress, String ifName, long v1, long v2) {
-        ThresholdingVisitor visitor = createVisitor();
-        
-        SnmpIfData ifData = createSnmpIfData(ipAddress, ifName);
+    private void runInterfaceResource(ThresholdingVisitor visitor, String ipAddress, String ifName, Long ifSpeed, Integer ifIndex, long v1, long v2) {
+        SnmpIfData ifData = createSnmpIfData(ipAddress, ifName, ifSpeed, ifIndex);
         CollectionAgent agent = createCollectionAgent();
         IfResourceType resourceType = createInterfaceResourceType(agent);
 
@@ -749,20 +1223,8 @@ public class ThresholdingVisitorTest {
 
     private void runFileSystemDataTest(ThresholdingVisitor visitor, int resourceId, String fs, long value, long max) throws Exception {
         CollectionAgent agent = createCollectionAgent();
-        MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();        
-        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, String>()), dataCollectionConfig);
-        // Creating DataCollection ResourceType
-        org.opennms.netmgt.config.datacollection.ResourceType type = new org.opennms.netmgt.config.datacollection.ResourceType();
-        type.setName("hrStorageIndex");
-        type.setLabel("Storage (MIB-2 Host Resources)");
-        org.opennms.netmgt.config.datacollection.StorageStrategy strategy = new org.opennms.netmgt.config.datacollection.StorageStrategy();
-        strategy.setClazz("org.opennms.netmgt.dao.support.IndexStorageStrategy");
-        type.setStorageStrategy(strategy);
-        org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy pstrategy = new org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy();
-        pstrategy.setClazz("org.opennms.netmgt.collectd.PersistAllSelectorStrategy");
-        type.setPersistenceSelectorStrategy(pstrategy);
         // Creating Generic ResourceType
-        GenericIndexResourceType resourceType = new GenericIndexResourceType(agent, collection, type);
+        GenericIndexResourceType resourceType = createGenericIndexResourceType(agent, "hrStorageIndex");
         // Creating strings.properties file
         Properties p = new Properties();
         p.put("hrStorageType", ".1.3.6.1.2.1.25.2.1.4");
@@ -781,6 +1243,48 @@ public class ThresholdingVisitorTest {
         f.delete();
     }
 
+    /*
+     * Parameter expectedValue should be around 200:
+     * Initial counter value is 20000 below limit.
+     * Next value is 40000, so the difference will be 60000.
+     * Counters are treated as rates so 60000/300 is 200.
+     */
+    private void runCounterWrapTest(double bits, double expectedValue) throws Exception {
+        Integer ifIndex = 1;
+        Long ifSpeed = 10000000l;
+        String ifName = "wlan0";
+
+        initFactories("/threshd-configuration.xml","/test-thresholds-bug3194.xml");
+        addHighThresholdEvent(1, 100, 90, expectedValue, "Unknown", "1", "ifOutOctets", ifName, ifIndex.toString());
+        ThresholdingVisitor visitor = createVisitor();
+        
+        // Creating Interface Resource Type
+        SnmpIfData ifData = createSnmpIfData("127.0.0.1", ifName, ifSpeed, ifIndex);
+        CollectionAgent agent = createCollectionAgent();
+        IfResourceType resourceType = createInterfaceResourceType(agent);
+
+        // Creating Data Source
+        MibObject object = createMibObject("counter", "ifOutOctets", "ifIndex");
+        SnmpAttributeType objectType = new NumericAttributeType(resourceType, "default", object, new AttributeGroupType("mibGroup", "ignore"));
+
+        // Step 1 - Initialize Counter
+        BigDecimal n = new BigDecimal(Math.pow(2, bits) - 20000);
+        SnmpValue snmpValue1 = SnmpUtils.getValueFactory().getCounter64(n.toBigInteger());
+        SnmpCollectionResource resource1 = new IfInfo(resourceType, agent, ifData);
+        resource1.setAttributeValue(objectType, snmpValue1);
+        resource1.visit(visitor);
+        
+        // Step 2 - Wrap Counter
+        SnmpValue snmpValue2 = SnmpUtils.getValueFactory().getCounter64(new BigInteger("40000"));
+        SnmpCollectionResource resource2 = new IfInfo(resourceType, agent, ifData);
+        resource2.setAttributeValue(objectType, snmpValue2);
+        resource2.visit(visitor);
+
+        // Verify Events
+        EasyMock.verify(agent);        
+        verifyEvents(0);
+    }
+    
     private CollectionAgent createCollectionAgent() {
         CollectionAgent agent = EasyMock.createMock(CollectionAgent.class);
         EasyMock.expect(agent.getNodeId()).andReturn(1).anyTimes();
@@ -801,7 +1305,22 @@ public class ThresholdingVisitorTest {
         OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, String>()), dataCollectionConfig);
         return new IfResourceType(agent, collection);
     }
-    
+
+    private GenericIndexResourceType createGenericIndexResourceType(CollectionAgent agent, String resourceTypeName) {
+        org.opennms.netmgt.config.datacollection.ResourceType type = new org.opennms.netmgt.config.datacollection.ResourceType();
+        type.setName(resourceTypeName);
+        type.setLabel(resourceTypeName);
+        org.opennms.netmgt.config.datacollection.StorageStrategy strategy = new org.opennms.netmgt.config.datacollection.StorageStrategy();
+        strategy.setClazz("org.opennms.netmgt.dao.support.IndexStorageStrategy");
+        type.setStorageStrategy(strategy);
+        org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy pstrategy = new org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy();
+        pstrategy.setClazz("org.opennms.netmgt.collectd.PersistAllSelectorStrategy");
+        type.setPersistenceSelectorStrategy(pstrategy);
+        MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();
+        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, String>()), dataCollectionConfig);
+        return new GenericIndexResourceType(agent, collection, type);
+    }
+
     private void addAttributeToCollectionResource(SnmpCollectionResource resource, ResourceType type, String attributeName, String attributeType, String attributeInstance, long value) {
         MibObject object = createMibObject(attributeType, attributeName, attributeInstance);
         SnmpAttributeType objectType = new NumericAttributeType(type, "default", object, new AttributeGroupType("mibGroup", "ignore"));
@@ -877,7 +1396,9 @@ public class ThresholdingVisitorTest {
         p = new Parm();
         p.setParmName("value");
         v = new Value();
-        v.setContent(Double.toString(value));
+        String pattern = System.getProperty("org.opennms.threshd.value.decimalformat", "###.##"); // See Bug 3427
+        DecimalFormat valueFormatter = new DecimalFormat(pattern);
+        v.setContent(valueFormatter.format(value));
         p.setValue(v);
         parms.addParm(p);
 
@@ -914,9 +1435,12 @@ public class ThresholdingVisitorTest {
         m_anticipatedEvents.add(e);
     }
     
-    void verifyEvents(int remainEvents) {
+    private void verifyEvents(int remainEvents) {
         if (remainEvents == 0) {
             List<Event> receivedList = m_anticipator.getAnticipatedEventsRecieved();
+            
+            Collections.sort(receivedList, m_eventComparator);
+            Collections.sort(m_anticipatedEvents, m_eventComparator);
             log().info("verifyEvents: Anticipated=" + m_anticipatedEvents.size() + ", Received=" + receivedList.size());
             if (m_anticipatedEvents.size() != receivedList.size()) {
                 for (Event e : m_anticipatedEvents) {
@@ -926,47 +1450,50 @@ public class ThresholdingVisitorTest {
                 fail("Anticipated event count (" + m_anticipatedEvents.size() + ") is different from received event count (" + receivedList.size() + ").");
             }
             for (int i = 0; i < m_anticipatedEvents.size(); i++) {
-                String anticipated = eventToString(m_anticipatedEvents.get(i));
-                String received = eventToString(receivedList.get(i));
-                log().info("verifyEvents: Anticipated " + anticipated);
-                log().info("verifyEvents: Received    " + received);
-                assertTrue(received.startsWith(anticipated));
+                log().info("verifyEvents: processing event " + (i+1));
+                compareEvents(m_anticipatedEvents.get(i), receivedList.get(i));
             }
         }
-        m_anticipator.verifyAnticipated(1000, 0, 0, remainEvents, 0);
+        m_anticipator.verifyAnticipated(0, 0, 0, remainEvents, 0);
     }
     
-    public String eventToString(Event e) {
-        StringBuffer b = new StringBuffer();
-        b.append(e.getUei());
-        b.append(";");
-        b.append(e.getNodeid());
-        b.append(";");
-        b.append(e.getInterface());
-        b.append(";");
-        b.append(e.getService());
-        b.append(";");
-        for (Parm p : e.getParms().getParm()) {
-            b.append(p.getParmName() + "=" + p.getValue().getContent());
-            b.append(";");
+    private void compareEvents(Event anticipated, Event received) {
+        assertEquals("UEIs must match", anticipated.getUei(), received.getUei());
+        assertEquals("NodeIDs must match", anticipated.getNodeid(), received.getNodeid());
+        assertEquals("interfaces must match", anticipated.getInterface(), received.getInterface());
+        assertEquals("services must match", anticipated.getService(), received.getService());
+        compareParms(anticipated.getParms().getParmCollection(), received.getParms().getParmCollection());
+    }
+
+    private void compareParms(List<Parm> anticipatedParms, List<Parm> receivedParms) {
+        Collections.sort(anticipatedParms, m_parmComparator);
+        Collections.sort(receivedParms, m_parmComparator);
+        for (Parm source : anticipatedParms) {
+            Parm found = null;
+            for (Parm p : receivedParms) {
+                if (p.getParmName().equals(source.getParmName()))
+                    found = p;
+            }
+            assertNotNull("parameter " + source.getParmName() + " must be found on the received event", found);
+            if (source.getValue().getContent() == null) source.getValue().setContent("null");
+            assertEquals("content must match for parameter " + source.getParmName(), source.getValue().getContent(), found.getValue().getContent());
         }
-        return b.toString();
     }
     
-    void resetAnticipator() {
+    private void resetAnticipator() {
         m_anticipator.reset();
         m_anticipatedEvents.clear();
     }
 
-    private SnmpIfData createSnmpIfData(String ipAddress, String ifName) {
+    private SnmpIfData createSnmpIfData(String ipAddress, String ifName, Long ifSpeed, Integer ifIndex) {
         OnmsNode node = new OnmsNode();
         node.setId(1);
         node.setLabel("testNode");
-        OnmsSnmpInterface snmpIface = new OnmsSnmpInterface(ipAddress, 1, node);
+        OnmsSnmpInterface snmpIface = new OnmsSnmpInterface(ipAddress, ifIndex, node);
         snmpIface.setIfDescr(ifName);
         snmpIface.setIfName(ifName);
         snmpIface.setIfAlias(ifName);
-        snmpIface.setIfSpeed(10000000l);
+        snmpIface.setIfSpeed(ifSpeed);
         return new SnmpIfData(snmpIface);
     }
     
@@ -975,37 +1502,19 @@ public class ThresholdingVisitorTest {
         network.setCriticalService("ICMP");
         network.addNode(1, "testNode");
         network.addInterface(ipAddress);
-        network.setIfAlias(ifName);
+        if (ifName != null)
+            network.setIfAlias(ifName);
         network.addService("ICMP");
         network.addService("SNMP");
         network.addService("HTTP");
         MockDatabase db = new MockDatabase();
         db.populate(network);
-        db.update("update snmpinterface set snmpifname=?, snmpifdescr=? where id=?", ifName, ifName, 1);
+        if (ifName != null)
+            db.update("update snmpinterface set snmpifname=?, snmpifdescr=? where id=?", ifName, ifName, 1);
         DataSourceFactory.setInstance(db);
         Vault.setDataSource(db);
     }
-    
-    private void setupSnmpInterfaceWithoutIpDatabase(String ifName, int ifIndex, boolean skipUpdate) throws Exception {
-        // Setup Non-IP Address Interface
-        MockNetwork network = new MockNetwork();
-        network.setCriticalService("ICMP");
-        network.addNode(1, "testNode");
-        network.addInterface("127.0.0.1");
-        network.setIfAlias("eth0");
-        network.addService("ICMP");
-        network.addService("SNMP");
-        MockDatabase db = new MockDatabase();
-        db.populate(network);
-        // Updating SNMP ifData for eth0
-        db.update("update snmpInterface set snmpifName=?, snmpifDescr=? where id=?", "eth0", "eth0", 1);
-        // Adding non-IP Interface wlan0
-        if (!skipUpdate)
-            db.update("insert into snmpInterface (nodeID, ipAddr, snmpifAlias, snmpifName, snmpifDescr, snmpifIndex) values (?, ?, ?, ?, ?, ?)", 1, "0.0.0.0", ifName, ifName, ifName, ifIndex);
-        DataSourceFactory.setInstance(db);
-        Vault.setDataSource(db);
-    }
-    
+
     private boolean deleteDirectory(File path) {
         if (path.exists()) {
             File[] files = path.listFiles();
@@ -1021,7 +1530,7 @@ public class ThresholdingVisitorTest {
         return path.delete();
     }
 
-    private Category log() {
+    private ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 

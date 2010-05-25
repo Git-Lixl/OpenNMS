@@ -1,7 +1,7 @@
 //
 // This file is part of the OpenNMS(R) Application.
 //
-// OpenNMS(R) is Copyright (C) 2002-2005 The OpenNMS Group, Inc.  All rights reserved.
+// OpenNMS(R) is Copyright (C) 2002-2009 The OpenNMS Group, Inc.  All rights reserved.
 // OpenNMS(R) is a derivative work, containing both original code, included code and modified
 // code that was published under the GNU General Public License. Copyrights for modified 
 // and included code are below.
@@ -10,6 +10,7 @@
 //
 // Modifications:
 //
+// 2009 Oct 01: Add delete capability for non-ip interface. - ayres@opennms.org
 // 2004 Oct 07: Added code to support RTC rescan on asset update
 // Aug 24, 2004: Created this file.
 //
@@ -44,24 +45,17 @@
 package org.opennms.netmgt.capsd;
 
 import java.net.InetAddress;
-import java.util.Date;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.eventd.EventIpcManagerFactory;
 import org.opennms.netmgt.model.events.EventListener;
 import org.opennms.netmgt.utils.XmlrpcUtil;
-import org.opennms.netmgt.xml.event.Autoaction;
 import org.opennms.netmgt.xml.event.Event;
-import org.opennms.netmgt.xml.event.Forward;
-import org.opennms.netmgt.xml.event.Operaction;
 import org.opennms.netmgt.xml.event.Parm;
 import org.opennms.netmgt.xml.event.Parms;
-import org.opennms.netmgt.xml.event.Script;
 import org.opennms.netmgt.xml.event.Snmp;
 import org.opennms.netmgt.xml.event.Value;
 
@@ -72,7 +66,7 @@ import org.opennms.netmgt.xml.event.Value;
  * @author brozow
  * 
  */
-public class EventUtils {
+public abstract class EventUtils {
 
     /**
      * Make the given listener object a listener for the list of events
@@ -113,11 +107,47 @@ public class EventUtils {
      *             if an interface is not available
      */
     static public void checkInterface(Event e) throws InsufficientInformationException {
-        if (e == null)
+        if (e == null) {
             throw new NullPointerException("e is null");
-
-        if (e.getInterface() == null || e.getInterface().length() == 0)
+        } else if (e.getInterface() == null || e.getInterface().length() == 0) {
             throw new InsufficientInformationException("ipaddr for event is unavailable");
+        }
+    }
+    
+    /**
+     * Is the given interface a non-IP interface
+     * 
+     * @param intf
+     *            the interface
+     *            
+     * @return true/false
+     *
+     */
+    static public boolean isNonIpInterface(String intf) {
+        if (intf == null || intf.length() == 0 || "0.0.0.0".equals(intf) ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+   
+    
+    /**
+     * Ensures the given event has an interface or ifIndex
+     * 
+     * @param e
+     *            the event
+     * @throws InsufficientInformationException
+     *             if  neither an interface nor an ifIndex is available
+     */
+    static public void checkInterfaceOrIfIndex(Event e) throws InsufficientInformationException {
+        if (e == null) {
+            throw new NullPointerException("event is null");
+        } else if (e.getInterface() == null || e.getInterface().length() == 0) {
+            if (!e.hasIfIndex()) {
+                throw new InsufficientInformationException("Neither ipaddr nor ifIndex for the event is available");
+            }
+        }
     }
 
     /**
@@ -129,11 +159,11 @@ public class EventUtils {
      *             if an interface is not available
      */
     static public void checkHost(Event e) throws InsufficientInformationException {
-        if (e == null)
+        if (e == null) {
             throw new NullPointerException("e is null");
-
-        if (e.getHost() == null || e.getHost().length() == 0)
+        } else if (e.getHost() == null || e.getHost().length() == 0) {
             throw new InsufficientInformationException("host for event is unavailable");
+        }
     }
 
     /**
@@ -145,11 +175,11 @@ public class EventUtils {
      *             if a node id is not available
      */
     static public void checkNodeId(Event e) throws InsufficientInformationException {
-        if (e == null)
+        if (e == null) {
             throw new NullPointerException("e is null");
-
-        if (!e.hasNodeid())
+        } else if (!e.hasNodeid()) {
             throw new InsufficientInformationException("nodeid for event is unavailable");
+        }
     }
 
     /**
@@ -161,15 +191,15 @@ public class EventUtils {
      *             if the event does not have a service
      */
     public static void checkService(Event e) throws InsufficientInformationException {
-        if (e == null)
+        if (e == null) {
             throw new NullPointerException("e is null");
-
-        if (e.getService() == null || e.getService().length() == 0)
+        } else if (e.getService() == null || e.getService().length() == 0) {
             throw new InsufficientInformationException("service for event is unavailable");
+        }
     }
 
     /**
-     * Constructs a deleteInterface event for the given nodeId, ipAddress pair.
+     * Constructs a deleteInterface event for the given nodeId, ipAddress (or ifIndex) pair.
      * 
      * @param source
      *            the source for the event
@@ -177,27 +207,32 @@ public class EventUtils {
      *            the nodeId of the node that owns the interface
      * @param ipAddr
      *            the ipAddress of the interface being deleted
+     * @param ifIndex
+     *            the ifIndex of the interface being deleted
      * @param txNo
      *            the transaction number to use for processing this event
      * @return an Event representing a deleteInterface event for the given
      *         nodeId, ipaddr
      */
-    public static Event createDeleteInterfaceEvent(String source, long nodeId, String ipAddr, long txNo) {
+    public static Event createDeleteInterfaceEvent(String source, long nodeId, String ipAddr, int ifIndex, long txNo) {
         Event newEvent = new Event();
         newEvent.setUei(EventConstants.DELETE_INTERFACE_EVENT_UEI);
         newEvent.setSource(source);
-        newEvent.setInterface(ipAddr);
+        if (ipAddr != null && ipAddr.length() != 0) {
+            newEvent.setInterface(ipAddr);
+        }
         newEvent.setNodeid(nodeId);
         newEvent.setTime(EventConstants.formatToString(new java.util.Date()));
+        if (ifIndex != -1) {
+            newEvent.setIfIndex(ifIndex);
+        }
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -228,12 +263,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -264,12 +297,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -291,25 +322,48 @@ public class EventUtils {
      *            the ipAdddr of the event
      * @param txNo
      *            a transaction number associated with the event
-     * @return an Event represent an interfaceDeleted event for the given
-     *         interface
+     * @return Event
+     *            an interfaceDeleted event for the given interface
      */
     public static Event createInterfaceDeletedEvent(String source, long nodeId, String ipAddr, long txNo) {
+        return createInterfaceDeletedEvent(source, nodeId, ipAddr, -1, txNo);
+    }
+    
+    /**
+     * Construct an interfaceDeleted event for an interface.
+     * 
+     * @param source
+     *            the source of the event
+     * @param nodeId
+     *            the nodeId of the node the interface resides in
+     * @param ipAddr
+     *            the ipAdddr of the event
+     * @param ifIndex
+     *            the ifIndex of the event
+     * @param txNo
+     *            a transaction number associated with the event
+     * @return Event
+     *            an interfaceDeleted event for the given interface
+     */
+    public static Event createInterfaceDeletedEvent(String source, long nodeId, String ipAddr, int ifIndex, long txNo) {
         Event newEvent = new Event();
         newEvent.setUei(EventConstants.INTERFACE_DELETED_EVENT_UEI);
         newEvent.setSource(source);
         newEvent.setNodeid(nodeId);
-        newEvent.setInterface(ipAddr);
+        if (ipAddr != null && ipAddr.length() != 0) {
+            newEvent.setInterface(ipAddr);
+        }
         newEvent.setTime(EventConstants.formatToString(new java.util.Date()));
+        if (ifIndex != -1) {
+            newEvent.setIfIndex(ifIndex);
+        }
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -340,12 +394,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -384,12 +436,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -549,7 +599,7 @@ public class EventUtils {
      */
     public static void sendEvent(Event newEvent, String callerUei, long txNo, boolean isXmlRpcEnabled) {
         // Send event to Eventd
-        Category log = ThreadCategory.getInstance(EventUtils.class);
+        ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
         try {
             EventIpcManagerFactory.getIpcManager().sendNow(newEvent);
 
@@ -585,7 +635,7 @@ public class EventUtils {
 
     public static Event createNodeAddedEvent(String source, int nodeId,
             String nodeLabel, String labelSource) {
-        Category log = ThreadCategory.getInstance(EventUtils.class);
+        ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
 		if (log.isDebugEnabled())
             log.debug("createAndSendNodeAddedEvent:  nodeId  " + nodeId);
 
@@ -598,12 +648,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_NODE_LABEL);
-        parmValue = new Value();
+        Value parmValue = new Value();
 		parmValue.setContent(nodeLabel);
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -639,7 +687,7 @@ public class EventUtils {
     }
 
 	public static Event createNodeGainedInterfaceEvent(String source, int nodeId, InetAddress ifaddr) {
-		Category log = ThreadCategory.getInstance(EventUtils.class);
+		ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
 		if (log.isDebugEnabled())
             log.debug("createAndSendNodeAddedEvent:  nodeId  " + nodeId);
 
@@ -653,13 +701,11 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
         // Add IP host name
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_IP_HOSTNAME);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(ifaddr.getHostName());
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -686,7 +732,7 @@ public class EventUtils {
      *            the node label of the deleted node.
      */
     public static Event createNodeDeletedEvent(String source, int nodeId, String hostName, String nodeLabel, long txNo) {
-        Category log = ThreadCategory.getInstance(EventUtils.class);
+        ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
         if (log.isDebugEnabled())
             log.debug("createAndSendNodeDeletedEvent:  processing deleteNode event for nodeid:  " + nodeId);
 
@@ -699,12 +745,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_NODE_LABEL);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(nodeLabel);
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -712,12 +756,12 @@ public class EventUtils {
         eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
         parmValue = new Value();
-        parmValue.setContent((new Long(txNo)).toString());
+        parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
 
         // Add Parms to the event
-        if ((nodeLabel != null) && (((new Long(txNo)).toString()) != null))
+        if ((nodeLabel != null) && ((String.valueOf(txNo)) != null))
             newEvent.setParms(eventParms);
 
         return newEvent;
@@ -737,7 +781,7 @@ public class EventUtils {
      *            the external transaction No of the event.
      */
     public static Event createAndSendDeleteNodeEvent(String source, String nodeLabel, String hostName, long txNo) {
-        Category log = ThreadCategory.getInstance(EventUtils.class);
+        ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
         if (log.isDebugEnabled())
             log.debug("createdAndSendDeleteNodeEvent: processing deleteInterface event... ");
 
@@ -749,12 +793,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_NODE_LABEL);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(nodeLabel);
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -762,7 +804,7 @@ public class EventUtils {
         eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
         parmValue = new Value();
-        parmValue.setContent((new Long(txNo)).toString());
+        parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
 
@@ -782,7 +824,7 @@ public class EventUtils {
      *            the node ID of the node to rescan.
      */
     public static Event createForceRescanEvent(String hostName, long nodeId) {
-        Category log = ThreadCategory.getInstance(EventUtils.class);
+        ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
         if (log.isDebugEnabled())
             log.debug("createdAndSendForceRescanEvent: processing forceRescan event... ");
 
@@ -812,7 +854,7 @@ public class EventUtils {
      *            the external transaction No. of the original event.
      */
     public static Event createAndSendInterfaceDeletedEvent(String source, int nodeId, String ipaddr, String hostName, long txNo) {
-        Category log = ThreadCategory.getInstance(EventUtils.class);
+        ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
         if (log.isDebugEnabled())
             log.debug("createAndSendInterfaceDeletedEvent:  processing deleteInterface event for interface: " + ipaddr + " at nodeid: " + nodeId);
 
@@ -826,13 +868,11 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
-        parmValue = new Value();
-        parmValue.setContent((new Long(txNo)).toString());
+        Value parmValue = new Value();
+        parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
 
@@ -867,7 +907,7 @@ public class EventUtils {
     }
 
 	public static Event createNodeGainedServiceEvent(String source, int nodeId, InetAddress ifaddr, String service, String nodeLabel, String labelSource, String sysName, String sysDescr) {
-		Category log = ThreadCategory.getInstance(EventUtils.class);
+		ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
 		if (log.isDebugEnabled())
             log.debug("createAndSendNodeGainedServiceEvent:  nodeId/interface/service  " + nodeId + "/" + ifaddr.getHostAddress() + "/" + service);
 
@@ -882,13 +922,11 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
         // Add IP host name
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_IP_HOSTNAME);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(ifaddr.getHostName());
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -953,7 +991,7 @@ public class EventUtils {
      *            the transaction no.
      */
     public static Event createAndSendDeleteServiceEvent(String source, DbNodeEntry nodeEntry, InetAddress ifaddr, String service, String hostName, long txNo) {
-        Category log = ThreadCategory.getInstance(EventUtils.class);
+        ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
         if (log.isDebugEnabled())
             log.debug("createAndSendDeleteServiceEvent:  nodeId/interface/service  " + nodeEntry.getNodeId() + "/" + ifaddr.getHostAddress() + "/" + service);
 
@@ -968,13 +1006,11 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
         // Add IP host name
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_IP_HOSTNAME);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(ifaddr.getHostName());
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -1018,7 +1054,7 @@ public class EventUtils {
      *            the exteranl transaction number
      */
     public static Event createAddInterfaceEvent(String source, String nodeLabel, String ipaddr, String hostName, long txNo) {
-        Category log = ThreadCategory.getInstance(EventUtils.class);
+        ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
         if (log.isDebugEnabled())
             log.debug("createAndSendAddInterfaceEvent:  processing updateServer event for interface:  " + ipaddr + " on server: " + hostName);
 
@@ -1031,12 +1067,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_NODE_LABEL);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(nodeLabel);
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -1044,7 +1078,7 @@ public class EventUtils {
         eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
         parmValue = new Value();
-        parmValue.setContent((new Long(txNo)).toString());
+        parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
 
@@ -1070,7 +1104,7 @@ public class EventUtils {
      *            the external transaction No.
      */
     public static Event createAndSendDeleteInterfaceEvent(String source, String nodeLabel, String ipaddr, String hostName, long txNo) {
-        Category log = ThreadCategory.getInstance(EventUtils.class);
+        ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
         if (log.isDebugEnabled())
             log.debug("createAndSendDeleteInterfaceEvent:  processing updateServer event for interface:  " + ipaddr + " on server: " + hostName);
 
@@ -1083,12 +1117,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_NODE_LABEL);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(nodeLabel);
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -1096,7 +1128,7 @@ public class EventUtils {
         eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
         parmValue = new Value();
-        parmValue.setContent((new Long(txNo)).toString());
+        parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
 
@@ -1124,7 +1156,7 @@ public class EventUtils {
      *            the external transaction No.
      */
     public static Event createChangeServiceEvent(String source, String ipaddr, String service, String action, String hostName, long txNo) {
-        Category log = ThreadCategory.getInstance(EventUtils.class);
+        ThreadCategory log = ThreadCategory.getInstance(EventUtils.class);
         if (log.isDebugEnabled())
             log.debug("createAndSendChangeServiceEvent:  processing updateService event for service:  " + service + " on interface: " + ipaddr);
 
@@ -1137,12 +1169,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_ACTION);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(action);
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -1150,7 +1180,7 @@ public class EventUtils {
         eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
         parmValue = new Value();
-        parmValue.setContent((new Long(txNo)).toString());
+        parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
 
@@ -1188,12 +1218,10 @@ public class EventUtils {
 
         // Add appropriate parms
         Parms eventParms = new Parms();
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(EventConstants.PARM_TRANSACTION_NO);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(String.valueOf(txNo));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);
@@ -1204,161 +1232,32 @@ public class EventUtils {
         return newEvent;
     }
 
+    /**
+     * @deprecated Use org.opennms.netmgt.model.events.EventUtils.toString(event) instead.
+     */
     public static String toString(Event event) {
-            StringBuffer b = new StringBuffer("Event: ");
-            if (event.getAutoacknowledge() != null) {
-            	b.append(" Autoacknowledge: " + event.getAutoacknowledge() + "\n");
-            }
-            if (event.getAutoactionCount() > 0) {
-            	b.append(" Autoactions:");
-            	for (Iterator<Autoaction> i = event.getAutoactionCollection().iterator(); i.hasNext(); ) {
-            		b.append(" " + i.next().toString());
-            	}
-            b.append("\n");
-            }
-            if (event.getCreationTime() != null) {
-            	b.append(" CreationTime: " + event.getCreationTime() + "\n");
-          }
-    b.append(" Dbid: " + event.getDbid() + "\n");
-    if (event.getDescr() != null) {
-            b.append(" Descr: " + event.getDescr() + "\n");
-    }
-    if (event.getDistPoller() != null) {
-            b.append(" DistPoller: " + event.getDistPoller() + "\n");
-    }
-    if (event.getForwardCount() > 0) {
-            b.append(" Forwards:");
-            for (Iterator<Forward> i = event.getForwardCollection().iterator(); i.hasNext(); ) {
-            	b.append(" " + i.next().toString());
-            }
-            b.append("\n");
-    }
-    if (event.getHost() != null) {
-            b.append(" Host: " + event.getHost() + "\n");
-    }
-    if (event.getInterface() != null) {
-            b.append(" Interface: " + event.getInterface() + "\n");
-    }
-    if (event.getLoggroupCount() > 0) {
-            b.append(" Loggroup:");
-            for (Iterator<String> i = event.getLoggroupCollection().iterator(); i.hasNext(); ) {
-            	b.append(" " + i.next().toString());
-            }
-            b.append("\n");
-    }
-    if (event.getLogmsg() != null) {
-            b.append(" Logmsg: " + event.getLogmsg() + "\n");
-    }
-    if (event.getMask() != null) {
-            b.append(" Mask: " + event.getMask() + "\n");
-    }
-    if (event.getMasterStation() != null) {
-            b.append(" MasterStation: " + event.getMasterStation() + "\n");
-    }
-    if (event.getMouseovertext() != null) {
-            b.append(" Mouseovertext: " + event.getMouseovertext() + "\n");
-    }
-    b.append(" Nodeid: " + event.getNodeid() + "\n");
-    if (event.getOperactionCount() > 0) {
-            b.append(" Operaction:");
-            for (Iterator<Operaction> i = event.getOperactionCollection().iterator(); i.hasNext(); ) {
-            	b.append(" " + i.next().toString());
-            }
-            b.append("\n");
-    }
-    if (event.getOperinstruct() != null) {
-            b.append(" Operinstruct: " + event.getOperinstruct() + "\n");
-    }
-    if (event.getParms() != null) {
-            b.append(" Parms: " + toString(event.getParms()) + "\n");
-    }
-    if (event.getScriptCount() > 0) {
-            b.append(" Script:");
-            for (Iterator<Script> i = event.getScriptCollection().iterator(); i.hasNext(); ) {
-            	b.append(" " + i.next().toString());
-            }
-            b.append("\n");
-    }
-    if (event.getService() != null) {
-            b.append(" Service: " + event.getService() + "\n");
-    }
-    if (event.getSeverity() != null) {
-            b.append(" Severity: " + event.getSeverity() + "\n");
-    }
-    if (event.getSnmp() != null) {
-            b.append(" Snmp: " + toString(event.getSnmp()) + "\n");
-    }
-    if (event.getSnmphost() != null) {
-            b.append(" Snmphost: " + event.getSnmphost() + "\n");
-    }
-    if (event.getSource() != null) {
-            b.append(" Source: " + event.getSource() + "\n");
-    }
-    if (event.getTime() != null) {
-            b.append(" Time: " + event.getTime() + "\n");
-    }
-    if (event.getTticket() != null) {
-            b.append(" Tticket: " + event.getTticket() + "\n");
-    }
-    if (event.getUei() != null) {
-            b.append(" Uei: " + event.getUei() + "\n");
-    }
-    if (event.getUuid() != null) {
-            b.append(" Uuid: " + event.getUuid() + "\n");
-    }
-          
-    b.append("End Event\n");
-          return b.toString();
-        }
-
-    public static String toString(Parms parms) {
-        if (parms.getParmCount() == 0) {
-    		return "Parms: (none)\n";
-    	}
-    	
-    	StringBuffer b = new StringBuffer();
-    	b.append("Parms:\n");
-    	for (Enumeration<Parm> e = parms.enumerateParm(); e.hasMoreElements(); ) {
-    		Parm p = e.nextElement();
-    		b.append(" ");
-    		b.append(p.getParmName());
-    		b.append(" = ");
-    		b.append(toString(p.getValue()));
-    		b.append("\n");
-    	}
-    	b.append("End Parms\n");
-    	return b.toString();
+        return org.opennms.netmgt.model.events.EventUtils.toString(event);
     }
     
+    /**
+     * @deprecated Use org.opennms.netmgt.model.events.EventUtils.toString(value) instead.
+     */
     public static String toString(Value value) {
-        return value.getType() + "(" + value.getEncoding() + "): " + value.getContent();
+        return org.opennms.netmgt.model.events.EventUtils.toString(value);
     }
 
+    /**
+     * @deprecated Use org.opennms.netmgt.model.events.EventUtils.toString(snmp) instead.
+     */
     public static String toString(Snmp snmp) {
-        StringBuffer b = new StringBuffer("Snmp: ");
-    
-        if (snmp.getVersion() != null) {
-    		b.append("Version: " + snmp.getVersion() + "\n");
-    	}
-    	
-    	b.append("TimeStamp: " + new Date(snmp.getTimeStamp()) + "\n");
-    	
-    	if (snmp.getCommunity() != null) {
-    		b.append("Community: " + snmp.getCommunity() + "\n");
-    	}
-    
-    	b.append("Generic: " + snmp.getGeneric() + "\n");
-    	b.append("Specific: " + snmp.getSpecific() + "\n");
-    	
-    	if (snmp.getId() != null) {
-    		b.append("Id: " + snmp.getId() + "\n");
-    	}
-    	if (snmp.getIdtext() != null) {
-    		b.append("Idtext: " + snmp.getIdtext() + "\n");
-    	}
-    	
-    	b.append("End Snmp\n");
-    	return b.toString();
+        return org.opennms.netmgt.model.events.EventUtils.toString(snmp);
+    }
+
+    /**
+     * @deprecated Use org.opennms.netmgt.model.events.EventUtils.toString(snmp) instead.
+     */
+    public static String toString(Parms parms) {
+        return org.opennms.netmgt.model.events.EventUtils.toString(parms);
     }
 
 	public static void addParam(Event event, String parmName, Object pollResultId) {
@@ -1370,12 +1269,10 @@ public class EventUtils {
 			event.setParms(eventParms);
 		}
         
-        Parm eventParm = null;
-        Value parmValue = null;
 
-        eventParm = new Parm();
+        Parm eventParm = new Parm();
         eventParm.setParmName(parmName);
-        parmValue = new Value();
+        Value parmValue = new Value();
         parmValue.setContent(String.valueOf(pollResultId));
         eventParm.setValue(parmValue);
         eventParms.addParm(eventParm);

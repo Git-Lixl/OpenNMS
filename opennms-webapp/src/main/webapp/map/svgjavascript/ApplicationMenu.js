@@ -1,3 +1,7 @@
+// variable used only locally to this set of functions
+var selectedMapInList=0;
+var selMaps;
+
 // Menu Svg Object Basic Functions	
 function instantiateRWAdminMenu(){
 	mapMenu.removeChilds();
@@ -62,6 +66,7 @@ function disableMenu(){
 
 function resetWorkPanel(menuName, menuOpening){
 	windowsClean();
+	myMapApp.disableTooltips();
 
 	if (menuOpening) {
 		hideMapInfo();
@@ -123,7 +128,7 @@ function instantiateMapGroupNormalMode() {
 	// *** MAP MENU FOR ADMINISTRATOR***
 	instantiateMapGroup();
 	id="AdminMode";
-	mapMenu.addElement(id, "Admin Mode", menuDeltaX,3*menuDeltaY,menuWidth,menuHeight, switchRoleSetUp,null);
+	mapMenu.addElement(id, "Admin Mode", menuDeltaX,4*menuDeltaY,menuWidth,menuHeight, switchRoleSetUp,null);
 }
 
 function instantiateMapGroup() {
@@ -131,7 +136,9 @@ function instantiateMapGroup() {
 	var id="Open";
 	mapMenu.addElement(id, id, menuDeltaX,menuDeltaY,menuWidth,menuHeight, addMapsList,null);
 	id="Close";
-	mapMenu.addElement(id, id, menuDeltaX,2*menuDeltaY,menuWidth,menuHeight, closeSetUp,null);	
+	mapMenu.addElement(id, id, menuDeltaX,2*menuDeltaY,menuWidth,menuHeight, closeSetUp,null);
+	id="Search";
+	mapMenu.addElement(id, id, menuDeltaX,3*menuDeltaY,menuWidth,menuHeight, addSearchMapList,null);	
 }
 
 function instantiateRefreshGroupAdminMode() {
@@ -140,6 +147,8 @@ function instantiateRefreshGroupAdminMode() {
 	refreshMenu.addElement(id, "Maps", menuDeltaX,menuDeltaY,menuWidth,menuHeight, loadMapsSetUp,null);
 	id = "LoadNodes";
 	refreshMenu.addElement(id, "Nodes", menuDeltaX,2*menuDeltaY,menuWidth,menuHeight, loadNodesSetUp,null);
+	id = "ReloadConfig";
+	refreshMenu.addElement(id, "Config", menuDeltaX,3*menuDeltaY,menuWidth,menuHeight, reloadConfigSetUp,null);
 }
 
 function instantiateRefreshGroupNormalMode() {
@@ -168,6 +177,14 @@ function instantiateNodeGroup() {
 	nodeMenu.addElement(id, "Set Icon", menuDeltaX,8*menuDeltaY,menuWidth,menuHeight, addIconList,null);
 	id = "DelNode";
 	nodeMenu.addElement(id, "Delete", menuDeltaX,9*menuDeltaY,menuWidth,menuHeight, deleteMapElementList,null);
+	if (hasHideNodes) {
+		id = "AddHidesNodes";
+		nodeMenu.addElement(id, "Add Hidden Nodes", menuDeltaX,10*menuDeltaY,menuWidth,menuHeight, addHideNodes,null);
+	}
+	if (hasHideMaps) {
+		id = "AddHidesMaps";
+		nodeMenu.addElement(id, "Add Hidden Maps", menuDeltaX,10*menuDeltaY,menuWidth,menuHeight, addHideMaps,null);
+	}
 }
 
 function instantiateViewGroup() {
@@ -178,15 +195,18 @@ function instantiateViewGroup() {
 	var itemEl2id="ColorNodesByAvail";	
 	var itemEl3id="ColorNodesByStatus";
 	var subitems= new Array(itemEl1id,itemEl2id,itemEl3id);
+
 	var id="ToggleFullScreen";
 	viewMenu.addElement(id, "Toggle Screen", menuDeltaX,menuDeltaY,menuWidth,menuHeight,toggleScreenSetUp, subitems);
+
 	id = "SetDimension";	
 	viewMenu.addElement(id, "Set Dimension", menuDeltaX,2*menuDeltaY,menuWidth,menuHeight,addDimensionList, subitems);
+
 	viewMenu.addItem(itemId, "View by...", menuDeltaX,3*menuDeltaY,menuWidth,menuHeight, subitems);
 	viewMenu.addItemElement(itemEl1id, "Severity", menuDeltaX+menuWidth,3*menuDeltaY,menuWidth,menuHeight, viewBySeveritySetUp);
 	viewMenu.addItemElement(itemEl2id,    "Avail", menuDeltaX+menuWidth,4*menuDeltaY,menuWidth,menuHeight, viewByAvailSetUp);
 	viewMenu.addItemElement(itemEl3id,   "Status", menuDeltaX+menuWidth,5*menuDeltaY,menuWidth,menuHeight,viewByStatusSetUp);
-	
+	viewMenu.addElement(id, "Switch...", menuDeltaX,4*menuDeltaY,menuWidth,menuHeight,switchSemaphore, subitems);
 }
 
 // ***********functions called by Map Menu ************************
@@ -194,6 +214,7 @@ function instantiateViewGroup() {
 function newMapSetUp() {	
 	closeAllMenu();
 	if (verifyMapString()) return;
+
 	hideMapInfo();
 	hideHistory();
 	clearTopInfo();
@@ -201,7 +222,118 @@ function newMapSetUp() {
 	hidePickColor();
 	resetFlags();
 	disableMenu();
+	mapTabSetUp(NEW_MAP_NAME);
+
 	newMap();
+}
+
+// Search Map
+function addSearchMapList()
+{
+	closeAllMenu();
+	clearTopInfo();
+	clearDownInfo();
+	hidePickColor();
+	resetFlags();
+	textbox1 = new textbox("textbox1","textboxwithcommand","",textboxmaxChars,textboxx,textboxy,textboxWidth,textboxHeight,textYOffset,textStyles,boxStyles,cursorStyles,seltextBoxStyles,"",filterSearchMapSelectionList);
+	selMaps = new selectionList("maps","maps",mapLabels,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,mymapsResult);
+	selMaps.sortList("asc");
+	selMaps.selectElementByPosition(0, false);
+	button1  = new button("button1","maps",searchMapSetUp,"rect","Open",undefined,buttonx,buttony,buttonwidth,buttonheight,buttonTextStyles,buttonStyles,shadeLightStyles,shadeDarkStyles,shadowOffset);
+}
+
+function filterSearchMapSelectionList(textboxId,value,changeType) {
+		if (changeType == "change") {
+			var matchingMaps = new Array(); 
+			for(var label in nodeLabelMap) {
+				if (label.indexOf(value) >= 0) {
+				    var mapLbl = nodeLabelMap[label];
+				    if (mapLbl!=undefined) {
+						for (var j=0; j<mapLbl.length;j++ ){
+					    	matchingMaps.push(mapLbl[j]);
+						}
+					}
+				}  
+			}
+			var elementInList = mapLabels.length;
+			for(var k=1;k<mapLabels.length;k++) {
+				var mapLabel = mapLabels[k];
+				var match = true;
+				for(var l=0;l<matchingMaps.length;l++) {
+					if (matchingMaps[l] == mapLabel ) {
+					   match = false;
+					   break;
+					}
+				}
+				if  ( match ) {
+					elementInList--;
+					if (selMaps.elementExists(mapLabel) >= 0) 
+						selMaps.deleteElement(mapLabel);
+				} else if (selMaps.elementExists(mapLabel) == -1 && match >= 0) {
+					selMaps.addElementAtPosition(mapLabel,k);
+				}
+			}
+		}
+}
+
+function searchMapSetUp()
+{
+	if (verifyMapString()) return;
+
+	if ( selMaps.elementsArray.length == 1 ) {
+		alert("No Matching Map Found");
+	} else if (selectedMapInList == 0 ) {
+
+		var elems = new String();
+		var first = true;
+		for ( var i = 1; i< selMaps.elementsArray.length; i++ ) {
+			if (first) {
+				elems = mapSortAss[selMaps.elementsArray[i]].id;
+				first = false;
+			} else {
+				elems = elems + "," + mapSortAss[selMaps.elementsArray[i]].id;
+			}
+		}
+
+		windowsClean();
+		clearTopInfo();
+		clearDownInfo();
+		mapTabSetUp(SEARCH_MAP_NAME);
+		searchMap(elems);
+
+	} else {
+		openMapSetUp();
+	}
+}
+function getTopElementsString() {
+	var elems = new String();
+	var first=true;
+	for(var label in nodeLabelMap) {
+		if (label == currentMapName ) {
+		    var mapLbl = nodeLabelMap[label];
+		    if (mapLbl!=undefined) {
+				for (var j=0; j<mapLbl.length;j++ ){
+					if (first) {
+						elems += mapSortAss[mapLbl[j]].id;
+						first = false;
+					} else {
+						elems += "," + mapSortAss[mapLbl[j]].id;
+					}
+				}
+			}
+			break;
+		}  
+	}
+	return elems;
+}
+
+function topMapSetUp(){
+	if (verifyMapString()) return;
+	windowsClean();
+	clearTopInfo();
+	clearDownInfo();
+	mapTabSetUp(SEARCH_MAP_NAME);
+	searchMap(getTopElementsString());	
 }
 
 // Open Map
@@ -212,11 +344,33 @@ function addMapsList()
 	clearDownInfo();
 	hidePickColor();
 	resetFlags();
-	selMaps = new selectionList("maps","maps",maps,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,mymapsResult);
+	textbox1 = new textbox("textbox1","textboxwithcommand","",textboxmaxChars,textboxx,textboxy,textboxWidth,textboxHeight,textYOffset,textStyles,boxStyles,cursorStyles,seltextBoxStyles,"",filterMapSelectionList);
+	selMaps = new selectionList("maps","maps",mapLabels,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,mymapsResult);
 	selMaps.sortList("asc");
+	selMaps.selectElementByPosition(1, true);
 	button1  = new button("button1","maps",openMapSetUp,"rect","Open",undefined,buttonx,buttony,buttonwidth,buttonheight,buttonTextStyles,buttonStyles,shadeLightStyles,shadeDarkStyles,shadowOffset);
 }
 
+function filterMapSelectionList(textboxId,value,changeType) {
+		if (changeType == "change") {
+			var elementInList = mapLabels.length;
+			for(var k=1;k<mapLabels.length;k++) {
+				var mapLabel = mapLabels[k];
+				var match = mapLabel.indexOf(value);
+				if  ( match == -1 ) {
+					elementInList--;
+					if (selMaps.elementExists(mapLabel) >= 0) 
+						selMaps.deleteElement(mapLabel);
+				} else if (selMaps.elementExists(mapLabel) == -1 && match >= 0) {
+					selMaps.addElementAtPosition(mapLabel,k);
+				}
+			}
+			if (elementInList > 1 )
+				selMaps.selectElementByPosition(1,true);
+			else 
+				selMaps.selectElementByPosition(0,false);
+		}
+}
 // This function is called by open map and add map as node!
 function mapsResult() { }
 
@@ -227,22 +381,27 @@ mapsResult.prototype.getSelectionListVal = function(selBoxName,mapNr,arrayVal) {
 	selectedMapInList=arrayVal;
 }
 
-function openMapSetUp(mapId) {
+function openMapSetUp(mapId,setuptab) {
 	if (verifyMapString()) return;
 
 	var mapToOpen;
-	if(mapId != undefined && mapId > 0){
+	if(mapId != undefined && (mapId > 0 || mapId == SEARCH_MAP )){
 		mapToOpen = mapId;
+		if(setuptab != undefined && setuptab ) {
+			mapTabSetUp(mapidSortAss[mapToOpen]);
+		}
 	}else if(selectedMapInList != undefined && mapSortAss[selectedMapInList].id > 0){
-		mapToOpen = mapSortAss[selectedMapInList].id;		
+		mapToOpen = mapSortAss[selectedMapInList].id;	
+		mapTabSetUp(mapSortAss[selectedMapInList].name);
 	}else{
 		alert("No maps to open");
 		return;
 	}
+	
 	windowsClean();
 	clearTopInfo();
 	clearDownInfo();
-	openMap(mapToOpen);	
+	top.$j.history.load(mapToOpen);
 }
 
 // Close Map
@@ -266,22 +425,27 @@ function closeSetUp() {
 // Rename Map
 function addRenameMapBox(){
 	closeAllMenu();
-	if(currentMapId!=MAP_NOT_OPENED){
+	if(currentMapType == "U" && currentMapId!=MAP_NOT_OPENED){
 		clearTopInfo();
 		clearDownInfo();
 		hidePickColor();
 		resetFlags();
 
 		//first a few styling parameters:
-		textbox1 = new textbox("textbox1","textboxwithcommand",currentMapName,textboxmaxChars,textboxx,textboxy,textboxWidth,textboxHeight,textYOffset,textStyles,boxStyles,cursorStyles,seltextBoxStyles,"[a-zA-Z0-9 ]",undefined);
+		textbox1 = new textbox("textbox1","textboxwithcommand",currentMapName,textboxmaxChars,textboxx,textboxy,textboxWidth,textboxHeight,textYOffset,textStyles,boxStyles,cursorStyles,seltextBoxStyles,"",undefined);
 		button1  = new button("button1","textboxwithcommand",renameMap,"rect","Rename",undefined,buttonx,buttony,buttonwidth,buttonheight,buttonTextStyles,buttonStyles,shadeLightStyles,shadeDarkStyles,shadowOffset);        
- 	}else{
+ 	} else if (currentMapType == "A") {
+		alert('Cannot rename Automatic map');
+ 	} else if (currentMapType == "S") {
+		alert('Cannot rename Static map');
+	}else{
 		alert('No maps opened');
     }
 }
 
 function renameMap(){
 	var newMapName = getTextBoxValue();
+	mapTabRename(currentMapName,newMapName)
 	clearTopInfo();
 	if(newMapName != null && trimAll(newMapName)!=""){
 		currentMapName=newMapName;
@@ -299,35 +463,42 @@ function deleteMapSetUp() {
 	clearDownInfo();
 	hidePickColor();
 	resetFlags();
-	if(currentMapId!=MAP_NOT_OPENED && currentMapId!=NEW_MAP){
+	if(currentMapType == "U" && currentMapId!=MAP_NOT_OPENED && currentMapId!=NEW_MAP){
 	    if(confirm('Are you sure to delete the map?')==true){ 
 	 		disableMenu();
 			deleteMap();
-    	} else {
-    	return;
     	}
+ 	} else if (currentMapType == "A") {
+		alert('Cannot delete Automatic map');
+ 	} else if (currentMapType == "S") {
+		alert('Cannot delete Static map');
 	}else{
 		alert('No maps to delete found');
-		return;
     }	
 }
 
 // Save Map
 function saveMapSetUp() {	
 	closeAllMenu();
-	if(currentMapId!=MAP_NOT_OPENED){
+	if(currentMapId == MAP_NOT_OPENED){
+		alert("No maps opened");
+	} else if (currentMapId == NEW_MAP && currentMapName == NEW_MAP_NAME){
+		alert("Rename 'NewMap' before saving");
+		addRenameMapBox();
+	} else if (currentMapId == SEARCH_MAP && currentMapName == SEARCH_MAP_NAME){
+		alert("Rename 'SearchMap' before saving");
+		addRenameMapBox();
+	}else{
 		clearTopInfo();
 		disableMenu();
 		writeDownInfo("Saving map '" +currentMapName+"'");
 		resetFlags();
 		saveMap();
-	}else{
-		alert("No maps opened");
 	}
 	
 }
 
-// Save Map
+// Clear Map
 function clearMapSetUp() {	
 	closeAllMenu();
 	hidePickColor();
@@ -450,6 +621,16 @@ function loadNodesSetUp() {
 	showHistory();
 }
 
+// Reload Nodes List
+function reloadConfigSetUp() {	
+	closeAllMenu();
+	clearTopInfo();
+	clearDownInfo();
+	hidePickColor();
+	resetFlags();
+	top.writeReload("Reloading the maps configuration.....");
+	reloadConfiguration();
+}
 // Refresh Map
 function refreshNodesSetUp() {	
 	closeAllMenu();
@@ -467,6 +648,33 @@ function refreshNodesSetUp() {
 }
 
 // *****************Functions Called by  Node Menu **********************
+// Add Hide Nodes function
+function addHideNodes()
+{
+	closeAllMenu();
+	clearTopInfo();
+	clearDownInfo();
+	hidePickColor();
+	resetFlags();
+	addMapElement(hideNodesIds);
+	hideNodesIds = "";
+	hasHideNodes = false;
+
+}
+
+//Add Hide Nodes function
+function addHideMaps()
+{
+	closeAllMenu();
+	clearTopInfo();
+	clearDownInfo();
+	hidePickColor();
+	resetFlags();
+	addMapAsNode(hideMapsIds);
+	hideMapsIds = "";
+	hasHideMaps = false;
+
+}
 // Add Node function
 function addMapElementList()
 {
@@ -480,9 +688,32 @@ function addMapElementList()
 	hidePickColor();
 	resetFlags();
 
-	selNodes = new selectionList("nodes","nodes",nodes,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,mynodesResult);
+	textbox1 = new textbox("textbox1","textboxwithcommand","",textboxmaxChars,textboxx,textboxy,textboxWidth,textboxHeight,textYOffset,textStyles,boxStyles,cursorStyles,seltextBoxStyles,"",filterNodeSelectionList);
+	selNodes = new selectionList("nodes","nodes",nodeLabels,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,mynodesResult);
     selNodes.sortList("asc");    
+	selNodes.selectElementByPosition(1, true);
 	button1  = new button("button1","nodes",addMapElementSetUp,"rect","Add",undefined,buttonx,buttony,buttonwidth,buttonheight,buttonTextStyles,buttonStyles,shadeLightStyles,shadeDarkStyles,shadowOffset);
+}
+
+function filterNodeSelectionList(textboxId,value,changeType) {
+	if (changeType == "change") {
+		var elementInList = nodeLabels.length;
+		for(var k=1;k<nodeLabels.length;k++) {
+			var nodeLabel = nodeLabels[k];
+			var match = nodeLabel.indexOf(value);
+			if  ( match == -1 ) {
+				elementInList--;
+				if (selNodes.elementExists(nodeLabel) >= 0) 
+					selNodes.deleteElement(nodeLabel);
+			} else if (selNodes.elementExists(nodeLabel) == -1 && match >= 0) {
+				selNodes.addElementAtPosition(nodeLabel,k);
+			}
+		}
+		if (elementInList > 1 )
+			selNodes.selectElementByPosition(1,true);
+		else 
+			selNodes.selectElementByPosition(0,false);
+	}
 }
 
 function nodesResult() { }
@@ -498,10 +729,10 @@ function addMapElementSetUp() {
 	if(selectedMapElemInList==0 ){
 		return;
 	}
-	addMapElement(nodeSortAss[selectedMapElemInList].id);	
-	clearTopInfo();
+	
 	clearDownInfo();
 	disableMenu();
+	addMapElement(nodeSortAss[selectedMapElemInList].getId());	
 }
 
 // Add Node by Category
@@ -516,9 +747,32 @@ function addCategoryList()
 	clearDownInfo();
 	hidePickColor();
 	resetFlags();
+	textbox1 = new textbox("textbox1","textboxwithcommand","",textboxmaxChars,textboxx,textboxy,textboxWidth,textboxHeight,textYOffset,textStyles,boxStyles,cursorStyles,seltextBoxStyles,"",filterCatSelectionList);
 	selCategories = new selectionList("categories","categories",categories,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,mycategoriesResult);
 	selCategories.sortList("asc");
+	selCategories.selectElementByPosition(1, true);
 	button1  = new button("button1","categories",addNodesByCategorySetUp,"rect","Add",undefined,buttonx,buttony,buttonwidth,buttonheight,buttonTextStyles,buttonStyles,shadeLightStyles,shadeDarkStyles,shadowOffset);
+}
+
+function filterCatSelectionList(textboxId,value,changeType) {
+	if (changeType == "change") {
+		var elementInList = categories.length;
+		for(var k=1;k<categories.length;k++) {
+			var category = categories[k];
+			var match = category.indexOf(value);
+			if  ( match == -1 ) {
+				elementInList--;
+				if (selCategories.elementExists(category) >= 0) 
+					selCategories.deleteElement(category);
+			} else if (selCategories.elementExists(category) == -1 && match >= 0) {
+				selCategories.addElementAtPosition(category,k);
+			}
+		}
+		if (elementInList > 1 )
+			selCategories.selectElementByPosition(1,true);
+		else 
+			selCategories.selectElementByPosition(0,false);
+	}
 }
 
 function categoriesResult() { }
@@ -531,10 +785,10 @@ function addNodesByCategorySetUp() {
 	if(selectedCategoryInList==0 )  {
 		return;
 	}
-	addNodesByCategory(categorySortAss[selectedCategoryInList]);	
 	clearTopInfo();
 	clearDownInfo();
 	disableMenu();
+	addNodesByCategory(categorySortAss[selectedCategoryInList]);	
 }
 
 // Add node using nodelabel
@@ -560,10 +814,10 @@ function addNodesByLabelSetUp() {
 		alert('Invalid Label (must not be blank)');
 		return;
 	}
-	addNodesByLabel(label);
 	clearTopInfo();
 	clearDownInfo();
 	disableMenu();
+	addNodesByLabel(label);
 }
 
 
@@ -590,10 +844,10 @@ function addRangeOfNodesSetUp() {
 		alert('Range not valid!');
 		return;
 	}
-	addRangeOfNodes(range);
 	clearTopInfo();
 	clearDownInfo();
 	disableMenu();
+	addRangeOfNodes(range);
 }
 
 // Add Map using neighbor
@@ -639,8 +893,10 @@ function addMapElementNeighList()
 	hidePickColor();
 	resetFlags();
 	
-	selNodes = new selectionList("nodes","nodes",nodes,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,mynodesResult);
+	textbox1 = new textbox("textbox1","textboxwithcommand","",textboxmaxChars,textboxx,textboxy,textboxWidth,textboxHeight,textYOffset,textStyles,boxStyles,cursorStyles,seltextBoxStyles,"",filterNodeSelectionList);
+	selNodes = new selectionList("nodes","nodes",nodeLabels,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,mynodesResult);
 	selNodes.sortList("asc");
+	selNodes.selectElementByPosition(1, true);
 	button1  = new button("button1","nodes",addMapElementWithNeighborsSetUp,"rect","Add",undefined,buttonx,buttony,buttonwidth,buttonheight,buttonTextStyles,buttonStyles,shadeLightStyles,shadeDarkStyles,shadowOffset);	
 }
 
@@ -648,10 +904,9 @@ function addMapElementWithNeighborsSetUp() {
 	if(selectedMapElemInList==0 )  {
 		return;
 	}
-	addMapElementWithNeighbors(nodeSortAss[selectedMapElemInList].id);
-	clearTopInfo();
 	clearDownInfo();
 	disableMenu();		
+	addMapElementWithNeighbors(nodeSortAss[selectedMapElemInList].id);
 }
 
 // Add Map as a Node Functions
@@ -667,8 +922,12 @@ function addMapAsNodeList(){
 	hidePickColor();
 	resetFlags();
 
-	selMaps = new selectionList("maps","maps",maps,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,mymapsResult);
+	textbox1 = new textbox("textbox1","textboxwithcommand","",textboxmaxChars,textboxx,textboxy,textboxWidth,textboxHeight,textYOffset,textStyles,boxStyles,cursorStyles,seltextBoxStyles,"",filterMapSelectionList);
+	selMaps = new selectionList("maps","maps",mapLabels,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,mymapsResult);
 	selMaps.sortList("asc");
+	selMaps.selectElementByPosition(1, true);
+
+	
 	button1  = new button("button1","maps",addMapAsNodeSetUp,"rect","Add",undefined,buttonx,buttony,buttonwidth,buttonheight,buttonTextStyles,buttonStyles,shadeLightStyles,shadeDarkStyles,shadowOffset);
 }
  
@@ -682,11 +941,10 @@ function addMapAsNodeSetUp() {
 		writeDownInfo("Cannot add map to itself");		
 		return;
 	}
-	addMapAsNode(mapId);
-
 	clearTopInfo();
 	clearDownInfo();
 	disableMenu();
+	addMapAsNode(mapId);
 }
 
 // Add icons List function
@@ -710,6 +968,7 @@ function addIconList()
 
 	selMEIcons = new selectionList("meicons","meicons",MEIcons,selBoxwidth,selBoxxOffset,selBoxyOffset,selBoxCellHeight,selBoxTextpadding,selBoxheightNrElements,selBoxtextStyles,selBoxStyles,selBoxScrollbarStyles,selBoxSmallrectStyles,selBoxHighlightStyles,selBoxTriangleStyles,selBoxpreSelect,false,true,myMEIconsResult);
 	selMEIcons.sortList("asc");
+	selMEIcons.selectElementByPosition(1,true)
 } 
 
 function setIconSetUp() {
@@ -744,7 +1003,7 @@ MEIconsResult.prototype.getSelectionListVal = function(selBoxName,mapNr,arrayVal
         iconPreview.setAttributeNS(null,"y", 87);
         iconPreview.setAttributeNS(null,"width", 20);
         iconPreview.setAttributeNS(null,"height", 25);
-        iconPreview.setAttributeNS(xlinkNS, "xlink:href",MEIconsSortAss[arrayVal] );
+        iconPreview.setAttributeNS(xlinkNS, "xlink:href",MEIconsSortAss[arrayVal]);
         iconPreviewGroup.appendChild(iconPreviewRect);
         iconPreviewGroup.appendChild(iconPreview);
         selMEIcons.parentGroup.appendChild(iconPreviewGroup);
@@ -819,7 +1078,7 @@ function setMapElemDimSetUp(){
 function viewBySeveritySetUp() {
 	closeAllMenu();
 	colorSemaphoreBy='S';
-	refreshMapElements();
+	refreshNodes();
 	clearTopInfo();
 	addLegend();
 	showMapInfo();
@@ -829,7 +1088,7 @@ function viewBySeveritySetUp() {
 function viewByAvailSetUp() {
 	closeAllMenu();
 	colorSemaphoreBy='A';
-	refreshMapElements();
+	refreshNodes();
 	clearTopInfo();
 	addLegend();
 	showMapInfo();
@@ -839,7 +1098,7 @@ function viewByAvailSetUp() {
 function viewByStatusSetUp() {
 	closeAllMenu();
 	colorSemaphoreBy='T';
-	refreshMapElements();
+	refreshNodes();
 	clearTopInfo();
 	addLegend();
 	showMapInfo();
@@ -853,6 +1112,19 @@ function toggleScreenSetUp() {
 	showMapInfo();
 	showHistory();
 }
+
+function switchSemaphore()  {
+	closeAllMenu();
+	if ( useSemaphore )
+	     useSemaphore=false;
+	else 
+	     useSemaphore=true;
+	     
+	for (var i in map.mapElements) {
+		map.mapElements[i].useSemaphore(useSemaphore);
+	}
+}
+
 // ***************function called by clicking on count down ******************
 function addRefreshTimeList()
 {	
@@ -1055,6 +1327,23 @@ function showMapInfo(){
 
 function writeMapInfo(){
 	clearMapInfo();
+	var hasHideText = '';
+	if (hasHideNodes && hasHideMaps) {
+		hasHideText = ' : map has hidden Nodes and Maps';
+	} else if (hasHideNodes) {
+		hasHideText = ' : map has hidden Nodes';
+	} else if (hasHideMaps) {
+		hasHideText = ' : map has hidden Maps';		
+	}
+	var mapType="Unknown";
+	
+	if (currentMapType == "U") {
+		mapType="User";
+	} else if (currentMapType == "A") {
+		mapType="Automatic"
+	}  else if (currentMapType == "S") {
+		mapType="Static"
+	}
 	var mapInfo= document.getElementById("MapInfo");
 	
 	var tspan = document.createElementNS(svgNS,"tspan");
@@ -1063,13 +1352,13 @@ function writeMapInfo(){
 	tspan.setAttributeNS(null, "id","MapInfoTitle");
 	tspan.setAttributeNS(null, "font-size",titleFontSize);
 	
-	var tspanContent = document.createTextNode("Map Info");
+	var tspanContent = document.createTextNode("Map Info"+hasHideText);
 	tspan.appendChild(tspanContent);
 	mapInfo.appendChild(tspan);
 
 	tspan = document.createElementNS(svgNS,"tspan");
 	tspan.setAttributeNS(null, "x","3");
-	tspan.setAttributeNS(null, "dy","25");
+	tspan.setAttributeNS(null, "dy","20");
 	tspan.setAttributeNS(null, "id","mapName");
 	
 	var tspanContent = document.createTextNode("Name: "+currentMapName+" ");
@@ -1078,7 +1367,7 @@ function writeMapInfo(){
 
 	tspan = document.createElementNS(svgNS,"tspan");
 	tspan.setAttributeNS(null, "x","3");
-	tspan.setAttributeNS(null, "dy","22");
+	tspan.setAttributeNS(null, "dy","15");
 	tspan.setAttributeNS(null, "id","mapOwner");
 	
 	var tspanContent = document.createTextNode("Owner: "+currentMapOwner+" ");
@@ -1087,7 +1376,7 @@ function writeMapInfo(){
 	
 	tspan = document.createElementNS(svgNS,"tspan");
 	tspan.setAttributeNS(null, "x","3");
-	tspan.setAttributeNS(null, "dy","22");
+	tspan.setAttributeNS(null, "dy","15");
 	tspan.setAttributeNS(null, "id","mapUserLast");
 	
 	var tspanContent = document.createTextNode("User last modified: "+currentMapUserlast+" ");
@@ -1096,7 +1385,7 @@ function writeMapInfo(){
 	
 	tspan = document.createElementNS(svgNS,"tspan");
 	tspan.setAttributeNS(null, "x","3");
-	tspan.setAttributeNS(null, "dy","22");
+	tspan.setAttributeNS(null, "dy","15");
 	tspan.setAttributeNS(null, "id","mapCreateTime");
 	
 	var tspanContent = document.createTextNode("Create time: "+currentMapCreatetime+" ");
@@ -1105,13 +1394,22 @@ function writeMapInfo(){
 	
 	tspan = document.createElementNS(svgNS,"tspan");
 	tspan.setAttributeNS(null, "x","3");
-	tspan.setAttributeNS(null, "dy","25");
+	tspan.setAttributeNS(null, "dy","15");
 	tspan.setAttributeNS(null, "id","mapLastModTime");
 	
 	var tspanContent = document.createTextNode("Last modified time: "+currentMapLastmodtime+" ");
 	tspan.appendChild(tspanContent);
 	mapInfo.appendChild(tspan);
+
+	tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","15");
+	tspan.setAttributeNS(null, "id","mapType");
 	
+	var tspanContent = document.createTextNode("Map Type: "+mapType+" ");
+	tspan.appendChild(tspanContent);
+	mapInfo.appendChild(tspan);
+
 	mapInfo.setAttributeNS(null,'display', 'inline');
 }
 
@@ -1135,6 +1433,9 @@ function clearMapInfo(){
    var mapLastModTimeNode=document.getElementById("mapLastModTime");
    if(mapLastModTimeNode!=null)
            mapLastModTimeNode.parentNode.removeChild(mapLastModTimeNode);          
+   var mapType=document.getElementById("mapType");
+   if(mapType!=null)
+       mapType.parentNode.removeChild(mapType);          
 }
 
 //Assert loading..
@@ -1159,6 +1460,15 @@ function assertRefreshing(loading){
 }
 
 function showHistory(){
+	var elems = getTopElementsString();
+	if (elems.length > 0 ) {
+		var topAction = document.getElementById("topAction");
+		topAction.setAttribute("onclick","topMapSetUp();");
+		document.getElementById("topGroup").setAttributeNS(null,'display', 'inline');
+	} else {
+		document.getElementById("topGroup").setAttributeNS(null,'display', 'none');
+	}
+		
 	if(mapHistory.length>mapHistoryIndex+1){
 		var next = mapHistory[mapHistoryIndex+1];
 		var nextName = mapHistoryName[mapHistoryIndex+1]; 
@@ -1169,7 +1479,7 @@ function showHistory(){
 			nextText.removeChild(nextText.firstChild);		
 		nextText.appendChild(textContent);
 		var nextAction = document.getElementById("nextAction");
-		nextAction.setAttribute("onclick","openMapSetUp("+next+");");
+		nextAction.setAttribute("onclick","openMapSetUp("+next+",true);");
 		document.getElementById("nextGroup").setAttributeNS(null,'display', 'inline');
 	}else{
 	    document.getElementById("nextGroup").setAttributeNS(null,'display', 'none');
@@ -1184,7 +1494,7 @@ function showHistory(){
 			prevText.removeChild(prevText.firstChild);
 		prevText.appendChild(textContent);
 		var prevAction = document.getElementById("prevAction");
-		prevAction.setAttribute("onclick","openMapSetUp("+prev+");");		
+		prevAction.setAttribute("onclick","openMapSetUp("+prev+",true);");		
 		document.getElementById("prevGroup").setAttributeNS(null,'display', 'inline');
 	}else{
 	    document.getElementById("prevGroup").setAttributeNS(null,'display', 'none');
@@ -1397,4 +1707,206 @@ function hidePickColor() {
 function showPickColor() {
 	add_pick_color("pickColor");
 	document.getElementById("pickColor").setAttributeNS(null,'display', 'inline');
+}
+
+function getInfoOnMapElement(mapElement)
+{
+
+    //var severityColor=getSeverityColor(mapElement.getSeverity())
+	var severityColor='black';
+    var severityLabel = SEVERITIES_LABEL[mapElement.getSeverity()];
+
+    //var statusColor=getStatusColor(mapElement.getStatus());
+	var statusColor='black'
+	var status = STATUSES_TEXT[mapElement.getStatus()];
+	
+	var avail=mapElement.getAvail();
+	var availColor='black';
+	//var availColor = getAvailColor(avail);
+
+
+
+	if(avail<0){
+		avail="Unknown";
+	}else{	
+		avail = (""+avail).substring(0,6)+"%";
+	}
+
+	var text = document.createElementNS(svgNS,"text");
+	text.setAttributeNS(null, "x","3");
+	text.setAttributeNS(null, "dy","15");
+	text.setAttributeNS(null, "id","topInfoTextTitle");
+	
+	var textLabel = document.createTextNode("Map Element info");
+	text.appendChild(textLabel);
+	
+	var tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","20");
+	
+	var tspanContent = document.createTextNode(mapElement.getLabel());
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);
+
+	if(mapElement.isMap()){
+		tspan = document.createElementNS(svgNS,"tspan");
+		tspan.setAttributeNS(null, "x","3");
+		tspan.setAttributeNS(null, "dy","15");
+		tspanContent = document.createTextNode("Id: "+ mapElement.getMapId() + "  (Map)");
+		tspan.appendChild(tspanContent);
+		text.appendChild(tspan);
+	}
+
+	if(mapElement.isNode()){
+		tspan = document.createElementNS(svgNS,"tspan");
+		tspan.setAttributeNS(null, "x","3");
+		tspan.setAttributeNS(null, "dy","15");
+		tspan.setAttributeNS(null, "id","TopInfoLabelText");
+		tspanContent = document.createTextNode("Id: "+ mapElement.getNodeId() + "  (Node)");
+		tspan.appendChild(tspanContent);
+		text.appendChild(tspan);	
+	}
+
+	tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","15");
+	tspan.setAttributeNS(null, "fill",statusColor);
+	tspanContent = document.createTextNode("Status: " + status);
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);	
+		
+	tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","15");
+	tspan.setAttributeNS(null, "fill",availColor);
+	tspanContent = document.createTextNode("Availability: " + avail );
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);
+	
+	tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","15");
+	tspan.setAttributeNS(null, "fill",severityColor);
+	tspanContent = document.createTextNode("Severity: " + severityLabel );
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);		
+
+	// get info 	
+	return text;
+}
+
+function getInfoOnLink(link) 
+{
+	var statusColor = 'black';
+	var text = document.createElementNS(svgNS,"text");
+	text.setAttributeNS(null, "x","3");
+	text.setAttributeNS(null, "dy","15");
+	text.setAttributeNS(null, "id","topInfoTextTitle");
+	text.setAttributeNS(null, "font-size",titleFontSize);
+	
+	var textLabel = document.createTextNode("Link info");
+	text.appendChild(textLabel);
+	
+	var tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","20");
+	var tspanContent = document.createTextNode(" From: " + nodeidSortAss[link.getFirstNodeId()].getLabel());
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);
+	
+	tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","15");
+	tspanContent = document.createTextNode("    To: " + nodeidSortAss[link.getSecondNodeId()].getLabel());
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);
+	
+	tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","15");
+	tspan.setAttributeNS(null, "fill",statusColor);
+	tspanContent = document.createTextNode(" Status: "+link.getStatus());
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);
+	
+	tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","15");
+	tspanContent = document.createTextNode(" Type: "+LINK_TEXT[link.getTypology()]);
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);
+	
+	if (LINK_SPEED[link.getTypology()] > 0 ) {
+		var speed = LINK_SPEED[link.getTypology()];
+		tspan = document.createElementNS(svgNS,"tspan");
+		tspan.setAttributeNS(null, "x","3");
+		tspan.setAttributeNS(null, "dy","15");
+		tspanContent = document.createTextNode(" Speed: "+speed);
+		tspan.appendChild(tspanContent);
+		text.appendChild(tspan);	
+	}
+	
+	tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","15");
+	tspanContent = document.createTextNode(" Number of Links: "+link.getNumberOfLinks());
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);	
+	
+	return text;
+}
+
+function getInfoOnSLink(slink) 
+{
+	var statusColor = 'black';
+	var text = document.createElementNS(svgNS,"text");
+	text.setAttributeNS(null, "x","3");
+	text.setAttributeNS(null, "dy","15");
+	text.setAttributeNS(null, "id","topInfoTextTitle");
+	text.setAttributeNS(null, "font-size",titleFontSize);
+	
+	var textLabel = document.createTextNode("Summary Link info");
+	text.appendChild(textLabel);
+	var tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","20");
+	tspanContent = document.createTextNode(" Type: "+LINK_TEXT[slink.getTypology()]);
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);
+	
+	for (var linkid in slink.getLinks()) {
+		var link = slink.getLinks()[linkid];
+		tspan = document.createElementNS(svgNS,"tspan");
+		tspan.setAttributeNS(null, "x","3");
+		tspan.setAttributeNS(null, "dy","15");
+		tspanContent = document.createTextNode(" Type(#links): " + LINK_TEXT[link.getTypology()] + "(" + link.getNumberOfLinks() + ")");
+		tspan.appendChild(tspanContent);
+		text.appendChild(tspan);
+	}
+	
+	if (LINK_SPEED[slink.getTypology()] > 0 ) {
+		var speed = LINK_SPEED[slink.getTypology()];
+		tspan = document.createElementNS(svgNS,"tspan");
+		tspan.setAttributeNS(null, "x","3");
+		tspan.setAttributeNS(null, "dy","15");
+		tspanContent = document.createTextNode(" Speed: "+speed);
+		tspan.appendChild(tspanContent);
+		text.appendChild(tspan);	
+	}
+
+	tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","15");
+	tspanContent = document.createTextNode(" Number of Links: "+slink.getNumberOfLinks());
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);	
+
+	tspan = document.createElementNS(svgNS,"tspan");
+	tspan.setAttributeNS(null, "x","3");
+	tspan.setAttributeNS(null, "dy","15");
+	tspanContent = document.createTextNode(" Number of MultiLinks: "+slink.getNumberOfMultiLinks());
+	tspan.appendChild(tspanContent);
+	text.appendChild(tspan);	
+	
+	return text;
 }

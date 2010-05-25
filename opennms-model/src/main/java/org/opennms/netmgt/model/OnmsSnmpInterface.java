@@ -58,7 +58,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.AlphaNumeric;
 import org.opennms.core.utils.ThreadCategory;
 import org.springframework.core.style.ToStringCreator;
@@ -111,6 +110,10 @@ public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
     private Date m_lastCapsdPoll;
 
     private String m_collect = "N";
+    
+    private String m_poll = "N";
+
+    private Date m_lastSnmpPoll;
 
     private OnmsNode m_node;
 
@@ -273,7 +276,27 @@ public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
     public void setCollect(String collect) {
         m_collect = collect;
     }
+
+    @Column(name="snmpPoll")
+    @XmlAttribute(name="pollFlag")
+    public String getPoll() {
+        return m_poll;
+    }
     
+    public void setPoll(String poll) {
+        m_poll = poll;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name="snmpLastSnmpPoll")
+    public Date getLastSnmpPoll() {
+        return m_lastSnmpPoll;
+    }
+    
+    public void setLastSnmpPoll(Date lastSnmpPoll) {
+        m_lastSnmpPoll = lastSnmpPoll;
+    }
+
     @Transient
     public boolean isCollectionUserSpecified(){
         return m_collect.startsWith("U");
@@ -295,6 +318,12 @@ public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
        }else if(!m_collect.startsWith("U")){
            m_collect = shouldCollect ? "C" : "N";
        }
+    }
+
+    @Transient
+    @XmlAttribute(name="poll")
+    public boolean isPollEnabled() {
+        return "P".equals(m_poll);
     }
 
     @XmlIDREF
@@ -355,7 +384,7 @@ public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
     // return ifsForSnmpIface;
     // }
 
-    public Category log() {
+    public ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 
@@ -467,10 +496,8 @@ public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
             setLastCapsdPoll(scannedSnmpIface.getLastCapsdPoll());
         }
         
-        if(scannedSnmpIface.isCollectionUserSpecified()){
-            setCollectionEnabled(scannedSnmpIface.isCollectionEnabled(), true);
-        }else if(!isCollectionUserSpecified()){
-            setCollectionEnabled(scannedSnmpIface.isCollectionEnabled() || isCollectionEnabled());
+        if(scannedSnmpIface.isCollectionUserSpecified() || !isCollectionUserSpecified()){
+            setCollectionEnabled(scannedSnmpIface.isCollectionEnabled(), scannedSnmpIface.isCollectionUserSpecified());
         }
         
     }

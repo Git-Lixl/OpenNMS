@@ -36,18 +36,18 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
+import org.opennms.core.tasks.BatchTask;
+import org.opennms.core.tasks.ContainerTask;
+import org.opennms.core.tasks.Task;
 import org.opennms.netmgt.provision.service.lifecycle.annotations.Activity;
 import org.opennms.netmgt.provision.service.lifecycle.annotations.Attribute;
-import org.opennms.netmgt.provision.service.tasks.BatchTask;
-import org.opennms.netmgt.provision.service.tasks.ContainerTask;
-import org.opennms.netmgt.provision.service.tasks.Task;
 
 public class Phase extends BatchTask {
     private LifeCycleInstance m_lifecycle;
     private String m_name;
     private Object[] m_providers;
         
-    public Phase(ContainerTask parent, LifeCycleInstance lifecycle, String name, Object[] providers) {
+    public Phase(ContainerTask<?> parent, LifeCycleInstance lifecycle, String name, Object[] providers) {
         super(lifecycle.getCoordinator(), parent);
         m_lifecycle = lifecycle;
         m_name = name;

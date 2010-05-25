@@ -95,11 +95,10 @@
 
     //required attributes
     Event[] events = (Event[])req.getAttribute( "events" );
-    Integer eventCount = (Integer)req.getAttribute( "eventCount" );
     EventQueryParms parms = (EventQueryParms)req.getAttribute( "parms" );
 
-    if( events == null || parms == null || eventCount == null ) {
-        throw new ServletException( "Missing either the events, eventCount, or parms request attribute." );
+    if( events == null || parms == null ) {
+        throw new ServletException( "Missing either the events or parms request attribute." );
     }
 
     String action = null;
@@ -127,7 +126,7 @@
   <jsp:param name="breadcrumb" value="List" />
 </jsp:include>
 
-  <script language="Javascript" type="text/javascript">
+  <script type="text/javascript">
     function checkAllCheckboxes() {
        if( document.acknowledge_form.event.length ) {  
          for( i = 0; i < document.acknowledge_form.event.length; i++ ) {
@@ -209,9 +208,9 @@
       
       <% if( !(req.isUserInRole( Authentication.READONLY_ROLE ))) { %>
         <% if( parms.ackType == AcknowledgeType.UNACKNOWLEDGED ) { %> 
-        <li><a href="javascript: void document.acknowledge_by_filter_form.submit()" onclick="return confirm('Are you sure you want to acknowledge all events in the current search including those not shown on your screen?  (<%=eventCount%> total events)')" title="Acknowledge all events that match the current search constraints, even those not shown on the screen">Acknowledge entire search</a></li>
+        <li><a href="javascript: void document.acknowledge_by_filter_form.submit()" onclick="return confirm('Are you sure you want to acknowledge all events in the current search including those not shown on your screen?')" title="Acknowledge all events that match the current search constraints, even those not shown on the screen">Acknowledge entire search</a></li>
         <% } else { %>
-        <li><a href="javascript: void document.acknowledge_by_filter_form.submit()" onclick="return confirm('Are you sure you want to unacknowledge all events in the current search including those not shown on your screen)?  (<%=eventCount%> total events)')" title="Unacknowledge all events that match the current search constraints, even those not shown on the screen">Unacknowledge entire search</a></li>
+        <li><a href="javascript: void document.acknowledge_by_filter_form.submit()" onclick="return confirm('Are you sure you want to unacknowledge all events in the current search including those not shown on your screen)?')" title="Unacknowledge all events that match the current search constraints, even those not shown on the screen">Unacknowledge entire search</a></li>
         <% } %>
       <% } %>
       </ul>
@@ -220,7 +219,7 @@
 
 
       <!-- hidden form for acknowledging the result set --> 
-      <form action="event/acknowledgeByFilter" method="POST" name="acknowledge_by_filter_form">    
+      <form action="event/acknowledgeByFilter" method="post" name="acknowledge_by_filter_form">    
         <input type="hidden" name="redirectParms" value="<%=req.getQueryString()%>" />
         <input type="hidden" name="action" value="<%=action%>" />
         <%=org.opennms.web.Util.makeHiddenTags(req)%>
@@ -229,10 +228,10 @@
       <jsp:include page="/includes/event-querypanel.jsp" flush="false" />
 
           
-            <% if( eventCount > 0 ) { %>
+            <% if( events.length > 0 ) { %>
               <% String baseUrl = this.makeLink(parms); %>
-              <jsp:include page="/includes/resultsIndex.jsp" flush="false" >
-                <jsp:param name="count"    value="<%=eventCount%>" />
+              <jsp:include page="/includes/resultsIndexNoCount.jsp" flush="false" >
+                <jsp:param name="itemCount"    value="<%=events.length%>" />
                 <jsp:param name="baseurl"  value="<%=baseUrl%>"    />
                 <jsp:param name="limit"    value="<%=parms.limit%>"      />
                 <jsp:param name="multiple" value="<%=parms.multiple%>"   />
@@ -256,7 +255,7 @@
             <% } %>
 
     <% if( !(req.isUserInRole( Authentication.READONLY_ROLE ))) { %>
-      <form action="event/acknowledge" method="POST" name="acknowledge_form">
+      <form action="event/acknowledge" method="post" name="acknowledge_form">
         <input type="hidden" name="redirectParms" value="<%=req.getQueryString()%>" />
         <input type="hidden" name="action" value="<%=action%>" />
         <%=org.opennms.web.Util.makeHiddenTags(req)%>
@@ -383,7 +382,7 @@
         </p>
       </form>
 
-      <%--<br>
+      <%--<br/>
       <% if(req.isUserInRole(Authentication.ADMIN_ROLE)) { %>
         <a HREF="admin/events.jsp" title="Acknowledge or Unacknowledge All Events">[Acknowledge or Unacknowledge All Events]</a>
       <% } %>--%>

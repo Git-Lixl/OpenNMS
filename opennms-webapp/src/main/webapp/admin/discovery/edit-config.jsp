@@ -64,7 +64,7 @@
   <jsp:param name="breadcrumb" value="<%=breadcrumb3%>" />
 </jsp:include>
 
-<script language="javascript">
+<script type="text/javascript">
 
 
 
@@ -129,9 +129,9 @@ DiscoveryConfiguration currConfig  = (DiscoveryConfiguration) sess.getAttribute(
 <!-- Body -->
 
 
-<br>
+<br/>
 
-<FORM method="POST" id="modifyDiscoveryConfig" name="modifyDiscoveryConfig" action="<%=org.opennms.web.Util.calculateUrlBase( request )%>admin/discovery/actionDiscovery">
+<FORM method="post" id="modifyDiscoveryConfig" name="modifyDiscoveryConfig" action="<%=org.opennms.web.Util.calculateUrlBase( request )%>admin/discovery/actionDiscovery">
 <input type="hidden" id="specificipaddress" name="specificipaddress" value=""/>
 <input type="hidden" id="specifictimeout" name="specifictimeout" value=""/>
 <input type="hidden" id="specificretries" name="specificretries" value=""/>
@@ -219,7 +219,7 @@ DiscoveryConfiguration currConfig  = (DiscoveryConfiguration) sess.getAttribute(
 				    <table class="standard">
 				      <tr>
 					<td class="standardheaderplain">
-					    <b>Ip Address</b>
+					    <b>IP Address</b>
 					</td> 
 					<td class="standardheaderplain">
 					    <b>Timeout (ms.)</b>
@@ -234,8 +234,8 @@ DiscoveryConfiguration currConfig  = (DiscoveryConfiguration) sess.getAttribute(
 				      <%for(int i=0; i<specs.length; i++){%>
 					 <tr>
 					  <td class="standard"  align="center"><%=specs[i].getContent()%></td>
-					  <td class="standard" align="center"><%=(specs[i].getTimeout()!=0)?""+specs[i].getTimeout():currConfig.getTimeout() %></td>
-					  <td class="standard" align="center"><%=(specs[i].getRetries()!=0)?""+specs[i].getRetries():currConfig.getRetries() %></td>
+					  <td class="standard" align="center"><%=(specs[i].getTimeout()!=0)?""+specs[i].getTimeout():""+currConfig.getTimeout() %></td>
+					  <td class="standard" align="center"><%=(specs[i].getRetries()!=0)?""+specs[i].getRetries():""+currConfig.getRetries() %></td>
 					  <td class="standard" width="1%" align="center"><input type="button" value="Delete" onclick="deleteSpecific(<%=i%>);"/></td> 
 					</tr>		      	
 				      <%} // end for%>
@@ -277,8 +277,8 @@ DiscoveryConfiguration currConfig  = (DiscoveryConfiguration) sess.getAttribute(
 				      <%for(int i=0; i<urls.length; i++){%>
 					 <tr>
 					  <td class="standard"  align="center"><%=urls[i].getContent()%></td>
-					  <td class="standard" align="center"><%=(urls[i].getTimeout()!=0)?""+urls[i].getTimeout():currConfig.getTimeout() %></td>
-					  <td class="standard" align="center"><%=(urls[i].getRetries()!=0)?""+urls[i].getRetries():currConfig.getRetries() %></td>
+					  <td class="standard" align="center"><%=(urls[i].getTimeout()!=0)?""+urls[i].getTimeout():""+currConfig.getTimeout() %></td>
+					  <td class="standard" align="center"><%=(urls[i].getRetries()!=0)?""+urls[i].getRetries():""+currConfig.getRetries() %></td>
 					  <td class="standard" width="1%" align="center"><input type="button" value="Delete" onclick="deleteIncludeUrl(<%=i%>);"/></td> 
 					</tr>		      	
 				      <%} // end for%>
@@ -327,8 +327,8 @@ DiscoveryConfiguration currConfig  = (DiscoveryConfiguration) sess.getAttribute(
 						 <tr>
 						  <td class="standard" align="center"><%=irange[i].getBegin()%></td>
 						  <td class="standard" align="center"><%=irange[i].getEnd()%></td>
-						  <td class="standard" align="center"><%=(irange[i].getTimeout()!=0)?""+irange[i].getTimeout():currConfig.getTimeout() %></td>
-						  <td class="standard" align="center"><%=(irange[i].getRetries()!=0)?""+irange[i].getRetries():currConfig.getRetries() %></td>
+						  <td class="standard" align="center"><%=(irange[i].getTimeout()!=0)?""+irange[i].getTimeout():""+currConfig.getTimeout() %></td>
+						  <td class="standard" align="center"><%=(irange[i].getRetries()!=0)?""+irange[i].getRetries():""+currConfig.getRetries() %></td>
 						  <td class="standard" width="1%" align="center"><input type="button" value="Delete" onclick="deleteIR(<%=i%>);"/></td> 						  
 						</tr>		      	
 					      <%} // end for%>
@@ -381,7 +381,7 @@ DiscoveryConfiguration currConfig  = (DiscoveryConfiguration) sess.getAttribute(
 		  	</tr>
 		    </table>     
 			
-			<input type="submit" value="Save and Restart Discovery" onclick="restartDiscovery();">
+			<input type="button" value="Save and Restart Discovery" onclick="restartDiscovery();">
 </FORM>
 
 <jsp:include page="/includes/footer.jsp" flush="false" />

@@ -46,7 +46,6 @@ import java.net.DatagramSocket;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.Category;
 import org.opennms.core.fiber.Fiber;
 import org.opennms.core.utils.ThreadCategory;
 
@@ -105,7 +104,7 @@ final class Receiver2 implements Runnable, Fiber {
     }
 
     public void run() {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
 
         // set the state
         //
@@ -130,7 +129,7 @@ final class Receiver2 implements Runnable, Fiber {
                         log.debug("No client waiting for response.");
                     }
                     while (iter.hasNext()) {
-                        Client c = (Client) iter.next();
+                        Client c = iter.next();
                         if (c.getStatus() == RUNNING) {
                             try {
                                 log.debug("sending DHCP response pkt to client " + c.getName());
@@ -148,6 +147,10 @@ final class Receiver2 implements Runnable, Fiber {
             } catch (InterruptedIOException ex) {
                 // ignore
             } catch (ArrayIndexOutOfBoundsException ex) {
+                log.warn("An error occurred when reading DHCP response. Ignoring exception: ", ex);
+            } catch (NegativeArraySizeException ex) {
+                // Ignore cases where the target returns a badly-formatted DHCP response
+                // Fixes http://bugzilla.opennms.org/show_bug.cgi?id=3445
                 log.warn("An error occurred when reading DHCP response. Ignoring exception: ", ex);
             } catch (IOException ex) {
                 synchronized (this) {

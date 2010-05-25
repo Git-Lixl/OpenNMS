@@ -98,7 +98,13 @@ public class NodeRestService extends OnmsRestService {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public OnmsNodeList getNodes() {
         OnmsCriteria criteria = getQueryFilters();
-        return new OnmsNodeList(m_nodeDao.findMatching(criteria));
+        
+        OnmsNodeList nodeList = new OnmsNodeList(m_nodeDao.findMatching(criteria));
+        
+        OnmsCriteria countCrit = getQueryFilters();
+        int count = m_nodeDao.countMatching(countCrit);
+        nodeList.setTotalCount(count);
+        return nodeList;
     }
 
     @GET
@@ -179,7 +185,7 @@ public class NodeRestService extends OnmsRestService {
         MultivaluedMap<String,String> params = m_uriInfo.getQueryParameters();
         OnmsCriteria criteria = new OnmsCriteria(OnmsNode.class);
 
-    	setLimitOffset(params, criteria, LIMIT);
+    	setLimitOffset(params, criteria, LIMIT, false);
         addOrdering(params, criteria, false);
     	addFiltersToCriteria(params, criteria, OnmsNode.class);
 
@@ -190,7 +196,7 @@ public class NodeRestService extends OnmsRestService {
     
     private void sendEvent(String uei, int nodeId) throws EventProxyException {
         Event e = new Event();
-        e.setUei(EventConstants.NODE_DELETED_EVENT_UEI);
+        e.setUei(uei);
         e.setNodeid(nodeId);
         e.setSource(getClass().getName());
         e.setTime(EventConstants.formatToString(new java.util.Date()));

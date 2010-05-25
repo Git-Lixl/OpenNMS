@@ -34,6 +34,9 @@
 	<include file="1.7.4/changelog.xml" />
 	<include file="1.7.5/changelog.xml" />
 	<include file="1.7.6/changelog.xml" />
+	<include file="1.7.7/changelog.xml" />
+	<include file="1.7.8/changelog.xml" />
+	<include file="1.7.10/changelog.xml" />
 
 	<include file="stored-procedures/getManagePercentAvailIntfWindow.xml" />
 	<include file="stored-procedures/getManagePercentAvailNodeWindow.xml" />
@@ -54,11 +57,13 @@
 
 	<include file="repair-sequences.xml" />
 
-	<changeSet id="grant-permissions" author="rangerrick" runOnChange="true" runAlways="true" context="production">
+	<!--
+	<changeSet id="grant-permissions" author="rangerrick" runOnChange="true" runAlways="true" context="grant">
 		<preConditions>
 			<dbms type="postgresql" />
 		</preConditions>
 		<sql>GRANT ALL PRIVILEGES ON DATABASE ${install.database.name} TO ${install.database.user}</sql>
 	</changeSet>
+	-->
 
 </databaseChangeLog>

@@ -43,11 +43,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.CollectionMath;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.model.PollStatus;
+import org.opennms.netmgt.ping.PingConstants;
 import org.opennms.netmgt.ping.Pinger;
 import org.opennms.netmgt.poller.Distributable;
 import org.opennms.netmgt.poller.DistributionContext;
@@ -111,7 +111,7 @@ final public class StrafePingMonitor extends IPv4Monitor {
         if (iface.getType() != NetworkInterface.TYPE_IPV4)
             throw new NetworkInterfaceNotSupportedException("Unsupported interface type, only TYPE_IPV4 currently supported");
 
-        Category log = ThreadCategory.getInstance(this.getClass());
+        ThreadCategory log = ThreadCategory.getInstance(this.getClass());
         PollStatus serviceStatus = PollStatus.unavailable();
         InetAddress host = (InetAddress) iface.getAddress();
         List<Number> responseTimes = null;
@@ -120,7 +120,7 @@ final public class StrafePingMonitor extends IPv4Monitor {
 
             // get parameters
             //
-            long timeout = ParameterMap.getKeyedLong(parameters, "timeout", Pinger.DEFAULT_TIMEOUT);
+            long timeout = ParameterMap.getKeyedLong(parameters, "timeout", PingConstants.DEFAULT_TIMEOUT);
             int count = ParameterMap.getKeyedInteger(parameters, "ping-count", DEFAULT_MULTI_PING_COUNT);
             long pingInterval = ParameterMap.getKeyedLong(parameters, "wait-interval", DEFAULT_PING_INTERVAL);
             int failurePingCount = ParameterMap.getKeyedInteger(parameters, "failure-ping-count", DEFAULT_FAILURE_PING_COUNT);

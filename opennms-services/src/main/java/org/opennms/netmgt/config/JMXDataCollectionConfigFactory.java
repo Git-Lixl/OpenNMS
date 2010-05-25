@@ -48,13 +48,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Category;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.ConfigFileConstants;
 import org.opennms.netmgt.collectd.Attr;
 import org.opennms.netmgt.config.collectd.Attrib;
+import org.opennms.netmgt.config.collectd.CompAttrib;
+import org.opennms.netmgt.config.collectd.CompMember;
 import org.opennms.netmgt.config.collectd.JmxCollection;
 import org.opennms.netmgt.config.collectd.JmxDatacollectionConfig;
 import org.opennms.netmgt.config.collectd.Mbean;
@@ -130,7 +131,7 @@ public final class JMXDataCollectionConfigFactory {
         initialize(stream);
     }
 
-    @Deprecated
+    //@Deprecated
     public JMXDataCollectionConfigFactory(Reader rdr) throws MarshalException, ValidationException {
     	initialize(rdr);
     }
@@ -287,7 +288,7 @@ public final class JMXDataCollectionConfigFactory {
      * @return a list of MIB objects
      */
     public Map<String, List<Attrib>> getAttributeMap(String cName, String aSysoid, String anAddress) {
-        Category log = ThreadCategory.getInstance(getClass());
+        ThreadCategory log = log();
         
         Map<String, List<Attrib>> attributeMap = new HashMap<String, List<Attrib>>();
 
@@ -317,7 +318,19 @@ public final class JMXDataCollectionConfigFactory {
             for (int i = 0; i < attributes.length; i++) {
                 list.add(attributes[i]);
             }
-            attributeMap.put(mbean.getObjectname(), list);
+            
+            CompAttrib[] compAttributes = mbean.getCompAttrib();
+            for (int i = 0; i < compAttributes.length; i++) {
+                CompMember[] compMembers = compAttributes[i].getCompMember();
+                for (int j = 0; j < compMembers.length; j++) {
+                    Attrib compAttrib = new Attrib();
+                    compAttrib.setName(compAttributes[i].getName() + "|" + compMembers[j].getName());
+                    compAttrib.setAlias(compMembers[j].getAlias());
+                    compAttrib.setType(compMembers[j].getType());
+                    list.add(compAttrib);
+                }
+            }
+            attributeMap.put(mbean.getObjectname(), list);            
         }
         return attributeMap;
     }
@@ -337,20 +350,36 @@ public final class JMXDataCollectionConfigFactory {
             while (en.hasMoreElements()) {
                 BeanInfo beanInfo = new BeanInfo();
                 
-                Mbean mbean = (Mbean)en.nextElement();
+                Mbean mbean = en.nextElement();
                 beanInfo.setMbeanName(mbean.getName());
                 beanInfo.setObjectName(mbean.getObjectname());
                 beanInfo.setKeyField(mbean.getKeyfield());
                 beanInfo.setExcludes(mbean.getExclude());
                 beanInfo.setKeyAlias(mbean.getKeyAlias());
-                int count = mbean.getAttribCount();
-                String[] attribs = new String[count];
+                
                 Attrib[] attributes = mbean.getAttrib();
-                for (int i = 0; i < attributes.length; i++) {
-                    attribs[i] = attributes[i].getName();
+                CompAttrib[] compositeAttributes = mbean.getCompAttrib();
+                
+                List<String> attribNameList = new ArrayList<String>();
+                List<String> compAttribNameList = new ArrayList<String>();
+                
+                for (Object ca : compositeAttributes) {
+                    CompAttrib myCa = (CompAttrib)ca;
+                    CompMember[] compositeMembers = myCa.getCompMember();
+                    for (Object cm : compositeMembers) {
+                        CompMember myCm = (CompMember)cm;
+                        attribNameList.add(myCa.getName() + "|" + myCm.getName());
+                        compAttribNameList.add(myCa.getName() + "|" + myCm.getName());
+                    }                    
                 }
                 
-                beanInfo.setAttributes(attribs);
+                for (Object a : attributes) {
+                    Attrib myA = (Attrib)a;
+                    attribNameList.add(myA.getName());
+                }
+                
+                beanInfo.setAttributes(attribNameList);
+                beanInfo.setCompositeAttributes(compAttribNameList);
                 map.put(mbean.getObjectname(), beanInfo);
             }
         }
@@ -367,7 +396,7 @@ public final class JMXDataCollectionConfigFactory {
         Mbeans beans = collection.getMbeans();
         Enumeration<Mbean> en = beans.enumerateMbean();
         while (en.hasMoreElements()) {
-            Mbean mbean = (Mbean)en.nextElement();
+            Mbean mbean = en.nextElement();
             int count = mbean.getAttribCount();
             String[] attribs = new String[count];
             Attrib[] attributes = mbean.getAttrib();
@@ -395,7 +424,7 @@ public final class JMXDataCollectionConfigFactory {
         //TODO: Delete this method, it is not referenced anywhere
         Iterator<Attrib>i = objectList.iterator();
         while (i.hasNext()) {
-            Attrib mibObj = (Attrib) i.next();
+            Attrib mibObj = i.next();
 
             // Create a MibObject from the castor MibObj
             Attr aMibObject = new Attr();
@@ -478,7 +507,7 @@ public final class JMXDataCollectionConfigFactory {
         return rrdPath;
     }
     
-    private static Category log() {
+    private static ThreadCategory log() {
     	return ThreadCategory.getInstance(JMXDataCollectionConfigFactory.class);
     }
     

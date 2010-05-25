@@ -1,7 +1,7 @@
 //
 // This file is part of the OpenNMS(R) Application.
 //
-// OpenNMS(R) is Copyright (C) 2002-2003 The OpenNMS Group, Inc. All rights
+// OpenNMS(R) is Copyright (C) 2002-2009 The OpenNMS Group, Inc. All rights
 // reserved.
 // OpenNMS(R) is a derivative work, containing both original code, included
 // code and modified
@@ -13,6 +13,7 @@
 //
 // Modifications:
 //
+// 2009 Oct 01: Add delete capability for non-ip interface. - ayres@opennms.org
 // 2008 Feb 09: Remove outage calendar from CollectionSpecification. - dj@opennms.org
 // 2007 Jun 30: Java 5 generics, log when we do match a specification. - dj@oopennms.org
 // 2006 Aug 15: Remove old, incorrect comment. Fix up log message. -
@@ -65,8 +66,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
+import org.opennms.netmgt.ConfigFileConstants;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.capsd.EventUtils;
 import org.opennms.netmgt.capsd.InsufficientInformationException;
@@ -85,6 +86,7 @@ import org.opennms.netmgt.eventd.EventIpcManager;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.EventListener;
 import org.opennms.netmgt.scheduler.LegacyScheduler;
 import org.opennms.netmgt.scheduler.ReadyRunnable;
@@ -108,7 +110,7 @@ public class Collectd extends AbstractServiceDaemon implements
         if (s_instrumentation == null) {
             String className = System.getProperty("org.opennms.collectd.instrumentationClass", DefaultCollectdInstrumentation.class.getName());
             try { 
-                s_instrumentation = (CollectdInstrumentation) ClassUtils.forName(className).newInstance();
+                s_instrumentation = (CollectdInstrumentation) ClassUtils.forName(className, Thread.currentThread().getContextClassLoader()).newInstance();
             } catch (Exception e) {
                 s_instrumentation = new DefaultCollectdInstrumentation();
             }
@@ -230,8 +232,11 @@ public class Collectd extends AbstractServiceDaemon implements
         // configureSNMP
         ueiList.add(EventConstants.CONFIGURE_SNMP_EVENT_UEI);
         
-        //thresholds configuration change
+        // thresholds configuration change
         ueiList.add(EventConstants.THRESHOLDCONFIG_CHANGED_EVENT_UEI);
+
+        // daemon configuration change
+        ueiList.add(EventConstants.RELOAD_DAEMON_CONFIG_UEI);
 
         getEventIpcManager().addEventListener(this, ueiList);
     }
@@ -327,7 +332,7 @@ public class Collectd extends AbstractServiceDaemon implements
         instrumentation().beginScheduleExistingInterfaces();
         try {
 
-            m_transTemplate.execute(new TransactionCallback() {
+            m_transTemplate.execute(new TransactionCallback<Object>() {
 
                 public Object doInTransaction(TransactionStatus status) {
                     
@@ -660,7 +665,7 @@ public class Collectd extends AbstractServiceDaemon implements
      */
     public void onEvent(final Event event) {
 
-        m_transTemplate.execute(new TransactionCallback() {
+        m_transTemplate.execute(new TransactionCallback<Object>() {
 
             public Object doInTransaction(TransactionStatus status) {
                 onEventInTransaction(event);
@@ -699,6 +704,8 @@ public class Collectd extends AbstractServiceDaemon implements
                 handleServiceDeleted(event);
             } else if (event.getUei().equals(EventConstants.THRESHOLDCONFIG_CHANGED_EVENT_UEI)) {
                 handleThresholdConfigurationChanged(event);
+            } else if (event.getUei().equals(EventConstants.RELOAD_DAEMON_CONFIG_UEI)) {
+                handleReloadDaemonConfig(event);
             }
         } catch (InsufficientInformationException e) {
             handleInsufficientInfo(e);
@@ -782,12 +789,16 @@ public class Collectd extends AbstractServiceDaemon implements
     private void handleInterfaceDeleted(Event event)
             throws InsufficientInformationException {
         EventUtils.checkNodeId(event);
-        EventUtils.checkInterface(event);
 
-        Category log = log();
+        ThreadCategory log = log();
+        
+        String ipAddr = event.getInterface();
+        if(EventUtils.isNonIpInterface(ipAddr) ) {
+            log().debug("handleInterfaceDeleted: the deleted interface was a non-ip interface. Nothing to do here.");
+            return;
+        }
 
         int nodeId = (int) event.getNodeid();
-        String ipAddr = event.getInterface();
 
         // Iterate over the collectable services list and mark any entries
         // which match the deleted nodeId/IP address pair for deletion
@@ -852,7 +863,7 @@ public class Collectd extends AbstractServiceDaemon implements
         EventUtils.checkNodeId(event);
         EventUtils.checkInterface(event);
 
-        Category log = log();
+        ThreadCategory log = log();
         if (log.isDebugEnabled())
             log.debug("interfaceReparentedHandler:  processing interfaceReparented event for "
                     + event.getInterface());
@@ -961,7 +972,7 @@ public class Collectd extends AbstractServiceDaemon implements
         EventUtils.checkNodeId(event);
         EventUtils.checkInterface(event);
 
-        Category log = log();
+        ThreadCategory log = log();
 
         int nodeId = (int) event.getNodeid();
 
@@ -1028,18 +1039,53 @@ public class Collectd extends AbstractServiceDaemon implements
      */
     private void handleThresholdConfigurationChanged(Event event) {
         log().debug("handleThresholdConfigurationChanged: Reloading thresholding configuration in collectd");
-        try {
-            ThresholdingConfigFactory.reload();
-            ThreshdConfigFactory.reload(); // Added to avoid static methods on ThresholdingVisitor
-        } catch (Exception e) {
-            log().error("handleThresholdConfigurationChanged: Failed to reload threshold configuration because "+e.getMessage(), e);
-            return; //Do nothing else - the config is borked, so we carry on with what we've got which should still be relatively ok
-        }
-        
         synchronized (m_collectableServices) {
 	        for(CollectableService service: m_collectableServices) {
 	            service.reinitializeThresholding();
 	        }
+        }
+    }
+    
+    private void handleReloadDaemonConfig(Event event) {
+        final String daemonName = "Threshd";
+        boolean isTarget = false;
+        List<Parm> parmCollection = event.getParms().getParmCollection();
+        for (Parm parm : parmCollection) {
+            if (EventConstants.PARM_DAEMON_NAME.equals(parm.getParmName()) && daemonName.equalsIgnoreCase(parm.getValue().getContent())) {
+                isTarget = true;
+                break;
+            }
+        }
+        if (isTarget) {
+            String thresholdsFile = ConfigFileConstants.getFileName(ConfigFileConstants.THRESHOLDING_CONF_FILE_NAME);
+            String threshdFile = ConfigFileConstants.getFileName(ConfigFileConstants.THRESHD_CONFIG_FILE_NAME);
+            String targetFile = thresholdsFile; // Default
+            for (Parm parm : parmCollection) {
+                if (EventConstants.PARM_CONFIG_FILE_NAME.equals(parm.getParmName()) && threshdFile.equalsIgnoreCase(parm.getValue().getContent())) {
+                    targetFile = threshdFile;
+                }
+            }
+            EventBuilder ebldr = null;
+            try {
+                if (targetFile.equals(thresholdsFile))
+                    ThresholdingConfigFactory.reload();
+                if (targetFile.equals(threshdFile))
+                    ThreshdConfigFactory.reload();
+                ebldr = new EventBuilder(EventConstants.THRESHOLDCONFIG_CHANGED_EVENT_UEI, "Collectd");
+                getEventIpcManager().sendNow(ebldr.getEvent());
+                ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_SUCCESSFUL_UEI, "Collectd");
+                ebldr.addParam(EventConstants.PARM_DAEMON_NAME, daemonName);
+                ebldr.addParam(EventConstants.PARM_CONFIG_FILE_NAME, targetFile);
+            } catch (Exception e) {
+                log().error("handleReloadDaemonConfig: Error reloading configuration: " + e, e);
+                ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_FAILED_UEI, "Collectd");
+                ebldr.addParam(EventConstants.PARM_DAEMON_NAME, daemonName);
+                ebldr.addParam(EventConstants.PARM_CONFIG_FILE_NAME, targetFile);
+                ebldr.addParam(EventConstants.PARM_REASON, e.getLocalizedMessage().substring(1, 128));
+            }
+            if (ebldr != null) {
+                getEventIpcManager().sendNow(ebldr.getEvent());
+            }
         }
     }
     
@@ -1073,7 +1119,7 @@ public class Collectd extends AbstractServiceDaemon implements
         EventUtils.checkNodeId(event);
         EventUtils.checkInterface(event);
 
-        Category log = log();
+        ThreadCategory log = log();
 
         if (log.isDebugEnabled())
             log.debug("primarySnmpInterfaceChangedHandler:  processing primary SNMP interface changed event...");
@@ -1197,7 +1243,7 @@ public class Collectd extends AbstractServiceDaemon implements
         // updates map and mark any which have the same interface
         // address for reinitialization
         //
-        Category log = log();
+        ThreadCategory log = log();
         
         OnmsIpInterface iface = null;
         synchronized (getCollectableServices()) {
@@ -1247,7 +1293,7 @@ public class Collectd extends AbstractServiceDaemon implements
         EventUtils.checkInterface(event);
         EventUtils.checkService(event);
 
-        Category log = log();
+        ThreadCategory log = log();
 
         //INCORRECT; we now support all *sorts* of data collection.  This is *way* out of date
         // Currently only support SNMP data collection.

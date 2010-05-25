@@ -1,12 +1,16 @@
 //
 // This file is part of the OpenNMS(R) Application.
 //
-// OpenNMS(R) is Copyright (C) 2006 The OpenNMS Group, Inc.  All rights reserved.
+// OpenNMS(R) is Copyright (C) 2006-2009 The OpenNMS Group, Inc.  All rights reserved.
 // OpenNMS(R) is a derivative work, containing both original code, included code and modified
 // code that was published under the GNU General Public License. Copyrights for modified
 // and included code are below.
 //
 // OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
+//
+// Modifications:
+//
+// 2009 Oct 01: Add ability to update database when an interface is deleted. - ayres@opennms.org
 //
 // Original code base Copyright (C) 1999-2001 Oculan Corp.  All rights reserved.
 //
@@ -35,7 +39,6 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.sql.SQLException;
 import java.util.*;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.*;
 
@@ -100,18 +103,13 @@ public class Linkd extends AbstractServiceDaemon {
 	private List<String> m_newSuspenctEventsIpAddr = null;
 	
 	public Linkd() {
-		super("OpenNMS.Linkd");
+		super(LOG4J_CATEGORY);
 	}
 
 	public static Linkd getInstance() {
 		return m_singleton;
 	}
 
-	public Category log() {
-		ThreadCategory.setPrefix(LOG4J_CATEGORY);
-		return ThreadCategory.getInstance();
-	}
-	
 	protected void onInit() {
 
         Assert.state(m_queryMgr != null, "must set the queryManager property");
@@ -119,11 +117,6 @@ public class Linkd extends AbstractServiceDaemon {
         Assert.state(m_scheduler != null, "must set the scheduler property");
         Assert.state(m_eventListener != null,"must be set the event receiver");
 	       
-		if (log().isInfoEnabled())
-			log()
-					.info("init: Category Level Set to "
-							+ log().getLevel().toString());
-
 		m_activepackages = new ArrayList<String>();
 		
 		// initialize the ipaddrsentevents
@@ -197,7 +190,7 @@ public class Linkd extends AbstractServiceDaemon {
 		}
 	}
 	
-	public synchronized void onStart() {
+	protected synchronized void onStart() {
 
 		// start the scheduler
 		//
@@ -210,7 +203,7 @@ public class Linkd extends AbstractServiceDaemon {
 
 	}
 
-	public synchronized void onStop() {
+	protected synchronized void onStop() {
 
 		// Stop the scheduler
 		m_scheduler.stop();
@@ -221,11 +214,11 @@ public class Linkd extends AbstractServiceDaemon {
 
 	}
 
-	public synchronized void onPause() {
+	protected synchronized void onPause() {
 		m_scheduler.pause();
 	}
 
-	public synchronized void onResume() {
+	protected synchronized void onResume() {
 		m_scheduler.resume();
 	}
 
@@ -354,6 +347,35 @@ public class Linkd extends AbstractServiceDaemon {
 			}
 			
 		}
+
+		// database changed need reload packageiplist
+		m_linkdConfig.createPackageIpListMap();
+
+	}
+	
+	/**
+	 * Update database when an interface is deleted
+	 * 
+	 * @param nodeid
+	 *            the nodeid for the node
+	 * @param ipAddr
+	 *            the ip address of the interface
+	 * @param ifIndex
+	 *            the ifIndex of the interface
+	 */
+	void deleteInterface(int nodeid, String ipAddr, int ifIndex) {
+
+		if (log().isDebugEnabled())
+			log().debug("deleteInterface: marking table entries as deleted for node "
+				+ nodeid + ", with ip address " + (ipAddr != null ? ipAddr : "null")
+				+ ", and ifIndex "+ (ifIndex > -1 ? ifIndex : "N/A"));
+
+		try {
+			m_queryMgr.updateForInterface(nodeid, ipAddr, ifIndex, QueryManager.ACTION_DELETE);
+		} catch (SQLException sqlE) {
+			log().error("deleteInterface: " +
+				"SQL Exception while updating database.",sqlE);
+		} 
 
 		// database changed need reload packageiplist
 		m_linkdConfig.createPackageIpListMap();

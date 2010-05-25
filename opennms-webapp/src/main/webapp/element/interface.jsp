@@ -3,7 +3,7 @@
 //
 // This file is part of the OpenNMS(R) Application.
 //
-// OpenNMS(R) is Copyright (C) 2002-2005 The OpenNMS Group, Inc.  All rights reserved.
+// OpenNMS(R) is Copyright (C) 2002-2009 The OpenNMS Group, Inc.  All rights reserved.
 // OpenNMS(R) is a derivative work, containing both original code, included code and modified
 // code that was published under the GNU General Public License. Copyrights for modified 
 // and included code are below.
@@ -12,6 +12,7 @@
 //
 // Modifications:
 //
+// 2009 Oct 01: correct minor logic error. - ayres@opennms.org
 // 2003 Oct 07: Corrected issue with selecting non-IP interface SNMP data.
 // 2003 Sep 25: Fixed SNMP Performance link issue.
 // 2003 Feb 07: Fixed URLEncoder issues.
@@ -48,6 +49,8 @@
 		session="true"
 		import="org.opennms.netmgt.config.PollerConfigFactory,
 				org.opennms.netmgt.config.PollerConfig,
+				org.opennms.netmgt.config.SnmpInterfacePollerConfigFactory,
+				org.opennms.netmgt.config.SnmpInterfacePollerConfig,
 				java.util.*,
                 org.opennms.core.utils.SIUtils,
                 org.opennms.netmgt.model.OnmsResource,
@@ -121,6 +124,10 @@
     PollerConfigFactory.init();
     PollerConfig pollerCfgFactory = PollerConfigFactory.getInstance();
     pollerCfgFactory.rebuildPackageIpListMap();
+    
+    SnmpInterfacePollerConfigFactory.init();
+    SnmpInterfacePollerConfig snmpPollerCfgFactory = SnmpInterfacePollerConfigFactory.getInstance();
+    snmpPollerCfgFactory.rebuildPackageIpListMap();
 %>
 
 <%
@@ -164,7 +171,7 @@ function doDelete() {
         %>
       <form method="post" name="delete" action="admin/deleteInterface">
       <input type="hidden" name="node" value="<%=nodeId%>"/>
-      <input type="hidden" name="ifindex" value="<%=(ifIndex != -1 ? "" : ifIndex)%>"/>
+      <input type="hidden" name="ifindex" value="<%=(ifIndex == -1 ? "" : "" + ifIndex)%>"/>
       <input type="hidden" name="intf" value="<%=ipAddr%>"/>
       <%
       }
@@ -176,7 +183,7 @@ function doDelete() {
         if (! ipAddr.equals("0.0.0.0")) {
         %>
 	<li>
-        <a href="<%=eventUrl1%>">View Events by Ip address</a>
+        <a href="<%=eventUrl1%>">View Events by IP Address</a>
 	</li>
 		<% } %>
 		
@@ -291,19 +298,22 @@ function doDelete() {
                 <th>Last Service Scan</th>
                 <td><%=intf_db.getLastCapsdPoll()%></td>
               </tr>
+			  <tr>
+	            <th>Snmp Polling Status</th>
+	            <td><%=ElementUtil.getSnmpInterfaceStatusString(intf_db)%></td>
+	          </tr>  
+       <% if(request.isUserInRole( Authentication.ADMIN_ROLE )) { %>
               <tr>
-                <th>Physical Address</th>
-                <td>
-                  <% String macAddr = intf_db.getPhysicalAddress(); %>
-                  <% if( macAddr != null && macAddr.trim().length() > 0 && !macAddr.equals("000000000000")) { %>
-                    <%=macAddr%>
-                  <% } else if ( atif_db != null && atif_db.get_physaddr().trim().length() > 0 ) { %>
-                  <%=atif_db.get_physaddr()%>
-                  <% } else { %>
-                    &nbsp;
-                  <% } %>
-                </td>
+                <th>Snmp Polling Package</th>
+                <td><%= (snmpPollerCfgFactory.getPackageName(NetworkElementFactory.getIpPrimaryAddress(nodeId)) == null) ? "&nbsp;" : 
+                snmpPollerCfgFactory.getPackageName(NetworkElementFactory.getIpPrimaryAddress(nodeId))%></td>
               </tr>
+	   <% } %>
+              <tr> 
+                <th>Last Snmp Poll</th>
+    	        <td><%=(intf_db.getSnmpLastSnmpPoll() == null) ? "&nbsp;" : intf_db.getSnmpLastSnmpPoll()%></td>
+        	  </tr>
+              
             </table>
             
             <!-- Node Link box -->
@@ -346,21 +356,22 @@ function doDelete() {
                       <th>Alias</th>
                       <td><%=(intf_db.getSnmpIfAlias() == null) ? "&nbsp;" : intf_db.getSnmpIfAlias()%></td>
                     </tr>
-
-                  </table>
+					<tr>
+		              <th>Physical Address</th>
+		              <td>
+		                <% String macAddr = intf_db.getPhysicalAddress(); %>
+		                <% if( macAddr != null && macAddr.trim().length() > 0 && !macAddr.equals("000000000000")) { %>
+		                  <%=macAddr%>
+		                <% } else if ( atif_db != null && atif_db.get_physaddr().trim().length() > 0 ) { %>
+		                <%=atif_db.get_physaddr()%>
+		                <% } else { %>
+		                  &nbsp;
+		                <% } %>
+		              </td>
+		            </tr>		            
+		            </table>
             <% } %>
 
-            <!-- services box -->
-            
-            <h3>Services</h3>
-            
-		    <table>
-              <% for( int i=0; i < services.length; i++ ) { %>
-                <tr>
-                  <td><a href="element/service.jsp?node=<%=services[i].getNodeId()%>&intf=<%=services[i].getIpAddress()%>&service=<%=services[i].getServiceId()%>"><%=services[i].getServiceName()%></a></td>
-                </tr>
-              <% } %>
-            </table>
 
             <!-- Availability box -->
             <jsp:include page="/includes/interfaceAvailability-box.jsp" flush="false" />
@@ -374,7 +385,7 @@ function doDelete() {
           
             <!-- events list box 1 using ipaddress-->
             <% if (!ipAddr.equals("0.0.0.0")) {
-            	String eventHeader1 = "<a href='" + eventUrl1 + "'>Recent Events (Using Filter Ip address:" + ipAddr + ")</a>"; %>
+            	String eventHeader1 = "<a href='" + eventUrl1 + "'>Recent Events (Using Filter IP Address:" + ipAddr + ")</a>"; %>
             <% String moreEventsUrl1 = eventUrl1; %>
             <jsp:include page="/includes/eventlist.jsp" flush="false" >
               <jsp:param name="node" value="<%=nodeId%>" />

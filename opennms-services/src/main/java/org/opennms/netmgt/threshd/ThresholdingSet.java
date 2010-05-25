@@ -42,7 +42,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.collectd.CollectionAttribute;
 import org.opennms.netmgt.config.ThreshdConfigFactory;
@@ -90,13 +89,17 @@ public abstract class ThresholdingSet {
         List<String> groupNameList = getThresholdGroupNames(m_nodeId, m_hostAddress, m_serviceName);
         m_thresholdGroups = new LinkedList<ThresholdGroup>();
         for (String groupName : groupNameList) {
-            ThresholdGroup thresholdGroup = m_thresholdsDao.get(groupName);
-            if (thresholdGroup == null) {
-                log().error("initialize: Could not get threshold group with name " + groupName);
-            }
-            m_thresholdGroups.add(thresholdGroup);
-            if (log().isDebugEnabled()) {
-                log().debug("initialize: Adding threshold group: " + thresholdGroup);
+            try {
+                ThresholdGroup thresholdGroup = m_thresholdsDao.get(groupName);
+                if (thresholdGroup == null) {
+                    log().error("initialize: Could not get threshold group with name " + groupName);
+                }
+                m_thresholdGroups.add(thresholdGroup);
+                if (log().isDebugEnabled()) {
+                    log().debug("initialize: Adding threshold group: " + thresholdGroup);
+                }
+            } catch (Exception e) {
+                log().error("initialize: Can't process threshold group " + groupName, e);
             }
         }
         m_hasThresholds = !m_thresholdGroups.isEmpty();
@@ -196,9 +199,13 @@ public abstract class ThresholdingSet {
      * Return a list of events to be send if some thresholds must be triggered or be rearmed.
      */
     protected List<Event> applyThresholds(CollectionResourceWrapper resourceWrapper, Map<String, CollectionAttribute> attributesMap) {
+        List<Event> eventsList = new LinkedList<Event>();
+        if (attributesMap == null || attributesMap.size() == 0) {
+            log().debug("applyThresholds: Ignoring resource " + resourceWrapper + " because required attributes map is empty.");
+            return eventsList;
+        }
         log().debug("applyThresholds: Applying thresholds on " + resourceWrapper + " using " + attributesMap.size() + " attributes.");
         Date date = new Date();
-        List<Event> eventsList = new LinkedList<Event>();
         for (ThresholdGroup group : m_thresholdGroups) {
             Map<String,Set<ThresholdEntity>> entityMap = getEntityMap(group, resourceWrapper.getResourceTypeName());
             if (entityMap != null) {
@@ -242,6 +249,8 @@ public abstract class ThresholdingSet {
             log().debug("passedThresholdFilters: applying " + filters.length + " filters to resource " + resource);
         }
         int count = 1;
+        String operator = thresholdEntity.getThresholdConfig().getBasethresholddef().getFilterOperator().toLowerCase();
+        boolean andResult = true;
         for (ResourceFilter f : filters) {
             if (log().isDebugEnabled()) {
                 log().debug("passedThresholdFilters: filter #" + count + ": field=" + f.getField() + ", regex='" + f.getContent() + "'");
@@ -257,8 +266,13 @@ public abstract class ThresholdingSet {
                     if (log().isDebugEnabled()) {
                         log().debug("passedThresholdFilters: the value of " + f.getField() + " is " + attr + ". Pass filter? " + pass);
                     }
-                    if (pass) {
+                    if (operator.equals("or") && pass) {
                         return true;
+                    }
+                    if (operator.equals("and")) {
+                        andResult = andResult && pass;
+                        if (andResult == false)
+                            return false;
                     }
                 } catch (PatternSyntaxException e) {
                     log().warn("passedThresholdFilters: the regular expression " + f.getContent() + " is invalid: " + e.getMessage(), e);
@@ -268,6 +282,8 @@ public abstract class ThresholdingSet {
                 log().warn("passedThresholdFilters: can't find value of " + f.getField() + " for resource " + resource);
             }
         }
+        if (operator.equals("and") && andResult)
+            return true;
         return false;
     }
     
@@ -319,10 +335,11 @@ public abstract class ThresholdingSet {
                 log().debug("getThresholdGroupNames: checking ipaddress " + hostAddress + " for inclusion in pkg " + pkg.getName());
             }
             boolean foundInPkg = m_configManager.interfaceInPackage(hostAddress, pkg);
-            if (!foundInPkg) {
+            if (!foundInPkg && Boolean.getBoolean("org.opennms.thresholds.filtersReloadEnabled")) {
                 // The interface might be a newly added one, rebuild the package
                 // to ipList mapping and again to verify if the interface is in
                 // the package.
+                log().info("getThresholdGroupNames: re-initializing filters.");
                 m_configManager.rebuildPackageIpListMap();
                 foundInPkg = m_configManager.interfaceInPackage(hostAddress, pkg);
             }
@@ -335,16 +352,13 @@ public abstract class ThresholdingSet {
             // Getting thresholding-group for selected service and adding to groupNameList
             for (org.opennms.netmgt.config.threshd.Service svc : pkg.getService()) {
                 if (svc.getName().equals(serviceName)) {
-                    String groupName = null;
                     for (org.opennms.netmgt.config.threshd.Parameter parameter : svc.getParameter()) {
                         if (parameter.getKey().equals("thresholding-group")) {
-                            groupName = parameter.getValue();
-                        }
-                    }
-                    if (groupName != null) {
-                        groupNameList.add(groupName);
-                        if (log().isDebugEnabled()) {
-                            log().debug("getThresholdGroupNames:  address/service: " + hostAddress + "/" + serviceName + ". Adding Group " + groupName);
+                            String groupName = parameter.getValue();
+                            groupNameList.add(groupName);
+                            if (log().isDebugEnabled()) {
+                                log().debug("getThresholdGroupNames:  address/service: " + hostAddress + "/" + serviceName + ". Adding Group " + groupName);
+                            }
                         }
                     }
                 }
@@ -368,7 +382,7 @@ public abstract class ThresholdingSet {
             }
             ThresholdResourceType thisResourceType = typeMap.get(resourceType);
             if (thisResourceType == null) {
-                log().warn("getEntityMap: No thresholds configured for resource type " + resourceType + ". Not processing this collection.");
+                log().info("getEntityMap: No thresholds configured for resource type " + resourceType + ". Not processing this collection.");
                 return null;
             }
             entityMap = thisResourceType.getThresholdMap();
@@ -381,7 +395,7 @@ public abstract class ThresholdingSet {
         return m_thresholdGroups.toString();
     }
 
-    protected Category log() {
+    protected ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
 

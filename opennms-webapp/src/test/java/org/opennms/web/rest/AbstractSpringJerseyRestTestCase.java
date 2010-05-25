@@ -109,6 +109,7 @@ public abstract class AbstractSpringJerseyRestTestCase {
                 "classpath:/org/opennms/web/rest/applicationContext-test.xml " +
                 "classpath*:/META-INF/opennms/component-service.xml " +
                 "classpath*:/META-INF/opennms/component-dao.xml " +
+                "classpath:/META-INF/opennms/applicationContext-reportingCore.xml " +
                 "classpath:/org/opennms/web/svclayer/applicationContext-svclayer.xml " +
                 "classpath:/org/opennms/web/rest/applicationContext-mockEventProxy.xml " +
                 "classpath:/META-INF/opennms/applicationContext-reporting.xml " +
@@ -231,9 +232,16 @@ public abstract class AbstractSpringJerseyRestTestCase {
         return retVal;
     }
 
-    protected String sendRequest(String requestType, String url, int spectedStatus) throws Exception {
+    @SuppressWarnings("unchecked")
+    protected String sendRequest(String requestType, String url, Map parameters, int expectedStatus) throws Exception {
         MockHttpServletRequest request = createRequest(requestType, url);
-        return sendRequest(request, spectedStatus);
+        request.setParameters(parameters);
+        return sendRequest(request, expectedStatus);
+    }
+    
+    protected String sendRequest(String requestType, String url, int expectedStatus) throws Exception {
+        MockHttpServletRequest request = createRequest(requestType, url);
+        return sendRequest(request, expectedStatus);
     }
 
     protected String sendRequest(MockHttpServletRequest request, int spectedStatus) throws Exception, UnsupportedEncodingException {

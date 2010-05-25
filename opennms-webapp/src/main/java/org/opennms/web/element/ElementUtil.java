@@ -1,7 +1,7 @@
 //
 // This file is part of the OpenNMS(R) Application.
 //
-// OpenNMS(R) is Copyright (C) 2002-2003 The OpenNMS Group, Inc.  All rights reserved.
+// OpenNMS(R) is Copyright (C) 2002-2009 The OpenNMS Group, Inc.  All rights reserved.
 // OpenNMS(R) is a derivative work, containing both original code, included code and modified
 // code that was published under the GNU General Public License. Copyrights for modified 
 // and included code are below.
@@ -10,6 +10,7 @@
 //
 // Copyright (C) 1999-2001 Oculan Corp.  All rights reserved.
 //
+// 2009 Aug 28: Restore search and display capabilities for non-ip interfaces
 // 2007 Jun 02: Move map initialization into their own methods, use
 //              Spring's Assert class for testing method arguments,
 //              and add methods for working with nodes. - dj@opennms.org
@@ -61,6 +62,12 @@ public class ElementUtil extends Object {
      * getInterfaceStatusMap} instead.
      */
     private static Map<Character, String> m_interfaceStatusMap;
+
+    /**
+     * Do not use directly. Call {@link #getSnmpInterfaceStatusMap 
+     * getInterfaceStatusMap} instead.
+     */
+    private static Map<Character, String> m_interfaceSnmpStatusMap;
 
     /**
      * Do not use directly. Call {@link #getServiceStatusMap 
@@ -121,6 +128,23 @@ public class ElementUtil extends Object {
         m_interfaceStatusMap = map;
     }
 
+    /** Returns the interface status map, initializing a new one if necessary. */
+    protected static Map<Character, String> getSnmpInterfaceStatusMap() {
+        if (m_interfaceSnmpStatusMap == null) {
+            initSnmpInterfaceStatusMap();
+        }
+
+        return m_interfaceSnmpStatusMap;
+    }
+
+    private synchronized static void initSnmpInterfaceStatusMap() {
+        Map<Character, String> map = new HashMap<Character, String>();
+        map.put(new Character('P'), "Polled");
+        map.put(new Character('N'), "Not Monitored");
+        
+        m_interfaceSnmpStatusMap = map;
+    }
+
     /** Return the human-readable name for a interface's status, may be null. */
     public static String getInterfaceStatusString(Interface intf) {
         Assert.notNull(intf, "intf argument cannot be null");
@@ -134,6 +158,22 @@ public class ElementUtil extends Object {
      */
     public static String getInterfaceStatusString(char c) {
         Map<Character, String> statusMap = getInterfaceStatusMap();
+        return statusMap.get(new Character(c));
+    }
+
+    /** Return the human-readable name for a snmp interface's status, may be null. */
+    public static String getSnmpInterfaceStatusString(Interface intf) {
+        Assert.notNull(intf, "intf argument cannot be null");
+
+        return getSnmpInterfaceStatusString(intf.isSnmpPollChar());
+    }
+
+    /**
+     * Return the human-readable name for a interface status character, may be
+     * null.
+     */
+    public static String getSnmpInterfaceStatusString(char c) {
+        Map<Character, String> statusMap = getSnmpInterfaceStatusMap();
         return statusMap.get(new Character(c));
     }
 
@@ -233,8 +273,7 @@ public class ElementUtil extends Object {
         Node node = NetworkElementFactory.getNode(nodeId);
 
         if (node == null) {
-            //handle this WAY better, very awful
-            throw new ServletException("No such node in database");
+            throw new ElementNotFoundException("No such node in database", "node", "element/node.jsp", "node", "element/nodeList.htm");
         }
         
         return node;
@@ -318,13 +357,96 @@ public class ElementUtil extends Object {
         }
 
         if (intf == null) {
-            //handle this WAY better, very awful
-            throw new ServletException("No such interface in database");
+            throw new ElementNotFoundException("No such interface in database", "interface", "element/interface.jsp", "ipinterfaceid", "element/interface.jsp");
         }
         
         return intf;
     }
 
+    /**
+     * Return interface from snmpinterface table given a servlet request.
+     * Intended for use with non-ip interfaces.
+     * 
+     * @param HttpServletRequest request
+     * 
+     * @return Interface
+     * 
+     * @throws ServletException, SQLException
+     */
+    public static Interface getSnmpInterfaceByParams(HttpServletRequest request)
+            throws ServletException, SQLException {
+        return getSnmpInterfaceByParams(request, "node", "ifindex");
+    }
+
+    /**
+     * Return interface from snmpinterface table given a servlet request, nodeId
+     * param name and ifIndex param name. Intended for use with non-ip interfaces.
+     * 
+     * @param HttpServletRequest request
+     * 
+     * @param String nodeIdParam
+     * 
+     * @param String ifIndexParam
+     * 
+     * @return Interface
+     * 
+     * @throws ServletException, SQLException
+     * 
+     */
+    public static Interface getSnmpInterfaceByParams(HttpServletRequest request,
+                                                     String nodeIdParam,
+                                                     String ifIndexParam)
+            throws ServletException, SQLException {
+        Interface intf;
+
+        String nodeIdString = request.getParameter(nodeIdParam);
+        String ifIndexString = request.getParameter(ifIndexParam);
+
+        int nodeId;
+        int ifIndex;
+
+        final String[] requiredParameters = new String[] {
+            nodeIdParam,
+            ifIndexParam
+            };
+
+        if (nodeIdString == null) {
+            throw new MissingParameterException(nodeIdParam,
+                    requiredParameters);
+        }
+
+        if (ifIndexString == null) {
+            throw new MissingParameterException(ifIndexParam,
+                    requiredParameters);
+        }
+
+        try {
+            nodeId = Integer.parseInt(nodeIdString);
+        } catch (NumberFormatException e) {
+            throw new ElementIdNotFoundException("Wrong data type for \""
+                    + nodeIdParam + "\", should be integer",
+                    nodeIdString, "node");
+        }
+
+        try {
+            ifIndex = Integer.parseInt(ifIndexString);
+        } catch (NumberFormatException e) {
+            throw new ElementIdNotFoundException("Wrong data type for \""
+                    + ifIndexParam + "\", should be integer",
+                    ifIndexString, "interface");
+        }
+
+        intf = NetworkElementFactory.getSnmpInterface(nodeId, ifIndex);
+
+        if (intf == null) {
+            throw new ElementNotFoundException("No such snmp interface in database for nodeId "
+                                               + nodeIdString + " ifIndex " + ifIndexString, "snmpinterface");
+        }
+
+    return intf;
+    }
+    
+    
     public static Service getServiceByParams(HttpServletRequest request)
             throws ServletException, SQLException {
         return getServiceByParams(request, "ifserviceid", "node", "intf",
@@ -403,8 +525,10 @@ public class ElementUtil extends Object {
         }
 
         if (service == null) {
-            //handle this WAY better, very awful
-            throw new ServletException("No such service in database");
+            String ipAddr = request.getParameter(ipAddrParam);
+            String serviceIdString = request.getParameter(serviceIdParam);
+            throw new ElementNotFoundException("No such service in database for " + ipAddr +
+                                               " with service ID " +serviceIdString, "service");
         }
         
         return service;

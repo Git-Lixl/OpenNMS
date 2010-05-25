@@ -39,11 +39,12 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.protocols.icmp.ICMPEchoPacket;
 import org.opennms.protocols.icmp.IcmpSocket;
+import org.opennms.protocols.rt.Request;
 
 /**
  * This class is used to encapsulate a ping request. A request consist of
@@ -52,70 +53,7 @@ import org.opennms.protocols.icmp.IcmpSocket;
  * @author <a href="mailto:ranger@opennms.org">Ben Reed</a>
  * @author <a href="mailto:brozow@opennms.org">Mathew Brozowski</a>
  */
-final public class PingRequest implements Delayed {
-    public static class RequestId {
-        InetAddress m_addr;
-        long m_tid;
-        short m_seqId;
-
-        public RequestId(InetAddress addr, long tid, short seqId) {
-            m_addr = addr;
-            m_tid = tid;
-            m_seqId = seqId;
-        }
-        
-        public RequestId(Reply reply) {
-            this(reply.getAddress(), reply.getPacket().getTID(), reply.getPacket().getSequenceId());
-        }
-
-        public InetAddress getAddress() {
-            return m_addr;
-        }
-
-        public long getTid() {
-            return m_tid;
-        }
-
-        public short getSequenceId() {
-            return m_seqId;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof RequestId) {
-                RequestId id = (RequestId)obj;
-                return getAddress().equals(id.getAddress()) && getTid() == id.getTid() && getSequenceId() == id.getSequenceId();
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 1;
-            hash = hash * 31 + m_addr.hashCode();
-            hash = hash * 31 + (int)(m_tid >>> 32);
-            hash = hash * 31 + (int)(m_tid);
-            hash = hash * 31 + m_seqId;
-            return hash;
-        }
-
-
-        public String toString() {
-            StringBuilder buf = new StringBuilder();
-            buf.append(super.toString());
-            buf.append('[');
-            buf.append("addr = ").append(m_addr);
-            buf.append(", ");
-            buf.append("tid = ").append(m_tid);
-            buf.append(", ");
-            buf.append("seqId = ").append(m_seqId);
-            buf.append(']');
-            return buf.toString();
-        }
-        
-
-    }
-
+final public class PingRequest implements Request<PingRequestId, PingRequest, PingReply> {
     public static final short FILTER_ID = (short) (new java.util.Random(System.currentTimeMillis())).nextInt();
     private static final short DEFAULT_SEQUENCE_ID = 1;
     private static long s_nextTid = 1;
@@ -123,7 +61,7 @@ final public class PingRequest implements Delayed {
     /**
      * The id representing the packet
      */
-    private RequestId m_id;
+    private PingRequestId m_id;
 
 	/**
 	 * the request packet
@@ -158,11 +96,14 @@ final public class PingRequest implements Delayed {
     /**
      * The thread logger associated with this request.
      */
-    private Category m_log = ThreadCategory.getInstance(this.getClass());
+    private ThreadCategory m_log = ThreadCategory.getInstance(this.getClass());
+    
+    
+    private AtomicBoolean m_processed = new AtomicBoolean(false);
     
 
-    PingRequest(InetAddress addr, long tid, short sequenceId, long timeout, int retries, Category logger, PingResponseCallback cb) {
-        m_id = new RequestId(addr, tid, sequenceId);
+    PingRequest(InetAddress addr, long tid, short sequenceId, long timeout, int retries, ThreadCategory logger, PingResponseCallback cb) {
+        m_id = new PingRequestId(addr, tid, sequenceId);
         m_retries    = retries;
         m_timeout    = timeout;
         m_log        = logger;
@@ -237,7 +178,7 @@ final public class PingRequest implements Delayed {
         }
     }
 
-    private Category log() {
+    private ThreadCategory log() {
         return m_log;
     }
 
@@ -256,24 +197,37 @@ final public class PingRequest implements Delayed {
         m_request = iPkt;
     }
     
-    public void processResponse(ICMPEchoPacket packet) {
+    public boolean processResponse(PingReply reply) {
+        try {
+            processResponse(reply.getPacket());
+        } finally {
+            setProcessed(true);
+        }
+        return true;
+    }
+
+    private void processResponse(ICMPEchoPacket packet) {
         m_response = packet;
         log().debug(System.currentTimeMillis()+": Ping Response Received "+this);
         m_callback.handleResponse(getAddress(), packet);
     }
-    
+
     public PingRequest processTimeout() {
-        PingRequest returnval = null;
-        if (this.isExpired()) {
-            if (this.getRetries() > 0) {
-                returnval = new PingRequest(getAddress(), getTid(), getSequenceId(), getTimeout(), getRetries() - 1, log(), m_callback);
-                log().debug(System.currentTimeMillis()+": Retrying Ping Request "+returnval);
-            } else {
-                log().debug(System.currentTimeMillis()+": Ping Request Timed out "+this);
-                m_callback.handleTimeout(getAddress(), getRequest());
+        try {
+            PingRequest returnval = null;
+            if (this.isExpired()) {
+                if (this.getRetries() > 0) {
+                    returnval = new PingRequest(getAddress(), getTid(), getSequenceId(), getTimeout(), getRetries() - 1, log(), m_callback);
+                    log().debug(System.currentTimeMillis()+": Retrying Ping Request "+returnval);
+                } else {
+                    log().debug(System.currentTimeMillis()+": Ping Request Timed out "+this);
+                    m_callback.handleTimeout(getAddress(), getRequest());
+                }
             }
+            return returnval;
+        } finally {
+            setProcessed(true);
         }
-        return returnval;
     }
     
     public boolean isExpired() {
@@ -304,12 +258,16 @@ final public class PingRequest implements Delayed {
         return 1;
     }
 
-    public RequestId getId() {
+    public PingRequestId getId() {
         return m_id;
     }
 
     public void processError(Throwable t) {
-        m_callback.handleError(getAddress(), getRequest(), t);
+        try {
+            m_callback.handleError(getAddress(), getRequest(), t);
+        } finally {
+            setProcessed(true);
+        }
     }
     
     static class LogPrefixPreservingCallbackAdapter implements PingResponseCallback {
@@ -352,6 +310,14 @@ final public class PingRequest implements Delayed {
         
         
         
+    }
+    
+    private void setProcessed(boolean processed) {
+        m_processed.set(processed);
+    }
+
+    public boolean isProcessed() {
+        return m_processed.get();
     }
 
 }

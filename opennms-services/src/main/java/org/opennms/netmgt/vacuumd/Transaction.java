@@ -46,7 +46,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.apache.log4j.Category;
 import org.opennms.core.utils.DBUtils;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.DataSourceFactory;
@@ -69,7 +68,7 @@ public class Transaction {
 	
 	public static void begin() {
         
-        log().debug("About to being Transaction for "+Thread.currentThread());
+        log().debug("About to begin Transaction for "+Thread.currentThread());
 		Transaction tx = s_threadTX.get();
 		if (tx != null) {
 			throw new IllegalStateException("Cannot begin a transaction.. one has already been begun");
@@ -79,7 +78,7 @@ public class Transaction {
 		
 	}
     
-    private static Category log() {
+    private static ThreadCategory log() {
         return ThreadCategory.getInstance(Transaction.class);
     }
 
@@ -104,7 +103,7 @@ public class Transaction {
         try {
             Transaction tx = getTX();
             tx.doEnd();
-            log().debug((tx.m_rollbackOnly ? "Rolled Back" : "Committed") + " transcation for "+Thread.currentThread());
+            log().debug((tx.m_rollbackOnly ? "Rolled Back" : "Committed") + " transaction for "+Thread.currentThread());
         } finally {
             clearTX();
         }
@@ -151,6 +150,9 @@ public class Transaction {
     private Connection doGetConnection(String dsName) throws SQLException {
         if (!m_connections.containsKey(dsName)) {
             DataSource ds = DataSourceFactory.getDataSource(dsName);
+            if (ds == null) {
+                throw new IllegalArgumentException("Could not find this datasource by using the DataSourceFactory: " + dsName);
+            }
             Connection conn = ds.getConnection();
             m_dbUtils.watch(conn);
             m_connections.put(dsName, conn);

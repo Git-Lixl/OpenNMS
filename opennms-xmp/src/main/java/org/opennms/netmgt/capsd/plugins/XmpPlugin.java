@@ -39,7 +39,6 @@ package org.opennms.netmgt.capsd.plugins;
 import java.net.InetAddress;
 import java.util.Map;
 
-import org.apache.log4j.Category;
 import org.apache.regexp.RE;
 import org.apache.regexp.RESyntaxException;
 import org.krupczak.Xmp.SocketOpts;
@@ -194,8 +193,8 @@ public final class XmpPlugin extends AbstractPlugin {
      * @return True if the protocol is supported by the address.
      */
     public boolean isProtocolSupported(InetAddress address, Map<String, Object> qualifiers) {
-        Category log = ThreadCategory.getInstance(getClass());
-        XmpConfig protoConfig = XmpConfigFactory.getXmpConfig();
+        ThreadCategory log = ThreadCategory.getInstance(getClass());
+        XmpConfig protoConfig = XmpConfigFactory.getInstance().getXmpConfig();
         XmpSession session;
         SocketOpts sockopts = new SocketOpts();
         // TODO how to apply timeout and retry to XMP operations?
