@@ -25,7 +25,7 @@ public class StatusDetails implements Serializable, IsSerializable, Comparable<S
 
     public Status getStatus() {
         if (m_status == null) {
-            m_status = Status.UNINITIALIZED;
+            m_status = Status.UNKNOWN;
         }
         return m_status;
     }
@@ -73,11 +73,19 @@ public class StatusDetails implements Serializable, IsSerializable, Comparable<S
         return new StatusDetails(Status.DOWN, reason);
     }
 
-    public static StatusDetails unknown(final String reason) {
-        return new StatusDetails(Status.UNKNOWN, reason);
+    public static StatusDetails disconnected(final String reason) {
+        return new StatusDetails(Status.DISCONNECTED, reason);
     }
 
-    public static StatusDetails uninitialized() {
-        return new StatusDetails(Status.UNINITIALIZED, null);
+    public static StatusDetails stopped(final String reason) {
+        return new StatusDetails(Status.STOPPED, reason);
+    }
+
+    public static StatusDetails unknown() {
+        return new StatusDetails(Status.UNKNOWN, null);
+    }
+
+    public static StatusDetails unknown(final String reason) {
+        return new StatusDetails(Status.UNKNOWN, reason);
     }
 }
