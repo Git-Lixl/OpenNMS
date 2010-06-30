@@ -36,6 +36,7 @@ import com.googlecode.gwtmapquest.transaction.MQALatLng;
 import com.googlecode.gwtmapquest.transaction.MQAPoi;
 import com.googlecode.gwtmapquest.transaction.MQAPoint;
 import com.googlecode.gwtmapquest.transaction.MQARectLL;
+import com.googlecode.gwtmapquest.transaction.MQAShapeCollection;
 import com.googlecode.gwtmapquest.transaction.MQATileMap;
 import com.googlecode.gwtmapquest.transaction.event.DblClickEvent;
 import com.googlecode.gwtmapquest.transaction.event.DblClickHandler;
@@ -104,11 +105,13 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
 
     private MQATileMap m_map;
 
-    private Map<String, MQAPoi> m_markers = new HashMap<String, MQAPoi>();
+    private Map<String, OnmsPoi> m_markers = new HashMap<String, OnmsPoi>();
 
     private HandlerManager m_eventBus;
     
     private ClickCounter m_clickCounter = new ClickCounter();
+
+    private Map<String, MQAShapeCollection<OnmsPoi>> m_markerLayers = new HashMap<String, MQAShapeCollection<OnmsPoi>>();
 
     interface MapQuestMapPanelUiBinder extends UiBinder<Widget, MapQuestMapPanel> {
     }
@@ -117,7 +120,7 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
         m_eventBus = eventBus;
         initWidget(uiBinder.createAndBindUi(this));
         m_map = MQATileMap.newInstance(getMapHolder().getElement());
-
+        
         initializeMap();
         
         m_map.addMoveEndHandler(new MoveEndHandler() {
@@ -189,10 +192,11 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
         }
     }
 
-    private MQAPoi createMarker(final GWTMarkerState marker) {
+    private OnmsPoi createMarker(final GWTMarkerState marker) {
         final MQALatLng latLng = toMQALatLng(marker.getLatLng());
         final MQAIcon icon = createIcon(marker);
-        final MQAPoi point = MQAPoi.newInstance(latLng, icon);
+        final OnmsPoi point = (OnmsPoi)OnmsPoi.newInstance(latLng, icon);
+        point.setStatus(marker.getStatus().name());
         point.setIconOffset(MQAPoint.newInstance(-16, -32));
         point.addClickHandler(new DefaultMarkerClickHandler(marker));
         point.setMaxZoomLevel(16);
@@ -240,14 +244,29 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
         m_map.setSize();
     }
 
-    public void placeMarker(final GWTMarkerState marker) {
-        MQAPoi m = getMarker(marker.getName());
+    public MQAShapeCollection<OnmsPoi> getLayer(final String layerName) {
+        if (layerName == null) return null;
+        MQAShapeCollection<OnmsPoi> points = m_markerLayers.get(layerName);
+        if (points == null) {
+            points = MQAShapeCollection.newInstance();
+            m_map.addShapeCollection(points);
+        }
+        return points;
+    }
 
+    public void placeMarker(final GWTMarkerState marker) {
+        OnmsPoi m = getMarker(marker.getName());
+
+        final MQAShapeCollection<OnmsPoi> newLayer = getLayer(marker.getStatus().name());
         if (m == null) {
             m = createMarker(marker);
             m_markers.put(marker.getName(), m);
-            m_map.addShape(m);
+            newLayer.add(m);
         } else {
+            Window.alert("Status = " + m.getStatus());
+            final MQAShapeCollection<OnmsPoi> oldLayer = getLayer(m.getStatus());
+            oldLayer.removeItem(m);
+            newLayer.add(m);
             updateMarker(m, marker);
         }
 
@@ -256,9 +275,11 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
     private void updateMarker(final MQAPoi m, final GWTMarkerState marker) {
         m.setIcon(createIcon(marker));
         m.setVisible(marker.isVisible());
+        final MQAShapeCollection<OnmsPoi> shapes = m_markerLayers.get(marker.getStatus().name());
+        shapes.add(m);
     }
 
-    private MQAPoi getMarker(final String name) {
+    private OnmsPoi getMarker(final String name) {
         return m_markers.get(name);
     }
 
@@ -272,6 +293,19 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
 
     public HandlerRegistration addClickHandler(ClickHandler handler) {
         return addDomHandler(handler, ClickEvent.getType());
+    }
+
+    private static final class OnmsPoi extends MQAPoi {
+        protected OnmsPoi() {
+        }
+
+        public final native void setStatus(final String status) /*-{
+            this.setValue('status', status);
+        }-*/;
+
+        public final native String getStatus() /*-{
+            return this.getValue('status');
+        }-*/;
     }
 
 }
