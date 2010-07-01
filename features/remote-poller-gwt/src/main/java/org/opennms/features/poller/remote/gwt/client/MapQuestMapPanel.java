@@ -171,7 +171,7 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
     }
 
     public void showLocationDetails(final String name, final String htmlTitle, final String htmlContent) {
-        final MQAPoi point = getMarker(name);
+        final OnmsPoi point = getMarker(name);
         if (point != null) {
             final MQALatLng latLng = point.getLatLng();
             m_map.setCenter(latLng);
@@ -272,7 +272,7 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
 
     }
 
-    private void updateMarker(final MQAPoi m, final GWTMarkerState marker) {
+    private void updateMarker(final OnmsPoi m, final GWTMarkerState marker) {
         m.setIcon(createIcon(marker));
         m.setVisible(marker.isVisible());
         final MQAShapeCollection<OnmsPoi> shapes = m_markerLayers.get(marker.getStatus().name());
