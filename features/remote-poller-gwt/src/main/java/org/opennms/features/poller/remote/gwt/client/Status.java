@@ -12,10 +12,10 @@ import java.io.Serializable;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 public enum Status implements Serializable, IsSerializable {
+    DOWN,
+    DISCONNECTED,
+    MARGINAL,
 	UP,
-	MARGINAL,
-	DOWN,
-	DISCONNECTED,
 	STOPPED,
 	UNKNOWN;
 

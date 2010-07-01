@@ -1,6 +1,9 @@
 package org.opennms.features.poller.remote.gwt.client;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.opennms.features.poller.remote.gwt.client.events.GWTMarkerClickedEvent;
@@ -112,13 +115,13 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
 
     private MQATileMap m_map;
 
-    private Map<String, OnmsPoi> m_markers = new HashMap<String, OnmsPoi>();
+    private Map<String, MQAPoi> m_markers = new HashMap<String, MQAPoi>();
 
     private HandlerManager m_eventBus;
     
     private ClickCounter m_clickCounter = new ClickCounter();
 
-    private Map<String, MQAShapeCollection<OnmsPoi>> m_markerLayers = new HashMap<String, MQAShapeCollection<OnmsPoi>>();
+    private Map<String, MQAShapeCollection<MQAPoi>> m_markerLayers = new HashMap<String, MQAShapeCollection<MQAPoi>>();
 
     interface MapQuestMapPanelUiBinder extends UiBinder<Widget, MapQuestMapPanel> {
     }
@@ -132,7 +135,7 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
         m_eventBus = eventBus;
         initWidget(uiBinder.createAndBindUi(this));
         m_map = MQATileMap.newInstance(getMapHolder().getElement());
-        
+
         initializeMap();
         
         m_map.addMoveEndHandler(new MoveEndHandler() {
@@ -188,7 +191,7 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
 
     /** {@inheritDoc} */
     public void showLocationDetails(final String name, final String htmlTitle, final String htmlContent) {
-        final OnmsPoi point = getMarker(name);
+        final MQAPoi point = getMarker(name);
         if (point != null) {
             final MQALatLng latLng = point.getLatLng();
             m_map.setCenter(latLng);
@@ -209,18 +212,29 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
         }
     }
 
-    private OnmsPoi createMarker(final GWTMarkerState marker) {
+    private MQAPoi createMarker(final GWTMarkerState marker) {
         final MQALatLng latLng = toMQALatLng(marker.getLatLng());
-        final MQAIcon icon = createIcon(marker);
-        final OnmsPoi point = (OnmsPoi)OnmsPoi.newInstance(latLng, icon);
-        point.setStatus(marker.getStatus().name());
-        point.setIconOffset(MQAPoint.newInstance(-16, -32));
+        final MQAPoi point = (MQAPoi)MQAPoi.newInstance(latLng);
+
+//        final MQAIcon icon = createIcon(marker);
+//        point.setIcon(icon);
+//        point.setIconOffset(MQAPoint.newInstance(-16, -32));
+
+        point.setHTMLContent(getIconHTML(marker));
+        point.setHTMLOffset(MQAPoint.newInstance(-16, -32));
+
+        point.setKey(marker.getStatus().name());
         point.addClickHandler(new DefaultMarkerClickHandler(marker));
         point.setMaxZoomLevel(16);
         point.setMinZoomLevel(1);
         point.setRolloverEnabled(true);
 
         return point;
+    }
+
+    private String getIconHTML(final GWTMarkerState marker) {
+        final int zIndex = 150 - marker.getStatus().ordinal();
+        return "<img src=\"" + marker.getImageURL() + "\" style=\"z-index:" + zIndex + "; position: absolute\" />";
     }
 
     private MQAIcon createIcon(final GWTMarkerState marker) {
@@ -267,11 +281,12 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
         m_map.setSize();
     }
 
-    public MQAShapeCollection<OnmsPoi> getLayer(final String layerName) {
+    public MQAShapeCollection<MQAPoi> getLayer(final String layerName) {
         if (layerName == null) return null;
-        MQAShapeCollection<OnmsPoi> points = m_markerLayers.get(layerName);
+        MQAShapeCollection<MQAPoi> points = m_markerLayers.get(layerName);
         if (points == null) {
             points = MQAShapeCollection.newInstance();
+            points.setDeclutter(true);
             m_map.addShapeCollection(points);
         }
         return points;
@@ -279,31 +294,30 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
 
     /** {@inheritDoc} */
     public void placeMarker(final GWTMarkerState marker) {
-        OnmsPoi m = getMarker(marker.getName());
+        MQAPoi m = getMarker(marker.getName());
 
-        final MQAShapeCollection<OnmsPoi> newLayer = getLayer(marker.getStatus().name());
+        final MQAShapeCollection<MQAPoi> newLayer = getLayer(marker.getStatus().name());
         if (m == null) {
             m = createMarker(marker);
             m_markers.put(marker.getName(), m);
             newLayer.add(m);
         } else {
-            Window.alert("Status = " + m.getStatus());
-            final MQAShapeCollection<OnmsPoi> oldLayer = getLayer(m.getStatus());
+            final MQAShapeCollection<MQAPoi> oldLayer = getLayer(m.getKey());
+            updateMarker(m, marker);
             oldLayer.removeItem(m);
             newLayer.add(m);
-            updateMarker(m, marker);
         }
 
     }
 
-    private void updateMarker(final OnmsPoi m, final GWTMarkerState marker) {
-        m.setIcon(createIcon(marker));
+    private void updateMarker(final MQAPoi m, final GWTMarkerState marker) {
+//        m.setIcon(createIcon(marker));
+        m.setHTMLContent(getIconHTML(marker));
         m.setVisible(marker.isVisible());
-        final MQAShapeCollection<OnmsPoi> shapes = m_markerLayers.get(marker.getStatus().name());
-        shapes.add(m);
+        m.setKey(marker.getStatus().name());
     }
 
-    private OnmsPoi getMarker(final String name) {
+    private MQAPoi getMarker(final String name) {
         return m_markers.get(name);
     }
 
@@ -325,18 +339,4 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
     public HandlerRegistration addClickHandler(ClickHandler handler) {
         return addDomHandler(handler, ClickEvent.getType());
     }
-
-    private static final class OnmsPoi extends MQAPoi {
-        protected OnmsPoi() {
-        }
-
-        public final native void setStatus(final String status) /*-{
-            this.setValue('status', status);
-        }-*/;
-
-        public final native String getStatus() /*-{
-            return this.getValue('status');
-        }-*/;
-    }
-
 }
