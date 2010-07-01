@@ -207,12 +207,6 @@ public class LocationMonitorState implements Serializable, IsSerializable {
 		return m_monitorsDisconnected.size();
 	}
 
-	private Collection<String> getServiceNames() {
-		final List<String> serviceNames = Collections.list(Collections.enumeration(m_serviceNames));
-		Collections.sort(serviceNames);
-		return serviceNames;
-	}
-
 	/**
 	 * <p>getServices</p>
 	 *

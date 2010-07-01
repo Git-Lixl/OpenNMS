@@ -1,9 +1,6 @@
 package org.opennms.features.poller.remote.gwt.client;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.opennms.features.poller.remote.gwt.client.events.GWTMarkerClickedEvent;
@@ -39,7 +36,6 @@ import com.googlecode.gwtmapquest.transaction.MQALatLng;
 import com.googlecode.gwtmapquest.transaction.MQAPoi;
 import com.googlecode.gwtmapquest.transaction.MQAPoint;
 import com.googlecode.gwtmapquest.transaction.MQARectLL;
-import com.googlecode.gwtmapquest.transaction.MQAShapeCollection;
 import com.googlecode.gwtmapquest.transaction.MQATileMap;
 import com.googlecode.gwtmapquest.transaction.event.DblClickEvent;
 import com.googlecode.gwtmapquest.transaction.event.DblClickHandler;
@@ -120,8 +116,6 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
     private HandlerManager m_eventBus;
     
     private ClickCounter m_clickCounter = new ClickCounter();
-
-    private Map<String, MQAShapeCollection<MQAPoi>> m_markerLayers = new HashMap<String, MQAShapeCollection<MQAPoi>>();
 
     interface MapQuestMapPanelUiBinder extends UiBinder<Widget, MapQuestMapPanel> {
     }
@@ -216,25 +210,16 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
         final MQALatLng latLng = toMQALatLng(marker.getLatLng());
         final MQAPoi point = (MQAPoi)MQAPoi.newInstance(latLng);
 
-//        final MQAIcon icon = createIcon(marker);
-//        point.setIcon(icon);
-//        point.setIconOffset(MQAPoint.newInstance(-16, -32));
+        final MQAIcon icon = createIcon(marker);
+        point.setIcon(icon);
+        point.setIconOffset(MQAPoint.newInstance(-16, -32));
 
-        point.setHTMLContent(getIconHTML(marker));
-        point.setHTMLOffset(MQAPoint.newInstance(-16, -32));
-
-        point.setKey(marker.getStatus().name());
         point.addClickHandler(new DefaultMarkerClickHandler(marker));
         point.setMaxZoomLevel(16);
         point.setMinZoomLevel(1);
         point.setRolloverEnabled(true);
 
         return point;
-    }
-
-    private String getIconHTML(final GWTMarkerState marker) {
-        final int zIndex = 150 - marker.getStatus().ordinal();
-        return "<img src=\"" + marker.getImageURL() + "\" style=\"z-index:" + zIndex + "; position: absolute\" />";
     }
 
     private MQAIcon createIcon(final GWTMarkerState marker) {
@@ -281,40 +266,23 @@ public class MapQuestMapPanel extends Composite implements MapPanel, HasDoubleCl
         m_map.setSize();
     }
 
-    public MQAShapeCollection<MQAPoi> getLayer(final String layerName) {
-        if (layerName == null) return null;
-        MQAShapeCollection<MQAPoi> points = m_markerLayers.get(layerName);
-        if (points == null) {
-            points = MQAShapeCollection.newInstance();
-            points.setDeclutter(true);
-            m_map.addShapeCollection(points);
-        }
-        return points;
-    }
-
     /** {@inheritDoc} */
     public void placeMarker(final GWTMarkerState marker) {
         MQAPoi m = getMarker(marker.getName());
 
-        final MQAShapeCollection<MQAPoi> newLayer = getLayer(marker.getStatus().name());
         if (m == null) {
             m = createMarker(marker);
             m_markers.put(marker.getName(), m);
-            newLayer.add(m);
+            m_map.addShape(m);
         } else {
-            final MQAShapeCollection<MQAPoi> oldLayer = getLayer(m.getKey());
             updateMarker(m, marker);
-            oldLayer.removeItem(m);
-            newLayer.add(m);
         }
 
     }
 
     private void updateMarker(final MQAPoi m, final GWTMarkerState marker) {
-//        m.setIcon(createIcon(marker));
-        m.setHTMLContent(getIconHTML(marker));
+        m.setIcon(createIcon(marker));
         m.setVisible(marker.isVisible());
-        m.setKey(marker.getStatus().name());
     }
 
     private MQAPoi getMarker(final String name) {
