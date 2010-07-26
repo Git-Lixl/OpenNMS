@@ -184,7 +184,6 @@ public class HttpMonitor extends IPv4Monitor {
                     log().warn("Connection exception for " + (iface.getAddress()) + ":" + determinePorts(httpClient.getParameters())[portIndex], e);
                     httpClient.setReason("HTTP connection exception on port: "+determinePorts(httpClient.getParameters())[portIndex]+": "+e.getMessage());
                 } catch (IOException e) {
-                    e.fillInStackTrace();
                     log().warn("IOException while polling address " + (iface.getAddress()), e);
                     httpClient.setReason("IOException while polling address: "+(iface.getAddress())+": "+e.getMessage());
                 } finally {

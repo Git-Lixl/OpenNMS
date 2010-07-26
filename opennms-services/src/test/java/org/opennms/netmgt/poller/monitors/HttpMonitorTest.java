@@ -383,6 +383,16 @@ public class HttpMonitorTest {
     @Test
     @JUnitHttpServer(port=10342, https=true)
     public void testBasicAuthenticationWithHttps() throws UnknownHostException {
+        callTestBasicAuthenticationWithHttps(false);
+    }
+
+    @Test
+    @JUnitHttpServer(port=10342, https=true)
+    public void testBasicAuthenticationWithHttpsIPv6() throws UnknownHostException {
+        callTestBasicAuthenticationWithHttps(true);
+    }
+
+    public void callTestBasicAuthenticationWithHttps(boolean preferIPv6) throws UnknownHostException {
 
         if (m_runTests == false) return;
 
@@ -391,7 +401,7 @@ public class HttpMonitorTest {
         PollStatus status = null;
 
         ServiceMonitor monitor = new HttpsMonitor();
-        MonitoredService svc = MonitorTestUtils.getMonitoredService(1, "localhost", "HTTP");
+        MonitoredService svc = MonitorTestUtils.getMonitoredService(1, "localhost", "HTTP", preferIPv6);
 
         p.setKey("port");
         p.setValue("10342");
@@ -431,6 +441,16 @@ public class HttpMonitorTest {
     @Test
     @JUnitHttpServer(port=10342)
     public void testWithUrl() throws UnknownHostException {
+        callTestWithUrl(false);
+    }
+
+    @Test
+    @JUnitHttpServer(port=10342)
+    public void testWithUrlIPv6() throws UnknownHostException {
+        callTestWithUrl(true);
+    }
+
+    public void callTestWithUrl(boolean preferIPv6) throws UnknownHostException {
         if (m_runTests == false) return;
 
         Map<String, Object> m = Collections.synchronizedMap(new TreeMap<String, Object>());
@@ -438,7 +458,7 @@ public class HttpMonitorTest {
         PollStatus status = null;
 
         ServiceMonitor monitor = new HttpMonitor();
-        MonitoredService svc = MonitorTestUtils.getMonitoredService(3, "localhost", "HTTP");
+        MonitoredService svc = MonitorTestUtils.getMonitoredService(3, "localhost", "HTTP", preferIPv6);
 
         p.setKey("host-name");
         p.setValue("localhost");
@@ -482,6 +502,16 @@ public class HttpMonitorTest {
     @Test
     @JUnitHttpServer(port=10342, vhosts={"opennms.com"})
     public void testPollInInvalidVirtualDomain() throws UnknownHostException {
+        callTestPollInInvalidVirtualDomain(false);
+    }
+
+    @Test
+    @JUnitHttpServer(port=10342, vhosts={"opennms.com"})
+    public void testPollInInvalidVirtualDomainIPv6() throws UnknownHostException {
+        callTestPollInInvalidVirtualDomain(true);
+    }
+
+    public void callTestPollInInvalidVirtualDomain(boolean preferIPv6) throws UnknownHostException {
 
         if (m_runTests == false) return;
 
@@ -489,7 +519,7 @@ public class HttpMonitorTest {
         Parameter p = new Parameter();
 
         ServiceMonitor monitor = new HttpMonitor();
-        MonitoredService svc = MonitorTestUtils.getMonitoredService(3, "localhost", "HTTP");
+        MonitoredService svc = MonitorTestUtils.getMonitoredService(3, "localhost", "HTTP", preferIPv6);
 
         p.setKey("port");
         p.setValue("10342");
@@ -521,7 +551,17 @@ public class HttpMonitorTest {
 
     @Test
     @JUnitHttpServer(port=10342, vhosts={"www.opennms.org"})
-    public void testPollInValidVirtualDomain() throws UnknownHostException {
+    public void testPollValidVirtualDomain() throws UnknownHostException {
+        callTestPollValidVirtualDomain(false);
+    }
+
+    @Test
+    @JUnitHttpServer(port=10342, vhosts={"www.opennms.org"})
+    public void testPollValidVirtualDomainIPv6() throws UnknownHostException {
+        callTestPollValidVirtualDomain(true);
+    }
+
+    public void callTestPollValidVirtualDomain(boolean preferIPv6) throws UnknownHostException {
 
         if (m_runTests == false) return;
 
@@ -529,7 +569,7 @@ public class HttpMonitorTest {
         Parameter p = new Parameter();
 
         ServiceMonitor monitor = new HttpMonitor();
-        MonitoredService svc = MonitorTestUtils.getMonitoredService(3, "localhost", "HTTP");
+        MonitoredService svc = MonitorTestUtils.getMonitoredService(3, "localhost", "HTTP", preferIPv6);
 
         p.setKey("port");
         p.setValue("10342");

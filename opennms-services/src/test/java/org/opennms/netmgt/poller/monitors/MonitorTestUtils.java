@@ -1,5 +1,6 @@
 package org.opennms.netmgt.poller.monitors;
 
+import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -18,6 +19,7 @@ public abstract class MonitorTestUtils {
         InetAddress[] addresses = InetAddress.getAllByName(hostname);
         for (InetAddress address : addresses) {
             myAddress = address;
+            if (!preferInet6Address && myAddress instanceof Inet4Address) break;
             if (preferInet6Address && myAddress instanceof Inet6Address) break;
         }
         if (preferInet6Address && !(myAddress instanceof Inet6Address)) {
