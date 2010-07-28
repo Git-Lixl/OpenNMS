@@ -43,12 +43,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.util.EntityUtils;
 import org.opennms.core.utils.Argument;
 import org.opennms.core.utils.MatchTable;
 import org.opennms.core.utils.PropertiesUtils;
@@ -80,12 +82,12 @@ public class HttpNotificationStrategy implements NotificationStrategy {
             return 1;
         }
         
-        HttpClient client = new HttpClient();
-        HttpMethod method = null;
-        NameValuePair[] posts = getPosts();
+        DefaultHttpClient client = new DefaultHttpClient();
+        HttpUriRequest method = null;
+        HttpParams posts = getPostArguments();
                 
         if (posts == null) {
-            method = new GetMethod(url);
+            method = new HttpGet(url);
             log().info("send: No \"post-\" arguments..., continuing with an HTTP GET using URL: "+url);
         } else {
             log().info("send: Found \"post-\" arguments..., continuing with an HTTP POST using URL: "+url);
@@ -93,24 +95,23 @@ public class HttpNotificationStrategy implements NotificationStrategy {
                 Argument arg = it.next();
                 log().debug("send: post argument: "+arg.getSwitch() +" = "+arg.getValue());
             }
-            method = new PostMethod(url);
-            ((PostMethod)method).addParameters(posts);
+            method = new HttpPost(url);
+            method.setParams(posts);
         }
 
         String contents = null;
         int statusCode = -1;
         try {
-            statusCode = client.executeMethod( method );
-            contents = method.getResponseBodyAsString();
+            HttpResponse response = client.execute(method);
+            statusCode = response.getStatusLine().getStatusCode();
+            contents = EntityUtils.toString(response.getEntity());
             log().info("send: Contents is: "+contents);
-        } catch (HttpException e) {
-            log().error("send: problem with HTTP post: "+e);
-            throw new RuntimeException("Problem with HTTP post: "+e.getMessage());
         } catch (IOException e) {
             log().error("send: IO problem with HTTP post/response: "+e);
             throw new RuntimeException("Problem with HTTP post: "+e.getMessage());
         } finally {
-            method.releaseConnection();
+            // Do we need to do any cleanup?
+            // method.releaseConnection();
         }
         
         doSql(contents);
@@ -144,19 +145,17 @@ public class HttpNotificationStrategy implements NotificationStrategy {
         }
     }
 
-    private NameValuePair[] getPosts() {
+    private HttpParams getPostArguments() {
         List<Argument> args = getArgsByPrefix("post-");
-        NameValuePair[] posts = new NameValuePair[args.size()];
-        int cnt = 0;
-        for (Iterator<Argument> it = args.iterator(); it.hasNext();) {
-            Argument arg = it.next();
+        HttpParams retval = new BasicHttpParams();
+        for (Argument arg : args) {
             String argSwitch = arg.getSwitch().substring("post-".length());
             if (arg.getValue() == null) {
                 arg.setValue("");
             }
-            posts[cnt++] = new NameValuePair(argSwitch, arg.getValue().equals("-tm") ? getMessage() : arg.getValue());
+            retval.setParameter(argSwitch, arg.getValue().equals("-tm") ? getMessage() : arg.getValue());
         }
-        return posts;
+        return retval;
     }
 
     private String getMessage() {
