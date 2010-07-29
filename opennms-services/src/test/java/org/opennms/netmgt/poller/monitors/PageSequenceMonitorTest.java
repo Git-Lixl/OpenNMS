@@ -143,17 +143,25 @@ public class PageSequenceMonitorTest {
 
     @Test
     public void testHttps() throws Exception {
+        System.out.println("************************************************************************");
+        System.out.println("****** BEGIN testLoginDynamicCredentialsTwice **************************");
+        System.out.println("************************************************************************");
+
 		m_params.put("page-sequence", "" +
 				"<?xml version=\"1.0\"?>" +
 				"<page-sequence>\n" + 
-				"  <page scheme=\"https\" path=\"/ws/eBayISAPI.dll?RegisterEnterInfo\" port=\"443\" user-agent=\"Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0)\" successMatch=\"Hi! Ready to register with eBay?\" virtual-host=\"support.opennms.com\"/>\n" + 
+				"  <page scheme=\"https\" path=\"/ws/eBayISAPI.dll?RegisterEnterInfo\" port=\"443\" user-agent=\"Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0)\" successMatch=\"Hi! Ready to register with eBay?\" virtual-host=\"scgi.ebay.com\"/>\n" + 
 				"</page-sequence>\n");
 		
 		
-        PollStatus googleStatus = m_monitor.poll(getHttpService("scgi.ebay.com"), m_params);
-        assertTrue("Expected available but was "+googleStatus+": reason = "+googleStatus.getReason(), googleStatus.isAvailable());
-        
-
+        try {
+            PollStatus googleStatus = m_monitor.poll(getHttpService("scgi.ebay.com"), m_params);
+            assertTrue("Expected available but was "+googleStatus+": reason = "+googleStatus.getReason(), googleStatus.isAvailable());
+        } finally {
+            System.out.println("************************************************************************");
+            System.out.println("******** END testLoginDynamicCredentialsTwice **************************");
+            System.out.println("************************************************************************");
+        }
     }
 
     @Test
@@ -247,7 +255,9 @@ public class PageSequenceMonitorTest {
                      "    <parameter key=\"j_username\" value=\"${ltr1}${ltr2}${ltr3}${ltr4}\"/>\n" + 
                      "    <parameter key=\"j_password\" value=\"${ltr1}${ltr2}${ltr3}${ltr4}\"/>\n" + 
                      "  </page>\n" + 
-                     "  <page virtual-host=\"localhost\" path=\"/opennms/spring_security_login?login_error\"  port=\"10342\" method=\"POST\" failureMatch=\"(?s)Log out\" failureMessage=\"Login should have Failed but did not\" successMatch=\"(?s)Your login attempt was not successful.*\" />\n" +
+                     "  <page virtual-host=\"localhost\" path=\"/opennms/spring_security_login\"  port=\"10342\" failureMatch=\"(?s)Log out\" failureMessage=\"Login should have Failed but did not\" successMatch=\"(?s)Your login attempt was not successful.*\">\n" +
+                     "    <parameter key=\"login_error\" value=\"\"/>\n" + 
+                     "  </page>\n" + 
                      "  <page path=\"/opennms/\" port=\"10342\" virtual-host=\"localhost\" successMatch=\"(?s)&lt;hea(.)&gt;&lt;titl(.)&gt;.*&lt;/for(.)&gt;&lt;/b(.)dy&gt;\">\n" +
                      "    <session-variable name=\"ltr1\" match-group=\"1\" />\n" +
                      "    <session-variable name=\"ltr2\" match-group=\"2\" />\n" +
@@ -261,10 +271,13 @@ public class PageSequenceMonitorTest {
                      "  <page virtual-host=\"localhost\" path=\"/opennms/events.html\" port=\"10342\" successMatch=\"Event Queries\" />\n" + 
                      "  <page virtual-host=\"localhost\" path=\"/opennms/j_spring_security_logout\" port=\"10342\" successMatch=\"Login with Username and Password\" />\n" + 
                      "</page-sequence>\n");
-             
+
+        try {
              PollStatus status = m_monitor.poll(getHttpService("localhost"), m_params);
              assertTrue("Expected available but was "+status+": reason = "+status.getReason(), status.isAvailable());
-             
+        } finally {
+            // Print some debug output if necessary
+        }
     }
     
     @Test
@@ -279,22 +292,26 @@ public class PageSequenceMonitorTest {
                 "    <session-variable name=\"ltr3\" match-group=\"3\" />\n" +
                 "    <session-variable name=\"ltr4\" match-group=\"4\" />\n" +
                 "  </page>\n" +
-                "  <page virtual-host=\"localhost\" path=\"/opennms/j_spring_security_check\" port=\"10342\" method=\"POST\" failureMatch=\"(?s)Your login attempt was not successful.*Reason: ([^&lt;]*)\" failureMessage=\"Login in Failed: ${1}\" successMatch=\"Log out\">\n" +
+                "  <page virtual-host=\"localhost\" path=\"/opennms/j_spring_security_check\" port=\"10342\" method=\"POST\" failureMatch=\"(?s)Your login attempt was not successful.*Reason: ([^&lt;]*)\" failureMessage=\"Login in Failed: ${1}\">\n" +
                 "    <parameter key=\"j_username\" value=\"${ltr1}${ltr2}${ltr3}${ltr4}\"/>\n" + 
                 "    <parameter key=\"j_password\" value=\"${ltr1}${ltr2}${ltr3}${ltr4}\"/>\n" + 
                 "  </page>\n" + 
+                "  <page virtual-host=\"localhost\" path=\"/opennms/\" port=\"10342\" successMatch=\"Log out\"/>\n" + 
                 "  <page virtual-host=\"localhost\" path=\"/opennms/events.html\" port=\"10342\" successMatch=\"Event Queries\" />\n" + 
                 "  <page virtual-host=\"localhost\" path=\"/opennms/j_spring_security_logout\" port=\"10342\" successMatch=\"Login with Username and Password\" />\n" + 
                 "</page-sequence>\n");
-        
+
         Map<String,Object> params = new HashMap<String,Object>();
         for (Entry<String,Object> entry : m_params.entrySet()) {
             params.put(entry.getKey(), entry.getValue());
         }
-        params.put("redirect-post", "true");
-        PollStatus status = m_monitor.poll(getHttpService("localhost"), params);
-        assertTrue("Expected available but was "+status+": reason = "+status.getReason(), status.isAvailable());
-        
+
+        try {
+            PollStatus status = m_monitor.poll(getHttpService("localhost"), params);
+            assertTrue("Expected available but was "+status+": reason = "+status.getReason(), status.isAvailable());
+        } finally {
+            // Print some debug output if necessary
+        }
     }
 
     @Test
