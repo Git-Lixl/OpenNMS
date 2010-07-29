@@ -10,6 +10,10 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 		</dependency>
 		<dependency>
@@ -27,6 +31,11 @@
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.opennms</groupId>
+			<artifactId>opennms-test</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 </project>

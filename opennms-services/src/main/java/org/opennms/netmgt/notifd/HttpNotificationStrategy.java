@@ -37,6 +37,7 @@
 package org.opennms.netmgt.notifd;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -44,12 +45,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.opennms.core.utils.Argument;
 import org.opennms.core.utils.MatchTable;
@@ -84,7 +86,7 @@ public class HttpNotificationStrategy implements NotificationStrategy {
         
         DefaultHttpClient client = new DefaultHttpClient();
         HttpUriRequest method = null;
-        HttpParams posts = getPostArguments();
+        List<NameValuePair> posts = getPostArguments();
                 
         if (posts == null) {
             method = new HttpGet(url);
@@ -96,7 +98,12 @@ public class HttpNotificationStrategy implements NotificationStrategy {
                 log().debug("send: post argument: "+arg.getSwitch() +" = "+arg.getValue());
             }
             method = new HttpPost(url);
-            method.setParams(posts);
+            try {
+                UrlEncodedFormEntity entity = new UrlEncodedFormEntity(posts, "UTF-8");
+                ((HttpPost)method).setEntity(entity);
+            } catch (UnsupportedEncodingException e) {
+                // Should never happen
+            }
         }
 
         String contents = null;
@@ -145,15 +152,15 @@ public class HttpNotificationStrategy implements NotificationStrategy {
         }
     }
 
-    private HttpParams getPostArguments() {
+    private List<NameValuePair> getPostArguments() {
         List<Argument> args = getArgsByPrefix("post-");
-        HttpParams retval = new BasicHttpParams();
+        List<NameValuePair> retval = new ArrayList<NameValuePair>();
         for (Argument arg : args) {
             String argSwitch = arg.getSwitch().substring("post-".length());
             if (arg.getValue() == null) {
                 arg.setValue("");
             }
-            retval.setParameter(argSwitch, arg.getValue().equals("-tm") ? getMessage() : arg.getValue());
+            retval.add(new BasicNameValuePair(argSwitch, arg.getValue().equals("-tm") ? getMessage() : arg.getValue()));
         }
         return retval;
     }

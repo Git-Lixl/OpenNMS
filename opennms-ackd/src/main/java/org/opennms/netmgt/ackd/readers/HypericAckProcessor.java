@@ -511,13 +511,13 @@ public class HypericAckProcessor implements AckProcessor {
 
             // Set a custom user-agent so that it's easy to tcpdump these requests
             httpMethod.getParams().setParameter(CoreProtocolPNames.USER_AGENT, "OpenNMS-Ackd.HypericAckProcessor");
-            // httpMethod.getParams().setParameter(ClientPNames.VIRTUAL_HOST, "localhost");
 
             // Parse the URI from the config so that we can deduce the username/password information
             String userinfo = null;
             try {
                 URI hypericUri = new URI(hypericUrl);
                 userinfo = hypericUri.getUserInfo();
+                // httpMethod.getParams().setParameter(ClientPNames.VIRTUAL_HOST, new HttpHost("localhost", hypericUri.getPort()));
             } catch (URISyntaxException e) {
                 log().warn("Could not parse URI to get username/password stanza: " + hypericUrl, e);
             }

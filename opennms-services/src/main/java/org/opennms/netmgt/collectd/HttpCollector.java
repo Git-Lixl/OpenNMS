@@ -47,6 +47,7 @@ import java.beans.PropertyVetoException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -62,18 +63,23 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
+import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
@@ -491,7 +497,10 @@ public class HttpCollector implements ServiceCollector {
 
         //review the httpclient code, looks like virtual host is checked for null
         //and if true, sets Host to the connection's host property
-        params.setParameter(ClientPNames.VIRTUAL_HOST, collectionSet.getUriDef().getUrl().getVirtualHost());
+        params.setParameter(
+                            ClientPNames.VIRTUAL_HOST, 
+                            new HttpHost(collectionSet.getUriDef().getUrl().getVirtualHost(), collectionSet.getUriDef().getUrl().getPort())
+        );
 
         return params;
     }
@@ -520,25 +529,45 @@ public class HttpCollector implements ServiceCollector {
 
     private static HttpPost buildPostMethod(final URI uri, final HttpCollectionSet collectionSet) {
         HttpPost method = new HttpPost(uri);
-        HttpParams postParams = buildRequestParameters(collectionSet);
-        method.setParams(postParams);
+        List<NameValuePair> postParams = buildRequestParameters(collectionSet);
+        try {
+            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(postParams, "UTF-8");
+            method.setEntity(entity);
+        } catch (UnsupportedEncodingException e) {
+            // Should never happen
+        }
         return method;
     }
 
     private static HttpGet buildGetMethod(final URI uri, final HttpCollectionSet collectionSet) {
-        HttpGet method = new HttpGet(uri);
-        HttpParams queryParams = buildRequestParameters(collectionSet);
-        method.setParams(queryParams);
+        URI uriWithQueryString = null;
+        List<NameValuePair> queryParams = buildRequestParameters(collectionSet);
+        try {
+            String query = URLEncodedUtils.format(queryParams, "UTF-8");
+            uriWithQueryString = new URI(
+                                         uri.getScheme(), 
+                                         uri.getUserInfo(), 
+                                         uri.getHost(), 
+                                         uri.getPort(), 
+                                         uri.getPath(), 
+                                         query, 
+                                         uri.getFragment()
+            );
+        } catch (URISyntaxException e) {
+            log().warn(e.getMessage(), e);
+            return new HttpGet(uri);
+        }
+        HttpGet method = new HttpGet(uriWithQueryString);
         return method;
     }
 
-    private static HttpParams buildRequestParameters(final HttpCollectionSet collectionSet) {
-        HttpParams retval = new BasicHttpParams();
+    private static List<NameValuePair> buildRequestParameters(final HttpCollectionSet collectionSet) {
+        List<NameValuePair> retval = new ArrayList<NameValuePair>();
         if (collectionSet.getUriDef().getUrl().getParameters() == null)
             return retval;
         List<Parameter> parameters = collectionSet.getUriDef().getUrl().getParameters().getParameterCollection();
         for (Parameter p : parameters) {
-            retval.setParameter(p.getKey(), p.getValue());
+            retval.add(new BasicNameValuePair(p.getKey(), p.getValue()));
         }
         return retval;
     }

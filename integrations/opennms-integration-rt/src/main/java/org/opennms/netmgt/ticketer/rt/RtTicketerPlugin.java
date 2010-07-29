@@ -32,19 +32,25 @@
 package org.opennms.netmgt.ticketer.rt;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpParams;
@@ -100,12 +106,17 @@ public class RtTicketerPlugin implements Plugin {
 
         } else {
 
-            HttpUriRequest post = new HttpPost(m_configDao.getBaseURL() + "/REST/1.0/ticket/" + ticketId);
+            HttpPost post = new HttpPost(m_configDao.getBaseURL() + "/REST/1.0/ticket/" + ticketId);
 
-            HttpParams params = new BasicHttpParams();
-            params.setParameter("user", m_user);
-            params.setParameter("pass", m_password);
-            post.setParams(params);
+            List<NameValuePair> params = new ArrayList<NameValuePair>();
+            params.add(new BasicNameValuePair("user", m_user));
+            params.add(new BasicNameValuePair("pass", m_password));
+            try {
+                UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params, "UTF-8");
+                post.setEntity(entity);
+            } catch (UnsupportedEncodingException e) {
+                // Should never happen
+            }
 
             try {
                 HttpResponse response = getClient().execute(post);
@@ -211,12 +222,18 @@ public class RtTicketerPlugin implements Plugin {
 
         String updateString = new String("Status: " + openNMSToRTState(ticket.getState()));
 
-        HttpParams params = new BasicHttpParams();
-        params.setParameter("content", updateString);
-        params.setParameter("user", m_user);
-        params.setParameter("pass", m_password);
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("content", updateString));
+        params.add(new BasicNameValuePair("user", m_user));
+        params.add(new BasicNameValuePair("pass", m_password));
         try {
-            post.setParams(params);
+            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params, "UTF-8");
+            post.setEntity(entity);
+        } catch (UnsupportedEncodingException e) {
+            // Should never happen
+        }
+
+        try {
             HttpResponse response = getClient().execute(post);
             if(response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 throw new PluginException("Received a non 200 response code from the server");
@@ -262,13 +279,18 @@ public class RtTicketerPlugin implements Plugin {
         contentBuilder.append("Subject: " + newTicket.getSummary() + "\n");
         contentBuilder.append("text: " + rtTicketText + "\n");
 
-        HttpUriRequest post = new HttpPost(m_configDao.getBaseURL() + "/REST/1.0/edit");
+        HttpPost post = new HttpPost(m_configDao.getBaseURL() + "/REST/1.0/edit");
 
-        HttpParams params = new BasicHttpParams();
-        params.setParameter("content", contentBuilder.toString());
-        params.setParameter("user", m_user);
-        params.setParameter("pass", m_password);
-        post.setParams(params);
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("content", contentBuilder.toString()));
+        params.add(new BasicNameValuePair("user", m_user));
+        params.add(new BasicNameValuePair("pass", m_password));
+        try {
+            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params, "UTF-8");
+            post.setEntity(entity);
+        } catch (UnsupportedEncodingException e) {
+            // Should never happen
+        }
 
         try {
             HttpResponse response = getClient().execute(post);

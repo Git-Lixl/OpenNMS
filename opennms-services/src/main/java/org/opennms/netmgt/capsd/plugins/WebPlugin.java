@@ -80,7 +80,7 @@ public class WebPlugin extends AbstractPlugin {
             httpClient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, ParameterMap.getKeyedInteger(map,"timeout", DEFAULT_TIMEOUT));
             httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, ParameterMap.getKeyedInteger(map,"timeout", DEFAULT_TIMEOUT));
             httpClient.getParams().setParameter(CoreProtocolPNames.USER_AGENT, ParameterMap.getKeyedString(map,"user-agent",DEFAULT_USER_AGENT));
-            httpClient.getParams().setParameter(ClientPNames.VIRTUAL_HOST, ParameterMap.getKeyedString(map,"virtual-host",null));
+            httpClient.getParams().setParameter(ClientPNames.VIRTUAL_HOST, new HttpHost(ParameterMap.getKeyedString(map,"virtual-host",null), ParameterMap.getKeyedInteger(map, "port", DEFAULT_PORT)));
 
             if(ParameterMap.getKeyedBoolean(map, "http-1.0", false)) {
                 httpClient.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_0);
