@@ -69,6 +69,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.message.BasicNameValuePair;
@@ -304,12 +305,12 @@ public class PageSequenceMonitor extends IPv4Monitor {
         public String toString() {
             StringBuffer retval = new StringBuffer();
             retval.append("HttpPage { ");
-                retval.append("page.host => ").append(m_page.getHost()).append(", ");
-                retval.append("page.port => ").append(m_page.getPort()).append(", ");
-                retval.append("page.path => ").append(m_page.getPath()).append(", ");
-                retval.append("page.successMatch => '").append(m_page.getSuccessMatch()).append("', ");
-                retval.append("page.failureMatch => '").append(m_page.getFailureMatch()).append("', ");
-                retval.append("page.locationMatch => '").append(m_page.getLocationMatch()).append("'");
+            retval.append("page.host => ").append(m_page.getHost()).append(", ");
+            retval.append("page.port => ").append(m_page.getPort()).append(", ");
+            retval.append("page.path => ").append(m_page.getPath()).append(", ");
+            retval.append("page.successMatch => '").append(m_page.getSuccessMatch()).append("', ");
+            retval.append("page.failureMatch => '").append(m_page.getFailureMatch()).append("', ");
+            retval.append("page.locationMatch => '").append(m_page.getLocationMatch()).append("'");
             retval.append(" }");
             return retval.toString();
         }
@@ -327,6 +328,15 @@ public class PageSequenceMonitor extends IPv4Monitor {
                     method.getParams().setParameter(CoreProtocolPNames.USER_AGENT, getUserAgent());
                 } else {
                     method.getParams().setParameter(CoreProtocolPNames.USER_AGENT, "OpenNMS PageSequenceMonitor (Service name: " + svc.getSvcName() + ")");
+                }
+
+                String disableVerification = m_page.getDisableHostVerification();
+                if (Boolean.parseBoolean(disableVerification)) {
+                    if (!"https".equals(uri.getScheme())) {
+                        log().warn("disable-host-verification is set on a non-SSL URI (which is unnecessary): " + uri.toString());
+                    }
+                    // @see http://hc.apache.org/httpcomponents-client-4.0.1/tutorial/html/connmgmt.html
+                    ((SSLSocketFactory)client.getConnectionManager().getSchemeRegistry().getScheme("https").getSocketFactory()).setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
                 }
 
                 if (m_parms.size() > 0) {

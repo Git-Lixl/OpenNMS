@@ -159,6 +159,22 @@ public class PageSequenceMonitorTest {
     }
 
     @Test
+    public void testHttpsWithoutHostValidation() throws Exception {
+        m_params.put("page-sequence", "" +
+                "<?xml version=\"1.0\"?>" +
+                "<page-sequence>\n" + 
+                "  <page scheme=\"https\" path=\"/ws/eBayISAPI.dll?RegisterEnterInfo\" port=\"443\" user-agent=\"Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0)\" successMatch=\"http://include.ebaystatic.com/\" virtual-host=\"scgi.ebay.com\" disable-host-verification=\"true\"/>\n" + 
+                "</page-sequence>\n");
+        
+        try {
+            PollStatus googleStatus = m_monitor.poll(getHttpService("scgi.ebay.com"), m_params);
+            assertTrue("Expected available but was "+googleStatus+": reason = "+googleStatus.getReason(), googleStatus.isAvailable());
+        } finally {
+            // Print some debug output if necessary
+        }
+    }
+
+    @Test
     @JUnitHttpServer(port=10342, webapps=@Webapp(context="/opennms", path="src/test/resources/loginTestWar"))
 	public void testLogin() throws Exception {
         
