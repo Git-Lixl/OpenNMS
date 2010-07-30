@@ -60,10 +60,8 @@ import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.ProtocolException;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.RedirectHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -78,7 +76,6 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
@@ -233,14 +230,11 @@ public class PageSequenceMonitor extends IPv4Monitor {
 
     public interface PageSequenceHttpUriRequest extends HttpUriRequest {
         public void setQueryParameters(List<NameValuePair> parms);
-        // public void setFollowRedirects(boolean follow);
     }
 
     public static class PageSequenceHttpPost extends HttpPost implements PageSequenceHttpUriRequest {
         public PageSequenceHttpPost(URI uri) {
             super(uri);
-            // Do not follow redirects by default for POSTs
-            // this.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
         }
 
         public void setQueryParameters(List<NameValuePair> parms) {
@@ -251,17 +245,6 @@ public class PageSequenceMonitor extends IPv4Monitor {
                 // Should never happen
             }
         }
-
-        /*
-        public void setFollowRedirects(final boolean follow) {
-            this.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, follow);
-        }
-
-        public boolean getFollowRedirects() {
-            boolean handleRedirects = this.getParams().getBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
-            return handleRedirects;
-        }
-        */
     }
 
     public static class PageSequenceHttpGet extends HttpGet implements PageSequenceHttpUriRequest {
@@ -291,16 +274,6 @@ public class PageSequenceMonitor extends IPv4Monitor {
             }
             this.setURI(uriWithQueryString);
         }
-
-        /*
-        public void setFollowRedirects(final boolean follow) {
-            // GET should always follow redirects
-        }
-
-        public boolean getFollowRedirects() {
-            return true;
-        }
-        */
     }
 
     public static class HttpPage {
@@ -359,35 +332,6 @@ public class PageSequenceMonitor extends IPv4Monitor {
                 if (m_parms.size() > 0) {
                     method.setQueryParameters(expandParms(svc));
                 }
-
-                /*
-                String redirectPost = m_parentSequence.getParameters().get("redirect-post");
-                if (redirectPost != null) {
-                    if (Boolean.valueOf(redirectPost)) {
-                        final RedirectHandler handler = client.getRedirectHandler();
-                        client.setRedirectHandler(new RedirectHandler() {
-                            /**
-                             * Delegate to the existing {@link RedirectHandler}
-                             * /
-                            public URI getLocationURI(HttpResponse response, HttpContext context) throws ProtocolException {
-                                return handler.getLocationURI(response, context);
-                            }
-
-                            /**
-                             * Always return true when deciding whether or not to redirect
-                             * /
-                            public boolean isRedirectRequested(HttpResponse response, HttpContext context) {
-                                int code = response.getStatusLine().getStatusCode();
-                                if (new HttpResponseRange("300-399").contains(code)) {
-                                    return true;
-                                } else {
-                                    return false;
-                                }
-                            }
-                        });
-                    }
-                }
-                */
 
                 if (m_page.getUserInfo() != null) {
                     String userInfo = m_page.getUserInfo();

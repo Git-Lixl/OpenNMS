@@ -95,11 +95,11 @@ public class PageSequenceMonitorTest {
 	}
     
     protected MonitoredService getHttpService(String hostname) throws Exception {
-    	return getHttpService(hostname, InetAddress.getByName(hostname).getHostAddress());
+    	return getHttpService(hostname, InetAddress.getByName(hostname));
     }
     
-    protected MonitoredService getHttpService(String hostname, String ip) throws Exception {
-    	MonitoredService svc = new MockMonitoredService(1, hostname, ip, "HTTP");
+    protected MonitoredService getHttpService(String hostname, InetAddress inetAddress) throws Exception {
+    	MonitoredService svc = new MockMonitoredService(1, hostname, inetAddress, "HTTP");
     	m_monitor.initialize(svc);
     	return svc;
     }
@@ -122,7 +122,7 @@ public class PageSequenceMonitorTest {
         setPageSequenceParam(null);
         m_params.put("timeout", "500");
         m_params.put("retries", "0");
-		PollStatus notLikely = m_monitor.poll(getHttpService("bogus", "1.1.1.1"), m_params);
+		PollStatus notLikely = m_monitor.poll(getHttpService("bogus", InetAddress.getByName("1.1.1.1")), m_params);
 		assertTrue("should not be available", notLikely.isUnavailable());
     }
 
@@ -143,14 +143,10 @@ public class PageSequenceMonitorTest {
 
     @Test
     public void testHttps() throws Exception {
-        System.out.println("************************************************************************");
-        System.out.println("****** BEGIN testLoginDynamicCredentialsTwice **************************");
-        System.out.println("************************************************************************");
-
 		m_params.put("page-sequence", "" +
 				"<?xml version=\"1.0\"?>" +
 				"<page-sequence>\n" + 
-				"  <page scheme=\"https\" path=\"/ws/eBayISAPI.dll?RegisterEnterInfo\" port=\"443\" user-agent=\"Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0)\" successMatch=\"Hi! Ready to register with eBay?\" virtual-host=\"scgi.ebay.com\"/>\n" + 
+				"  <page scheme=\"https\" host=\"scgi.ebay.com\" path=\"/ws/eBayISAPI.dll?RegisterEnterInfo\" port=\"443\" user-agent=\"Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0)\" successMatch=\"http://include.ebaystatic.com/\"/>\n" + 
 				"</page-sequence>\n");
 		
 		
@@ -158,9 +154,7 @@ public class PageSequenceMonitorTest {
             PollStatus googleStatus = m_monitor.poll(getHttpService("scgi.ebay.com"), m_params);
             assertTrue("Expected available but was "+googleStatus+": reason = "+googleStatus.getReason(), googleStatus.isAvailable());
         } finally {
-            System.out.println("************************************************************************");
-            System.out.println("******** END testLoginDynamicCredentialsTwice **************************");
-            System.out.println("************************************************************************");
+            // Print some debug output if necessary
         }
     }
 

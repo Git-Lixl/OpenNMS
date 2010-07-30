@@ -25,7 +25,7 @@ public abstract class MonitorTestUtils {
         if (preferInet6Address && !(myAddress instanceof Inet6Address)) {
             throw new UnknownHostException("No IPv6 address could be found for the hostname: " + hostname);
         }
-        return new MockMonitoredService(nodeId, hostname, myAddress.getHostAddress(), svcName);
+        return new MockMonitoredService(nodeId, hostname, myAddress, svcName);
     }
 
 }
