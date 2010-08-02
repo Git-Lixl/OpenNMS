@@ -497,10 +497,13 @@ public class HttpCollector implements ServiceCollector {
 
         //review the httpclient code, looks like virtual host is checked for null
         //and if true, sets Host to the connection's host property
-        params.setParameter(
-                            ClientPNames.VIRTUAL_HOST, 
-                            new HttpHost(collectionSet.getUriDef().getUrl().getVirtualHost(), collectionSet.getUriDef().getUrl().getPort())
-        );
+        String virtualHost = collectionSet.getUriDef().getUrl().getVirtualHost();
+        if (virtualHost != null) {
+            params.setParameter(
+                                ClientPNames.VIRTUAL_HOST, 
+                                new HttpHost(virtualHost, collectionSet.getUriDef().getUrl().getPort())
+            );
+        }
 
         return params;
     }
