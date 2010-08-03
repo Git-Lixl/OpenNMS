@@ -332,11 +332,12 @@ public class PageSequenceMonitor extends IPv4Monitor {
 
                 String disableVerification = m_page.getDisableHostVerification();
                 if (Boolean.parseBoolean(disableVerification)) {
-                    if (!"https".equals(uri.getScheme())) {
-                        log().warn("disable-host-verification is set on a non-SSL URI (which is unnecessary): " + uri.toString());
-                    }
                     // @see http://hc.apache.org/httpcomponents-client-4.0.1/tutorial/html/connmgmt.html
                     ((SSLSocketFactory)client.getConnectionManager().getSchemeRegistry().getScheme("https").getSocketFactory()).setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+                } else {
+                    if (!"https".equals(uri.getScheme())) {
+                        log().warn("disable-host-verification is enabled on a non-SSL URI (which has no effect): " + uri.toString());
+                    }
                 }
 
                 if (m_parms.size() > 0) {

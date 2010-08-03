@@ -39,6 +39,7 @@
 package org.opennms.netmgt.poller.monitors;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.net.InetAddress;
 import java.util.Collections;
@@ -159,13 +160,42 @@ public class PageSequenceMonitorTest {
     }
 
     @Test
+    public void testHttpsWithHostValidation() throws Exception {
+        m_params.put("page-sequence", "" +
+                "<?xml version=\"1.0\"?>" +
+                "<page-sequence>\n" + 
+                "  <page scheme=\"https\" path=\"/ws/eBayISAPI.dll?RegisterEnterInfo\" port=\"443\" user-agent=\"Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0)\" successMatch=\"http://include.ebaystatic.com/\" virtual-host=\"scgi.ebay.com\" disable-host-verification=\"false\"/>\n" + 
+                "</page-sequence>\n");
+        
+        try {
+            m_monitor.poll(getHttpService("scgi.ebay.com"), m_params);
+            fail("Expected SSL host mismatch error");
+        } catch (Throwable e) {
+            assertTrue("Wrong exception caught: " + e.getClass().getName(), e instanceof AssertionError);
+        }
+    }
+
+    @Test
     public void testHttpsWithoutHostValidation() throws Exception {
         m_params.put("page-sequence", "" +
                 "<?xml version=\"1.0\"?>" +
                 "<page-sequence>\n" + 
-                "  <page scheme=\"https\" path=\"/ws/eBayISAPI.dll?RegisterEnterInfo\" port=\"443\" user-agent=\"Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0)\" successMatch=\"http://include.ebaystatic.com/\" virtual-host=\"scgi.ebay.com\" disable-host-verification=\"true\"/>\n" + 
+                "  <page scheme=\"https\" path=\"/ws/eBayISAPI.dll?RegisterEnterInfo\" port=\"443\" user-agent=\"Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0)\" successMatch=\"http://include.ebaystatic.com/\" virtual-host=\"scgi.ebay.com\"/>\n" + 
                 "</page-sequence>\n");
         
+        try {
+            PollStatus googleStatus = m_monitor.poll(getHttpService("scgi.ebay.com"), m_params);
+            assertTrue("Expected available but was "+googleStatus+": reason = "+googleStatus.getReason(), googleStatus.isAvailable());
+        } finally {
+            // Print some debug output if necessary
+        }
+
+        m_params.put("page-sequence", "" +
+                     "<?xml version=\"1.0\"?>" +
+                     "<page-sequence>\n" + 
+                     "  <page scheme=\"https\" path=\"/ws/eBayISAPI.dll?RegisterEnterInfo\" port=\"443\" user-agent=\"Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0)\" successMatch=\"http://include.ebaystatic.com/\" virtual-host=\"scgi.ebay.com\" disable-host-verification=\"true\"/>\n" + 
+                     "</page-sequence>\n");
+
         try {
             PollStatus googleStatus = m_monitor.poll(getHttpService("scgi.ebay.com"), m_params);
             assertTrue("Expected available but was "+googleStatus+": reason = "+googleStatus.getReason(), googleStatus.isAvailable());
