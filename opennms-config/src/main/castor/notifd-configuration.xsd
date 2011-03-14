@@ -57,8 +57,7 @@
   <element name="auto-acknowledge">
     <complexType>
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="1" name="match"
-                 type="string"/>
+        <element maxOccurs="unbounded" minOccurs="1" name="match" type="string"/>
       </sequence>
 
       <attribute default="RESOLVED: " name="resolution-prefix" type="string"/>

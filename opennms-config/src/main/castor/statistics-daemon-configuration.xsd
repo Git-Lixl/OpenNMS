@@ -156,21 +156,21 @@
         </annotation>
       </attribute>
 
-      <attribute name="status" use="required">
-        <annotation>
-          <documentation>status of the report; report is generated only if
-          on</documentation>
-        </annotation>
-
-        <simpleType>
-          <restriction base="string">
-            <enumeration value="on"/>
-            <enumeration value="off"/>
-          </restriction>
-        </simpleType>
-      </attribute>
+		<attribute use="required" ref="this:status" />
     </complexType>
   </element>
+
+  <attribute name="status">
+    <annotation>
+      <documentation>status of the report; report is generated only if on</documentation>
+    </annotation>
+    <simpleType>
+      <restriction base="string">
+        <enumeration value="on"/>
+        <enumeration value="off"/>
+      </restriction>
+    </simpleType>
+  </attribute>
 
   <element name="parameter">
     <annotation>

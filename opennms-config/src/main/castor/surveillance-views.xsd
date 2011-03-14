@@ -8,18 +8,20 @@
     <annotation><documentation>Level element containing surveillance view definitions</documentation></annotation>
     <complexType>
       <sequence>
-        <element name="views">
-          <complexType>
-            <sequence>
-              <element ref="this:view" minOccurs="0" maxOccurs="unbounded"></element>
-            </sequence>
-          </complexType>
-        </element>
+        <element minOccurs="0" maxOccurs="1" ref="this:views" />
       </sequence>
       <attribute name="default-view" type="string" use="optional" default="default"/>
     </complexType>
   </element>
   
+  <element name="views">
+    <complexType>
+      <sequence>
+        <element ref="this:view" minOccurs="0" maxOccurs="unbounded"></element>
+      </sequence>
+    </complexType>
+  </element>
+
   <element name="view">
     <complexType>
       <sequence>

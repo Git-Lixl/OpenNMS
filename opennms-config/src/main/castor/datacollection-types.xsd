@@ -10,6 +10,50 @@
     <documentation>XML Schema for types used by datacollection files. Version: $Id$. </documentation>
   </annotation>
 
+  <element name="persistenceSelectorStrategy">
+    <annotation>
+      <documentation>Selects a PersistenceSelectorStrategy that decides which data is persisted and which is not.</documentation>
+    </annotation>
+    <complexType>
+      <sequence>
+        <element maxOccurs="unbounded" minOccurs="0" ref="dc:parameter">
+          <annotation>
+            <documentation>list of parameters to pass to the strategy
+            for strategy-specific configuration information</documentation>
+          </annotation>
+        </element>
+      </sequence>
+
+      <attribute name="class" type="string" use="required">
+        <annotation>
+          <documentation>Java class name of the class that implements the PersistenceSelectorStrategy.</documentation>
+        </annotation>
+      </attribute>
+    </complexType>
+  </element>
+
+  <element name="storageStrategy">
+    <annotation>
+      <documentation>Selects a StorageStrategy that decides where data is stored.</documentation>
+    </annotation>
+    <complexType>
+      <sequence>
+        <element maxOccurs="unbounded" minOccurs="0" ref="dc:parameter">
+          <annotation>
+            <documentation>list of parameters to pass to the strategy
+            for strategy-specific configuration information</documentation>
+          </annotation>
+        </element>
+      </sequence>
+    
+      <attribute name="class" type="string" use="required">
+        <annotation>
+          <documentation>Java class name of the class that implements the StorageStrategy.</documentation>
+        </annotation>
+      </attribute>
+    </complexType>
+  </element>
+
   <element name="resourceType">
     <annotation>
       <documentation>a custom resource type</documentation>
@@ -17,49 +61,8 @@
 
     <complexType>
       <sequence>
-        <element maxOccurs="1" minOccurs="1" name="persistenceSelectorStrategy">
-          <annotation>
-            <documentation>Selects a PersistenceSelectorStrategy that decides which data is persisted and which is not.</documentation>
-          </annotation>
-          <complexType>
-            <sequence>
-              <element maxOccurs="unbounded" minOccurs="0" ref="dc:parameter">
-                <annotation>
-                  <documentation>list of parameters to pass to the strategy
-                  for strategy-specific configuration information</documentation>
-                </annotation>
-              </element>
-            </sequence>
-
-            <attribute name="class" type="string" use="required">
-	          <annotation>
-	            <documentation>Java class name of the class that implements the PersistenceSelectorStrategy.</documentation>
-	          </annotation>
-	        </attribute>
-	      </complexType>
-        </element>
-
-        <element maxOccurs="1" minOccurs="1" name="storageStrategy">
-          <annotation>
-            <documentation>Selects a StorageStrategy that decides where data is stored.</documentation>
-          </annotation>
-          <complexType>
-            <sequence>
-              <element maxOccurs="unbounded" minOccurs="0" ref="dc:parameter">
-                <annotation>
-                  <documentation>list of parameters to pass to the strategy
-                  for strategy-specific configuration information</documentation>
-                </annotation>
-              </element>
-            </sequence>
-          
-            <attribute name="class" type="string" use="required">
-	          <annotation>
-	            <documentation>Java class name of the class that implements the StorageStrategy.</documentation>
-	          </annotation>
-	        </attribute>
-	      </complexType>
-        </element>
+        <element maxOccurs="1" minOccurs="1" ref="dc:persistenceSelectorStrategy" />
+        <element maxOccurs="1" minOccurs="1" ref="dc:storageStrategy" />
       </sequence>
 
       <attribute name="name" type="string" use="required">

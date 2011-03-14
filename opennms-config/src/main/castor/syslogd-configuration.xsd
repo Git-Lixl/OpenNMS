@@ -123,48 +123,81 @@
         </complexType>
     </element>
 
+    <element name="match">
+        <annotation>
+            <documentation>String against which to match the message; interpreted
+                           as a substring or a regular expression according to the
+                           value of the "type" attribute
+            </documentation>
+        </annotation>
+        <complexType>
+            <attribute name="type" use="required">
+                <annotation>
+                    <documentation>Whether to interpret this match string as a simple
+                                   substring or as a regular expression
+                    </documentation>
+                </annotation>
+                <simpleType>
+                    <restriction base="string">
+                        <pattern value="(substr|regex)"/>
+                    </restriction>
+                </simpleType>
+            </attribute>
+            <attribute name="expression" type="string" use="required">
+                <annotation>
+                    <documentation>The match expression</documentation>
+                </annotation>
+            </attribute>
+            <attribute name="default-parameter-mapping" type="boolean" use="optional" default="true">
+            	<annotation>
+            		<documentation>Whether to do the default mappings of matching-groups to
+            					   event parameters (group 1 -> group1, etc.) if this is a
+            					   regex match.
+				   </documentation>
+            	</annotation>
+            </attribute>
+        </complexType>
+    </element>
+
+    <element name="parameter-assignment">
+    	<annotation>
+    		<documentation>For regex matches, assign the value of a matching group
+    		               to a named event parameter
+    		</documentation>
+    	</annotation>
+    	<complexType>
+    		<attribute name="matching-group" use="required">
+    			<annotation>
+    				<documentation>The number of the matching group from the regex
+    				               whose value will be assigned. Group 0 always refers
+    				               to the entire string matched by the expression. If
+    				               the referenced group does not exist, the empty string
+    				               will be assigned.
+    				</documentation>
+   				</annotation>
+   				<simpleType>
+								<restriction base="int">
+									<minInclusive value="0" />
+								</restriction>
+   				</simpleType>
+    		</attribute>
+    		<attribute name="parameter-name" type="string" use="required">
+    			<annotation>
+    				<documentation>The name of the event parameter to which the named
+    				               matching group's value will be assigned
+    				</documentation>
+    			</annotation>
+    		</attribute>
+    	</complexType>
+    </element>
+
     <element name="ueiMatch">
         <annotation>
             <documentation>List of Strings to UEI matches</documentation>
         </annotation>
         <complexType>
             <sequence>
-                <element maxOccurs="1" minOccurs="1" name="match">
-                    <annotation>
-                        <documentation>String against which to match the message; interpreted
-                                       as a substring or a regular expression according to the
-                                       value of the "type" attribute
-                        </documentation>
-                    </annotation>
-                    <complexType>
-                        <attribute name="type" use="required">
-                            <annotation>
-                                <documentation>Whether to interpret this match string as a simple
-                                               substring or as a regular expression
-                                </documentation>
-                            </annotation>
-                            <simpleType>
-                                <restriction base="string">
-                                    <pattern value="(substr|regex)"/>
-                                </restriction>
-                            </simpleType>
-                        </attribute>
-                        <attribute name="expression" type="string" use="required">
-                            <annotation>
-                                <documentation>The match expression</documentation>
-                            </annotation>
-                        </attribute>
-                        <attribute name="default-parameter-mapping" type="boolean" use="optional" default="true">
-                        	<annotation>
-                        		<documentation>Whether to do the default mappings of matching-groups to
-                        					   event parameters (group 1 -> group1, etc.) if this is a
-                        					   regex match.
-           					   </documentation>
-                        	</annotation>
-                        </attribute>
-                    </complexType>
-                </element>
-
+                <element ref="this:match" maxOccurs="1" minOccurs="1" />
                 <element maxOccurs="1" minOccurs="1" name="uei"
                          type="string">
                     <annotation>
@@ -172,37 +205,8 @@
                     </annotation>
                 </element>
                 
-                <element maxOccurs="unbounded" minOccurs="0" name="parameter-assignment">
-                	<annotation>
-                		<documentation>For regex matches, assign the value of a matching group
-                		               to a named event parameter
-                		</documentation>
-                	</annotation>
-                	<complexType>
-                		<attribute name="matching-group" use="required">
-                			<annotation>
-                				<documentation>The number of the matching group from the regex
-                				               whose value will be assigned. Group 0 always refers
-                				               to the entire string matched by the expression. If
-                				               the referenced group does not exist, the empty string
-                				               will be assigned.
-                				</documentation>
-               				</annotation>
-               				<simpleType>
-								<restriction base="int">
-									<minInclusive value="0" />
-								</restriction>
-               				</simpleType>
-                		</attribute>
-                		<attribute name="parameter-name" type="string" use="required">
-                			<annotation>
-                				<documentation>The name of the event parameter to which the named
-                				               matching group's value will be assigned
-                				</documentation>
-                			</annotation>
-                		</attribute>
-                	</complexType>
-                </element>
+					 <element ref="this:parameter-assignment" maxOccurs="unbounded" minOccurs="0" />
+
             </sequence>
         </complexType>
     </element>
@@ -224,30 +228,7 @@
         </annotation>
         <complexType>
             <sequence>
-                <element maxOccurs="1" minOccurs="1" name="match">
-                    <annotation>
-                        <documentation>The match expression</documentation>
-                    </annotation>
-                    <complexType>
-                        <attribute name="type" use="required">
-                            <annotation>
-                                <documentation>Whether to interpret this match string as a simple
-                                               substring or as a regular expression
-                                </documentation>
-                            </annotation>
-                            <simpleType>
-                                <restriction base="string">
-                                    <pattern value="(substr|regex)"/>
-                                </restriction>
-                            </simpleType>
-                        </attribute>
-                        <attribute name="expression" type="string" use="required">
-                            <annotation>
-                                <documentation>The match expression</documentation>
-                            </annotation>
-                        </attribute>
-                    </complexType>
-                </element>
+                <element maxOccurs="1" minOccurs="1" ref="this:match" />
             </sequence>
         </complexType>
     </element>

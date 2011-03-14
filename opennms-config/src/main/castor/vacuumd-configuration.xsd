@@ -25,53 +25,11 @@
           </annotation>
         </element>
 
-        <element name="automations">
-          <complexType>
-            <sequence>
-              <element ref="this:automation" maxOccurs="unbounded" minOccurs="0" />
-            </sequence>
-          </complexType>
-        </element>
-
-        <element name="triggers">
-          <annotation>
-            <documentation>A collection of triggers</documentation>
-          </annotation>
-
-          <complexType>
-            <sequence>
-              <element ref="this:trigger" maxOccurs="unbounded" minOccurs="0" />
-            </sequence>
-          </complexType>
-        </element>
-
-        <element name="actions">
-          <annotation>
-            <documentation>A collection of actions</documentation>
-          </annotation>
-
-          <complexType>
-            <sequence>
-              <element ref="this:action" maxOccurs="unbounded" minOccurs="0" />
-            </sequence>
-          </complexType>
-        </element>
-
-        <element name="auto-events">
-          <complexType>
-            <sequence>
-              <element ref="this:auto-event" maxOccurs="unbounded" minOccurs="0" />
-            </sequence>
-          </complexType>
-        </element>
-
-        <element name="action-events">
-          <complexType>
-            <sequence>
-              <element ref="this:action-event"  minOccurs="0" maxOccurs="unbounded"/>
-            </sequence>
-          </complexType>
-        </element>
+		  <element ref="this:automations" maxOccurs="1" minOccurs="0" />
+		  <element ref="this:triggers" maxOccurs="1" minOccurs="0" />
+		  <element ref="this:actions" maxOccurs="1" minOccurs="0" />
+		  <element ref="this:auto-events" maxOccurs="1" minOccurs="0" />
+		  <element ref="this:action-events" minOccurs="0" maxOccurs="1" />
         
       </sequence>
 
@@ -87,6 +45,14 @@
           </restriction>
         </simpleType>      
       </attribute>
+    </complexType>
+  </element>
+
+  <element name="automations">
+    <complexType>
+      <sequence>
+        <element ref="this:automation" maxOccurs="unbounded" minOccurs="0" />
+      </sequence>
     </complexType>
   </element>
 
@@ -143,6 +109,18 @@
     </complexType>
   </element>
 
+  <element name="triggers">
+    <annotation>
+      <documentation>A collection of triggers</documentation>
+    </annotation>
+
+    <complexType>
+      <sequence>
+        <element ref="this:trigger" maxOccurs="unbounded" minOccurs="0" />
+      </sequence>
+    </complexType>
+  </element>
+
   <element name="trigger">
     <annotation>
       <documentation>A query to the database with a resultset used for
@@ -175,6 +153,18 @@
     </complexType>
   </element>
 
+  <element name="actions">
+    <annotation>
+      <documentation>A collection of actions</documentation>
+    </annotation>
+
+    <complexType>
+      <sequence>
+        <element ref="this:action" maxOccurs="unbounded" minOccurs="0" />
+      </sequence>
+    </complexType>
+  </element>
+
   <element name="action">
     <annotation>
       <documentation>actions modify the database based on results of a
@@ -190,6 +180,14 @@
 
       <attribute name="data-source" type="string" default="opennms" />
 
+    </complexType>
+  </element>
+
+  <element name="auto-events">
+    <complexType>
+      <sequence>
+        <element ref="this:auto-event" maxOccurs="unbounded" minOccurs="0" />
+      </sequence>
     </complexType>
   </element>
 
@@ -223,6 +221,14 @@
     </complexType>
   </element>
   
+  <element name="action-events">
+    <complexType>
+      <sequence>
+        <element ref="this:action-event"  minOccurs="0" maxOccurs="unbounded"/>
+      </sequence>
+    </complexType>
+  </element>
+
   <element name="action-event">
     <complexType>
       <sequence>

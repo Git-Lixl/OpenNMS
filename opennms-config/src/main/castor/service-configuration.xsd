@@ -72,17 +72,20 @@
 
       <attribute default="0" name="pass" type="int" use="optional"/>
 
-      <attribute name="at" use="required">
-        <simpleType>
-          <restriction base="string">
-            <enumeration value="start"/>
-            <enumeration value="stop"/>
-            <enumeration value="status"/>
-          </restriction>
-        </simpleType>
-      </attribute>
+		<attribute use="required" ref="this:at" />
+
     </complexType>
   </element>
+
+  <attribute name="at">
+    <simpleType>
+      <restriction base="string">
+        <enumeration value="start"/>
+        <enumeration value="stop"/>
+        <enumeration value="status"/>
+      </restriction>
+    </simpleType>
+  </attribute>
 
   <element name="argument">
     <complexType>

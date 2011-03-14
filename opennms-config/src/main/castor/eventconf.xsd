@@ -57,6 +57,14 @@
     </complexType>
   </element>
 
+  <element name="uei">
+    <complexType>
+      <simpleContent>
+        <extension base="string"/>
+      </simpleContent>
+    </complexType>
+  </element>
+
   <element name="event">
     <complexType>
       <sequence>

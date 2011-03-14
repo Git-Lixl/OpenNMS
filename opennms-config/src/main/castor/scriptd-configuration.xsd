@@ -72,14 +72,16 @@
     </complexType>
   </element>
 
+  <element name="uei">
+    <complexType>
+      <attribute name="name" type="string" use="required"/>
+    </complexType>
+  </element>
+
   <element name="event-script">
     <complexType mixed="true">
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="0" name="uei">
-          <complexType>
-            <attribute name="name" type="string" use="required"/>
-          </complexType>
-        </element>
+        <element ref="this:uei" maxOccurs="unbounded" minOccurs="0" />
       </sequence>
 
       <attribute name="language" type="string" use="required"/>

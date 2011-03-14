@@ -49,5 +49,10 @@ genDir.eachDirRecurse { dir ->
     dir.eachFileMatch( ~/.*Descriptor\.java/) { file ->
         subst(file, /java\.lang\.Class getJavaClass/, /java\.lang\.Class<?> getJavaClass/)
     }
+    dir.eachFileMatch( ~/.*\.java/) { file ->
+        subst(file, /^public class /, "@SuppressWarnings(\"all\") public class ");
+        subst(file, /^public abstract class /, "@SuppressWarnings(\"all\") public abstract class ");
+        subst(file, /^.SuppressWarnings."serial"./, "");
+    }
     
 }

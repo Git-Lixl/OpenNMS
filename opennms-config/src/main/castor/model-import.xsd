@@ -91,27 +91,28 @@
         </annotation>
       </attribute>
       <attribute name="managed" type="boolean" use="optional" default="true" />
-      <attribute name="snmp-primary">
-        <annotation>
-          <documentation>
-            This attribute is used by OpenNMS to control SNMP data collection. P - Primary interface. This is the "preferred interface used in data collection.
-            S - Secondary interface. This interface meets all the qualifications to be a primary interface. C - Collectable interface. This is a manual setting
-            controlled by the user. N - Not a collectable interface. This is a manual setting controlled by the user.
-
-            If the snmpStorageFlag is set to "all", then all interfaces not set to 'N' will be collected. If the snmpStorageFlag is set to "select", then all
-            interfaces with 'P|S|C' will be collected. If the snmpStorageFlag is set to "primary", then only the interfaces set to 'P' will be collected.
-          </documentation>
-        </annotation>
-        <simpleType>
-          <restriction base="string">
-            <enumeration value="P"/>
-            <enumeration value="S"/>
-            <enumeration value="N"/>
-          </restriction>
-        </simpleType>
-      </attribute>
+		<attribute ref="this:snmp-primary" />
     </complexType>
   </element>
+  <attribute name="snmp-primary">
+    <annotation>
+      <documentation>
+        This attribute is used by OpenNMS to control SNMP data collection. P - Primary interface. This is the "preferred interface used in data collection.
+        S - Secondary interface. This interface meets all the qualifications to be a primary interface. C - Collectable interface. This is a manual setting
+        controlled by the user. N - Not a collectable interface. This is a manual setting controlled by the user.
+
+        If the snmpStorageFlag is set to "all", then all interfaces not set to 'N' will be collected. If the snmpStorageFlag is set to "select", then all
+        interfaces with 'P|S|C' will be collected. If the snmpStorageFlag is set to "primary", then only the interfaces set to 'P' will be collected.
+      </documentation>
+    </annotation>
+    <simpleType>
+      <restriction base="string">
+        <enumeration value="P"/>
+        <enumeration value="S"/>
+        <enumeration value="N"/>
+      </restriction>
+    </simpleType>
+  </attribute>
   <element name="monitored-service">
     <annotation>
       <documentation>
