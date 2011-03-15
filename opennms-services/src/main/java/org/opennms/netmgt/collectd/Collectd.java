@@ -913,7 +913,7 @@ public class Collectd extends AbstractServiceDaemon implements
             Value parmValue = null;
             String parmContent = null;
 
-            Enumeration<Parm> parmEnum = parms.enumerateParm();
+            Enumeration<? extends Parm> parmEnum = parms.enumerateParm();
             while (parmEnum.hasMoreElements()) {
                 Parm parm = parmEnum.nextElement();
                 parmName = parm.getParmName();
@@ -1171,7 +1171,7 @@ public class Collectd extends AbstractServiceDaemon implements
             Value parmValue = null;
             String parmContent = null;
 
-            Enumeration<Parm> parmEnum = parms.enumerateParm();
+            Enumeration<? extends Parm> parmEnum = parms.enumerateParm();
             while (parmEnum.hasMoreElements()) {
                 Parm parm = parmEnum.nextElement();
                 parmName = parm.getParmName();

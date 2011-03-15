@@ -855,7 +855,7 @@ abstract public class PollerConfigManager implements PollerConfig {
      *
      * @return a {@link java.util.Enumeration} object.
      */
-    public Enumeration<Package> enumeratePackage() {
+    public Enumeration<? extends Package> enumeratePackage() {
         getReadLock().lock();
         try {
             return getConfiguration().enumeratePackage();
@@ -869,7 +869,7 @@ abstract public class PollerConfigManager implements PollerConfig {
      *
      * @return a {@link java.util.Enumeration} object.
      */
-    public Enumeration<Monitor> enumerateMonitor() {
+    public Enumeration<? extends Monitor> enumerateMonitor() {
         getReadLock().lock();
         try {
             return getConfiguration().enumerateMonitor();

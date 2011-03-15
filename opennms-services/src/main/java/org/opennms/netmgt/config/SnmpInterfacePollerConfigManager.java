@@ -448,7 +448,7 @@ abstract public class SnmpInterfacePollerConfigManager implements SnmpInterfaceP
             }
         }
 
-        Enumeration<String> eurl = pkg.enumerateIncludeUrl();
+        Enumeration<? extends String> eurl = pkg.enumerateIncludeUrl();
         while (!has_specific && eurl.hasMoreElements()) {
             has_specific = interfaceInUrl(iface, eurl.nextElement());
         }
@@ -577,7 +577,7 @@ abstract public class SnmpInterfacePollerConfigManager implements SnmpInterfaceP
      *
      * @return a {@link java.util.Enumeration} object.
      */
-    public Enumeration<Package> enumeratePackage() {
+    public Enumeration<? extends Package> enumeratePackage() {
         return getConfiguration().enumeratePackage();
     }
     

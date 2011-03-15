@@ -781,7 +781,7 @@ public class RancidProvisioningAdapter extends SimpleQueuedProvisioningAdapter i
     public void handleRancidGroupProcessingCompleted(Event e) {
         log().debug("handleRancidGroupProcessingCompleted: get Event uei/id: " + e.getUei() + "/" + e.getDbid());
         if (e.getParms() != null ) {
-            Iterator<Parm> ite = e.getParms().iterateParm();
+            Iterator<? extends Parm> ite = e.getParms().iterateParm();
             while (ite.hasNext()) {
                 Parm parm = ite.next();
                 log().debug("handleRancidGroupProcessingCompleted: parm name: " + parm.getParmName());

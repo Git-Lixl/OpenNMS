@@ -134,7 +134,7 @@ public interface LinkdConfig {
      *
      * @return a {@link java.util.Enumeration} object.
      */
-    Enumeration<Package> enumeratePackage();
+    Enumeration<? extends Package> enumeratePackage();
     
     /**
      * <p>getPackage</p>

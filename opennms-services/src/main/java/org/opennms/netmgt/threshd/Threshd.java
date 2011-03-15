@@ -223,7 +223,7 @@ public final class Threshd extends AbstractServiceDaemon {
     }
 
     private void initializeThresholders() {
-        Enumeration<Thresholder> eiter = m_threshdConfig.getConfiguration().enumerateThresholder();
+        Enumeration<? extends Thresholder> eiter = m_threshdConfig.getConfiguration().enumerateThresholder();
         while (eiter.hasMoreElements()) {
             Thresholder thresholder = eiter.nextElement();
             try {
@@ -394,7 +394,7 @@ public final class Threshd extends AbstractServiceDaemon {
      *            otheriwse
      */
     void scheduleService(int nodeId, String ipAddress, String svcName, boolean existing) {
-        Enumeration<org.opennms.netmgt.config.threshd.Package> epkgs = m_threshdConfig.getConfiguration().enumeratePackage();
+        Enumeration<? extends org.opennms.netmgt.config.threshd.Package> epkgs = m_threshdConfig.getConfiguration().enumeratePackage();
         
         // Compare interface/service pair against each threshd package
         // For each match, create new ThresholdableService object and

@@ -415,7 +415,7 @@ public class Vulnscand extends AbstractServiceDaemon {
 
 		// If the status of the daemon is "true" (meaning "on")...
 		if (config.getStatus()) {
-			Enumeration<ScanLevel> scanLevels = config.enumerateScanLevel();
+			Enumeration<? extends ScanLevel> scanLevels = config.enumerateScanLevel();
 
 			while (scanLevels.hasMoreElements()) {
 				ScanLevel scanLevel = scanLevels.nextElement();

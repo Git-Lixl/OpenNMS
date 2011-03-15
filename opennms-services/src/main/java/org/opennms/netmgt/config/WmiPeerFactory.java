@@ -430,7 +430,7 @@ public class WmiPeerFactory extends PeerFactory {
 
         // Attempt to locate the node
         //
-        Enumeration<Definition> edef = m_config.enumerateDefinition();
+        Enumeration<? extends Definition> edef = m_config.enumerateDefinition();
         DEFLOOP: while (edef.hasMoreElements()) {
             Definition def = edef.nextElement();
 

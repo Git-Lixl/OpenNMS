@@ -489,7 +489,7 @@ public abstract class EventUtils {
         if (parms == null)
             throw new InsufficientInformationException("parameter " + parmName + " required but but no parms are available.");
 
-        Enumeration<Parm> parmEnum = parms.enumerateParm();
+        Enumeration<? extends Parm> parmEnum = parms.enumerateParm();
         while (parmEnum.hasMoreElements()) {
             Parm parm = parmEnum.nextElement();
             if (parmName.equals(parm.getParmName())) {

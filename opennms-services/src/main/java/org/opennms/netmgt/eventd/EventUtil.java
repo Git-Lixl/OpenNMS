@@ -621,7 +621,7 @@ public final class EventUtil {
         	StringBuffer ret = new StringBuffer();
 
         	Parms parms = event.getParms();
-        	Enumeration<Parm> en = parms.enumerateParm();
+        	Enumeration<? extends Parm> en = parms.enumerateParm();
         	while (en.hasMoreElements()) {
         		Parm evParm = en.nextElement();
         		Value parmValue = evParm.getValue();
@@ -663,7 +663,7 @@ public final class EventUtil {
          //Fixed a bug here, used to check "parm" for null (before this method was created during refactoring)
          // pretty parms was the intented variable to test.
         	if (parms != null) {
-        		Enumeration<Parm> en = parms.enumerateParm();
+        		Enumeration<? extends Parm> en = parms.enumerateParm();
         		while (en.hasMoreElements()) {
         			Parm evParm = en.nextElement();
         			String parmName = evParm.getParmName();
@@ -700,7 +700,7 @@ public final class EventUtil {
 
         	Parms parms = event.getParms();
         	if (parms != null) {
-        		Enumeration<Parm> en = parms.enumerateParm();
+        		Enumeration<? extends Parm> en = parms.enumerateParm();
         		while (en.hasMoreElements()) {
         			Parm evParm = en.nextElement();
         			String parmName = evParm.getParmName();
@@ -897,7 +897,7 @@ public final class EventUtil {
 
         	Parms parms = event.getParms();
         	if (parms != null) {
-        		Enumeration<Parm> en = parms.enumerateParm();
+        		Enumeration<? extends Parm> en = parms.enumerateParm();
         		while (en.hasMoreElements()) {
         			Parm evParm = en.nextElement();
         			String parmName = evParm.getParmName();

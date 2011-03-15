@@ -300,7 +300,7 @@ public abstract class EventUtils {
         if (parms == null)
             return defaultValue;
     
-        Enumeration<Parm> parmEnum = parms.enumerateParm();
+        Enumeration<? extends Parm> parmEnum = parms.enumerateParm();
         while (parmEnum.hasMoreElements()) {
             Parm parm = parmEnum.nextElement();
             if (parmName.equals(parm.getParmName())) {
@@ -481,7 +481,7 @@ public abstract class EventUtils {
         
         StringBuffer b = new StringBuffer();
         b.append("Parms:\n");
-        for (Enumeration<Parm> e = parms.enumerateParm(); e.hasMoreElements(); ) {
+        for (Enumeration<? extends Parm> e = parms.enumerateParm(); e.hasMoreElements(); ) {
             Parm p = e.nextElement();
             b.append(" ");
             b.append(p.getParmName());

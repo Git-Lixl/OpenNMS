@@ -99,7 +99,7 @@ public class MockPollerConfigTest extends TestCase {
         assertTrue(m_pollerConfig.isInterfaceInPackage("192.168.1.1", pkg));
         assertFalse(m_pollerConfig.isInterfaceInPackage("192.168.1.7", pkg));
 
-        Enumeration<Service> svcs = pkg.enumerateService();
+        Enumeration<? extends Service> svcs = pkg.enumerateService();
         assertNotNull(svcs);
         
         int svcCount = 0;

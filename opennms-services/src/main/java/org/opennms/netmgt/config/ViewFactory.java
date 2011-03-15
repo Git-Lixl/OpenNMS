@@ -408,7 +408,7 @@ public class ViewFactory {
         // clear out the internal structure and reload it
         m_views.clear();
 
-        Enumeration<View> en = views.enumerateView();
+        Enumeration<? extends View> en = views.enumerateView();
         while (en.hasMoreElements()) {
             View curView = en.nextElement();
             m_views.put(curView.getName(), curView);

@@ -76,7 +76,7 @@ public class CollectdConfig {
 
     private void createPackageObjects(String localServer, boolean verifyServer) {
         m_packages = new LinkedList<CollectdPackage>();
-        Enumeration<Package> pkgEnum = m_config.enumeratePackage();
+        Enumeration<? extends Package> pkgEnum = m_config.enumeratePackage();
         while (pkgEnum.hasMoreElements()) {
             Package pkg = pkgEnum.nextElement();
             m_packages.add(new CollectdPackage(pkg, localServer, verifyServer));

@@ -170,7 +170,7 @@ AbstractCastorConfigDao<DatacollectionConfig, DatacollectionConfig> implements D
         // an empty Mask list matches ALL IP addresses (default is INCLUDE).
         //
         List<SystemDef> systemList = new ArrayList<SystemDef>();
-        Enumeration<SystemDef> e = collection.getSystems().enumerateSystemDef();
+        Enumeration<? extends SystemDef> e = collection.getSystems().enumerateSystemDef();
 
         SystemDef system = null;
         while (e.hasMoreElements()) {

@@ -170,7 +170,7 @@ public final class EventExpander implements EventProcessor, InitializingBean {
     private org.opennms.netmgt.xml.event.Mask transform(org.opennms.netmgt.xml.eventconf.Mask src) {
         org.opennms.netmgt.xml.event.Mask dest = new org.opennms.netmgt.xml.event.Mask();
 
-        Enumeration<Maskelement> en = src.enumerateMaskelement();
+        Enumeration<? extends Maskelement> en = src.enumerateMaskelement();
         while (en.hasMoreElements()) {
             org.opennms.netmgt.xml.eventconf.Maskelement confme = en.nextElement();
 
@@ -658,7 +658,7 @@ public final class EventExpander implements EventProcessor, InitializingBean {
                 e.removeAllAutoaction();
             }
             if (e.getAutoactionCount() == 0 && econf.getAutoactionCount() > 0) {
-                Enumeration<org.opennms.netmgt.xml.eventconf.Autoaction> eter = econf.enumerateAutoaction();
+                Enumeration<? extends org.opennms.netmgt.xml.eventconf.Autoaction> eter = econf.enumerateAutoaction();
                 while (eter.hasMoreElements()) {
                     org.opennms.netmgt.xml.eventconf.Autoaction src = eter.nextElement();
                     e.addAutoaction(transform(src));
@@ -671,7 +671,7 @@ public final class EventExpander implements EventProcessor, InitializingBean {
                 e.removeAllOperaction();
             }
             if (e.getOperactionCount() == 0 && econf.getOperactionCount() > 0) {
-                Enumeration<org.opennms.netmgt.xml.eventconf.Operaction> eter = econf.enumerateOperaction();
+                Enumeration<? extends org.opennms.netmgt.xml.eventconf.Operaction> eter = econf.enumerateOperaction();
                 while (eter.hasMoreElements()) {
                     org.opennms.netmgt.xml.eventconf.Operaction src = eter.nextElement();
                     e.addOperaction(transform(src));
@@ -711,7 +711,7 @@ public final class EventExpander implements EventProcessor, InitializingBean {
                 e.removeAllForward();
             }
             if (e.getForwardCount() == 0 && econf.getForwardCount() > 0) {
-                Enumeration<org.opennms.netmgt.xml.eventconf.Forward> eter = econf.enumerateForward();
+                Enumeration<? extends org.opennms.netmgt.xml.eventconf.Forward> eter = econf.enumerateForward();
                 while (eter.hasMoreElements()) {
                     org.opennms.netmgt.xml.eventconf.Forward src = eter.nextElement();
                     e.addForward(transform(src));
@@ -724,7 +724,7 @@ public final class EventExpander implements EventProcessor, InitializingBean {
                 e.removeAllScript();
             }
             if (e.getScriptCount() == 0 && econf.getScriptCount() > 0) {
-                Enumeration<org.opennms.netmgt.xml.eventconf.Script> eter = econf.enumerateScript();
+                Enumeration<? extends org.opennms.netmgt.xml.eventconf.Script> eter = econf.enumerateScript();
                 while (eter.hasMoreElements()) {
                     org.opennms.netmgt.xml.eventconf.Script src = eter.nextElement();
                     e.addScript(transform(src));

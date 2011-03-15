@@ -278,7 +278,7 @@ public final class CategoryFactory implements CatFactory {
         try {
             boolean deleted = false;
     
-            final Enumeration<Categorygroup> enumCG = m_config.enumerateCategorygroup();
+            final Enumeration<? extends Categorygroup> enumCG = m_config.enumerateCategorygroup();
             while (enumCG.hasMoreElements()) {
                 final Categorygroup cg = enumCG.nextElement();
                 if (cg.getName().equals(groupname)) {
@@ -306,7 +306,7 @@ public final class CategoryFactory implements CatFactory {
     public boolean addCategory(final String groupname, final Category cat) {
         getWriteLock().lock();
         try {
-            Enumeration<Categorygroup> enumCG = m_config.enumerateCategorygroup();
+            Enumeration<? extends Categorygroup> enumCG = m_config.enumerateCategorygroup();
             while (enumCG.hasMoreElements()) {
                 Categorygroup cg = enumCG.nextElement();
                 if (cg.getName().equals(groupname)) {
@@ -335,7 +335,7 @@ public final class CategoryFactory implements CatFactory {
     public boolean replaceCategory(final String groupname, final Category cat) {
         getWriteLock().lock();
         try {
-            final Enumeration<Categorygroup> enumCG = m_config.enumerateCategorygroup();
+            final Enumeration<? extends Categorygroup> enumCG = m_config.enumerateCategorygroup();
             while (enumCG.hasMoreElements()) {
                 final Categorygroup cg = enumCG.nextElement();
                 if (cg.getName().equals(groupname)) {
@@ -373,7 +373,7 @@ public final class CategoryFactory implements CatFactory {
     public boolean deleteCategory(final String groupname, final Category cat) {
         getWriteLock().lock();
         try {
-            final Enumeration<Categorygroup> enumCG = m_config.enumerateCategorygroup();
+            final Enumeration<? extends Categorygroup> enumCG = m_config.enumerateCategorygroup();
             while (enumCG.hasMoreElements()) {
                 final Categorygroup cg = enumCG.nextElement();
                 if (cg.getName().equals(groupname)) {
@@ -402,14 +402,14 @@ public final class CategoryFactory implements CatFactory {
     public boolean deleteCategory(final String groupname, final String catlabel) {
         getWriteLock().lock();
         try {
-            final Enumeration<Categorygroup> enumCG = m_config.enumerateCategorygroup();
+            final Enumeration<? extends Categorygroup> enumCG = m_config.enumerateCategorygroup();
             while (enumCG.hasMoreElements()) {
                 final Categorygroup cg = enumCG.nextElement();
                 if (cg.getName().equals(groupname)) {
                     // get categories and delete
                     final Categories cats = cg.getCategories();
     
-                    final Enumeration<Category> enumCat = cats.enumerateCategory();
+                    final Enumeration<? extends Category> enumCat = cats.enumerateCategory();
                     while (enumCat.hasMoreElements()) {
                         final Category cat = enumCat.nextElement();
                         if (cat.getLabel().equals(catlabel)) {

@@ -611,7 +611,7 @@ public class Poller extends AbstractServiceDaemon {
     }
 
     private Package findPackageForService(String ipAddr, String serviceName) {
-        Enumeration<Package> en = m_pollerConfig.enumeratePackage();
+        Enumeration<? extends Package> en = m_pollerConfig.enumeratePackage();
         Package lastPkg = null;
         
         while (en.hasMoreElements()) {

@@ -329,7 +329,7 @@ public interface PollerConfig {
      *
      * @return a {@link java.util.Enumeration} object.
      */
-    public Enumeration<Package> enumeratePackage();
+    public Enumeration<? extends Package> enumeratePackage();
     
     /**
      * <p>getPackage</p>

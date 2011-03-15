@@ -330,7 +330,7 @@ public final class JMXDataCollectionConfigFactory {
         
         Mbeans beans = collection.getMbeans();
         
-        Enumeration<Mbean> en = beans.enumerateMbean();
+        Enumeration<? extends Mbean> en = beans.enumerateMbean();
         while (en.hasMoreElements()) {
             List<Attrib> list = new ArrayList<Attrib>();
             Mbean mbean = en.nextElement();
@@ -372,7 +372,7 @@ public final class JMXDataCollectionConfigFactory {
             log().warn("no collection named '" + cName + "' was found");
         } else {
             Mbeans beans = collection.getMbeans();
-            Enumeration<Mbean> en = beans.enumerateMbean();
+            Enumeration<? extends Mbean> en = beans.enumerateMbean();
             while (en.hasMoreElements()) {
                 BeanInfo beanInfo = new BeanInfo();
                 
@@ -426,7 +426,7 @@ public final class JMXDataCollectionConfigFactory {
         org.opennms.netmgt.config.collectd.JmxCollection collection = (org.opennms.netmgt.config.collectd.JmxCollection) m_collectionMap.get(cName);
         
         Mbeans beans = collection.getMbeans();
-        Enumeration<Mbean> en = beans.enumerateMbean();
+        Enumeration<? extends Mbean> en = beans.enumerateMbean();
         while (en.hasMoreElements()) {
             Mbean mbean = en.nextElement();
             int count = mbean.getAttribCount();

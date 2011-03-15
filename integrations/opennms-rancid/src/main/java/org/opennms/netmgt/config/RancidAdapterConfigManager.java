@@ -307,7 +307,7 @@ abstract public class RancidAdapterConfigManager implements RancidAdapterConfig 
             }
         }
 
-        Enumeration<String> eurl = pkg.enumerateIncludeUrl();
+        Enumeration<? extends String> eurl = pkg.enumerateIncludeUrl();
         while (!has_specific && eurl.hasMoreElements()) {
             has_specific = interfaceInUrl(iface, eurl.nextElement());
         }

@@ -2481,7 +2481,7 @@ public class PollablesTest {
     }
 
     protected Package findPackageForService(PollerConfig pollerConfig, String ipAddr, String serviceName) {
-        Enumeration<Package> en = pollerConfig.enumeratePackage();
+        Enumeration<? extends Package> en = pollerConfig.enumeratePackage();
         Package lastPkg = null;
         while (en.hasMoreElements()) {
             Package pkg = (Package)en.nextElement();

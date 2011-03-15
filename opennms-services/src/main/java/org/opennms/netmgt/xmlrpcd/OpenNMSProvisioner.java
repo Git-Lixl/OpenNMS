@@ -434,7 +434,7 @@ public class OpenNMSProvisioner implements Provisioner {
      * @return a {@link org.opennms.netmgt.config.poller.Parameter} object.
      */
     public Parameter findParamterWithKey(Service svc, String key) {
-        Enumeration<Parameter> e = svc.enumerateParameter();
+        Enumeration<? extends Parameter> e = svc.enumerateParameter();
         while(e.hasMoreElements()) {
             Parameter parameter = (Parameter)e.nextElement();
             if (key.equals(parameter.getKey())) {

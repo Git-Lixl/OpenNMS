@@ -435,7 +435,7 @@ final class BroadcastEventProcessor implements EventListener {
             Value parmValue = null;
             String parmContent = null;
 
-            Enumeration<Parm> parmEnum = parms.enumerateParm();
+            Enumeration<? extends Parm> parmEnum = parms.enumerateParm();
             while (parmEnum.hasMoreElements()) {
                 Parm parm = parmEnum.nextElement();
                 parmName = parm.getParmName();
@@ -536,7 +536,7 @@ final class BroadcastEventProcessor implements EventListener {
             Value parmValue = null;
             String parmContent = null;
 
-            Enumeration<Parm> parmEnum = parms.enumerateParm();
+            Enumeration<? extends Parm> parmEnum = parms.enumerateParm();
             while (parmEnum.hasMoreElements()) {
                 Parm parm = parmEnum.nextElement();
                 parmName = parm.getParmName();

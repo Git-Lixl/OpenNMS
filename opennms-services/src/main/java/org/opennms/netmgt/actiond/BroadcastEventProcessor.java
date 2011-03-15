@@ -100,7 +100,7 @@ final class BroadcastEventProcessor implements EventListener {
 
         // Handle autoactions
         //
-        Enumeration<Autoaction> walker = event.enumerateAutoaction();
+        Enumeration<? extends Autoaction> walker = event.enumerateAutoaction();
         while (walker.hasMoreElements()) {
             try {
                 Autoaction aact = walker.nextElement();

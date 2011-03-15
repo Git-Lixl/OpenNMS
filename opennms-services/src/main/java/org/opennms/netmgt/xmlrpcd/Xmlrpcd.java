@@ -142,7 +142,7 @@ public class Xmlrpcd extends AbstractServiceDaemon {
             }
 
             // create a BroadcastEventProcessor per server 
-            Enumeration<ExternalServers> servers = getConfig().getExternalServerEnumeration();
+            Enumeration<? extends ExternalServers> servers = getConfig().getExternalServerEnumeration();
             int i = 0;
             while (servers.hasMoreElements()) {
                 ExternalServers server = servers.nextElement();

@@ -213,7 +213,7 @@ public final class XmlrpcdConfigFactory {
          * The old style configuration did not have a <serverSubscription> field
          * inside the <external-servers> tag, so create a default one.
          */
-        Enumeration<ExternalServers> e = getExternalServerEnumeration();
+        Enumeration<? extends ExternalServers> e = getExternalServerEnumeration();
         while (e.hasMoreElements()) {
             ExternalServers es = e.nextElement();
             if (es.getServerSubscriptionCollection().size() == 0) {
@@ -360,7 +360,7 @@ public final class XmlrpcdConfigFactory {
      *
      * @return an enumeration of xmlrpc servers.
      */
-    public synchronized Enumeration<ExternalServers> getExternalServerEnumeration() {
+    public synchronized Enumeration<? extends ExternalServers> getExternalServerEnumeration() {
         return m_config.enumerateExternalServers();
     }
 
@@ -370,7 +370,7 @@ public final class XmlrpcdConfigFactory {
      *
      * @return an enumeration of subscriptions.
      */
-    public synchronized Enumeration<Subscription> getSubscriptionEnumeration() {
+    public synchronized Enumeration<? extends Subscription> getSubscriptionEnumeration() {
     	return m_config.enumerateSubscription();
     }
     

@@ -292,7 +292,7 @@ public class EventUtils {
             return defaultValue;
         }
 
-        Enumeration<Parm> parmEnum = parms.enumerateParm();
+        Enumeration<? extends Parm> parmEnum = parms.enumerateParm();
         while (parmEnum.hasMoreElements()) {
             Parm parm = parmEnum.nextElement();
             if (parmName.equals(parm.getParmName())) {
@@ -324,7 +324,7 @@ public class EventUtils {
             throw new InsufficientInformationException("parameter " + parmName + " required but but no parms are available.");
         }
 
-        Enumeration<Parm> parmEnum = parms.enumerateParm();
+        Enumeration<? extends Parm> parmEnum = parms.enumerateParm();
         while (parmEnum.hasMoreElements()) {
             Parm parm = parmEnum.nextElement();
             if (parmName.equals(parm.getParmName())) {

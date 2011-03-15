@@ -269,7 +269,7 @@ abstract public class LinkdConfigManager implements LinkdConfig {
      *
      * @return a {@link java.util.Enumeration} object.
      */
-    public Enumeration<Package> enumeratePackage() {
+    public Enumeration<? extends Package> enumeratePackage() {
         getReadLock().lock();
         try {
             return getConfiguration().enumeratePackage();

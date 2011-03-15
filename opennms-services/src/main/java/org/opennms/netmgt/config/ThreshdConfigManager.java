@@ -163,7 +163,7 @@ public abstract class ThreshdConfigManager {
     
         m_pkgIpMap = new HashMap<Package, List<String>>();
     
-        Enumeration<org.opennms.netmgt.config.threshd.Package> pkgEnum = m_config.enumeratePackage();
+        Enumeration<? extends org.opennms.netmgt.config.threshd.Package> pkgEnum = m_config.enumeratePackage();
         while (pkgEnum.hasMoreElements()) {
             org.opennms.netmgt.config.threshd.Package pkg = pkgEnum.nextElement();
     
@@ -370,7 +370,7 @@ public abstract class ThreshdConfigManager {
             }
         }
 
-        Enumeration<String> eurl = pkg.enumerateIncludeUrl();
+        Enumeration<? extends String> eurl = pkg.enumerateIncludeUrl();
         while (!has_specific && eurl.hasMoreElements()) {
             has_specific = interfaceInUrl(iface, eurl.nextElement());
         }

@@ -75,7 +75,7 @@ public class CollectdPackage {
 	}
 
 	private void createIncludeURLs(Package pkg) {
-		Enumeration<String> urlEnum = pkg.enumerateIncludeUrl();
+		Enumeration<? extends String> urlEnum = pkg.enumerateIncludeUrl();
 		while (urlEnum.hasMoreElements()) {
 			m_includeURLs.add(new IncludeURL(urlEnum.nextElement()));
 		}
@@ -103,7 +103,7 @@ public class CollectdPackage {
 		Package pkg = getPackage();
 		boolean result = false;
 	
-		Enumeration<Service> esvcs = pkg.enumerateService();
+		Enumeration<? extends Service> esvcs = pkg.enumerateService();
 		while (result == false && esvcs.hasMoreElements()) {
 			Service tsvc = esvcs.nextElement();
 			if (tsvc.getName().equalsIgnoreCase(svcName)) {

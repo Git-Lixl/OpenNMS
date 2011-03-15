@@ -260,7 +260,7 @@ public class DefaultPollerBackEnd implements PollerBackEnd, SpringServiceDaemon 
 
     private Map<String, Object> getParameterMap(final Service serviceConfig) {
         final Map<String, Object> paramMap = new HashMap<String, Object>();
-        final Enumeration<Parameter> serviceParms = serviceConfig.enumerateParameter();
+        final Enumeration<? extends Parameter> serviceParms = serviceConfig.enumerateParameter();
         while(serviceParms.hasMoreElements()) {
             final Parameter serviceParm = serviceParms.nextElement();
 

@@ -376,7 +376,7 @@ public final class VulnscandConfigFactory {
     }
 
     private static ScanLevel getScanLevel(int level) {
-        Enumeration<ScanLevel> scanLevels = m_config.enumerateScanLevel();
+        Enumeration<? extends ScanLevel> scanLevels = m_config.enumerateScanLevel();
 
         while (scanLevels.hasMoreElements()) {
             ScanLevel scanLevel = scanLevels.nextElement();
@@ -498,7 +498,7 @@ public final class VulnscandConfigFactory {
     public Set<InetAddress> getAllIpAddresses(ScanLevel level) {
         Set<InetAddress> retval = new TreeSet<InetAddress>();
 
-        Enumeration<Range> e = level.enumerateRange();
+        Enumeration<? extends Range> e = level.enumerateRange();
         while (e.hasMoreElements()) {
             Range ir = e.nextElement();
 
@@ -514,7 +514,7 @@ public final class VulnscandConfigFactory {
 
         }
 
-        Enumeration<String> specifics = level.enumerateSpecific();
+        Enumeration<? extends String> specifics = level.enumerateSpecific();
         while (specifics.hasMoreElements()) {
             String current = specifics.nextElement();
             try {
@@ -541,7 +541,7 @@ public final class VulnscandConfigFactory {
 
             if (excludes != null) {
                 if (excludes.getRangeCount() > 0) {
-                    Enumeration<Range> e = excludes.enumerateRange();
+                    Enumeration<? extends Range> e = excludes.enumerateRange();
                     while (e.hasMoreElements()) {
                         Range ir = e.nextElement();
 
@@ -556,7 +556,7 @@ public final class VulnscandConfigFactory {
                 }
 
                 if (excludes.getSpecificCount() > 0) {
-                    Enumeration<String> e = excludes.enumerateSpecific();
+                    Enumeration<? extends String> e = excludes.enumerateSpecific();
                     while (e.hasMoreElements()) {
                         String current = e.nextElement();
                         log.debug("excludes: Specific: " + current);

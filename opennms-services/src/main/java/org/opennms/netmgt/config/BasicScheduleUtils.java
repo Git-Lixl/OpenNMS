@@ -79,7 +79,7 @@ public class BasicScheduleUtils {
         long curCalTime = cal.getTimeInMillis();
         // check if day is part of outage
         boolean inOutage = false;
-        Enumeration<Time> e = sched.enumerateTime();
+        Enumeration<? extends Time> e = sched.enumerateTime();
         while (e.hasMoreElements() && !inOutage) {
             outCalBegin.setTimeInMillis(curCalTime);
             outCalEnd.setTimeInMillis(curCalTime);
@@ -222,7 +222,7 @@ public class BasicScheduleUtils {
         cal.setTimeInMillis(curCalTime);
         // check if day is part of outage
         boolean inOutage = false;
-        Enumeration<Time> en = out.enumerateTime();
+        Enumeration<? extends Time> en = out.enumerateTime();
         while (en.hasMoreElements() && !inOutage) {
             Calendar outCalBegin = new GregorianCalendar();
             Calendar outCalEnd = new GregorianCalendar();
