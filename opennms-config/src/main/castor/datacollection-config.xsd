@@ -1,135 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema targetNamespace="http://xmlns.opennms.org/xsd/config/datacollection"
-        xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:typ="http://xmlns.opennms.org/xsd/types"
-        xmlns:dctyp="http://xmlns.opennms.org/xsd/config/datacollection-types"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:ns2="http://www.w3.org/1999/xhtml"
-        xmlns:ns="http://www.w3.org/2001/XMLSchema"
-        xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty"
-        xmlns:dc="http://xmlns.opennms.org/xsd/config/datacollection">
+<schema targetNamespace="http://xmlns.opennms.org/xsd/config/datacollection" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:typ="http://xmlns.opennms.org/xsd/types" xmlns:dctyp="http://xmlns.opennms.org/xsd/config/datacollection-types"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns2="http://www.w3.org/1999/xhtml" xmlns:ns="http://www.w3.org/2001/XMLSchema" xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty"
+  xmlns:this="http://xmlns.opennms.org/xsd/config/datacollection">
   <annotation>
-    <documentation>XML Schema for the datacollection-config.xml configuration
-    file. Version: $Id$. </documentation>
+    <documentation>XML Schema for the datacollection-config.xml configuration file.</documentation>
   </annotation>
 
-  <import namespace="http://xmlns.opennms.org/xsd/types" schemaLocation="types.xsd"/>
-  <import namespace="http://xmlns.opennms.org/xsd/config/datacollection-types" schemaLocation="datacollection-types.xsd"/>
+  <import namespace="http://xmlns.opennms.org/xsd/types" schemaLocation="types.xsd" />
+  <import namespace="http://xmlns.opennms.org/xsd/config/datacollection-types" schemaLocation="datacollection-types.xsd" />
 
   <element name="datacollection-config">
     <annotation>
-      <documentation>Top-level element for the datacollection-config.xml
-      configuration file.</documentation>
+      <documentation>Top-level element for the datacollection-config.xml configuration file.</documentation>
     </annotation>
 
     <complexType>
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="1" ref="dc:snmp-collection">
-          <annotation>
-            <documentation>SNMP data collection element</documentation>
-          </annotation>
-        </element>
+        <element maxOccurs="unbounded" minOccurs="1" ref="this:snmp-collection" />
       </sequence>
-
-      <attribute name="rrdRepository" type="string" use="required">
-        <annotation>
-          <documentation>full path to the RRD repository for collected SNMP
-          data</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:rrdRepository" use="required" />
     </complexType>
   </element>
 
   <element name="snmp-collection">
     <annotation>
-      <documentation>a grouping of SNMP related RRD parms, MIB object groups
-      and sysoid based system definitions.</documentation>
+      <documentation>a grouping of SNMP related RRD parms, MIB object groups and sysoid based system definitions.</documentation>
     </annotation>
 
     <complexType>
       <sequence>
-        <element maxOccurs="1" minOccurs="1" ref="typ:rrd">
-          <annotation>
-            <documentation>RRD parms</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="dc:include-collection">
-          <annotation>
-            <documentation>Include Collection by specifying
-            System Definition Name or Data Collection Group Name.</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="dctyp:resourceType">
-          <annotation>
-            <documentation>Custom resource types</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="1" minOccurs="0" ref="dc:groups">
-          <annotation>
-            <documentation>MIB object groups</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="1" minOccurs="0" ref="dc:systems">
-          <annotation>
-            <documentation>sysOid-based sytems</documentation>
-          </annotation>
-        </element>
+        <element maxOccurs="1" minOccurs="1" ref="typ:rrd" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:include-collection" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="dctyp:resourceType" />
+        <element maxOccurs="1" minOccurs="0" ref="this:groups" />
+        <element maxOccurs="1" minOccurs="0" ref="this:systems" />
       </sequence>
-
-      <attribute name="name" type="string" use="required">
-        <annotation>
-          <documentation>collector name</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="maxVarsPerPdu" type="int" use="optional">
-        <annotation>
-          <documentation>DEPRECATED</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="snmpStorageFlag" use="required">
-        <annotation>
-          <documentation>indicates if collected SNMP data is to be stored for
-          "all" interfaces or only for the "primary"
-          interface.</documentation>
-        </annotation>
-
-        <simpleType>
-          <restriction base="string">
-            <pattern value="(all|primary|select)"/>
-          </restriction>
-        </simpleType>
-      </attribute>
+      <attribute ref="this:name" use="required" />
+      <attribute ref="this:maxVarsPerPdu" use="optional" />
+      <attribute ref="this:snmpStorageFlag" use="required" />
     </complexType>
   </element>
 
   <element name="include-collection">
     <complexType>
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="0" type="string" name="exclude-filter">
-          <annotation>
-            <documentation>Exclude filter uses regular expression syntax to avoid certain system definitions</documentation>
-          </annotation>
-        </element>
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:exclude-filter" />
       </sequence>
-
-      <attribute name="systemDef" type="string" use="optional">
-        <annotation>
-          <documentation>System Definition Name</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="dataCollectionGroup" type="string" use="optional">
-        <annotation>
-          <documentation>Data Collection Group Name</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:systemDef" use="optional" />
+      <attribute ref="this:dataCollectionGroup" use="optional" />
     </complexType>
+  </element>
+
+  <element type="string" name="exclude-filter">
+    <annotation>
+      <documentation>Exclude filter uses regular expression syntax to avoid certain system definitions</documentation>
+    </annotation>
   </element>
 
   <element name="groups">
@@ -139,11 +64,7 @@
 
     <complexType>
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="1" ref="dctyp:group">
-          <annotation>
-            <documentation>a MIB object group</documentation>
-          </annotation>
-        </element>
+        <element maxOccurs="unbounded" minOccurs="1" ref="dctyp:group" />
       </sequence>
     </complexType>
   </element>
@@ -155,13 +76,47 @@
 
     <complexType>
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="1" ref="dctyp:systemDef">
-          <annotation>
-            <documentation>list of system definitions</documentation>
-          </annotation>
-        </element>
+        <element maxOccurs="unbounded" minOccurs="1" ref="dctyp:systemDef" />
       </sequence>
     </complexType>
   </element>
+
+  <attribute name="rrdRepository" type="string">
+    <annotation>
+      <documentation>full path to the RRD repository for collected SNMP data</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="name" type="string" />
+
+  <attribute name="maxVarsPerPdu" type="int">
+    <annotation>
+      <documentation>DEPRECATED</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="snmpStorageFlag">
+    <annotation>
+      <documentation>indicates if collected SNMP data is to be stored for "all" interfaces or only for the "primary" interface.</documentation>
+    </annotation>
+
+    <simpleType>
+      <restriction base="string">
+        <pattern value="(all|primary|select)" />
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute name="systemDef" type="string">
+    <annotation>
+      <documentation>System Definition Name</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="dataCollectionGroup" type="string">
+    <annotation>
+      <documentation>Data Collection Group Name</documentation>
+    </annotation>
+  </attribute>
 
 </schema>

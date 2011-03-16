@@ -145,6 +145,7 @@ public class CastorUtils {
      */
     private static <T> Unmarshaller createUnmarshaller(Class<T> clazz, boolean preserveWhitespace) {
         Unmarshaller u = new Unmarshaller(clazz);
+        u.setProperty("org.exolab.castor.regexp", "org.exolab.castor.util.JakartaOroEvaluator");
         u.setIgnoreExtraAttributes(false);
         u.setIgnoreExtraElements(false);
         u.setWhitespacePreserve(preserveWhitespace);

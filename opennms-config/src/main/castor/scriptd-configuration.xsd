@@ -1,44 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema targetNamespace="http://xmlns.opennms.org/xsd/config/scriptd"
-        xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:this="http://xmlns.opennms.org/xsd/config/scriptd"
-        xmlns:ns2="http://www.w3.org/1999/xhtml"
-        xmlns:ns="http://www.w3.org/2001/XMLSchema"
-        xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
+<schema targetNamespace="http://xmlns.opennms.org/xsd/config/scriptd" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:this="http://xmlns.opennms.org/xsd/config/scriptd"
+  xmlns:ns2="http://www.w3.org/1999/xhtml" xmlns:ns="http://www.w3.org/2001/XMLSchema" xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
   <annotation>
-    <documentation>XML Schema for the scriptd-configuration.xml configuration
-    file. Version: $Id$</documentation>
+    <documentation>XML Schema for the scriptd-configuration.xml configuration file.</documentation>
   </annotation>
 
   <element name="scriptd-configuration">
     <annotation>
-      <documentation>Top-level element for the scriptd-configuration.xml
-      configuration file.</documentation>
+      <documentation>Top-level element for the scriptd-configuration.xml configuration file.</documentation>
     </annotation>
 
     <complexType>
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:engine"/>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:start-script"/>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:stop-script"/>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:reload-script"/>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:event-script"/>
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:engine" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:start-script" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:stop-script" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:reload-script" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:event-script" />
       </sequence>
     </complexType>
   </element>
 
   <element name="engine">
     <complexType>
-      <attribute name="language" type="string" use="required"/>
-
-      <attribute name="className" type="string" use="required"/>
-
-      <attribute name="extensions" type="string"/>
+      <attribute ref="this:language" use="required" />
+      <attribute ref="this:className" use="required" />
+      <attribute ref="this:extensions" />
     </complexType>
   </element>
 
@@ -46,7 +33,7 @@
     <complexType>
       <simpleContent>
         <extension base="string">
-          <attribute name="language" type="string" use="required"/>
+          <attribute ref="this:language" use="required" />
         </extension>
       </simpleContent>
     </complexType>
@@ -56,7 +43,7 @@
     <complexType>
       <simpleContent>
         <extension base="string">
-          <attribute name="language" type="string" use="required"/>
+          <attribute ref="this:language" use="required" />
         </extension>
       </simpleContent>
     </complexType>
@@ -66,7 +53,7 @@
     <complexType>
       <simpleContent>
         <extension base="string">
-          <attribute name="language" type="string" use="required"/>
+          <attribute ref="this:language" use="required" />
         </extension>
       </simpleContent>
     </complexType>
@@ -74,7 +61,7 @@
 
   <element name="uei">
     <complexType>
-      <attribute name="name" type="string" use="required"/>
+      <attribute ref="this:name" use="required" />
     </complexType>
   </element>
 
@@ -83,8 +70,15 @@
       <sequence>
         <element ref="this:uei" maxOccurs="unbounded" minOccurs="0" />
       </sequence>
-
-      <attribute name="language" type="string" use="required"/>
+      <attribute ref="this:language" use="required" />
     </complexType>
   </element>
+
+  <attribute name="name" type="string" />
+
+  <attribute name="language" type="string" />
+
+  <attribute name="className" type="string" />
+
+  <attribute name="extensions" type="string" />
 </schema>

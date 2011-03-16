@@ -6,45 +6,31 @@
         xmlns:ns2="http://www.w3.org/1999/xhtml"
         xmlns:ns="http://www.w3.org/2001/XMLSchema"
         xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty"
-        xmlns:dc="http://xmlns.opennms.org/xsd/config/datacollection-groups">
+        xmlns:this="http://xmlns.opennms.org/xsd/config/datacollection-groups">
   <annotation>
-    <documentation>XML Schema for the sub files associated to datacollection-config.xml configuration
-    file. Version: $Id$. </documentation>
+    <documentation>XML Schema for the sub files associated to datacollection-config.xml configuration file.</documentation>
   </annotation>
 
   <import namespace="http://xmlns.opennms.org/xsd/config/datacollection-types" schemaLocation="datacollection-types.xsd"/>
           
   <element name="datacollection-group">
     <annotation>
-      <documentation>Top-level element for the datacollection group
-      configuration file.</documentation>
+      <documentation>Top-level element for the datacollection group configuration file.</documentation>
     </annotation>
 
     <complexType>
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="0" ref="types:resourceType">
-          <annotation>
-            <documentation>Custom resource types</documentation>
-          </annotation>
-        </element>
-        <element maxOccurs="unbounded" minOccurs="0" ref="types:group">
-          <annotation>
-            <documentation>a MIB object group</documentation>
-          </annotation>
-        </element>
-        <element maxOccurs="unbounded" minOccurs="0" ref="types:systemDef">
-          <annotation>
-            <documentation>list of system definitions</documentation>
-          </annotation>
-        </element>
+        <element maxOccurs="unbounded" minOccurs="0" ref="types:resourceType" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="types:group" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="types:systemDef" />
       </sequence>
+      <attribute ref="this:name" use="required" />
+    </complexType>
+  </element>
 
-      <attribute name="name" type="string" use="required">
+      <attribute name="name" type="string">
         <annotation>
           <documentation>data collector group name</documentation>
         </annotation>
       </attribute>
-    </complexType>
-  </element>
-
 </schema>

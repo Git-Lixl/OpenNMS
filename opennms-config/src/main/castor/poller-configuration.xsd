@@ -1,104 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema targetNamespace="http://xmlns.opennms.org/xsd/config/poller"
-        xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:this="http://xmlns.opennms.org/xsd/config/poller"
-        xmlns:ns2="http://www.w3.org/1999/xhtml"
-        xmlns:ns="http://www.w3.org/2001/XMLSchema"
-        xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
+<schema targetNamespace="http://xmlns.opennms.org/xsd/config/poller" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:this="http://xmlns.opennms.org/xsd/config/poller"
+  xmlns:ns2="http://www.w3.org/1999/xhtml" xmlns:ns="http://www.w3.org/2001/XMLSchema" xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
   <annotation>
-    <documentation>XML Schema for the poller-configuration.xml configuration
-    file. Version: $Id$</documentation>
+    <documentation>XML Schema for the poller-configuration.xml configuration file.</documentation>
   </annotation>
 
   <element name="poller-configuration">
     <annotation>
-      <documentation>Top-level element for the poller-configuration.xml
-      configuration file.</documentation>
+      <documentation>Top-level element for the poller-configuration.xml configuration file.</documentation>
     </annotation>
 
     <complexType>
       <sequence>
-        <element maxOccurs="1" minOccurs="1" ref="this:node-outage">
-          <annotation>
-            <documentation>Configuration of node-outage
-            functionality</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="1" ref="this:package">
-          <annotation>
-            <documentation>Package encapsulating addresses, services to be
-            polled for these addresses, etc..</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="1" ref="this:monitor">
-          <annotation>
-            <documentation>Service monitors</documentation>
-          </annotation>
-        </element>
+        <element maxOccurs="1" minOccurs="1" ref="this:node-outage" />
+        <element maxOccurs="unbounded" minOccurs="1" ref="this:package" />
+        <element maxOccurs="unbounded" minOccurs="1" ref="this:monitor" />
       </sequence>
-
-      <attribute name="threads" type="int" use="required">
-        <annotation>
-          <documentation>The maximum number of threads used for
-          polling.</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="nextOutageId" type="string" use="optional" default="SELECT nextval('outageNxtId')">
-        <annotation>
-          <documentation>SQL query for getting the next outage
-          ID.</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="serviceUnresponsiveEnabled" use="required">
-        <annotation>
-          <documentation>Enable/disable serviceUnresponsive
-          behavior</documentation>
-        </annotation>
-
-        <simpleType>
-          <restriction base="string">
-            <pattern value="(true|false)"/>
-          </restriction>
-        </simpleType>
-      </attribute>
-
-      <attribute default="false" name="xmlrpc" use="optional">
-        <annotation>
-          <documentation>Flag which indicates if an external XMLRPC server has
-          to be notified with any event process errors</documentation>
-        </annotation>
-
-        <simpleType>
-          <restriction base="string">
-            <pattern value="(true|false)"/>
-          </restriction>
-        </simpleType>
-      </attribute>
-
-      <attribute default="false" name="pathOutageEnabled" use="optional">
-        <annotation>
-          <documentation>Flag which indicates if the optional path outage
-          feature is enabled</documentation>
-        </annotation>
-
-        <simpleType>
-          <restriction base="string">
-            <pattern value="(true|false)"/>
-          </restriction>
-        </simpleType>
-      </attribute>
+      <attribute ref="this:threads" use="required" />
+      <attribute ref="this:nextOutageId" use="optional" default="SELECT nextval('outageNxtId')" />
+      <attribute ref="this:serviceUnresponsiveEnabled" use="required" />
+      <attribute ref="this:xmlrpc" default="false" use="optional" />
+      <attribute ref="this:pathOutageEnabled" default="false" use="optional" />
     </complexType>
   </element>
 
   <element name="node-outage">
     <annotation>
-      <documentation>Configuration of node-outage
-      functionality</documentation>
+      <documentation>Configuration of node-outage functionality</documentation>
     </annotation>
 
     <complexType>
@@ -107,57 +35,30 @@
           <documentation>Critical service</documentation>
         </annotation>
 
-        <element maxOccurs="1" minOccurs="0" ref="this:critical-service"/>
+        <element maxOccurs="1" minOccurs="0" ref="this:critical-service" />
       </sequence>
 
-      <attribute name="status" use="required">
-        <annotation>
-          <documentation>Enable/disable node outage processing</documentation>
-        </annotation>
-
-        <simpleType>
-          <restriction base="string">
-            <pattern value="(on|off)"/>
-          </restriction>
-        </simpleType>
-      </attribute>
-
-      <attribute name="pollAllIfNoCriticalServiceDefined" use="optional" default="true">
-        <annotation>
-          <documentation>Defines behavior of node outage processing when a
-          service has changed status to DOWN and a critical service is not
-          defined. If "true", all remaining services on the interface are
-          polled.</documentation>
-        </annotation>
-
-        <simpleType>
-          <restriction base="string">
-            <pattern value="(true|false)"/>
-          </restriction>
-        </simpleType>
-      </attribute>
+      <attribute ref="this:status" use="required" />
+      <attribute ref="this:pollAllIfNoCriticalServiceDefined" use="optional" default="true" />
     </complexType>
   </element>
 
   <element name="critical-service">
     <annotation>
       <documentation>Critical service. Defining a critical service greatly
-      reduces the traffic generated by the poller when an interface is DOWN.
-      When an interface is DOWN only the critical service is polled. If and
-      when the critical service comes back UP then the interface's other
-      services are polled to determine their status. When an interface is UP
-      all services are polled as expected. If the critical service goes DOWN,
-      all services are considered to be DOWN and therefore the interface is
-      also considered DOWN.</documentation>
+        reduces the traffic generated by the poller when an interface is DOWN.
+        When an interface is DOWN only the critical service is
+        polled. If and
+        when the critical service comes back UP then the interface's other
+        services are polled to determine their status. When an interface is UP
+        all services are polled as expected. If
+        the critical service goes DOWN,
+        all services are considered to be DOWN and therefore the interface is
+        also considered DOWN.</documentation>
     </annotation>
 
     <complexType>
-      <attribute name="name" type="string" use="required">
-        <annotation>
-          <documentation>Name of the critical service (typically,
-          "ICMP")</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:name" use="required" />
     </complexType>
   </element>
 
@@ -172,293 +73,142 @@
           <documentation>Parameters for polling this service</documentation>
         </annotation>
 
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:parameter"/>
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:parameter" />
       </sequence>
-
-      <attribute name="service" type="string" use="required">
-        <annotation>
-          <documentation>Service name</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="class-name" type="string" use="required">
-        <annotation>
-          <documentation>Java cass used to monitor/poll the service. The class
-          must implement the org.opennms.netmgt.poller.monitors.ServiceMonitor
-          interface.</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:service" use="required" />
+      <attribute ref="this:class-name" use="required" />
     </complexType>
   </element>
 
   <element name="package">
     <annotation>
-      <documentation>Package encapsulating addresses, services to be polled
-      for these addresses, etc..</documentation>
+      <documentation>Package encapsulating addresses, services to be polled for these addresses, etc..</documentation>
     </annotation>
 
     <complexType>
       <sequence>
-        <element maxOccurs="1" minOccurs="1" ref="this:filter">
-          <annotation>
-            <documentation>A rule which adresses belonging to this package
-            must pass. This package is applied only to addresses that pass
-            this filter.</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" name="specific"
-                 type="string">
-          <annotation>
-            <documentation>Adresses in this package</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:include-range">
-          <annotation>
-            <documentation>Range of adresses in this package.</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:exclude-range">
-          <annotation>
-            <documentation>Range of adresses to be excluded from this
-            package.</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" name="include-url"
-                 type="string">
-          <annotation>
-            <documentation>A file URL holding specific addresses to be polled.
-            Each line in the URL file can be one of:
-            &lt;IP&gt;&lt;space&gt;#&lt;comments&gt; or &lt;IP&gt; or
-            #&lt;comments&gt;. Lines starting with a '#' are ignored and so
-            are characters after a '&lt;space&gt;#' in a line.</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="1" minOccurs="1" ref="this:rrd">
-          <annotation>
-            <documentation>RRD parameters for response time
-            data.</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="1" ref="this:service">
-          <annotation>
-            <documentation>Services to be polled for addresses belonging to
-            this package.</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" name="outage-calendar"
-                 type="string">
-          <annotation>
-            <documentation>Scheduled outages. If a service is found down
-            during this period, it is not reported as down.</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="1" ref="this:downtime">
-          <annotation>
-            <documentation>Downtime model. Determines the rate at which
-            addresses are to be polled when they remain down for extended
-            periods.</documentation>
-          </annotation>
-        </element>
+        <element maxOccurs="1" minOccurs="1" ref="this:filter" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:specific" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:include-range" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:exclude-range" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:include-url" />
+        <element maxOccurs="1" minOccurs="1" ref="this:rrd" />
+        <element maxOccurs="unbounded" minOccurs="1" ref="this:service" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:outage-calendar" />
+        <element maxOccurs="unbounded" minOccurs="1" ref="this:downtime" />
       </sequence>
-
-      <attribute name="name" type="string" use="required">
-        <annotation>
-          <documentation>Name or identifier for this package.</documentation>
-        </annotation>
-      </attribute>
-      <attribute name="remote" type="boolean" use="optional" default="false" >
-        <annotation>
-          <documentation>
-            Boolean represnting whether this is a package for a remote location montior.
-            If true, this package will be ignored by the OpenNMS daemon poller.
-          </documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:name" use="required" />
+      <attribute ref="this:remote" use="optional" default="false" />
     </complexType>
   </element>
 
   <element name="filter">
     <annotation>
-      <documentation>A rule which adresses belonging to this package must
-      pass. This package is applied only to addresses that pass this
-      filter</documentation>
+      <documentation>A rule which addresses belonging to this package must pass. This package is applied only to addresses that pass this filter</documentation>
     </annotation>
 
     <complexType>
       <simpleContent>
-        <extension base="string"/>
+        <extension base="string" />
       </simpleContent>
     </complexType>
   </element>
 
+  <element name="specific" type="string">
+    <annotation>
+      <documentation>Addresses in this package</documentation>
+    </annotation>
+  </element>
+
   <element name="include-range">
     <annotation>
-      <documentation>Range of adresses to be included in this
-      package.</documentation>
+      <documentation>Range of addresses to be included in this package.</documentation>
     </annotation>
 
     <complexType>
-      <attribute name="begin" type="string" use="required">
-        <annotation>
-          <documentation>Starting address of the range.</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="end" type="string" use="required">
-        <annotation>
-          <documentation>Ending address of the range.</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:begin" use="required" />
+      <attribute ref="this:end" use="required" />
     </complexType>
   </element>
 
   <element name="exclude-range">
     <annotation>
-      <documentation>Range of adresses to be excluded from this
-      package.</documentation>
+      <documentation>Range of adresses to be excluded from this package.</documentation>
     </annotation>
 
     <complexType>
-      <attribute name="begin" type="string" use="required">
-        <annotation>
-          <documentation>Starting address of the range.</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="end" type="string" use="required">
-        <annotation>
-          <documentation>Ending address of the range.</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:begin" use="required" />
+      <attribute ref="this:end" use="required" />
     </complexType>
+  </element>
+
+  <element name="include-url" type="string">
+    <annotation>
+      <documentation>A file URL holding specific addresses to be polled.
+        Each line in the URL file can be one of:
+        &lt;IP&gt;&lt;space&gt;#&lt;comments&gt; or &lt;IP&gt; or
+        #&lt;comments&gt;. Lines
+        starting with a '#' are ignored and so
+        are characters after a '&lt;space&gt;#' in a line.</documentation>
+    </annotation>
   </element>
 
   <element name="service">
     <annotation>
-      <documentation>Service to be polled for addresses in this
-      package.</documentation>
+      <documentation>Service to be polled for addresses in this package.</documentation>
     </annotation>
 
     <complexType>
       <sequence>
         <annotation>
-          <documentation>Parameters to be used for polling this
-          service.</documentation>
+          <documentation>Parameters to be used for polling this service.</documentation>
         </annotation>
 
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:parameter"/>
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:parameter" />
       </sequence>
-
-      <attribute name="name" type="string" use="required">
-        <annotation>
-          <documentation>Service name</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="interval" type="long" use="required">
-        <annotation>
-          <documentation>Interval at which the service is to be
-          polled</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="user-defined" use="optional" default="false">
-        <annotation>
-          <documentation>Specifies if the service is user defined. Used
-          specifically for UI purposes.</documentation>
-        </annotation>
-
-        <simpleType>
-          <restriction base="string">
-            <pattern value="(true|false)"/>
-          </restriction>
-        </simpleType>
-      </attribute>
-
-      <attribute name="status" use="optional" default="on">
-        <annotation>
-          <documentation>Status of the service. The service is polled only if
-          this is set to 'on'.</documentation>
-        </annotation>
-
-        <simpleType>
-          <restriction base="string">
-            <pattern value="(on|off)"/>
-          </restriction>
-        </simpleType>
-      </attribute>
+      <attribute ref="this:name" use="required" />
+      <attribute ref="this:interval" use="required" />
+      <attribute ref="this:user-defined" use="optional" default="false" />
+      <attribute ref="this:status" use="optional" default="on" />
     </complexType>
+  </element>
+
+  <element name="outage-calendar" type="string">
+    <annotation>
+      <documentation>Scheduled outages. If a service is found down during this period, it is not reported as down.</documentation>
+    </annotation>
   </element>
 
   <element name="downtime">
     <annotation>
       <documentation>Downtime model. This determines the rates at which
-      addresses are to be polled when they remain down for extended periods.
-      Usually polling is done at lower rates when a node is down until a
-      certain amount of downtime at which the node is marked
-      'deleted'.</documentation>
+        addresses are to be polled when they remain down for extended periods.
+        Usually polling is done at lower rates when a node is down
+        until a certain amount of downtime at which the node is marked 'deleted'.</documentation>
     </annotation>
 
     <complexType>
-      <attribute name="begin" type="long" use="required">
-        <annotation>
-          <documentation>Start of the interval.</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="end" type="long" use="optional">
-        <annotation>
-          <documentation>End of the interval.</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="delete" use="optional">
-        <annotation>
-          <documentation>Attribute that determines if service is to be deleted
-          when down continously until the start time.</documentation>
-        </annotation>
-
-        <simpleType>
-          <restriction base="string">
-            <pattern value="(yes|true)"/>
-          </restriction>
-        </simpleType>
-      </attribute>
-
-      <attribute name="interval" type="long" use="optional">
-        <annotation>
-          <documentation>Interval at which service is to be polled between the
-          specified start and end when service has been continously
-          down.</documentation>
-        </annotation>
-      </attribute>
+      <attribute name="begin" type="long" use="required" />
+      <attribute name="end" type="long" use="optional" />
+      <attribute ref="this:delete" use="optional" />
+      <attribute ref="this:interval" use="optional" />
     </complexType>
   </element>
 
   <element name="parameter">
     <annotation>
       <documentation>Parameters to be used for polling this service. E.g.: for
-      polling HTTP, the URL to hit is configurable via a parameter. Parameters
-      are specfic to the service monitor.</documentation>
+        polling HTTP, the URL to hit is configurable via a parameter. Parameters
+        are specific to the service monitor.
+      </documentation>
     </annotation>
 
     <complexType>
-
       <sequence>
         <any id="configuration" minOccurs="0" maxOccurs="1" />
       </sequence>
-      
-      <attribute name="key" type="string" use="required"/>
-
-      <attribute name="value" type="string" use="optional"/>
+      <attribute ref="this:key" use="required" />
+      <attribute ref="this:value" use="optional" />
     </complexType>
   </element>
 
@@ -469,24 +219,164 @@
 
     <complexType>
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="1" name="rra">
-          <annotation>
-            <documentation>Round Robin Archive definitions</documentation>
-          </annotation>
-
-          <simpleType>
-            <restriction base="string">
-              <pattern value="RRA:(AVERAGE|MIN|MAX|LAST):.*"/>
-            </restriction>
-          </simpleType>
-        </element>
+        <element maxOccurs="unbounded" minOccurs="1" ref="this:rra" />
       </sequence>
-
-      <attribute name="step" type="int" use="required">
-        <annotation>
-          <documentation>Step size for the RRD, in seconds.</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:step" use="required" />
     </complexType>
   </element>
+
+  <element name="rra">
+    <annotation>
+      <documentation>Round Robin Archive definitions</documentation>
+    </annotation>
+
+    <simpleType>
+      <restriction base="string">
+        <pattern value="RRA:(AVERAGE|MIN|MAX|LAST):.*" />
+      </restriction>
+    </simpleType>
+  </element>
+
+  <attribute name="threads" type="int">
+    <annotation>
+      <documentation>The maximum number of threads used for polling.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="nextOutageId" type="string">
+    <annotation>
+      <documentation>SQL query for getting the next outage ID.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="serviceUnresponsiveEnabled">
+    <annotation>
+      <documentation>Enable/disable serviceUnresponsive behavior</documentation>
+    </annotation>
+
+    <simpleType>
+      <restriction base="string">
+        <pattern value="(true|false)" />
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute default="false" name="xmlrpc">
+    <annotation>
+      <documentation>Flag which indicates if an external XMLRPC server has to be notified with any event process errors</documentation>
+    </annotation>
+
+    <simpleType>
+      <restriction base="string">
+        <pattern value="(true|false)" />
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute name="pathOutageEnabled">
+    <annotation>
+      <documentation>Flag which indicates if the optional path outage feature is enabled</documentation>
+    </annotation>
+
+    <simpleType>
+      <restriction base="string">
+        <pattern value="(true|false)" />
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute name="status">
+    <simpleType>
+      <restriction base="string">
+        <pattern value="(on|off)" />
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute name="pollAllIfNoCriticalServiceDefined">
+    <annotation>
+      <documentation>Defines behavior of node outage processing when a
+        service has changed status to DOWN and a critical service is not
+        defined. If "true", all remaining services on the interface
+        are
+        polled.</documentation>
+    </annotation>
+
+    <simpleType>
+      <restriction base="string">
+        <pattern value="(true|false)" />
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute name="name" type="string" />
+
+  <attribute name="service" type="string">
+    <annotation>
+      <documentation>Service name</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="class-name" type="string">
+    <annotation>
+      <documentation>Java class used to monitor/poll the service. The class
+        must implement the org.opennms.netmgt.poller.monitors.ServiceMonitor
+        interface.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="remote" type="boolean">
+    <annotation>
+      <documentation>Boolean representing whether this is a package for a remote location monitor. If true, this package will be ignored by the OpenNMS daemon poller.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="begin" type="string">
+    <annotation>
+      <documentation>Starting address of the range.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="end" type="string">
+    <annotation>
+      <documentation>Ending address of the range.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="interval" type="long" />
+
+  <attribute name="user-defined">
+    <annotation>
+      <documentation>Specifies if the service is user defined. Used
+        specifically for UI purposes.</documentation>
+    </annotation>
+
+    <simpleType>
+      <restriction base="string">
+        <pattern value="(true|false)" />
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute name="delete">
+    <annotation>
+      <documentation>Attribute that determines if service is to be deleted when down continuously until the start time.</documentation>
+    </annotation>
+
+    <simpleType>
+      <restriction base="string">
+        <pattern value="(yes|true)" />
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute name="key" type="string" />
+
+  <attribute name="value" type="string" />
+
+  <attribute name="step" type="int">
+    <annotation>
+      <documentation>Step size for the RRD, in seconds.</documentation>
+    </annotation>
+  </attribute>
 </schema>

@@ -1,25 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema targetNamespace="http://xmlns.opennms.org/xsd/config/kscReports"
-        xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:this="http://xmlns.opennms.org/xsd/config/kscReports"
-        xmlns:ns2="http://www.w3.org/1999/xhtml"
-        xmlns:ns="http://www.w3.org/2001/XMLSchema"
-        xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
+<schema targetNamespace="http://xmlns.opennms.org/xsd/config/kscReports" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:this="http://xmlns.opennms.org/xsd/config/kscReports"
+  xmlns:ns2="http://www.w3.org/1999/xhtml" xmlns:ns="http://www.w3.org/2001/XMLSchema" xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
   <annotation>
-    <documentation>XML Schema for the ksc-performance-reports.xml
-    configuration file. Version: $Id$. </documentation>
+    <documentation>XML Schema for the ksc-performance-reports.xml configuration file.</documentation>
   </annotation>
 
   <element name="ReportsList">
     <annotation>
-      <documentation>Top-level element for the ksc-performance-reports.xml
-      configuration file. </documentation>
+      <documentation>Top-level element for the ksc-performance-reports.xml configuration file.</documentation>
     </annotation>
 
     <complexType>
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:Report"/>
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:Report" />
       </sequence>
     </complexType>
   </element>
@@ -27,46 +20,56 @@
   <element name="Report">
     <complexType>
       <sequence>
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:Graph"/>
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:Graph" />
       </sequence>
-      
-      <attribute name="id" type="int" use="optional"/>
-
-      <attribute name="title" type="string" use="required"/>
-
-      <attribute name="show_timespan_button" type="boolean" use="optional"/>
-
-      <attribute name="show_graphtype_button" type="boolean" use="optional"/>
-
-      <attribute name="graphs_per_line" use="optional">
-        <simpleType>
-          <restriction base="int">
-            <minInclusive value="0"/>
-          </restriction>
-        </simpleType>
-      </attribute>
-  
-
+      <attribute ref="this:id" use="optional" />
+      <attribute ref="this:title" use="required" />
+      <attribute ref="this:show_timespan_button" use="optional" />
+      <attribute ref="this:show_graphtype_button" use="optional" />
+      <attribute ref="this:graphs_per_line" use="optional" />
     </complexType>
   </element>
 
   <element name="Graph">
     <complexType>
-      <attribute name="title" type="string" use="required"/>
-
-      <attribute name="resourceId" type="string" use="optional"/>
-      
-      <attribute name="nodeId" type="string" use="optional"/>
-
-      <attribute name="domain" type="string" use="optional"/>
-
-      <attribute name="interfaceId" type="string" use="optional"/>
-
-      <attribute name="timespan" type="string" use="required"/>
-
-      <attribute name="graphtype" type="string" use="required"/>
-
-      <attribute name="extlink" type="string" use="optional"/>
+      <attribute ref="this:title" use="required" />
+      <attribute ref="this:resourceId" use="optional" />
+      <attribute ref="this:nodeId" use="optional" />
+      <attribute ref="this:domain" use="optional" />
+      <attribute ref="this:interfaceId" use="optional" />
+      <attribute ref="this:timespan" use="required" />
+      <attribute ref="this:graphtype" use="required" />
+      <attribute ref="this:extlink" use="optional" />
     </complexType>
   </element>
+
+  <attribute name="id" type="int" />
+
+  <attribute name="title" type="string" />
+
+  <attribute name="show_timespan_button" type="boolean" />
+
+  <attribute name="show_graphtype_button" type="boolean" />
+
+  <attribute name="graphs_per_line">
+    <simpleType>
+      <restriction base="int">
+        <minInclusive value="0" />
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute name="resourceId" type="string" />
+
+  <attribute name="nodeId" type="string" />
+
+  <attribute name="domain" type="string" />
+
+  <attribute name="interfaceId" type="string" />
+
+  <attribute name="timespan" type="string" />
+
+  <attribute name="graphtype" type="string" />
+
+  <attribute name="extlink" type="string" />
 </schema>

@@ -59,7 +59,6 @@ import javax.xml.bind.Unmarshaller;
 
 import junit.framework.AssertionFailedError;
 
-import org.exolab.castor.util.LocalConfiguration;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.junit.After;
@@ -147,7 +146,7 @@ import org.springframework.util.StringUtils;
  * @author <a href="mailto:dj@opennms.org">DJ Gregor</a>
  */
 public class WillItUnmarshalTest {
-    private static final String CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY = "org.exolab.castor.xml.lenient.sequence.order";
+//    private static final String CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY = "org.exolab.castor.xml.lenient.sequence.order";
     private static Set<String> m_filesTested = new HashSet<String>();
     private static Set<String> m_exampleFilesTested = new HashSet<String>();
     
@@ -156,9 +155,8 @@ public class WillItUnmarshalTest {
         
         MockLogAppender.setupLogging(true, "INFO");
         
-        // Reload castor properties every time since some tests fiddle with them
-        LocalConfiguration.getInstance().getProperties().clear();
-        LocalConfiguration.getInstance().getProperties().load(ConfigurationTestUtils.getInputStreamForResource(this, "/castor.properties"));
+        System.setProperty("org.exolab.castor.indent", "true");
+        System.setProperty("org.exolab.castor.xml.lenient.sequence.order", "true");
     }
 
     @After
@@ -172,7 +170,7 @@ public class WillItUnmarshalTest {
      */
     @Test
     public void testGoodOrdering() throws Exception {
-        LocalConfiguration.getInstance().getProperties().remove(CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY);
+        System.setProperty("org.exolab.castor.xml.lenient.sequence.order", "false");
 
         Resource resource = ConfigurationTestUtils.getSpringResourceForResource(this, "eventconf-good-ordering.xml");
         System.out.println("Unmarshalling: " + resource.getURI());
@@ -185,7 +183,7 @@ public class WillItUnmarshalTest {
      */
     @Test
     public void testLenientOrdering() throws Exception {
-        LocalConfiguration.getInstance().getProperties().put(CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY, "true");
+        System.setProperty("org.exolab.castor.xml.lenient.sequence.order", "true");
 
         Resource resource = ConfigurationTestUtils.getSpringResourceForResource(this, "eventconf-bad-ordering.xml");
         System.out.println("Unmarshalling: " + resource.getURI());
@@ -209,7 +207,7 @@ public class WillItUnmarshalTest {
      */
     @Test
     public void testLenientOrderingDisabled() throws Exception {
-        LocalConfiguration.getInstance().getProperties().remove(CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY);
+        System.setProperty("org.exolab.castor.xml.lenient.sequence.order", "false");
 
         unmarshalAndAnticipateException("eventconf-bad-ordering.xml", "Element with name event passed to type events in incorrect order");
     }
@@ -689,7 +687,7 @@ public class WillItUnmarshalTest {
         for (File includedEventFile : includedEventFiles) {
             try {
                 // Be conservative about what we ship, so don't be lenient
-                LocalConfiguration.getInstance().getProperties().remove(CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY);
+                System.setProperty("org.exolab.castor.xml.lenient.sequence.order", "false");
                 Resource resource = new FileSystemResource(includedEventFile);
                 System.out.println("Unmarshalling: " + resource.getURI());
                 CastorUtils.unmarshal(Events.class, resource);
@@ -714,7 +712,7 @@ public class WillItUnmarshalTest {
         for (File includedGroupFile : includedGroupFiles) {
             try {
                 // Be conservative about what we ship, so don't be lenient
-                LocalConfiguration.getInstance().getProperties().remove(CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY);
+                System.setProperty("org.exolab.castor.xml.lenient.sequence.order", "false");
                 Resource resource = new FileSystemResource(includedGroupFile);
                 System.out.println("Unmarshalling: " + resource.getURI());
                 CastorUtils.unmarshal(DatacollectionGroup.class, resource);
@@ -755,7 +753,7 @@ public class WillItUnmarshalTest {
 
     private static <T>T unmarshal(File file, Class<T> clazz, Set<String> testedSet, String fileName) throws MarshalException, ValidationException, IOException {
         // Be conservative about what we ship, so don't be lenient
-        LocalConfiguration.getInstance().getProperties().remove(CASTOR_LENIENT_SEQUENCE_ORDERING_PROPERTY);
+        System.setProperty("org.exolab.castor.xml.lenient.sequence.order", "false");
         
         Resource resource = new FileSystemResource(file);
         System.out.println("Unmarshalling: " + resource.getURI());

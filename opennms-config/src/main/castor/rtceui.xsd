@@ -1,34 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema targetNamespace="http://xmlns.opennms.org/xsd/rtceui"
-        xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:this="http://xmlns.opennms.org/xsd/rtceui"
-        xmlns:ns2="http://www.w3.org/1999/xhtml"
-        xmlns:ns="http://www.w3.org/2001/XMLSchema"
-        xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
+<schema targetNamespace="http://xmlns.opennms.org/xsd/rtceui" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:this="http://xmlns.opennms.org/xsd/rtceui"
+  xmlns:typ="http://xmlns.opennms.org/xsd/types" xmlns:ns2="http://www.w3.org/1999/xhtml" xmlns:ns="http://www.w3.org/2001/XMLSchema" xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
   <annotation>
-    <documentation>XML Schema for RTC data. This is used for passing RTC data
-    from the OpenNMS daemon to the UI. Version $Id$. </documentation>
+    <documentation>XML Schema for RTC data. This is used for passing RTC data from the OpenNMS daemon to the UI.</documentation>
   </annotation>
-
-  <element name="euiLevel">
-    <complexType>
-      <sequence>
-        <element maxOccurs="1" minOccurs="1" ref="this:header">
-          <annotation>
-            <documentation>The header</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="1" ref="this:category">
-          <annotation>
-            <documentation>category value and nodes belonging to
-            it</documentation>
-          </annotation>
-        </element>
-      </sequence>
-    </complexType>
-  </element>
 
   <element name="header">
     <complexType>
@@ -47,6 +22,24 @@
     </complexType>
   </element>
 
+  <element name="euiLevel">
+    <complexType>
+      <sequence>
+        <element maxOccurs="1" minOccurs="1" ref="this:header">
+          <annotation>
+            <documentation>The header</documentation>
+          </annotation>
+        </element>
+
+        <element maxOccurs="unbounded" minOccurs="1" ref="this:category">
+          <annotation>
+            <documentation>category value and nodes belonging to it</documentation>
+          </annotation>
+        </element>
+      </sequence>
+    </complexType>
+  </element>
+
   <element name="category">
     <annotation>
       <documentation>A category</documentation>
@@ -54,62 +47,57 @@
 
     <complexType>
       <sequence>
-        <element maxOccurs="1" minOccurs="1" name="catlabel" type="string">
-          <annotation>
-            <documentation>The category label</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="1" minOccurs="1" name="catvalue" type="double">
-          <annotation>
-            <documentation>The category availability value</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:node">
-          <annotation>
-            <documentation>A node that belongs to this
-            category</documentation>
-          </annotation>
-        </element>
+        <element maxOccurs="1" minOccurs="1" ref="this:catlabel" />
+        <element maxOccurs="1" minOccurs="1" ref="this:catvalue" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:node" />
       </sequence>
     </complexType>
   </element>
 
-  <element name="node">
+  <element name="catlabel" type="string">
     <annotation>
-      <documentation>A node</documentation>
+      <documentation>The category label</documentation>
     </annotation>
+  </element>
 
+  <element name="catvalue" type="double">
+    <annotation>
+      <documentation>The category availability value</documentation>
+    </annotation>
+  </element>
+
+  <element name="node">
     <complexType>
       <sequence>
-        <element maxOccurs="1" minOccurs="1" name="nodeid" type="long">
-          <annotation>
-            <documentation>The node id</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="1" minOccurs="1" name="nodevalue" type="double">
-          <annotation>
-            <documentation>The node availability value</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="1" minOccurs="1" name="nodesvccount" type="long">
-          <annotation>
-            <documentation>The number of active services on the
-            node</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="1" minOccurs="1" name="nodesvcdowncount"
-                 type="long">
-          <annotation>
-            <documentation>The number of active services currently down on the
-            node</documentation>
-          </annotation>
-        </element>
+        <element maxOccurs="1" minOccurs="1" ref="this:nodeid" />
+        <element maxOccurs="1" minOccurs="1" ref="this:nodevalue" />
+        <element maxOccurs="1" minOccurs="1" ref="this:nodesvccount" />
+        <element maxOccurs="1" minOccurs="1" ref="this:nodesvcdowncount" />
       </sequence>
     </complexType>
+  </element>
+
+  <element name="nodeid" type="long">
+    <annotation>
+      <documentation>The node id</documentation>
+    </annotation>
+  </element>
+
+  <element name="nodevalue" type="double">
+    <annotation>
+      <documentation>The node availability value</documentation>
+    </annotation>
+  </element>
+
+  <element name="nodesvccount" type="long">
+    <annotation>
+      <documentation>The number of active services on the node</documentation>
+    </annotation>
+  </element>
+
+  <element name="nodesvcdowncount" type="long">
+    <annotation>
+      <documentation>The number of active services currently down on the node</documentation>
+    </annotation>
   </element>
 </schema>

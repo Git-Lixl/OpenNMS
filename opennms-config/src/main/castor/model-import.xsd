@@ -6,70 +6,38 @@
         Use this configuration file as an import of nodes, interfaces, and services to OpenNMS by-passing several phases of discovery and capabilities polling.
       </documentation>
     </annotation>
+
     <complexType>
       <sequence>
         <element ref="this:node" minOccurs="0" maxOccurs="unbounded" />
       </sequence>
-      <attribute name="date-stamp" type="dateTime" />
-      <attribute name="last-import" type="dateTime" />
-      <attribute name="foreign-source" type="string" use="optional" default="imported:" />
+      <attribute ref="this:date-stamp" />
+      <attribute ref="this:last-import" />
+      <attribute ref="this:foreign-source" use="optional" default="imported:" />
     </complexType>
   </element>
+
   <element name="node">
     <annotation>
       <documentation>A node in OpenNMS is a network entity that is used to contain network interfaces and those interface's services.</documentation>
     </annotation>
+
     <complexType>
       <sequence>
         <element ref="this:interface" minOccurs="0" maxOccurs="unbounded" />
         <element ref="this:category" minOccurs="0" maxOccurs="unbounded" />
         <element ref="this:asset" minOccurs="0" maxOccurs="unbounded" />
       </sequence>
-      <attribute name="node-label" use="required">
-        <simpleType>
-          <restriction base="string">
-<!--             <pattern value="[0-9A-Za-z][-0-9A-Za-z._]+"></pattern> -->
-            <pattern value=".*$"></pattern>
-          </restriction>
-        </simpleType>
-      </attribute>
-      <attribute name="foreign-id" type="string" use="required" >
-        <annotation>
-          <documentation>
-          This optional attribute can be used to facilitate integration by making the key from the integrating DB available adjacent to the OpenNMS key.
-          </documentation>
-        </annotation>
-      </attribute>
-      <attribute name="parent-foreign-id" type="string" use="optional" >
-        <annotation>
-          <documentation>
-          This optional attribute can be used to facilitate building node relationships.
-          </documentation>
-        </annotation>
-      </attribute>
-      <attribute name="parent-node-label" type="string" use="optional" >
-        <annotation>
-          <documentation>
-          This optional attribute can be used to facilitate building node relationships.
-          </documentation>
-        </annotation>
-      </attribute>
-      <attribute name="city" type="string" use="optional" >
-        <annotation>
-          <documentation>
-          This optional attribute can be used to persist an asset value to the building column in the OpenNMS DB.
-          </documentation>
-        </annotation>
-      </attribute>
-      <attribute name="building" type="string" use="optional" >
-        <annotation>
-          <documentation>
-          This optional attribute can be used to persist an asset value to the building column in the OpenNMS DB.
-          </documentation>
-        </annotation>
-      </attribute>
+
+      <attribute ref="this:node-label" use="required" />
+      <attribute ref="this:foreign-id" use="required" />
+      <attribute ref="this:parent-foreign-id" use="optional" />
+      <attribute ref="this:parent-node-label" use="optional" />
+      <attribute ref="this:city" use="optional" />
+      <attribute ref="this:building" use="optional" />
     </complexType>
   </element>
+
   <element name="interface">
     <annotation>
       <documentation>A network interface.</documentation>
@@ -79,74 +47,150 @@
         <element ref="this:monitored-service" minOccurs="0" maxOccurs="unbounded" />
         <element ref="this:category" minOccurs="0" maxOccurs="unbounded" />
       </sequence>
-      <attribute name="ip-addr" type="string" use="required" />
-      <attribute name="descr" use="optional" >
-        <annotation>
-          <documentation>This will be used to set a description field.  Currently a calculation of (ifDescr | ifName | ifAlias)</documentation>
-        </annotation>
-      </attribute>
-      <attribute name="status" use="optional" type="int" default="1">
-        <annotation>
-          <documentation>Set this optional value to 3 to indicate &quot;testing&quot;. Any other value is ignored.</documentation>
-        </annotation>
-      </attribute>
-      <attribute name="managed" type="boolean" use="optional" default="true" />
-		<attribute ref="this:snmp-primary" />
+      <attribute ref="this:ip-addr" use="required" />
+      <attribute ref="this:descr" use="optional" />
+      <attribute ref="this:status" use="optional" default="1" />
+      <attribute ref="this:managed" use="optional" default="true" />
+      <attribute ref="this:snmp-primary" />
     </complexType>
   </element>
-  <attribute name="snmp-primary">
-    <annotation>
-      <documentation>
-        This attribute is used by OpenNMS to control SNMP data collection. P - Primary interface. This is the "preferred interface used in data collection.
-        S - Secondary interface. This interface meets all the qualifications to be a primary interface. C - Collectable interface. This is a manual setting
-        controlled by the user. N - Not a collectable interface. This is a manual setting controlled by the user.
 
-        If the snmpStorageFlag is set to "all", then all interfaces not set to 'N' will be collected. If the snmpStorageFlag is set to "select", then all
-        interfaces with 'P|S|C' will be collected. If the snmpStorageFlag is set to "primary", then only the interfaces set to 'P' will be collected.
-      </documentation>
-    </annotation>
-    <simpleType>
-      <restriction base="string">
-        <enumeration value="P"/>
-        <enumeration value="S"/>
-        <enumeration value="N"/>
-      </restriction>
-    </simpleType>
-  </attribute>
   <element name="monitored-service">
     <annotation>
-      <documentation>
-        This element is defined outside of the interface element for future use where it is expected that services on other network entities will be able to be
-        defined (i.e. networks, nodes and applications)
-      </documentation>
+      <documentation>This element is defined outside of the interface element for future use where it is expected that services on other
+        network entities will be able to be defined (i.e. networks,
+        nodes and applications)</documentation>
     </annotation>
     <complexType>
       <sequence>
-        <element ref="this:category" minOccurs="0" maxOccurs="unbounded">
-        </element>
+        <element ref="this:category" minOccurs="0" maxOccurs="unbounded" />
       </sequence>
-      <attribute name="service-name" type="string" use="required" />
+      <attribute ref="this:service-name" use="required" />
     </complexType>
   </element>
+
   <element name="category">
     <annotation>
       <documentation>
-        This element is used to specify OpenNMS specific categories.  Note: currently, these categories are defined in a separate configuration file and
-        are related directly to monitored services. I have separated out this element so that it can be referenced by other entities (nodes, interfaces, etc.)
-        however, they will be ignored until the domain model is changed and the service layer is adapted for this behavior. 
+        This element is used to specify OpenNMS specific categories. Note: currently, these categories are defined in a separate configuration file and
+        are related directly to monitored
+        services. I have separated out this element so that it can be referenced by other entities (nodes, interfaces, etc.)
+        however, they will be ignored until the domain model is changed and the
+        service layer is adapted for this behavior. 
       </documentation>
     </annotation>
     <complexType>
-    	  <attribute name="name" type="string" use="required" />
+      <attribute ref="this:name" use="required" />
     </complexType>
   </element>
+
   <element name="asset">
     <annotation>
       <documentation>This element is used to specify an asset record attribute.</documentation>
     </annotation>
     <complexType>
-      <attribute name="name" type="string" use="required" />
-      <attribute name="value" type="string" use="required" />
+      <attribute ref="this:name" use="required" />
+      <attribute ref="this:value" use="required" />
     </complexType>
   </element>
+
+  <attribute name="name" type="string" />
+
+  <attribute name="value" type="string" />
+
+  <attribute name="date-stamp" type="dateTime" />
+
+  <attribute name="last-import" type="dateTime" />
+
+  <attribute name="foreign-source" type="string" />
+
+  <attribute name="node-label">
+    <simpleType>
+      <restriction base="string">
+        <!-- <pattern value="[0-9A-Za-z][-0-9A-Za-z._]+"></pattern> -->
+        <pattern value=".*$"></pattern>
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute name="foreign-id" type="string">
+    <annotation>
+      <documentation>
+        This optional attribute can be used to facilitate integration by making the key from the integrating DB available adjacent to the OpenNMS key.
+          </documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="parent-foreign-id" type="string">
+    <annotation>
+      <documentation>
+        This optional attribute can be used to facilitate building node relationships.
+          </documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="parent-node-label" type="string">
+    <annotation>
+      <documentation>
+        This optional attribute can be used to facilitate building node relationships.
+          </documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="city" type="string">
+    <annotation>
+      <documentation>
+        This optional attribute can be used to persist an asset value to the building column in the OpenNMS DB.
+          </documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="building" type="string">
+    <annotation>
+      <documentation>
+        This optional attribute can be used to persist an asset value to the building column in the OpenNMS DB.
+          </documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="ip-addr" type="string" />
+
+  <attribute name="descr">
+    <annotation>
+      <documentation>This will be used to set a description field. Currently a calculation of (ifDescr | ifName | ifAlias)</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="status" type="int" default="1">
+    <annotation>
+      <documentation>Set this optional value to 3 to indicate &quot;testing&quot;. Any other value is ignored.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="managed" type="boolean" default="true" />
+
+  <attribute name="snmp-primary">
+    <annotation>
+      <documentation>
+        This attribute is used by OpenNMS to control SNMP data collection. P - Primary interface. This is the "preferred interface used in data collection.
+        S - Secondary interface. This
+        interface meets all the qualifications to be a primary interface. C - Collectable interface. This is a manual setting
+        controlled by the user. N - Not a collectable interface. This is a manual
+        setting controlled by the user.
+
+        If the snmpStorageFlag is set to "all", then all interfaces not set to 'N' will be collected. If the snmpStorageFlag is set to "select", then all
+        interfaces with
+        'P|S|C' will be collected. If the snmpStorageFlag is set to "primary", then only the interfaces set to 'P' will be collected.
+      </documentation>
+    </annotation>
+    <simpleType>
+      <restriction base="string">
+        <enumeration value="P" />
+        <enumeration value="S" />
+        <enumeration value="N" />
+      </restriction>
+    </simpleType>
+  </attribute>
+
+  <attribute name="service-name" type="string" />
 </schema>

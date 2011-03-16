@@ -142,7 +142,7 @@ public class AvailabilityReport extends Object {
         created.setMonth(month);
         created.setSec(second);
         created.setYear(year);
-        created.setContent(new BigDecimal(today.getTime().getTime()));
+        created.setContent(today.getTime().getTime());
 
         m_report = new Report();
         m_report.setCreated(created);

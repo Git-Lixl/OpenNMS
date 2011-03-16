@@ -57,8 +57,6 @@ import org.opennms.netmgt.xml.rtc.Node;
  *
  * @author <A HREF="mailto:sowmya@opennms.org">Sowmya Nataraj </A>
  * @author <A HREF="http://www.opennms.org">OpenNMS.org </A>
- * @author <A HREF="mailto:sowmya@opennms.org">Sowmya Nataraj </A>
- * @author <A HREF="http://www.opennms.org">OpenNMS.org </A>
  * @see org.opennms.netmgt.rtc.datablock.RTCCategory
  * @see org.opennms.netmgt.xml.rtc.EuiLevel
  * @version $Id: $

@@ -1,68 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema targetNamespace="http://xmlns.opennms.org/xsd/config/rancid/adapter"
-        xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:this="http://xmlns.opennms.org/xsd/config/rancid/adapter"
-        xmlns:typ="http://xmlns.opennms.org/xsd/types"
-        xmlns:ns2="http://www.w3.org/1999/xhtml"
-        xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
+<schema targetNamespace="http://xmlns.opennms.org/xsd/config/rancid/adapter" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:this="http://xmlns.opennms.org/xsd/config/rancid/adapter"
+  xmlns:typ="http://xmlns.opennms.org/xsd/types" xmlns:ns2="http://www.w3.org/1999/xhtml" xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
   <annotation>
     <documentation>XML Schema for the rancid-configuration.xml configuration file. Version: $Id$</documentation>
   </annotation>
-   
-  <import namespace="http://xmlns.opennms.org/xsd/types" schemaLocation="types.xsd"/>
+
+  <import namespace="http://xmlns.opennms.org/xsd/types" schemaLocation="types.xsd" />
 
   <element name="rancid-configuration">
-	    <annotation>
-	        <documentation>Top-level element for the rancid-configuration.xml configuration file.</documentation>
-	    </annotation>
-	
-		<complexType>
-	    	<sequence>
-	 	        <element minOccurs="0" maxOccurs="1" ref="this:policies"/>
-	 	        <element minOccurs="0" maxOccurs="unbounded" ref="this:mapping"/>
-	 		</sequence>
-	 		
-	       	<attribute name="delay" type="long" use="required">
-		        <annotation>
-		          <documentation>The time in sec to wait before trying
-		          to set the download flag to up in router.db.
-		          If schedule is there then it is verified if you are able
-		           to write to router.db in rancid.
-		           Otherwise you wait until schedule let you write on rancid.
-		          </documentation>
-		        </annotation>
-		    </attribute>
-	 		
-		    <attribute name="retries" type="int" use="required">
-		        <annotation>
-	    	      <documentation>The maximum number of retry before
-	    	      sending a failure.</documentation>
-	        	</annotation>
-	      	</attribute>
-
-		    <attribute name="useCategories" type="boolean" use="optional" default="false">
-		        <annotation>
-	    	      <documentation>If you want to use opennms categories
-	    	      to match rancid device type.</documentation>
-	        	</annotation>
-	      	</attribute>
-
-			<attribute name="default-type" type="string" use="optional" default="cisco">
-        		<annotation>
-          			<documentation>The Default Rancid type, it is used when no device type
-          			for provisioned node is found.
-          			</documentation>
-        		</annotation>
-      		</attribute>
-			
-	   </complexType>
-	 </element>      
-      
-   <element name="policies">
     <annotation>
-      <documentation>Configuration of Policy
-      functionality</documentation>
+      <documentation>Top-level element for the rancid-configuration.xml configuration file.</documentation>
+    </annotation>
+
+    <complexType>
+      <sequence>
+        <element minOccurs="0" maxOccurs="1" ref="this:policies" />
+        <element minOccurs="0" maxOccurs="unbounded" ref="this:mapping" />
+      </sequence>
+
+      <attribute ref="this:delay" use="required" />
+      <attribute ref="this:retries" use="required" />
+      <attribute ref="this:useCategories" use="optional" default="false" />
+      <attribute ref="this:default-type" use="optional" default="cisco" />
+    </complexType>
+  </element>
+
+  <element name="policies">
+    <annotation>
+      <documentation>Configuration of Policy functionality</documentation>
     </annotation>
 
     <complexType>
@@ -71,8 +36,7 @@
           <documentation>Management policy for Rancid</documentation>
         </annotation>
 
-        <element maxOccurs="unbounded" minOccurs="1" ref="this:policy-manage"/>
-        
+        <element maxOccurs="unbounded" minOccurs="1" ref="this:policy-manage" />
       </sequence>
     </complexType>
   </element>
@@ -80,69 +44,32 @@
   <element name="policy-manage">
     <annotation>
       <documentation>This represents a policy to manage a provisioned node
-      if matched a node will be added updated or deleted using
-      the element attribute definitions .</documentation>
+        if matched a node will be added updated or deleted using
+        the element attribute definitions .</documentation>
     </annotation>
 
     <complexType>
-
       <sequence>
         <annotation>
-          <documentation>General Scheduling Property 
-          you set the date and time for which do scheduling</documentation>
+          <documentation>General Scheduling Property
+            you set the date and time for which do scheduling</documentation>
         </annotation>
-        <element minOccurs="1" maxOccurs="1" ref="this:package"/>
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:schedule"/>
+        <element minOccurs="1" maxOccurs="1" ref="this:package" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:schedule" />
       </sequence>
 
-      <attribute name="name" type="string" use="required">
-        <annotation>
-          <documentation>The name of the policy
-          </documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="delay" type="long" use="optional">
-        <annotation>
-          <documentation>The time in sec to wait before trying
-          to set the download flag to up in router.db.
-          If schedule is there then it is verified if you are able
-           to write to router.db in rancid.
-           Otherwise you wait until schedule let you write on rancid.
-          </documentation>
-        </annotation>
-      </attribute>
-
-    <attribute name="retries" type="int" use="optional">
-        <annotation>
-   	      <documentation>The maximum number of retry before
-   	      sending a failure.</documentation>
-       	</annotation>
-     	</attribute>
-
-    <attribute name="useCategories" type="boolean" use="optional">
-        <annotation>
-   	      <documentation>If you want to use opennms categories
-   	      to match rancid device type.</documentation>
-       	</annotation>
-     	</attribute>
-
-	<attribute name="default-type" type="string" use="optional">
-      		<annotation>
-        			<documentation>The Default Rancid type, it is used when no device type
-        			for provisioned node is found.
-        			</documentation>
-    		</annotation>
-  		</attribute>
-
+      <attribute ref="this:name" use="required" />
+      <attribute ref="this:delay" use="optional" />
+      <attribute ref="this:retries" use="optional" />
+      <attribute ref="this:useCategories" use="optional" />
+      <attribute ref="this:default-type" use="optional" />
     </complexType>
 
   </element>
-   
+
   <element name="package">
     <annotation>
-      <documentation>Package encapsulating addresses, services to be polled
-      for these addresses, etc..</documentation>
+      <documentation>Package encapsulating addresses, services to be polled for these addresses, etc..</documentation>
     </annotation>
 
     <complexType>
@@ -150,62 +77,30 @@
         <element maxOccurs="1" minOccurs="1" ref="this:filter">
           <annotation>
             <documentation>A rule which addresses belonging to this package
-            must pass. This package is applied only to addresses that pass
-            this filter.</documentation>
+              must pass. This package is applied only to addresses that pass
+              this filter.</documentation>
           </annotation>
         </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" name="specific"
-                 type="string">
-          <annotation>
-            <documentation>Addresses in this package</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:include-range">
-          <annotation>
-            <documentation>Range of addresses in this package.</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" ref="this:exclude-range">
-          <annotation>
-            <documentation>Range of addresses to be excluded from this
-            package.</documentation>
-          </annotation>
-        </element>
-
-        <element maxOccurs="unbounded" minOccurs="0" name="include-url"
-                 type="string">
-          <annotation>
-            <documentation>A file URL holding specific addresses to be polled.
-            Each line in the URL file can be one of:
-            &lt;IP&gt;&lt;space&gt;#&lt;comments&gt; or &lt;IP&gt; or
-            #&lt;comments&gt;. Lines starting with a '#' are ignored and so
-            are characters after a '&lt;space&gt;#' in a line.</documentation>
-          </annotation>
-        </element>
-
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:specific" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:include-range" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:exclude-range" />
+        <element maxOccurs="unbounded" minOccurs="0" ref="this:include-url" />
       </sequence>
 
-      <attribute name="name" type="string" use="required">
-        <annotation>
-          <documentation>Name or identifier for this package.</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:name" use="required" />
     </complexType>
   </element>
 
   <element name="filter">
     <annotation>
       <documentation>A rule which addresses belonging to this package must
-      pass. This package is applied only to addresses that pass this
-      filter</documentation>
+        pass. This package is applied only to addresses that pass this
+        filter</documentation>
     </annotation>
 
     <complexType>
       <simpleContent>
-        <extension base="string"/>
+        <extension base="string" />
       </simpleContent>
     </complexType>
   </element>
@@ -213,43 +108,40 @@
   <element name="include-range">
     <annotation>
       <documentation>Range of addresses to be included in this
-      package.</documentation>
+        package.</documentation>
     </annotation>
 
     <complexType>
-      <attribute name="begin" type="string" use="required">
-        <annotation>
-          <documentation>Starting address of the range.</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="end" type="string" use="required">
-        <annotation>
-          <documentation>Ending address of the range.</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:begin" use="required" />
+      <attribute ref="this:end" use="required" />
     </complexType>
   </element>
 
   <element name="exclude-range">
     <annotation>
-      <documentation>Range of addresses to be excluded from this
-      package.</documentation>
+      <documentation>Range of addresses to be excluded from this package.</documentation>
     </annotation>
 
     <complexType>
-      <attribute name="begin" type="string" use="required">
-        <annotation>
-          <documentation>Starting address of the range.</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="end" type="string" use="required">
-        <annotation>
-          <documentation>Ending address of the range.</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:begin" use="required" />
+      <attribute ref="this:end" use="required" />
     </complexType>
+  </element>
+
+  <element name="include-url" type="string">
+    <annotation>
+      <documentation>A file URL holding specific addresses to be polled.
+        Each line in the URL file can be one of:
+        &lt;IP&gt;&lt;space&gt;#&lt;comments&gt; or &lt;IP&gt; or
+        #&lt;comments&gt;. Lines starting with a '#' are ignored and so
+        are characters after a '&lt;space&gt;#' in a line.</documentation>
+    </annotation>
+  </element>
+
+  <element name="specific" type="string">
+    <annotation>
+      <documentation>Addresses in this package</documentation>
+    </annotation>
   </element>
 
   <element name="mapping">
@@ -258,33 +150,67 @@
     </annotation>
 
     <complexType>
-      <attribute name="sysoid-mask" type="string" use="required">
-        <annotation>
-          <documentation>sysoid to match.</documentation>
-        </annotation>
-      </attribute>
-
-      <attribute name="type" type="string" use="required">
-        <annotation>
-          <documentation>The rancid device type 
-          for the specified sysoid mask.</documentation>
-        </annotation>
-      </attribute>
+      <attribute ref="this:sysoid-mask" use="required" />
+      <attribute ref="this:type" use="required" />
     </complexType>
   </element>
-      
+
   <element name="schedule">
     <annotation>
-      <documentation>This is a time when you can schedule set up/down
-      to rancid</documentation>
+      <documentation>This is a time when you can schedule set up/down to rancid</documentation>
     </annotation>
 
     <complexType>
       <complexContent>
-        <extension base="typ:basicSchedule"/>
+        <extension base="typ:basicSchedule" />
       </complexContent>
     </complexType>
   </element>
-      
+
+  <attribute name="delay" type="long" />
+
+  <attribute name="retries" type="int">
+    <annotation>
+      <documentation>The maximum number of retry before sending a failure.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="useCategories" type="boolean">
+    <annotation>
+      <documentation>If you want to use opennms categories to match rancid device type.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="default-type" type="string">
+    <annotation>
+      <documentation>The Default Rancid type, it is used when no device type for provisioned node is found.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="name" type="string" />
+
+  <attribute name="begin" type="string">
+    <annotation>
+      <documentation>Starting address of the range.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="end" type="string">
+    <annotation>
+      <documentation>Ending address of the range.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="sysoid-mask" type="string">
+    <annotation>
+      <documentation>sysoid to match.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="type" type="string">
+    <annotation>
+      <documentation>The rancid device type for the specified sysoid mask.</documentation>
+    </annotation>
+  </attribute>
 
 </schema>

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema targetNamespace="http://xmlns.opennms.org/xsd/config/tags"
-        xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:this="http://xmlns.opennms.org/xsd/config/tags">
+<schema targetNamespace="http://xmlns.opennms.org/xsd/config/tags" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:this="http://xmlns.opennms.org/xsd/config/tags">
   <annotation>
     <documentation>XML Schema for metadata tags.</documentation>
   </annotation>
@@ -10,7 +8,7 @@
     <annotation>
       <documentation>An collection of tags.</documentation>
     </annotation>
-    
+
     <complexType>
       <sequence>
         <element minOccurs="0" maxOccurs="unbounded" ref="this:tag" />
@@ -24,9 +22,11 @@
     </annotation>
 
     <complexType>
-      <attribute name="name" type="string" />
+      <attribute ref="this:name" use="required" />
     </complexType>
 
   </element>
+
+  <attribute name="name" type="string" />
 
 </schema>

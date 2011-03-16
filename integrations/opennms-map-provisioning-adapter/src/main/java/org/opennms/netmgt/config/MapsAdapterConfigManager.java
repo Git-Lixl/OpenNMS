@@ -391,7 +391,7 @@ abstract public class MapsAdapterConfigManager implements MapsAdapterConfig {
             }
         }
     
-        final Enumeration<String> eurl = pkg.enumerateIncludeUrl();
+        final Enumeration<? extends String> eurl = pkg.enumerateIncludeUrl();
         while (!has_specific && eurl.hasMoreElements()) {
             has_specific = interfaceInUrl(iface, eurl.nextElement());
         }

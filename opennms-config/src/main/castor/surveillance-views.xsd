@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema xmlns="http://www.w3.org/2001/XMLSchema" 
-        targetNamespace="http://xmlns.opennms.org/xsd/config/surveillance-views"
-        xmlns:this="http://xmlns.opennms.org/xsd/config/surveillance-views" 
-        xmlns:tns="http://www.opennms.org/surveillance-views">
-        
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://xmlns.opennms.org/xsd/config/surveillance-views" xmlns:this="http://xmlns.opennms.org/xsd/config/surveillance-views"
+  xmlns:tns="http://www.opennms.org/surveillance-views">
+
   <element name="surveillance-view-configuration">
-    <annotation><documentation>Level element containing surveillance view definitions</documentation></annotation>
+    <annotation>
+      <documentation>Level element containing surveillance view definitions</documentation>
+    </annotation>
     <complexType>
       <sequence>
         <element minOccurs="0" maxOccurs="1" ref="this:views" />
       </sequence>
-      <attribute name="default-view" type="string" use="optional" default="default"/>
+      <attribute ref="this:default-view" use="optional" default="default" />
     </complexType>
   </element>
-  
+
   <element name="views">
     <complexType>
       <sequence>
@@ -28,58 +28,69 @@
         <element ref="this:rows" minOccurs="1" maxOccurs="1" />
         <element ref="this:columns" minOccurs="1" maxOccurs="1" />
       </sequence>
-      <attribute name="name" type="string" use="required"/>
-      <attribute name="refresh-seconds" type="string" use="optional" default="300" />
+      <attribute ref="this:name" use="required" />
+      <attribute ref="this:refresh-seconds" use="optional" default="300" />
     </complexType>
   </element>
-  
-  <element name="rows" >
+
+  <element name="rows">
     <complexType>
       <sequence>
         <element ref="this:row-def" minOccurs="1" maxOccurs="unbounded" />
       </sequence>
     </complexType>
   </element>
-  
-  <element name="columns" >
+
+  <element name="columns">
     <complexType>
       <sequence>
         <element ref="this:column-def" minOccurs="1" maxOccurs="unbounded" />
       </sequence>
     </complexType>
   </element>
-  
+
   <element name="row-def">
     <complexType>
       <sequence>
         <element ref="this:category" minOccurs="1" maxOccurs="unbounded"></element>
       </sequence>
-      <attribute name="label" type="string" use="required" />
-      <attribute name="report-category" type="string" use="optional" />
+      <attribute ref="this:label" use="required" />
+      <attribute ref="this:report-category" use="optional" />
     </complexType>
   </element>
-  
+
   <element name="column-def">
     <complexType>
       <sequence>
         <element ref="this:category" minOccurs="1" maxOccurs="unbounded"></element>
       </sequence>
-      <attribute name="label" type="string" use="required" />
-      <attribute name="report-category" type="string" use="optional" />
+      <attribute ref="this:label" use="required" />
+      <attribute ref="this:report-category" use="optional" />
     </complexType>
   </element>
-  
+
   <element name="category">
     <annotation>
       <documentation>
         This element is used to specify OpenNMS specific categories. Note: currently, these categories are defined in a separate configuration file and are
-        related directly to monitored services. I have separated out this element so that it can be refereneced by other entities (nodes, interfaces, etc.)
-        however, they will be ignored until the domain model is changed and the service layer is adapted for this behavior.
+        related directly to monitored
+        services. I have separated out this element so that it can be refereneced by other entities (nodes, interfaces, etc.)
+        however, they will be ignored until the domain model is changed and the
+        service layer is adapted for this behavior.
       </documentation>
     </annotation>
     <complexType>
-      <attribute name="name" type="string" use="required" />
+      <attribute ref="this:name" use="required" />
     </complexType>
   </element>
 
+  <attribute name="default-view" type="string" />
+
+  <attribute name="name" type="string" />
+
+  <attribute name="refresh-seconds" type="string" />
+
+  <attribute name="label" type="string" />
+
+  <attribute name="report-category" type="string" />
 </schema>

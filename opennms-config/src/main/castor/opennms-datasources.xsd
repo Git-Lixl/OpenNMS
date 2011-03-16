@@ -1,18 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema xmlns="http://www.w3.org/2001/XMLSchema"
-  targetNamespace="http://xmlns.opennms.org/xsd/config/opennms-datasources"
-  xmlns:this="http://xmlns.opennms.org/xsd/config/opennms-datasources">
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://xmlns.opennms.org/xsd/config/opennms-datasources" xmlns:this="http://xmlns.opennms.org/xsd/config/opennms-datasources">
   <annotation>
-    <documentation>XML Schema for the opennms-database.xml configuration file. Version: $Id:
-      opennms-database.xsd,v 1.4 2006/03/13 10:52:11 mhuot Exp $</documentation>
+    <documentation>XML Schema for the opennms-database.xml configuration file.</documentation>
   </annotation>
 
-  <element name="data-source-configuration" >
+  <element name="data-source-configuration">
     <annotation>
-      <documentation>
-        Top Level element for opennms-datasources.xml... a list of data sources
-        to be used within OpenNMS.
-      </documentation>
+      <documentation>Top Level element for opennms-datasources.xml... a list of data sources to be used within OpenNMS.</documentation>
     </annotation>
     <complexType>
       <sequence>
@@ -21,55 +15,96 @@
       </sequence>
     </complexType>
   </element>
+
   <element name="connection-pool">
     <annotation>
       <documentation>Database connection pool configuration.</documentation>
     </annotation>
     <complexType>
-      <attribute name="factory" type="string" use="optional" default="org.opennms.netmgt.config.C3P0ConnectionFactory">
-        <annotation><documentation>The connection pool implementation to use.</documentation></annotation>
-      </attribute>
-      <attribute name="idleTimeout" type="int" use="optional" default="600">
-        <annotation><documentation>How long, in seconds, an idle connection is kept in the pool before it is removed.</documentation></annotation>
-      </attribute>
-      <attribute name="loginTimeout" type="int" use="optional" default="3">
-        <annotation><documentation>How long, in seconds, to attempt to make a connection to the database.</documentation></annotation>
-      </attribute>
-      <attribute name="minPool" type="int" use="optional" default="10">
-        <annotation><documentation>The minimum number of pooled connections to retain.</documentation></annotation>
-      </attribute>
-      <attribute name="maxPool" type="int" use="optional" default="50">
-        <annotation><documentation>The maximum number of pooled connections to retain.</documentation></annotation>
-      </attribute>
-      <attribute name="maxSize" type="int" use="optional" default="500">
-        <annotation><documentation>The maximum number of connections that can be created.</documentation></annotation>
-      </attribute>
-      
+      <attribute ref="this:factory" use="optional" default="org.opennms.netmgt.config.C3P0ConnectionFactory" />
+      <attribute ref="this:idleTimeout" use="optional" default="600" />
+      <attribute ref="this:loginTimeout" use="optional" default="3" />
+      <attribute ref="this:minPool" use="optional" default="10" />
+      <attribute ref="this:maxPool" use="optional" default="50" />
+      <attribute ref="this:maxSize" use="optional" default="500" />
     </complexType>
   </element>
-  <element name="jdbc-data-source" >
+
+  <element name="jdbc-data-source">
     <annotation>
-      <documentation>Top-level element for the opennms-database.xml configuration
-      file.</documentation>
+      <documentation>Top-level element for the opennms-database.xml configuration file.</documentation>
     </annotation>
     <complexType>
       <sequence>
-        <element ref="this:param" minOccurs="0" maxOccurs="unbounded">
-        </element>
+        <element ref="this:param" minOccurs="0" maxOccurs="unbounded" />
       </sequence>
-      <attribute name="name" type="string" use="required" />
-      <attribute name="database-name" type="string" use="optional" default="opennms" />
-      <attribute name="schema-name" type="string" use="optional" />
-      <attribute name="url" type="string" use="required" />
-      <attribute name="class-name" type="string" use="required" />
-      <attribute name="user-name" type="string" use="optional" />
-      <attribute name="password" type="string" use="optional" />
+      <attribute ref="this:name" use="required" />
+      <attribute ref="this:database-name" use="optional" default="opennms" />
+      <attribute ref="this:schema-name" use="optional" />
+      <attribute ref="this:url" use="required" />
+      <attribute ref="this:class-name" use="required" />
+      <attribute ref="this:user-name" use="optional" />
+      <attribute ref="this:password" use="optional" />
     </complexType>
   </element>
+
   <element name="param">
     <complexType>
-      <attribute name="name" use="required" type="string"/>
-      <attribute name="value" use="required" type="string"/>
+      <attribute ref="this:name" use="required" />
+      <attribute ref="this:value" use="required" />
     </complexType>
   </element>
+
+  <attribute name="factory" type="string">
+    <annotation>
+      <documentation>The connection pool implementation to use.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="idleTimeout" type="int">
+    <annotation>
+      <documentation>How long, in seconds, an idle connection is kept in the pool before it is removed.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="loginTimeout" type="int">
+    <annotation>
+      <documentation>How long, in seconds, to attempt to make a connection to the database.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="minPool" type="int">
+    <annotation>
+      <documentation>The minimum number of pooled connections to retain.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="maxPool" type="int">
+    <annotation>
+      <documentation>The maximum number of pooled connections to retain.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="maxSize" type="int">
+    <annotation>
+      <documentation>The maximum number of connections that can be created.</documentation>
+    </annotation>
+  </attribute>
+
+  <attribute name="name" type="string" />
+
+  <attribute name="value" type="string" />
+
+  <attribute name="database-name" type="string" />
+
+  <attribute name="schema-name" type="string" />
+
+  <attribute name="url" type="string" />
+
+  <attribute name="class-name" type="string" />
+
+  <attribute name="user-name" type="string" />
+
+  <attribute name="password" type="string" />
+
 </schema>

@@ -389,7 +389,7 @@ public class Category {
      *
      * @return a {@link java.util.Enumeration} object.
      */
-    public Enumeration<Node> enumerateNode() {
+    public Enumeration<? extends Node> enumerateNode() {
         return m_rtcCategory.enumerateNode();
     }
 
@@ -408,7 +408,7 @@ public class Category {
         long count = 0;
         long downCount = 0;
 
-        Enumeration<Node> nodeEnum = category.enumerateNode();
+        Enumeration<? extends Node> nodeEnum = category.enumerateNode();
 
         while (nodeEnum.hasMoreElements()) {
             org.opennms.netmgt.xml.rtc.Node node = nodeEnum.nextElement();
