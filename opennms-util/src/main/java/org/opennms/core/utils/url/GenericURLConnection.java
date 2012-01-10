@@ -13,7 +13,7 @@ public abstract class GenericURLConnection extends URLConnection {
 		super(url);
 	}
 
-	private String getUsername(URL url) {
+	protected String getUsername(URL url) {
 		String userInfo = url.getUserInfo();
 		if (userInfo != null) {
 			if (userInfo.contains(":")) {
@@ -27,7 +27,7 @@ public abstract class GenericURLConnection extends URLConnection {
 		}
 	}
 
-	private String getPassword() {
+	protected String getPassword() {
 		String userInfo = url.getUserInfo();
 		if (userInfo != null) {
 			if (userInfo.contains(":")) {
@@ -41,7 +41,7 @@ public abstract class GenericURLConnection extends URLConnection {
 		}
 	}
 
-	private Map<String, String> getQueryArgs(URL url) {
+	protected Map<String, String> getQueryArgs(URL url) {
 		HashMap<String, String> hashMap = new HashMap<String, String>();
 
 		String queryString = url.getQuery();
