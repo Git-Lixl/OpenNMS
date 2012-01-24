@@ -28,6 +28,7 @@
 
 package org.opennms.protocols.xml.collector;
 
+import java.beans.PropertyDescriptor;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
@@ -61,6 +62,8 @@ import org.opennms.netmgt.model.RrdRepository;
 import org.opennms.protocols.xml.config.XmlGroup;
 import org.opennms.protocols.xml.config.XmlObject;
 import org.opennms.protocols.xml.config.XmlSource;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -133,9 +136,10 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
             NodeList resourceList = (NodeList) xpath.evaluate(group.getResourceXpath(), doc, XPathConstants.NODESET);
             for (int j = 0; j < resourceList.getLength(); j++) {
                 Node resource = resourceList.item(j);
-                Node resourceName = (Node) xpath.evaluate(group.getKeyXpath(), resource, XPathConstants.NODE);
+                Node resourceNameNode = group.getKeyXpath() == null ? null : (Node) xpath.evaluate(group.getKeyXpath(), resource, XPathConstants.NODE);
+                String resourceName = resourceNameNode == null ? "node" : resourceNameNode.getNodeValue(); // if key-xpath doesn't exist or not found, a node resource will be assumed.
                 log().debug("fillCollectionSet: processing XML resource " + resourceName);
-                XmlCollectionResource collectionResource = getCollectionResource(agent, resourceName.getNodeValue(), group.getResourceType(), timestamp);
+                XmlCollectionResource collectionResource = getCollectionResource(agent, resourceName, group.getResourceType(), timestamp);
                 AttributeGroupType attribGroupType = new AttributeGroupType(group.getName(), group.getIfType());
                 for (XmlObject object : group.getXmlObjects()) {
                     String value = (String) xpath.evaluate(object.getXpath(), resource, XPathConstants.STRING);
@@ -214,7 +218,7 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
 
     /**
      * Parses the URL.
-     *
+     * 
      * <p>Valid placeholders are:</p>
      * <ul>
      * <li><b>ipaddr</b>, The Node IP Address</li>
@@ -223,14 +227,17 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
      * <li><b>nodeLabel</b>, The Node Label</li>
      * <li><b>foreignId</b>, The Node Foreign ID</li>
      * <li><b>foreignSource</b>, The Node Foreign Source</li>
+     * <li>Any asset property defined on the node.</li>
      * </ul>
-     * 
+     *
      * @param unformattedUrl the unformatted URL
      * @param agent the collection agent
      * @param collectionStep the collection step (in seconds)
      * @return the string
+     * 
+     * @throws IllegalArgumentException the illegal argument exception
      */
-    protected String parseUrl(final String unformattedUrl, final CollectionAgent agent, final Integer collectionStep) {
+    protected String parseUrl(final String unformattedUrl, final CollectionAgent agent, final Integer collectionStep) throws IllegalArgumentException {
         NodeDao nodeDao = BeanUtils.getBean("daoContext", "nodeDao", NodeDao.class);
         OnmsNode node = nodeDao.get(agent.getNodeId());
         String url = unformattedUrl.replace("{ipaddr}", agent.getHostAddress());
@@ -239,6 +246,16 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
         url = url.replace("{nodeLabel}", node.getLabel());
         url = url.replace("{foreignId}", node.getForeignId());
         url = url.replace("{foreignSource}", node.getForeignSource());
+        if (node.getAssetRecord() != null) {
+            BeanWrapper wrapper = new BeanWrapperImpl(node.getAssetRecord());
+            for (PropertyDescriptor p : wrapper.getPropertyDescriptors()) {
+                Object obj = wrapper.getPropertyValue(p.getName());
+                if (obj != null)
+                    url = url.replace('{' + p.getName() + '}', obj.toString());
+            }
+        }
+        if (url.matches(".*\\{.+\\}.*"))
+            throw new IllegalArgumentException("The URL " + url + " contains unknown placeholders.");
         return url;
     }
 
