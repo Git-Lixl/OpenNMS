@@ -14,10 +14,11 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
     private GenericURLFactory() {
         urlConnections = new HashMap<String, String>();
 
-        // Map the protocol against the implementation
-        // TODO indigo: maybe a way we can configure it with spring?
+        // Map dns:// against DNS requisition URL connection
         urlConnections.put("dns", "org.opennms.netmgt.provision.service.dns.DnsRequisitionUrlConnection");
-        //urlConnections.put("vmware", "VMwareURLConnection");
+
+        // Map puppet:// against Puppet requisition URL connection
+        urlConnections.put("puppet", "org.opennms.netmgt.provision.service.puppet.PuppetRequisitionUrlConnection");
     }
 
     public static void initialize() {
@@ -45,16 +46,20 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
     public URLStreamHandler createURLStreamHandler(String protocol) {
         Class c = null;
 
+        // There is not such a protocol defined
         if (!urlConnections.containsKey(protocol))
-            return null;
+            return null; // leave
 
         try {
+            // Get implementation class by protocol at runtime
             c = Class.forName(urlConnections.get(protocol));
         } catch (ClassNotFoundException e) {
+            // There is not such a class for this protocol
             e.printStackTrace();
             return null;
         }
 
+        // Return this
         return new GenericURLStreamHandler(c);
     }
 }
