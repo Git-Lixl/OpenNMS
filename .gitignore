@@ -11,3 +11,6 @@ target
 .springBeans
 .DS_Store
 build.properties
+*.iws
+*.ipr
+*.iml
