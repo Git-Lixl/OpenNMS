@@ -12,6 +12,9 @@ target
 .DS_Store
 build.properties
 *.iml
-*.iwl
 *.iws
 *.ipr
+.launch
+.*launch
+bin/
+
