@@ -60,11 +60,12 @@ public class PuppetRestClient {
         m_webResource = m_client.resource(url.toURI());
     }
     
-    public List<String> getPuppetNodeByFactsSearch(String environment, String search) {
+    public List<String> getPuppetNodesByFactsSearch(String environment, String search) {
         Yaml puppetNodeListYaml = new Yaml();
         ArrayList<String> puppetHosts = new ArrayList<String>();
         
-        // https://{puppetmaster}:8140/{environment}/facts_search/search?facts.operatingsystem=Ubuntu
+        // https://{puppetmaster}:8140/{environment}/facts_search/search?{search}
+        // environment = production
         // search = facts.operatingsystem=Ubuntu
         String puppetSearchResult = m_webResource.path(environment).path("facts_search").path("search?" + search).accept(MEDIA_TYPE_YAML).get(String.class);
         logger.debug("Search result for puppet nodes: '{}'", puppetSearchResult);
@@ -73,11 +74,11 @@ public class PuppetRestClient {
         return puppetHosts;
     }
 
-    public Map<String,String> getFactsByPuppetNode(String puppetNode) {
+    public Map<String,String> getFactsByPuppetNode(String environment, String puppetNode) {
         Map<String,String> nodeFacts = new HashMap<String,String>();
 
-        //https://{puppetmaster}:8140/production/node/patches.opennms-edu.net
-        String puppetNodeYaml = m_webResource.path("production").path("node").path(puppetNode).accept(MEDIA_TYPE_YAML).get(String.class).replace("!ruby/", "");
+        //https://{puppetmaster}:8140/{environment}/node/{puppetNode}
+        String puppetNodeYaml = m_webResource.path(environment).path("node").path(puppetNode).accept(MEDIA_TYPE_YAML).get(String.class).replace("!ruby/", "");
         logger.debug("Get puppet node facts for node '{}': '{}'", puppetNode, puppetNodeYaml);
 
         try {

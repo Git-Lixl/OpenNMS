@@ -1,6 +1,7 @@
 package org.opennms.netmgt.provision.service.puppet;
 
 import org.apache.commons.io.IOExceptionWithCause;
+import org.apache.commons.lang.StringUtils;
 import org.opennms.core.utils.url.GenericURLConnection;
 import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
@@ -14,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
+import java.util.List;
 import java.util.Map;
 /**
  * <p>PuppetRequisitionUrlConnection class.</p>
@@ -27,8 +29,6 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
 
     private static Map<String, String> m_args;
 
-    private Requisition m_requisition = null;
-
     private PuppetRestClient m_puppetRestClient;
     
     private String m_host;
@@ -36,6 +36,10 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
     private Integer m_port;
     
     private URL m_puppetRestUrl;
+
+    private String m_foreignSource;
+    
+    private String m_puppetEnvironment;
 
     protected PuppetRequisitionUrlConnection(URL url) throws MalformedURLException {
         super(url);
@@ -48,12 +52,18 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
         
         m_puppetRestUrl = new URL("https://" + m_host + ":" + m_port);
 
+        m_foreignSource = parseForeignSource(url);
+        
+        m_puppetEnvironment = parsePuppetEnvironment(url);
+
         try {
             // https://{puppetmaster}:8140
             m_puppetRestClient = new PuppetRestClient(m_puppetRestUrl);
         } catch (URISyntaxException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
+
+        logger.debug("Initialized PuppetRequisitionUrlConnection with URL: '{}' and args: '{}'", url, m_args);
     }
 
     /**
@@ -68,42 +78,98 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
     }
 
     private Requisition buildPuppetRequisition() {
-        return new Requisition();
+        Requisition requisition = new Requisition(m_foreignSource);
+        List<String> puppetNodeList = m_puppetRestClient.getPuppetNodesByFactsSearch(m_puppetEnvironment,"facts.operatingsystem=Ubuntu");
+        
+        for (String node : puppetNodeList) {
+            requisition.insertNode(createRequisitionNode(m_puppetEnvironment, node));
+            logger.debug("Insert puppet requisition node '{}' from environment '{}'", node, m_puppetEnvironment);
+        }
+        
+        return requisition;
     }
 
-    private RequisitionNode createRequisitionNode(String puppetNodeRecord) {
+    private RequisitionNode createRequisitionNode(String environment, String puppetNode) {
+        logger.debug("Create requisition node for puppet node '{}'", puppetNode);
         RequisitionNode requisitionNode = new RequisitionNode();
 
         RequisitionInterface requisitionInterface = new RequisitionInterface();
 
-        //puppetNodeRecord -> Puppet node name: itchy.opennms-edu.net
-        m_puppetRestClient.getFactsByPuppetNode(puppetNodeRecord);
-
-        /*
-         * node label:
-         * ip address:
-         * uuid
-         * operatingsystem:
-         */
+        //environnment -> Puppet environment: production
+        //puppetNode -> Puppet node name: itchy.opennms-edu.net
+        Map<String,String> puppetNodeFacts = m_puppetRestClient.getFactsByPuppetNode(environment, puppetNode);
 
         // Setting the node label
-        requisitionNode.setNodeLabel("<nodelabel>");
+        requisitionNode.setNodeLabel(puppetNodeFacts.get("name"));
+        logger.debug("Set node label: '{}'", puppetNodeFacts.get("name"));
 
         // Foreign Id to map against uuid from puppetmaster
-        requisitionNode.setForeignId("<puppet-uuid>");
-
-        // Primary interface
-        boolean primary = true;
+        requisitionNode.setForeignId("uniqueid");
+        logger.debug("Set node foreign ID: '{}'", puppetNodeFacts.get("uniqueid"));
 
         try {
-            InetAddress inetAddress = InetAddress.getByName("");
+            InetAddress inetAddress = InetAddress.getByName(puppetNodeFacts.get("ipaddress"));
+            requisitionInterface.setIpAddr(inetAddress.toString());
+            requisitionInterface.setSnmpPrimary("P");
         } catch (UnknownHostException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-
+        requisitionInterface.setManaged(Boolean.TRUE);
+        requisitionInterface.setStatus(Integer.valueOf(1));
         requisitionNode.putInterface(requisitionInterface);
 
         return new RequisitionNode();
+    }
+
+    /**
+     * Foreign Source should be the second path entity, if it exists, otherwise it is
+     * set to the value of the zone.
+     *
+     *   dns://<host>/<zone>[/<foreign source>][/<?expression=<regex>>
+     *
+     * @param url a {@link java.net.URL} object.
+     * @return a {@link java.lang.String} object.
+     */
+    protected static String parseForeignSource(URL url) {
+
+        String path = url.getPath();
+
+        path = StringUtils.removeStart(path, "/");
+        path = StringUtils.removeEnd(path, "/");
+
+        String foreignSource = path;
+
+        if (path != null && StringUtils.countMatches(path, "/") == 1) {
+            String[] paths = path.split("/");
+            foreignSource = paths[1];
+        }
+
+        return foreignSource;
+    }
+
+    /**
+     * Puppet environment should be the first path entity
+     *
+     *   puppet://<host>/<puppet environment>[/<foreign source>][/<?expression=<regex>>
+     *
+     * @param url a {@link java.net.URL} object.
+     * @return a {@link java.lang.String} object.
+     */
+    protected static String parsePuppetEnvironment(URL url) {
+
+        String path = url.getPath();
+
+        path = StringUtils.removeStart(path, "/");
+        path = StringUtils.removeEnd(path, "/");
+
+        String puppetEnvironment = path;
+
+        if (path != null && StringUtils.countMatches(path, "/") == 1) {
+            String[] paths = path.split("/");
+            puppetEnvironment = paths[0];
+        }
+
+        return puppetEnvironment;
     }
 
     /**
