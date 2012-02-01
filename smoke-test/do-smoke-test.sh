@@ -98,11 +98,10 @@ reset_opennms() {
 get_source() {
 	banner "Getting OpenNMS Source"
 
-	rsync -avr --exclude=target --exclude=smoke-test "$ME"/../  "$SOURCEDIR"/ || die "Unable to create source dir."
+	rsync -avr --exclude=target --exclude=smoke-test --delete "$ME"/../  "$SOURCEDIR"/ || die "Unable to create source dir."
 	pushd "$SOURCEDIR"
 		git clean -fdx || die "Unable to clean source tree."
 		git reset --hard HEAD
-		git pull || die "Unable to pull latest code."
 
 		# if $MATCH_RPM is set to "yes", then reset the code to the git hash the RPM was built from
 		case $MATCH_RPM in
