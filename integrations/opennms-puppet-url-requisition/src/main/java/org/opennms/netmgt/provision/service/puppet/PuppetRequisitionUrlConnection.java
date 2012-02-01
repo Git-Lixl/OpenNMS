@@ -13,8 +13,12 @@ import javax.xml.bind.JAXBException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.*;
 import java.util.Map;
+import java.util.logging.Level;
+import org.opennms.netmgt.provision.service.puppet.tools.Map2BeanUtils;
+import org.opennms.netmgt.provision.service.puppet.tools.RequisitionAssetUtils;
 /**
  * <p>PuppetRequisitionUrlConnection class.</p>
  *
@@ -72,18 +76,27 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
     }
 
     private RequisitionNode createRequisitionNode(String puppetNodeRecord) {
+
         RequisitionNode requisitionNode = new RequisitionNode();
 
         RequisitionInterface requisitionInterface = new RequisitionInterface();
-
         //puppetNodeRecord -> Puppet node name: itchy.opennms-edu.net
-        m_puppetRestClient.getFactsByPuppetNode(puppetNodeRecord);
-
+        Map<String, String> factsByPuppetNode = m_puppetRestClient.getFactsByPuppetNode(puppetNodeRecord);
+        PuppetModel puppetModel = new PuppetModel();
+        try {
+            puppetModel = (PuppetModel) Map2BeanUtils.fill(puppetModel, factsByPuppetNode);
+            requisitionNode.setAssets(RequisitionAssetUtils.generateRequisitionAssets(puppetModel));
+        } catch (IllegalArgumentException ex) {
+            java.util.logging.Logger.getLogger(PuppetRequisitionUrlConnection.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(PuppetRequisitionUrlConnection.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvocationTargetException ex) {
+            java.util.logging.Logger.getLogger(PuppetRequisitionUrlConnection.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchMethodException ex) {
+            java.util.logging.Logger.getLogger(PuppetRequisitionUrlConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
         /*
-         * node label:
-         * ip address:
-         * uuid
-         * operatingsystem:
+         * node label: ip address: uuid operatingsystem:
          */
 
         // Setting the node label
@@ -104,6 +117,7 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
         requisitionNode.putInterface(requisitionInterface);
 
         return new RequisitionNode();
+        
     }
 
     /**
