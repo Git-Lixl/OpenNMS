@@ -7,6 +7,7 @@ import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
+import org.opennms.netmgt.provision.service.puppet.tools.SSLUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,27 +42,28 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
     
     private String m_puppetEnvironment;
 
-    protected PuppetRequisitionUrlConnection(URL url) throws MalformedURLException {
+    public PuppetRequisitionUrlConnection(URL url) throws MalformedURLException {
         super(url);
+
+        SSLUtilities.trustAllHostnames();
+        SSLUtilities.trustAllHttpsCertificates();
         
         m_host = url.getHost();
+        logger.debug("Init puppet requisition host '{}'", m_host);
         
         m_port = url.getPort();
-
+        logger.debug("Init puppet requisition port '{}'", m_port);
+        
         m_args = getQueryArgs(url);
         
         m_puppetRestUrl = new URL("https://" + m_host + ":" + m_port);
+        logger.debug("Init puppet ReST URL '{}'", m_puppetRestUrl);
 
         m_foreignSource = parseForeignSource(url);
-        
+        logger.debug("Init puppet foreign source '{}'", m_foreignSource);
+                
         m_puppetEnvironment = parsePuppetEnvironment(url);
-
-        try {
-            // https://{puppetmaster}:8140
-            m_puppetRestClient = new PuppetRestClient(m_puppetRestUrl);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        logger.debug("Init puppet environment '{}'", m_puppetEnvironment);
 
         logger.debug("Initialized PuppetRequisitionUrlConnection with URL: '{}' and args: '{}'", url, m_args);
     }
@@ -79,17 +81,24 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
 
     private Requisition buildPuppetRequisition() {
         Requisition requisition = new Requisition(m_foreignSource);
-        List<String> puppetNodeList = m_puppetRestClient.getPuppetNodesByFactsSearch(m_puppetEnvironment,"facts.operatingsystem=Ubuntu");
         
-        for (String node : puppetNodeList) {
-            requisition.insertNode(createRequisitionNode(m_puppetEnvironment, node));
-            logger.debug("Insert puppet requisition node '{}' from environment '{}'", node, m_puppetEnvironment);
+        try {
+            // https://{puppetmaster}:8140
+            m_puppetRestClient = new PuppetRestClient(m_puppetRestUrl);
+            List<String> puppetNodeList = m_puppetRestClient.getPuppetNodesByFactsSearch(m_puppetEnvironment,"facts.operatingsystem=Ubuntu");
+        
+            for (String puppetNode : puppetNodeList) {
+                requisition.insertNode(createRequisitionNode(puppetNode));
+                logger.debug("Insert puppet requisition node '{}' from environment '{}'", puppetNode, m_puppetEnvironment);
+             }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
         
         return requisition;
     }
 
-    private RequisitionNode createRequisitionNode(String environment, String puppetNode) {
+    private RequisitionNode createRequisitionNode(String puppetNode) {
         logger.debug("Create requisition node for puppet node '{}'", puppetNode);
         RequisitionNode requisitionNode = new RequisitionNode();
 
@@ -97,22 +106,21 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
 
         //environnment -> Puppet environment: production
         //puppetNode -> Puppet node name: itchy.opennms-edu.net
-        Map<String,String> puppetNodeFacts = m_puppetRestClient.getFactsByPuppetNode(environment, puppetNode);
+        Map<String,String> puppetNodeFacts = m_puppetRestClient.getFactsByPuppetNode(m_puppetEnvironment, puppetNode);
 
         // Setting the node label
-        requisitionNode.setNodeLabel(puppetNodeFacts.get("name"));
-        logger.debug("Set node label: '{}'", puppetNodeFacts.get("name"));
+        requisitionNode.setNodeLabel(puppetNode);
 
         // Foreign Id to map against uuid from puppetmaster
-        requisitionNode.setForeignId("uniqueid");
+        requisitionNode.setForeignId(puppetNodeFacts.get("uniqueid"));
         logger.debug("Set node foreign ID: '{}'", puppetNodeFacts.get("uniqueid"));
 
         try {
             InetAddress inetAddress = InetAddress.getByName(puppetNodeFacts.get("ipaddress"));
-            requisitionInterface.setIpAddr(inetAddress.toString());
+            requisitionInterface.setIpAddr(puppetNodeFacts.get("ipaddress"));
             requisitionInterface.setSnmpPrimary("P");
         } catch (UnknownHostException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error parsing IP address '{}'. Error message: '{}'", puppetNodeFacts.get("ipaddress"), e.getMessage());
         }
         requisitionInterface.setManaged(Boolean.TRUE);
         requisitionInterface.setStatus(Integer.valueOf(1));
