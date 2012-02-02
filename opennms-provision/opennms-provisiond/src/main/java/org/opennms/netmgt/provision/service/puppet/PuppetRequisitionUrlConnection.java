@@ -7,6 +7,8 @@ import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
+import org.opennms.netmgt.provision.service.puppet.tools.Map2BeanUtils;
+import org.opennms.netmgt.provision.service.puppet.tools.RequisitionAssetUtils;
 import org.opennms.netmgt.provision.service.puppet.tools.SSLUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,7 @@ import javax.xml.bind.JAXBException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.*;
 import java.util.List;
 import java.util.Map;
@@ -124,6 +127,19 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
         } catch (UnknownHostException e) {
             logger.error("Error parsing IP address '{}'. Error message: '{}'", puppetNodeFacts.get("ipaddress"), e.getMessage());
         }
+        
+        PuppetModel puppetAssetModel = new PuppetModel();
+        try {
+            puppetAssetModel = (PuppetModel) Map2BeanUtils.fill(puppetAssetModel,puppetNodeFacts);
+            requisitionNode.setAssets(RequisitionAssetUtils.generateRequisitionAssets(puppetAssetModel));
+        } catch (IllegalAccessException e) {
+            logger.error("Illegal access ocured. Error message: '{}'", e.getMessage());
+        } catch (InvocationTargetException e) {
+            logger.error("Invocation target exception. Error message: '{}'", e.getMessage());
+        } catch (NoSuchMethodException e) {
+            logger.error("No such method exception. Error message: '{}'", e.getMessage());
+        }
+
         requisitionInterface.setManaged(Boolean.TRUE);
         requisitionInterface.setStatus(Integer.valueOf(1));
         requisitionNode.putInterface(requisitionInterface);
