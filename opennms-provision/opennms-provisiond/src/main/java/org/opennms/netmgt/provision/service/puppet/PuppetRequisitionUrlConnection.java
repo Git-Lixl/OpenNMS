@@ -14,13 +14,9 @@ import javax.xml.bind.JAXBException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.net.*;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import org.opennms.netmgt.provision.service.puppet.tools.Map2BeanUtils;
-import org.opennms.netmgt.provision.service.puppet.tools.RequisitionAssetUtils;
 /**
  * <p>PuppetRequisitionUrlConnection class.</p>
  *
@@ -93,31 +89,15 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
         return requisition;
     }
 
-    private RequisitionNode createRequisitionNode(String environment, String puppetNodeRecord) {
+    private RequisitionNode createRequisitionNode(String environment, String puppetNode) {
         logger.debug("Create requisition node for puppet node '{}'", puppetNode);
         RequisitionNode requisitionNode = new RequisitionNode();
 
         RequisitionInterface requisitionInterface = new RequisitionInterface();
 
         //environnment -> Puppet environment: production
-        //puppetNodeRecord -> Puppet node name: itchy.opennms-edu.net
-        Map<String, String> puppetNodeFacts = m_puppetRestClient.getFactsByPuppetNode(environment, puppetNodeRecord);
-        PuppetModel puppetModel = new PuppetModel();
-        try {
-            puppetModel = (PuppetModel) Map2BeanUtils.fill(puppetModel, puppetNodeFacts);
-            requisitionNode.setAssets(RequisitionAssetUtils.generateRequisitionAssets(puppetModel));
-        } catch (IllegalArgumentException ex) {
-            java.util.logging.Logger.getLogger(PuppetRequisitionUrlConnection.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(PuppetRequisitionUrlConnection.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvocationTargetException ex) {
-            java.util.logging.Logger.getLogger(PuppetRequisitionUrlConnection.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchMethodException ex) {
-            java.util.logging.Logger.getLogger(PuppetRequisitionUrlConnection.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        /*
-         * node label: ip address: uuid operatingsystem:
-         */
+        //puppetNode -> Puppet node name: itchy.opennms-edu.net
+        Map<String,String> puppetNodeFacts = m_puppetRestClient.getFactsByPuppetNode(environment, puppetNode);
 
         // Setting the node label
         requisitionNode.setNodeLabel(puppetNodeFacts.get("name"));
@@ -139,7 +119,6 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
         requisitionNode.putInterface(requisitionInterface);
 
         return new RequisitionNode();
-        
     }
 
     /**

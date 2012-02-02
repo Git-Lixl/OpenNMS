@@ -16,8 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.opennms.netmgt.provision.service.puppet.tools.Map2Bean;
-import org.opennms.netmgt.provision.service.puppet.tools.RequistionAssetGen;
 
 /**
  * <p>PuppetRestClient class.</p>

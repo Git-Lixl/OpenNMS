@@ -28,18 +28,6 @@
 
 package org.opennms.netmgt.provision.service;
 
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.tasks.Task;
 import org.opennms.core.utils.InetAddressUtils;
@@ -61,10 +49,22 @@ import org.opennms.netmgt.provision.service.operations.NoOpProvisionMonitor;
 import org.opennms.netmgt.provision.service.operations.ProvisionMonitor;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.event.Parm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
+
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 /**
  * Massively Parallel Java Provisioning <code>ServiceDaemon</code> for OpenNMS.
@@ -73,6 +73,7 @@ import org.springframework.util.Assert;
  */
 @EventListener(name="Provisiond:EventListener")
 public class Provisioner implements SpringServiceDaemon {
+    private Logger logger = LoggerFactory.getLogger(Provisioner.class);
     
     /** Constant <code>NAME="Provisiond"</code> */
     public static final String NAME = "Provisiond";
@@ -202,8 +203,9 @@ public class Provisioner implements SpringServiceDaemon {
         Assert.notNull(m_taskCoordinator, "taskCoordinator property must be set");
         Assert.notNull(m_agentConfigFactory, "agentConfigFactory property must be set");
 
-
+        logger.debug("Initialize GenericURLFactory");
         GenericURLFactory.initialize();
+        logger.debug("Initialized GenericURLFactory with: '{}'", GenericURLFactory.getInstance().toString());
     }
     
     /**

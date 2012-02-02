@@ -48,6 +48,12 @@
       <artifactId>quartz-dependencies</artifactId>
       <type>pom</type>
     </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>1.9</version>
+    </dependency>
+ 
     <!-- runtime only dependencies -->
     <dependency>
       <groupId>org.opennms</groupId>
