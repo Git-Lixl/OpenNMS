@@ -81,6 +81,8 @@ public class PuppetRestClient {
      * @throws URISyntaxException
      */
     public PuppetRestClient(URL url) throws URISyntaxException {
+
+        // If you want base authentication go for defaultApacheClientConfig and credentials
         m_clientConfig = new DefaultClientConfig();
         m_client = Client.create(m_clientConfig);
 
@@ -104,8 +106,9 @@ public class PuppetRestClient {
         // https://{puppetmaster}:8140/{environment}/facts_search/search?{search}
         // environment = production
         // search = facts.operatingsystem=Ubuntu
+        // production/facts_search/search?facts.productname=VMware%20Virtual%20Platform
         String puppetSearchResult = m_webResource.path(environment).path("facts_search").path("search?" + search).accept(MEDIA_TYPE_YAML).get(String.class);
-        logger.debug("Search result for puppet nodes: '{}'", puppetSearchResult);
+        logger.debug("Search result with search '{}' for puppet nodes: '{}'","search?" + search, puppetSearchResult);
 
         puppetHosts = (ArrayList<String>) puppetNodeListYaml.load(puppetSearchResult);
         return puppetHosts;

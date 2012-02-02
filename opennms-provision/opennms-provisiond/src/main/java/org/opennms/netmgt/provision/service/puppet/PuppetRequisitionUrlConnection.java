@@ -36,7 +36,6 @@ import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
-import org.opennms.netmgt.provision.service.puppet.tools.SSLUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +43,7 @@ import javax.xml.bind.JAXBException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.List;
 import java.util.Map;
@@ -60,12 +60,12 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
     /**
      * Log to OPENNMS_HOME/logs/daemon/provisiond.log
      */
-    private Logger logger = LoggerFactory.getLogger("Provisiond." + PuppetRequisitionUrlConnection.class.getName());
+    private static Logger logger = LoggerFactory.getLogger("Provisiond." + PuppetRequisitionUrlConnection.class.getName());
 
     /**
      * Arguments from provisionds import url resource
      */
-    private static Map<String, String> m_args;
+    private String m_factSearch = "";
 
     /**
      * Puppet ReST client implementation
@@ -113,9 +113,8 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
 
         m_host = url.getHost();
 
-        m_port = url.getPort();
-
-        m_args = getQueryArgs(url);
+        // Set default to port 8140
+        m_port = (url.getPort() == -1) ? 8140 : url.getPort();
 
         m_puppetRestUrl = new URL("https://" + m_host + ":" + m_port);
 
@@ -123,11 +122,18 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
 
         m_puppetEnvironment = parsePuppetEnvironment(url);
 
+        try {
+            m_factSearch = URLDecoder.decode(url.getQuery(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            logger.error("Unsupported enconding. Error message '{}'", e.getMessage());
+        }
+
         logger.debug("Initialize puppet requisition url connection: '{}'", "Host[" + m_host +
+                "] Port[" + m_port +
                 "] Environment[" + m_puppetEnvironment +
                 "] Foreign source[" + m_foreignSource +
                 "] ReST URL[" + m_puppetRestUrl +
-                "] Arguments[" + m_args);
+                "] Arguments[" + m_factSearch + "]");
     }
 
     /**
@@ -143,18 +149,18 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
 
     /**
      * <p>buildPuppetRequisition</p>
-     * 
+     * <p/>
      * Build the OpenNMS requisition data structure from puppet master.
-     * 
+     *
      * @return a {@link org.opennms.netmgt.provision.persist.requisition.Requisition} object
      */
     private Requisition buildPuppetRequisition() {
         Requisition requisition = new Requisition(m_foreignSource);
 
         try {
-            // https://{puppetmaster}:8140
+            // m_puppetRestUrl should be https://{puppetmaster}:8140
             m_puppetRestClient = new PuppetRestClient(m_puppetRestUrl);
-            List<String> puppetNodeList = m_puppetRestClient.getPuppetNodesByFactsSearch(m_puppetEnvironment, "facts.operatingsystem=Ubuntu");
+            List<String> puppetNodeList = m_puppetRestClient.getPuppetNodesByFactsSearch(m_puppetEnvironment, m_factSearch);
 
             for (String puppetNode : puppetNodeList) {
                 requisition.insertNode(createRequisitionNode(puppetNode));
@@ -170,7 +176,7 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
     /**
      * Create a specific OpenNMS requisition node from puppet master identified by the puppet node name. Retrieve puppet
      * facts and fill up the OpenNMS requisition node model.
-     * 
+     *
      * @param puppetNode a {@link java.lang.String} puppet node name
      * @return a {@link org.opennms.netmgt.provision.persist.requisition.RequisitionNode} object
      */
@@ -257,7 +263,7 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
     /**
      * Puppet environment should be the first path entity
      * <p/>
-     * puppet://<host>/<puppet environment>[/<foreign source>][/<?expression=<regex>>
+     * puppet://<puppetmaster host>/<puppet environment>[/<foreign source>]/search?[<factsearch>]
      *
      * @param url a {@link java.net.URL} object.
      * @return a {@link java.lang.String} object.
