@@ -43,7 +43,6 @@ import javax.xml.bind.JAXBException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +106,7 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
         super(url);
 
         // TODO indigo: For security reasons, please import your puppet masters SSL certificate in your JVM. Only for test environment
-        // Figure out how we can handle this in a safe way even you run massively parallel. THIS IS A JVM SETTING!
+        // Figure out how we can handle this in a safe way even you run massively parallel. THIS IS A JVM SETTING
         SSLUtilities.trustAllHostnames();
         SSLUtilities.trustAllHttpsCertificates();
 
@@ -123,9 +122,9 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
         m_puppetEnvironment = parsePuppetEnvironment(url);
 
         try {
-            m_factSearch = URLDecoder.decode(url.getQuery(), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            logger.error("Unsupported enconding. Error message '{}'", e.getMessage());
+            m_factSearch = url.getQuery();
+        } catch (NullPointerException e) {
+            logger.error("No fact_search query set");
         }
 
         logger.debug("Initialize puppet requisition url connection: '{}'", "Host[" + m_host +
@@ -134,6 +133,7 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
                 "] Foreign source[" + m_foreignSource +
                 "] ReST URL[" + m_puppetRestUrl +
                 "] Arguments[" + m_factSearch + "]");
+        logger.debug("Rest query to build: '{}'", m_puppetRestUrl + "/" + m_puppetEnvironment + "/" + "facts_search/search?" + m_factSearch);
     }
 
     /**
@@ -245,16 +245,19 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
      */
     protected static String parseForeignSource(URL url) {
 
+
         String path = url.getPath();
 
         path = StringUtils.removeStart(path, "/");
         path = StringUtils.removeEnd(path, "/");
 
         String foreignSource = path;
+        logger.debug("Parse foreign source from path: '{}'", foreignSource);
 
         if (path != null && StringUtils.countMatches(path, "/") == 1) {
             String[] paths = path.split("/");
             foreignSource = paths[1];
+            logger.debug("Set foreign source to: '{}'", foreignSource);
         }
 
         return foreignSource;
@@ -276,10 +279,12 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
         path = StringUtils.removeEnd(path, "/");
 
         String puppetEnvironment = path;
+        logger.debug("Parse environment from path: '{}'", puppetEnvironment);
 
         if (path != null && StringUtils.countMatches(path, "/") == 1) {
             String[] paths = path.split("/");
             puppetEnvironment = paths[0];
+            logger.debug("Set enivronment source to: '{}'", puppetEnvironment);
         }
 
         return puppetEnvironment;
