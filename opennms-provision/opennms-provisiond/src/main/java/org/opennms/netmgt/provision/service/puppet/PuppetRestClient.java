@@ -25,7 +25,7 @@ import java.util.Map;
  * @since 1.10.1
  */
 public class PuppetRestClient {
-    private Logger logger = LoggerFactory.getLogger(PuppetRequisitionUrlConnection.class);
+    private Logger logger = LoggerFactory.getLogger("Provisiond." + PuppetRestClient.class.getName());
     /**
      * HTTP client for ReST connection
      */

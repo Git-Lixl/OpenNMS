@@ -26,7 +26,8 @@ import java.util.Map;
  * @since 1.10.1
  */
 public class PuppetRequisitionUrlConnection extends GenericURLConnection {
-    private Logger logger = LoggerFactory.getLogger(PuppetRequisitionUrlConnection.class);
+
+    private Logger logger = LoggerFactory.getLogger("Provisiond." + PuppetRequisitionUrlConnection.class.getName());
 
     private static Map<String, String> m_args;
 
@@ -110,6 +111,7 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
 
         // Setting the node label
         requisitionNode.setNodeLabel(puppetNode);
+        logger.debug("Set node label: '{}'", puppetNode);
 
         // Foreign Id to map against uuid from puppetmaster
         requisitionNode.setForeignId(puppetNodeFacts.get("uniqueid"));
@@ -126,7 +128,7 @@ public class PuppetRequisitionUrlConnection extends GenericURLConnection {
         requisitionInterface.setStatus(Integer.valueOf(1));
         requisitionNode.putInterface(requisitionInterface);
 
-        return new RequisitionNode();
+        return requisitionNode;
     }
 
     /**
