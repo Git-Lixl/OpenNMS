@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2010-2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2010-2011 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2011 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -28,6 +28,9 @@
 
 package org.opennms.web.controller.support;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +51,6 @@ import org.opennms.netmgt.rt.RequestTrackerException;
 import org.opennms.systemreport.SystemReport;
 import org.opennms.systemreport.SystemReportPlugin;
 import org.opennms.systemreport.formatters.FtpSystemReportFormatter;
-import org.opennms.web.WebSecurityUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.ModelAndView;
@@ -83,10 +85,6 @@ public class SupportController extends AbstractController implements Initializin
             results = logout(request);
         } else if ("createTicket".equals(operation)) {
             results = createTicket(request);
-        } else if ("selectTicket".equals(operation)) {
-            results = selectTicket(request);
-        } else if ("replyToTicket".equals(operation)) {
-            results = replyToTicket(request);
         }
 
         RequestTracker rt = (RequestTracker)session.getAttribute("requestTracker");
@@ -101,11 +99,6 @@ public class SupportController extends AbstractController implements Initializin
             }
             results.setUsername(rt.getUsername());
             results.setLatestTickets(rt.getTicketsForQueue(results.getQueue(), 5));
-            
-            if (session.getAttribute("activeSupportTicketId") != null) {
-                Long activeSupportTicketId = WebSecurityUtils.safeParseLong(session.getAttribute("activeSupportTicketId").toString());
-                results.setActiveSupportTicketId(activeSupportTicketId);
-            }
         }
 
         results.setRTUrl(m_configDao.getBaseURL());
@@ -170,8 +163,6 @@ public class SupportController extends AbstractController implements Initializin
         try {
             final long id = rt.createTicket(ticket);
             results.setSuccess(true);
-            session.setAttribute("activeSupportTicketId", ticket.getId());
-            results.setActiveSupportTicketId(ticket.getId());
             results.setMessage("New ticket created: <a href=\"" + m_configDao.getBaseURL() + "/Ticket/Display.html?id=" + id + "\">" + id + "</a>");
         } catch (final RequestTrackerException e) {
             LogUtils.warnf(this, e, "Unable to create ticket %s", ticket);
@@ -179,6 +170,69 @@ public class SupportController extends AbstractController implements Initializin
             results.setMessage("Unable to create ticket: " + e.getLocalizedMessage());
         }
         return results;
+    }
+
+    private String divineOsDistributionInfo() {
+    }
+
+    private String divineRedHatVersion() {
+        File redhatRelease = new File("/etc/redhat-release");
+        if (!redhatRelease.exists()) return null;
+        String release = readFirstLine(redhatRelease);
+        if (release == null) return "Red Hat-ish (indeterminate)";
+        return release;
+    }
+
+    private String divineDebianVersion() {
+        File debianVersion = new File("/etc/debian_version");
+        if (!debianVersion.exists()) return null;
+        String release = null;
+        boolean isUbuntu = false;
+        File lsbRelease = new File("/etc/lsb-release");
+        if (lsbRelease.exists()) {
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(lsbRelease));
+		String line = "";
+                while (line != null) {
+                    line = reader.readLine();
+                    if (line.matches("DISTRIB_ID=Ubuntu")) isUbuntu = true;
+                    if (line.matches("DISTRIB_RELEASE=")) {
+                        release = line.split("=", 2)[1].replaceAll("\"", "");
+                    }
+                }
+                reader.close();
+            } catch (IOException ioe) {
+            }
+        }
+
+        if (isUbuntu && release != null) return release;
+        if (isUbuntu) return "Ubuntu (indeterminate)";
+        release = readFirstLine(debianVersion);
+        if (release != null) return "Debian " + release;
+        return "Debian (indeterminate)";
+    }
+
+    private String divineSuseVersion() {
+        File suseVersion = new File("/etc/SuSE-release");
+        if (!suseVersion.exists()) return null;
+        String release = readFirstLine(suseVersion);
+        if (release == null) return "SuSE (indeterminate)";
+        return release;
+    }
+    
+    private String readFirstLine(File file) {
+        if (file == null) return null;
+        if (! file.canRead()) return null;
+        String firstLine = null;
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            firstLine = reader.readLine();
+            file.close();
+        } catch (IOException ioe) {
+            LogUtils.warnf(this, ioe, "Unable to read first line of file '%s' despite its being readable: %s", file.getPath(), ioe.getLocalizedMessage());
+            firstLine = null;
+        }
+        return firstLine;
     }
 
     private SupportResults login(final HttpServletRequest request) {
@@ -234,47 +288,6 @@ public class SupportController extends AbstractController implements Initializin
         }
     }
     
-    private SupportResults selectTicket(final HttpServletRequest request) {
-        final String ticketString = request.getParameter("ticket").trim();
-        Long ticketId;
-        final SupportResults results = new SupportResults();
-
-        try {
-            ticketId = WebSecurityUtils.safeParseLong(ticketString);
-            results.setSuccess(true);
-            final HttpSession session = request.getSession(true);
-            session.setAttribute("activeSupportTicketId", ticketId);
-            results.setActiveSupportTicketId(ticketId);
-            results.setMessage("Ticket " + ticketId + " selected as active support ticket");
-        } catch (Exception e) {
-            LogUtils.warnf(this, e, "Unable to activate malformed support ticket ID %s because: %s", ticketString, e.getLocalizedMessage());
-            results.setSuccess(false);
-        }
-        return results;
-    }
-    
-    private SupportResults replyToTicket(final HttpServletRequest request) {
-        final HttpSession session = request.getSession();
-
-        final RequestTracker rt = (RequestTracker)session.getAttribute("requestTracker");
-
-        final String ticketString = request.getParameter("ticket").trim();
-        final String replyBody = request.getParameter("replyBody");
-        Long ticketId;
-        final SupportResults results = new SupportResults();
-
-        try {
-            ticketId = WebSecurityUtils.safeParseLong(ticketString);
-            rt.updateTicket(ticketId, replyBody);
-            results.setSuccess(true);
-            results.setMessage("Ticket " + ticketId + " has been updated with requested details");
-        } catch (Exception e) {
-            LogUtils.warnf(this, e, "Unable to update ticket %s because: %s", ticketString, e.getLocalizedMessage());
-            results.setSuccess(false);
-        }
-        return results;
-    }
-    
     private SupportResults logout(final HttpServletRequest request) {
         final HttpSession session = request.getSession(true);
         final RequestTracker rt = (RequestTracker)session.getAttribute("requestTracker");
@@ -286,7 +299,6 @@ public class SupportController extends AbstractController implements Initializin
         final SupportResults results = new SupportResults();
         try {
             m_configDao.save();
-            session.removeAttribute("activeSupportTicketId");
             results.setSuccess(true);
             results.setNeedsLogin(true);
         } catch (final IOException e) {

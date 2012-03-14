@@ -2,7 +2,7 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2006-2011 The OpenNMS Group, Inc.
+ * Copyright (C) 2006-2012 The OpenNMS Group, Inc.
  * OpenNMS(R) is Copyright (C) 1999-2011 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
@@ -138,6 +138,7 @@
     nodeModel.put("id", Integer.toString(nodeId));
     nodeModel.put("label", node_db.getLabel());
     nodeModel.put("foreignSource", node_db.getForeignSource());
+    nodeModel.put("foreignId", node_db.getForeignId());
 
     List<Map<String, String>> links = new ArrayList<Map<String, String>>();
     links.addAll(createLinkForService(nodeId, m_telnetServiceId, "Telnet", "telnet://", "", getServletContext()));
@@ -156,6 +157,7 @@
     nodeModel.put("criticalPath", PathOutageFactory.getCriticalPath(nodeId));
     nodeModel.put("noCriticalPath", PathOutageFactory.NO_CRITICAL_PATH);
     nodeModel.put("admin", request.isUserInRole(Authentication.ROLE_ADMIN));
+    nodeModel.put("activeSupportTicketId", request.getSession(true).getAttribute("activeSupportTicketId"));
     
     // get the child interfaces
     Interface[] intfs = NetworkElementFactory.getInstance(getServletContext()).getActiveInterfacesOnNode(nodeId);
@@ -299,6 +301,38 @@
 <div class="TwoColLeft">
   
   
+  <!-- Support ticket annotation box, if a ticket is activated -->
+  <c:if test="${model.activeSupportTicketId != null}">
+  <h3 class="o-box">Commercial Support Ticket Actions</h3>
+  <form name="nodeDetailsToTicket" method="POST" action="support/index.htm">
+  <input type="hidden" name="ticket" value="${model.activeSupportTicketId}" />
+  <input type="hidden" name="operation" value="replyToTicket" />
+  <table class="o-box">
+    <tr>
+      <th>Action</th>
+      <td><input type="submit" value="Add node details to ticket #${model.activeSupportTicketId}"</td>
+    </tr>
+    <tr>
+      <th>Gory Details</th>
+      <td>
+        <textarea name="replyBody">
+Node details added via web console support portal
+-------------------------------------------------
+FS: ${model.foreignSource}
+FID: ${model.foreignId}
+OnmsNode: <c:out value="${model.node}" />
+<c:if test="${! empty model.resources}">
+Child resources:
+<c:forEach items="${model.resources}" var="resource">
+<c:out value="${resource}" />
+</c:forEach>
+</c:if>
+        </textarea>
+      </td>
+    </tr>
+  </table>
+  </form>
+  </c:if>
 
   <!-- Asset box, if info available --> 
   <c:if test="${! empty model.asset && (! empty model.asset.description || ! empty model.asset.comments)}">

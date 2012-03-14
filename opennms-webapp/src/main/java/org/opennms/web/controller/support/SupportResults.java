@@ -46,6 +46,7 @@ public class SupportResults implements Serializable {
     private String m_queue;
     private List<RTTicket> m_latestTickets;
     private String m_message;
+    private Long m_activeSupportTicketId;
 
     public SupportResults() {
     }
@@ -104,6 +105,14 @@ public class SupportResults implements Serializable {
 
     public void setLatestTickets(final List<RTTicket> tickets) {
         m_latestTickets = tickets;
+    }
+    
+    public Long getActiveSupportTicketId() {
+        return m_activeSupportTicketId;
+    }
+    
+    public void setActiveSupportTicketId(Long id) {
+        m_activeSupportTicketId = id;
     }
 
     public String toString() {

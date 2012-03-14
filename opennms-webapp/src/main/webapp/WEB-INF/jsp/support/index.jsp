@@ -133,14 +133,27 @@ session="true"
         	Your newest tickets are listed below.  For a complete list, log in to the
         	<a href="<c:out value="${results.RTUrl}" />">OpenNMS support portal</a>.
         </p>
+        <p>
+        	By selecting the radio button for a ticket below, you can activate controls
+		throughout the OpenNMS web console for annotating the selected ticket with
+		details about a node, interface, or other entity.
+        </p>
         
         <table>
+        <form method="POST" name="setActiveTicketForm">
         <c:forEach var="ticket" items="${results.latestTickets}">
           <tr>
             <td><c:out value="${ticket.created}" /></td>
             <td><a href="<c:out value="${results.RTUrl}/Ticket/Display.html?id=${ticket.id}" />" target="_blank"><c:out value="${ticket.subject}" /></a></td>
+            <td><input type="radio" name="ticket"
+                 value="${ticket.id}"
+                 onclick="document.setActiveTicketForm.submit();"
+                 <c:if test="${results.activeSupportTicketId != null}"><c:if test="${results.activeSupportTicketId eq ticket.id}">checked="true"</c:if></c:if>
+                /></td>
           </tr>
         </c:forEach>
+        <input type="hidden" name="operation" value="selectTicket" />
+        </form>
         </table>
       </c:when>
 
