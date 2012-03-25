@@ -121,6 +121,9 @@ public class DaoWebAlarmRepository implements WebAlarmRepository {
                 case SEVERITY:
                     criteria.addOrder(Order.desc("severityId"));
                     break;
+                case ACKUSER:
+                    criteria.addOrder(Order.asc("alarmAckUser"));
+                    break;
                 case REVERSE_COUNT:
                     criteria.addOrder(Order.asc("counter"));
                     break;
@@ -148,6 +151,10 @@ public class DaoWebAlarmRepository implements WebAlarmRepository {
                 case REVERSE_SEVERITY:
                     criteria.addOrder(Order.asc("severityId"));
                     break;
+                case REVERSE_ACKUSER:
+                    criteria.addOrder(Order.desc("alarmAckUser"));
+                    break;
+
                 default:
                     break;
                 }
