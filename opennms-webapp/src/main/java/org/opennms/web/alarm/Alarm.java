@@ -40,12 +40,10 @@ import org.opennms.netmgt.model.TroubleTicketState;
  *
  * @author <A HREF="mailto:tarus@opennms.org">Tarus Balog </A>
  * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
- * @author <A HREF="mailto:tarus@opennms.org">Tarus Balog </A>
- * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
  * @version $Id: $
  * @since 1.8.1
  */
-public class Alarm extends Object {
+public class Alarm {
     /** Constant <code>PROBLEM_TYPE=1</code> */
     public static final int PROBLEM_TYPE = 1;
     
@@ -159,15 +157,10 @@ public class Alarm extends Object {
 
     /** The human-readable name of the node of this alarm. Can be null. */
     protected String nodeLabel;
-
-    /** sticky note feature */
-    protected String stickyNote;
     
-    protected Date stickyNoteCreate;
+    protected Memo stickyMemo;
     
-    protected Date stickyNoteUpdate;
-    
-    protected String stickyNoteUser;
+    protected ReductionKeyMemo reductionKeyMemo;
     
     /**
      * Empty constructor to create an empty <code>Alarm</code> instance. All
@@ -547,36 +540,12 @@ public class Alarm extends Object {
         return (this.serviceName);
     }
 
-    public String getStickyNote() {
-        return stickyNote;
+    public ReductionKeyMemo getReductionKeyMemo() {
+        return reductionKeyMemo;
     }
 
-    public void setStickyNote(String stickyNote) {
-        this.stickyNote = stickyNote;
-    }
-
-    public Date getStickyNoteCreate() {
-        return stickyNoteCreate;
-    }
-
-    public void setStickyNoteCreate(Date stickyNoteCreate) {
-        this.stickyNoteCreate = stickyNoteCreate;
-    }
-
-    public Date getStickyNoteUpdate() {
-        return stickyNoteUpdate;
-    }
-
-    public void setStickyNoteUpdate(Date stickyNoteUpdate) {
-        this.stickyNoteUpdate = stickyNoteUpdate;
-    }
-
-    public String getStickyNoteUser() {
-        return stickyNoteUser;
-    }
-
-    public void setStickyNoteUser(String stickyNoteUser) {
-        this.stickyNoteUser = stickyNoteUser;
+    public Memo getStickyMemo() {
+        return stickyMemo;
     }
     
     @Override
@@ -606,11 +575,9 @@ public class Alarm extends Object {
             .append("suppressedTime", suppressedTime)
             .append("acknowledgedUser", acknowledgeUser)
             .append("acknowledgedTime", acknowledgeTime)
-            .append("stickyNote", stickyNote)
-            .append("stickyNoteCreate", stickyNoteCreate)
-            .append("stickyNoteUpdate", stickyNoteUpdate)
-            .append("stickyNoteUser", stickyNoteUser)
             .append("parms", parms)
+            .append("stickyMemo", stickyMemo)
+            .append("reductionKeyMemo", reductionKeyMemo)    
             .toString();
     }
 }

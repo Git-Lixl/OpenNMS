@@ -33,6 +33,7 @@ import java.net.InetAddress;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
+import javax.persistence.CascadeType;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -42,6 +43,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -133,7 +135,7 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
     /** nullable persistent field */
     private String m_tTicketId;
     
-      /** nullable persistent field */
+    /** nullable persistent field */
     private TroubleTicketState m_tTicketState;
 
     /** nullable persistent field */
@@ -182,14 +184,13 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
     
     private Map<String, String> m_details;
 
-    /** SickyNote Feature */
-    private String m_stickyNote;
+    @OneToOne(cascade=CascadeType.ALL)
+    @Column(name="stickymemo")
+    private OnmsMemo m_stickyMemo;
     
-    private String m_stickyNoteUser;
-    
-    private Date m_stickyNoteUpdate;
-    
-    private Date m_stickyNoteCreate;
+    @OneToOne
+    @Column(name="reductionkeymemo")
+    private OnmsMemo m_reductionKeyMemo;
     
     /**
      * default constructor
@@ -1037,50 +1038,22 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
         m_ifIndex = ifIndex;
     }
 
-    /** StickyNote Feature */
-    @Column(name="stickyNote")
-    @XmlElement(name="stickyNote")
-    public String getStickyNote() {
-        return m_stickyNote;
+    public OnmsMemo getReductionKeyMemo() {
+        return m_reductionKeyMemo;
     }
 
-    public void setStickyNote(String stickyNote) {
-        this.m_stickyNote = stickyNote;
+    public void setReductionKeyMemo(OnmsMemo reductionKeyMemo) {
+        this.m_reductionKeyMemo = reductionKeyMemo;
     }
 
-    @Column(name="stickyNoteCreate")
-    @XmlElement(name="stickyNoteCreate")
-    @Temporal(TemporalType.TIMESTAMP)
-    public Date getStickyNoteCreate() {
-        return m_stickyNoteCreate;
+    public OnmsMemo getStickyMemo() {
+        return m_stickyMemo;
     }
 
-    public void setStickyNoteCreate(Date stickyNoteCreate) {
-        this.m_stickyNoteCreate = stickyNoteCreate;
+    public void setStickyMemo(OnmsMemo stickyMemo) {
+        this.m_stickyMemo = stickyMemo;
     }
 
-    @Column(name="stickyNoteUpdate")
-    @XmlElement(name="stickyNoteUpdate")
-    @Temporal(TemporalType.TIMESTAMP)
-    public Date getStickyNoteUpdate() {
-        return m_stickyNoteUpdate;
-    }
-
-    public void setStickyNoteUpdate(Date stickyNoteUpdate) {
-        this.m_stickyNoteUpdate = stickyNoteUpdate;
-    }
-
-    @Column(name="stickyNoteUser")
-    @XmlElement(name="stickyNoteUser")
-    public String getStickyNoteUser() {
-        return m_stickyNoteUser;
-    }
-
-    public void setStickyNoteUser(String stickyNoteUser) {
-        this.m_stickyNoteUser = stickyNoteUser;
-    }
-    
-    
     
     /** {@inheritDoc} */
     public void acknowledge(String user) {

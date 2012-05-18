@@ -43,6 +43,7 @@ drop table ifServices cascade;
 drop table snmpInterface cascade;
 drop table ipInterface cascade;
 drop table alarms cascade;
+drop table memos cascade;
 drop table node cascade;
 drop table service cascade;
 drop table distPoller cascade;
@@ -81,6 +82,7 @@ drop sequence nodeNxtId;
 drop sequence serviceNxtId;
 drop sequence eventsNxtId;
 drop sequence alarmsNxtId;
+drop sequence memoNxtId;
 drop sequence outageNxtId;
 drop sequence notifyNxtId;
 drop sequence userNotifNxtId;
@@ -148,6 +150,9 @@ create sequence eventsNxtId minvalue 1;
 --#          sequence,   column, table
 --# install: alarmsNxtId alarmId alarms
 create sequence alarmsNxtId minvalue 1;
+
+--# Sequence for the id colomn in  memos table 
+create sequence memoNxtId minvalue 1;
 
 --# Sequence for the outageID column in the outages table
 --#          sequence,   column,  table
@@ -950,6 +955,16 @@ create table usersNotified (
 
 create index userid_notifyid_idx on usersNotified(userID, notifyID);
 
+--#TODO comment
+create table memos {
+    id          INTEGER, CONSTRAINT pk_memosID PRIMARY KEY(id),
+    body        text,
+    author      varchar(256),
+    reductionkey varchar(256),
+    updated     timestamp with time zone,
+    created     timestamp with time zone
+};
+
 --########################################################################
 --#
 --# This table contains the following fields:
@@ -996,7 +1011,7 @@ create table alarms (
 	serviceID               INTEGER,
 	reductionKey            VARCHAR(256),
 	alarmType               INTEGER,
-    counter                 INTEGER NOT NULL,
+        counter                 INTEGER NOT NULL,
 	severity                INTEGER NOT NULL,
 	lastEventID             INTEGER, CONSTRAINT fk_eventIDak2 FOREIGN KEY (lastEventID)  REFERENCES events (eventID) ON DELETE CASCADE,
 	firstEventTime          timestamp with time zone,
@@ -1021,10 +1036,11 @@ create table alarms (
 	x733AlarmType           VARCHAR(31),
 	x733ProbableCause       INTEGER default 0 not null,
 	qosAlarmState           VARCHAR(31),
-    ifIndex                 integer,
-    clearKey				VARCHAR(256),
-    eventParms              text
-	
+        ifIndex                 integer,
+        clearKey		VARCHAR(256),
+        eventParms              text,
+        stickymemo              INTEGER, CONSTRAINT fk_stickymemo FOREIGN KEY (stickymemo) REFERENCES memos(id),
+        reductionkeymemo        INTEGER, CONSTRAINT fk_reductionkeymemo FOREIGN KEY (reductionkeymemo) REFERENCES memos(id)
 );
 
 CREATE INDEX alarm_uei_idx ON alarms(eventUei);
