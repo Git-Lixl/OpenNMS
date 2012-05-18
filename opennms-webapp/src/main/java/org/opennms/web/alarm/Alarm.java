@@ -28,11 +28,11 @@
 
 package org.opennms.web.alarm;
 
+import java.util.Date;
+
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.netmgt.model.OnmsSeverity;
 import org.opennms.netmgt.model.TroubleTicketState;
-
-import java.util.Date;
 
 /**
  * A JavaBean implementation to hold information about a network alarm as
@@ -40,81 +40,57 @@ import java.util.Date;
  *
  * @author <A HREF="mailto:tarus@opennms.org">Tarus Balog </A>
  * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
- * @author <A HREF="mailto:tarus@opennms.org">Tarus Balog </A>
- * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
  * @version $Id: $
  * @since 1.8.1
  */
-public class Alarm extends Object {
-    /**
-     * Constant <code>PROBLEM_TYPE=1</code>
-     */
+public class Alarm {
+    /** Constant <code>PROBLEM_TYPE=1</code> */
     public static final int PROBLEM_TYPE = 1;
-
-    /**
-     * Constant <code>RESOLUTION_TYPE=2</code>
-     */
+    
+    /** Constant <code>RESOLUTION_TYPE=2</code> */
     public static final int RESOLUTION_TYPE = 2;
 
-    /**
-     * Unique identifier for the alarm, cannot be null
-     */
+    /** Unique identifier for the alarm, cannot be null */
     protected int id;
 
-    /**
-     * Universal Event Identifer (UEI) for this alarm, cannot be null
-     */
+    /** Universal Event Identifer (UEI) for this alarm, cannot be null */
     protected String uei;
 
-    /**
-     * The dpName of the Dist Poller which received the alarm, cannot be null.
-     */
+    /** The dpName of the Dist Poller which received the alarm, cannot be null. */
     protected String dpName;
 
-    /**
-     * Unique integer identifier for node, can be null
-     */
+    /** Unique integer identifier for node, can be null */
     protected Integer nodeID;
 
-    /**
-     * IP Address of node's interface
-     */
+    /** IP Address of node's interface */
     protected String ipAddr;
 
-    /**
-     * Unique integer identifier of service/poller package, can be null
-     */
+    /** Unique integer identifier of service/poller package, can be null */
     protected Integer serviceID;
 
-    /**
-     * Reduction key for this alarm, cannot be null
-     */
+    /** Reduction key for this alarm, cannot be null */
     protected String reductionKey;
 
-    /**
-     * Reduction count for the alarm, cannot be null
-     */
+    /** Reduction count for the alarm, cannot be null */
     protected int count;
 
     /**
      * Severity the of alarm.
-     * <p/>
+     * 
      * <pre>
-     *
+     * 
      *   1  = Indeterminate
      *   2 = Cleared (unimplemented at this time)
      *   3 = Warning
      *   4 = Minor
      *   5 = Major
      *   6 = Critical
-     *
+     *  
      * </pre>
      */
     protected OnmsSeverity severity;
 
-    /**
-     * The last event to be reduced by this alarm
-     */
+    /** The last event to be reduced by this alarm */
     protected int lastEventID;
 
     /**
@@ -127,9 +103,7 @@ public class Alarm extends Object {
      */
     protected Date lasteventtime;
 
-    /**
-     * Free-form textual description of the alarm
-     */
+    /** Free-form textual description of the alarm */
     protected String description;
 
     /**
@@ -139,9 +113,7 @@ public class Alarm extends Object {
      */
     protected String logMessage;
 
-    /**
-     * Operator instruction for event.
-     */
+    /** Operator instruction for event. */
     protected String operatorInstruction;
 
     /**
@@ -162,66 +134,34 @@ public class Alarm extends Object {
      */
     protected String mouseOverText;
 
-    /**
-     * The time that suppression will end for this alarm.
-     */
+    /** The time that suppression will end for this alarm. */
     protected Date suppressedUntil;
 
-    /**
-     * The name of the user who suppressed this alarm.
-     */
+    /** The name of the user who suppressed this alarm. */
     protected String suppressedUser;
 
-    /**
-     * The time this alarm was suppressed.
-     */
+    /** The time this alarm was suppressed. */
     protected Date suppressedTime;
 
-    /**
-     * The name of the user who acknowledged this alarm.
-     */
+    /** The name of the user who acknowledged this alarm. */
     protected String acknowledgeUser;
 
-    /**
-     * The time this alarm was acknowledged.
-     */
+    /** The time this alarm was acknowledged. */
     protected Date acknowledgeTime;
 
-    /**
-     * The &lt;parms&gt; element for this alarm.
-     */
+    /** The &lt;parms&gt; element for this alarm.*/
     protected String parms;
 
-    /**
-     * Human-readable name of the service
-     */
+    /** Human-readable name of the service */
     protected String serviceName;
 
-    /**
-     * The human-readable name of the node of this alarm. Can be null.
-     */
+    /** The human-readable name of the node of this alarm. Can be null. */
     protected String nodeLabel;
-
-    /**
-     * Sticky note message
-     */
-    protected String stickyNote = "";
-
-    /**
-     * Create date
-     */
-    protected Date stickyNoteCreate;
-
-    /**
-     * Update date
-     */
-    protected Date stickyNoteUpdate;
-
-    /**
-     * User account
-     */
-    protected String stickyNoteUser = "";
-
+    
+    protected Memo stickyMemo;
+    
+    protected ReductionKeyMemo reductionKeyMemo;
+    
     /**
      * Empty constructor to create an empty <code>Alarm</code> instance. All
      * fields will hold the default values.
@@ -233,16 +173,16 @@ public class Alarm extends Object {
      * Create an alarm that represents a real network alarm with only the
      * required parameters.
      *
-     * @param id             a int.
-     * @param uei            a {@link java.lang.String} object.
-     * @param dpName         a {@link java.lang.String} object.
-     * @param lasteventtime  a {@link java.util.Date} object.
+     * @param id a int.
+     * @param uei a {@link java.lang.String} object.
+     * @param dpName a {@link java.lang.String} object.
+     * @param lasteventtime a {@link java.util.Date} object.
      * @param firsteventtime a {@link java.util.Date} object.
-     * @param count          a int.
-     * @param severityId     a int.
+     * @param count a int.
+     * @param severityId a int.
      */
     public Alarm(int id, String uei, String dpName, Date lasteventtime, Date firsteventtime, int count, int severityId) {
-        if (uei == null || dpName == null || lasteventtime == null || firsteventtime == null) {
+        if (uei == null || dpName == null || lasteventtime == null || firsteventtime == null ) {
             throw new IllegalArgumentException("Cannot take null parameters.");
         }
 
@@ -259,69 +199,69 @@ public class Alarm extends Object {
      * Create an alarm that represents a real network alarm with all the
      * parameters.
      *
-     * @param id                  a int.
-     * @param uei                 a {@link java.lang.String} object.
-     * @param dpName              a {@link java.lang.String} object.
-     * @param nodeID              a {@link java.lang.Integer} object.
-     * @param ipAddr              a {@link java.lang.String} object.
-     * @param serviceID           a {@link java.lang.Integer} object.
-     * @param reductionKey        a {@link java.lang.String} object.
-     * @param count               a int.
-     * @param severity            a int.
-     * @param lastEventID         a int.
-     * @param firsteventtime      a {@link java.util.Date} object.
-     * @param lasteventtime       a {@link java.util.Date} object.
-     * @param description         a {@link java.lang.String} object.
-     * @param logMessage          a {@link java.lang.String} object.
+     * @param id a int.
+     * @param uei a {@link java.lang.String} object.
+     * @param dpName a {@link java.lang.String} object.
+     * @param nodeID a {@link java.lang.Integer} object.
+     * @param ipAddr a {@link java.lang.String} object.
+     * @param serviceID a {@link java.lang.Integer} object.
+     * @param reductionKey a {@link java.lang.String} object.
+     * @param count a int.
+     * @param severity a int.
+     * @param lastEventID a int.
+     * @param firsteventtime a {@link java.util.Date} object.
+     * @param lasteventtime a {@link java.util.Date} object.
+     * @param description a {@link java.lang.String} object.
+     * @param logMessage a {@link java.lang.String} object.
      * @param operatorInstruction a {@link java.lang.String} object.
-     * @param troubleTicket       a {@link java.lang.String} object.
-     * @param troubleTicketState  a {@link org.opennms.netmgt.model.TroubleTicketState} object.
-     * @param mouseOverText       a {@link java.lang.String} object.
-     * @param suppressedUntil     a {@link java.util.Date} object.
-     * @param suppressedUser      a {@link java.lang.String} object.
-     * @param suppressedTime      a {@link java.util.Date} object.
-     * @param acknowledgeUser     a {@link java.lang.String} object.
-     * @param acknowledgeTime     a {@link java.util.Date} object.
-     * @param parms               a {@link java.lang.String} object.
+     * @param troubleTicket a {@link java.lang.String} object.
+     * @param troubleTicketState a {@link org.opennms.netmgt.model.TroubleTicketState} object.
+     * @param mouseOverText a {@link java.lang.String} object.
+     * @param suppressedUntil a {@link java.util.Date} object.
+     * @param suppressedUser a {@link java.lang.String} object.
+     * @param suppressedTime a {@link java.util.Date} object.
+     * @param acknowledgeUser a {@link java.lang.String} object.
+     * @param acknowledgeTime a {@link java.util.Date} object.
+     * @param parms a {@link java.lang.String} object.
      */
     public Alarm(int id, String uei, String dpName, Integer nodeID, String ipAddr, Integer serviceID, String reductionKey, int count, int severity, int lastEventID, Date firsteventtime, Date lasteventtime, String description, String logMessage, String operatorInstruction, String troubleTicket, TroubleTicketState troubleTicketState, String mouseOverText, Date suppressedUntil, String suppressedUser, Date suppressedTime, String acknowledgeUser, Date acknowledgeTime, String parms) {
-        this(id, uei, dpName, nodeID, ipAddr, serviceID, reductionKey, count, severity, lastEventID, firsteventtime, lasteventtime, description, logMessage, operatorInstruction, troubleTicket, troubleTicketState, mouseOverText, suppressedUntil, suppressedUser, suppressedTime, acknowledgeUser, acknowledgeTime, parms, null, null);
+    	this(id, uei, dpName, nodeID, ipAddr, serviceID, reductionKey, count, severity, lastEventID, firsteventtime, lasteventtime, description, logMessage, operatorInstruction, troubleTicket, troubleTicketState, mouseOverText, suppressedUntil, suppressedUser, suppressedTime, acknowledgeUser, acknowledgeTime, parms, null, null);
     }
 
     /**
      * Create an alarm that represents a real network alarm with all the
      * parameters.
      *
-     * @param id                  a int.
-     * @param uei                 a {@link java.lang.String} object.
-     * @param dpName              a {@link java.lang.String} object.
-     * @param nodeID              a {@link java.lang.Integer} object.
-     * @param ipAddr              a {@link java.lang.String} object.
-     * @param serviceID           a {@link java.lang.Integer} object.
-     * @param reductionKey        a {@link java.lang.String} object.
-     * @param count               a int.
-     * @param severityId          a int.
-     * @param lastEventID         a int.
-     * @param firsteventtime      a {@link java.util.Date} object.
-     * @param lasteventtime       a {@link java.util.Date} object.
-     * @param description         a {@link java.lang.String} object.
-     * @param logMessage          a {@link java.lang.String} object.
+     * @param id a int.
+     * @param uei a {@link java.lang.String} object.
+     * @param dpName a {@link java.lang.String} object.
+     * @param nodeID a {@link java.lang.Integer} object.
+     * @param ipAddr a {@link java.lang.String} object.
+     * @param serviceID a {@link java.lang.Integer} object.
+     * @param reductionKey a {@link java.lang.String} object.
+     * @param count a int.
+     * @param severityId a int.
+     * @param lastEventID a int.
+     * @param firsteventtime a {@link java.util.Date} object.
+     * @param lasteventtime a {@link java.util.Date} object.
+     * @param description a {@link java.lang.String} object.
+     * @param logMessage a {@link java.lang.String} object.
      * @param operatorInstruction a {@link java.lang.String} object.
-     * @param troubleTicket       a {@link java.lang.String} object.
-     * @param troubleTicketState  a {@link org.opennms.netmgt.model.TroubleTicketState} object.
-     * @param mouseOverText       a {@link java.lang.String} object.
-     * @param suppressedUntil     a {@link java.util.Date} object.
-     * @param suppressedUser      a {@link java.lang.String} object.
-     * @param suppressedTime      a {@link java.util.Date} object.
-     * @param acknowledgeUser     a {@link java.lang.String} object.
-     * @param acknowledgeTime     a {@link java.util.Date} object.
-     * @param parms               a {@link java.lang.String} object.
-     * @param nodeLabel           a {@link java.lang.String} object.
-     * @param serviceName         a {@link java.lang.String} object.
+     * @param troubleTicket a {@link java.lang.String} object.
+     * @param troubleTicketState a {@link org.opennms.netmgt.model.TroubleTicketState} object.
+     * @param mouseOverText a {@link java.lang.String} object.
+     * @param suppressedUntil a {@link java.util.Date} object.
+     * @param suppressedUser a {@link java.lang.String} object.
+     * @param suppressedTime a {@link java.util.Date} object.
+     * @param acknowledgeUser a {@link java.lang.String} object.
+     * @param acknowledgeTime a {@link java.util.Date} object.
+     * @param parms a {@link java.lang.String} object.
+     * @param nodeLabel a {@link java.lang.String} object.
+     * @param serviceName a {@link java.lang.String} object.
      */
     public Alarm(int id, String uei, String dpName, Integer nodeID, String ipAddr, Integer serviceID, String reductionKey, int count, int severityId, int lastEventID, Date firsteventtime, Date lasteventtime, String description, String logMessage, String operatorInstruction, String troubleTicket, TroubleTicketState troubleTicketState, String mouseOverText, Date suppressedUntil, String suppressedUser, Date suppressedTime, String acknowledgeUser, Date acknowledgeTime, String parms, String nodeLabel, String serviceName) {
 
-        if (uei == null || dpName == null || lasteventtime == null || firsteventtime == null) {
+        if (uei == null || dpName == null || lasteventtime == null || firsteventtime == null ) {
             throw new IllegalArgumentException("Cannot take null values for the following parameters: uei, dpName, firsteventtime, lasteventtime.");
         }
 
@@ -331,26 +271,26 @@ public class Alarm extends Object {
         this.dpName = dpName;
         this.lasteventtime = lasteventtime;
         this.firsteventtime = firsteventtime;
-        this.count = count;
+	this.count = count;
         this.severity = OnmsSeverity.get(severityId);
 
         // optional fields
-        this.nodeID = nodeID;
-        this.ipAddr = ipAddr;
-        this.serviceID = serviceID;
-        this.reductionKey = reductionKey;
-        this.lastEventID = lastEventID;
-        this.description = description;
-        this.logMessage = logMessage;
-        this.operatorInstruction = operatorInstruction;
-        this.troubleTicket = troubleTicket;
-        this.troubleTicketState = troubleTicketState;
-        this.mouseOverText = mouseOverText;
-        this.suppressedUntil = suppressedUntil;
-        this.suppressedUser = suppressedUser;
-        this.suppressedTime = suppressedTime;
-        this.acknowledgeUser = acknowledgeUser;
-        this.acknowledgeTime = acknowledgeTime;
+    	this.nodeID = nodeID;
+	this.ipAddr = ipAddr;
+	this.serviceID = serviceID;
+	this.reductionKey = reductionKey;
+	this.lastEventID = lastEventID;
+	this.description = description;
+	this.logMessage = logMessage;
+	this.operatorInstruction = operatorInstruction;
+	this.troubleTicket = troubleTicket;
+	this.troubleTicketState = troubleTicketState;
+	this.mouseOverText = mouseOverText;
+	this.suppressedUntil = suppressedUntil;
+	this.suppressedUser = suppressedUser;
+	this.suppressedTime = suppressedTime;
+	this.acknowledgeUser = acknowledgeUser;
+	this.acknowledgeTime = acknowledgeTime;
         this.parms = parms;
         this.nodeLabel = nodeLabel;
         this.serviceName = serviceName;
@@ -419,7 +359,7 @@ public class Alarm extends Object {
     public OnmsSeverity getSeverity() {
         return severity;
     }
-
+    
     /**
      * <p>getNodeId</p>
      *
@@ -600,115 +540,44 @@ public class Alarm extends Object {
         return (this.serviceName);
     }
 
-    /**
-     * <p>Getter for the field <code>stickyNode</code></p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getStickyNote() {
-        return stickyNote;
+    public ReductionKeyMemo getReductionKeyMemo() {
+        return reductionKeyMemo;
     }
 
-    /**
-     * <p>Setter for the field <code>stickyNode</code></p>
-     *
-     * @param stickyNote a {@link java.lang.String} object.
-     */
-    public void setStickyNote(String stickyNote) {
-        this.stickyNote = stickyNote;
+    public Memo getStickyMemo() {
+        return stickyMemo;
     }
-
-    /**
-     * <p>Getter for the sticky note create date</p>
-     *
-     * @return a {@link java.util.Date} object.
-     */
-    public Date getStickyNoteCreate() {
-        return stickyNoteCreate;
-    }
-
-    /**
-     * <p>Setter for the sticky note create date</p>
-     *
-     * @param stickyNoteCreate a {@link java.util.Date} object.
-     */
-    public void setStickyNoteCreate(Date stickyNoteCreate) {
-        this.stickyNoteCreate = stickyNoteCreate;
-    }
-
-    /**
-     * <p>Getter for the sticky note update date</p>
-     *
-     * @return a {@link java.util.Date} object.
-     */
-    public Date getStickyNoteUpdate() {
-        return stickyNoteUpdate;
-    }
-
-    /**
-     * <p>Setter for the sticky note update date</p>
-     *
-     * @param stickyNoteUpdate a {@link java.util.Date} object.
-     */
-    public void setStickyNoteUpdate(Date stickyNoteUpdate) {
-        this.stickyNoteUpdate = stickyNoteUpdate;
-    }
-
-    /**
-     * <p>Getter for the sticky note user</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getStickyNoteUser() {
-        return stickyNoteUser;
-    }
-
-    /**
-     * <p>Setter for the sticky note user</p>
-     *
-     * @param stickyNoteUser a {@link java.lang.String} object.
-     */
-    public void setStickyNoteUser(String stickyNoteUser) {
-        this.stickyNoteUser = stickyNoteUser;
-    }
-
-    /**
-     * <p>toString</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
+    
     @Override
     public String toString() {
         return new ToStringBuilder(this)
-                .append("id", id)
-                .append("UEI", uei)
-                .append("distPoller", dpName)
-                .append("nodeID", nodeID)
-                .append("nodeLabel", nodeLabel)
-                .append("ipAddress", ipAddr)
-                .append("serviceID", serviceID)
-                .append("reductionKey", reductionKey)
-                .append("count", count)
-                .append("severity", severity)
-                .append("serviceName", serviceName)
-                .append("lastEventID", lastEventID)
-                .append("lastEventTime", lasteventtime)
-                .append("description", description)
-                .append("logMessage", logMessage)
-                .append("operatorInstruction", operatorInstruction)
-                .append("troubleTicket", troubleTicket)
-                .append("troubleTicketState", troubleTicketState)
-                .append("mouseOverText", mouseOverText)
-                .append("suppressedUntil", suppressedUntil)
-                .append("suppressedUser", suppressedUser)
-                .append("suppressedTime", suppressedTime)
-                .append("acknowledgedUser", acknowledgeUser)
-                .append("acknowledgedTime", acknowledgeTime)
-                .append("stickyNote", stickyNote)
-                .append("stickyNoteCreate", stickyNoteCreate)
-                .append("stickyNoteUpdate", stickyNoteUpdate)
-                .append("stickyNoteUser", stickyNoteUser)
-                .append("parms", parms)
-                .toString();
+            .append("id", id)
+            .append("UEI", uei)
+            .append("distPoller", dpName)
+            .append("nodeID", nodeID)
+            .append("nodeLabel", nodeLabel)
+            .append("ipAddress", ipAddr)
+            .append("serviceID", serviceID)
+            .append("reductionKey", reductionKey)
+            .append("count", count)
+            .append("severity", severity)
+            .append("serviceName", serviceName)
+            .append("lastEventID", lastEventID)
+            .append("lastEventTime", lasteventtime)
+            .append("description", description)
+            .append("logMessage", logMessage)
+            .append("operatorInstruction", operatorInstruction)
+            .append("troubleTicket", troubleTicket)
+            .append("troubleTicketState", troubleTicketState)
+            .append("mouseOverText", mouseOverText)
+            .append("suppressedUntil", suppressedUntil)
+            .append("suppressedUser", suppressedUser)
+            .append("suppressedTime", suppressedTime)
+            .append("acknowledgedUser", acknowledgeUser)
+            .append("acknowledgedTime", acknowledgeTime)
+            .append("parms", parms)
+            .append("stickyMemo", stickyMemo)
+            .append("reductionKeyMemo", reductionKeyMemo)    
+            .toString();
     }
 }

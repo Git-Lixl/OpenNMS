@@ -38,11 +38,7 @@ import org.hibernate.criterion.Restrictions;
 import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.AlarmDao;
-import org.opennms.netmgt.model.AckAction;
-import org.opennms.netmgt.model.OnmsAcknowledgment;
-import org.opennms.netmgt.model.OnmsAlarm;
-import org.opennms.netmgt.model.OnmsCriteria;
-import org.opennms.netmgt.model.OnmsSeverity;
+import org.opennms.netmgt.model.*;
 import org.opennms.netmgt.model.acknowledgments.AckService;
 import org.opennms.web.alarm.filter.AlarmCriteria;
 import org.opennms.web.alarm.filter.AlarmCriteria.AlarmCriteriaVisitor;
@@ -194,14 +190,10 @@ public class DaoWebAlarmRepository implements WebAlarmRepository, InitializingBe
         alarm.acknowledgeUser = onmsAlarm.getAckUser();
         alarm.acknowledgeTime = onmsAlarm.getAckTime();
         alarm.parms = onmsAlarm.getEventParms();
-
-        alarm.stickyNote = onmsAlarm.getStickyNote();
-        alarm.stickyNoteCreate = onmsAlarm.getStickyNoteCreate();
-        alarm.stickyNoteUpdate = onmsAlarm.getStickyNoteUpdate();
-        alarm.stickyNoteUser = onmsAlarm.getStickyNoteUser();
-        
+        alarm.stickyMemo = mapOnmsMemoToMemo(onmsAlarm.getStickyMemo());
         alarm.nodeLabel = onmsAlarm.getNode() != null ? onmsAlarm.getNode().getLabel() : ""; 
         alarm.serviceName = onmsAlarm.getServiceType() != null ? onmsAlarm.getServiceType().getName() : "";
+        
         return alarm;
     }
     
@@ -276,7 +268,6 @@ public class DaoWebAlarmRepository implements WebAlarmRepository, InitializingBe
             ack.setAckAction(AckAction.ESCALATE);
             m_ackService.processAck(ack);
         }
-
     }
     
     /** {@inheritDoc} */
@@ -331,6 +322,20 @@ public class DaoWebAlarmRepository implements WebAlarmRepository, InitializingBe
     @Transactional
     public void unacknowledgeAlarms(int[] alarmIds, String user) {
         unacknowledgeMatchingAlarms(new AlarmCriteria(new AlarmIdListFilter(alarmIds)), user);
+    }
+
+    //TODO move memo code to a seperate class to get memos detached from Alarms
+    private Memo mapOnmsMemoToMemo(OnmsMemo onmsMemo) {
+        Memo memo = new Memo();
+        if (onmsMemo != null) {
+            memo.setId(onmsMemo.getId());
+            memo.setAuthor(onmsMemo.getAuthor() == null ? "" : onmsMemo.getAuthor());
+            memo.setBody(onmsMemo.getBody() == null ? "" : onmsMemo.getBody());
+            memo.setCreated(onmsMemo.getCreated());
+            memo.setUpdated(onmsMemo.getUpdated());
+
+        }
+        return memo;
     }
 
 }
