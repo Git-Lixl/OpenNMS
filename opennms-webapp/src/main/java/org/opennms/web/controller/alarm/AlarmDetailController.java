@@ -103,6 +103,6 @@ public class AlarmDetailController extends AbstractController {
             logger.error("Could not retrieve alarm from webAlarmRepository for ID='{}'", alarmIdString);
         }
 
-        return new ModelAndView("alarm/detail.htm", "alarmDetail", m_alarm);
+        return new ModelAndView("alarm/detail", "alarm", m_alarm);
     }
 }

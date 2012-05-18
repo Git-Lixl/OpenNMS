@@ -67,7 +67,7 @@
   of the alarms</a> to find the alarm you are looking for.
 </p>
 
-<form method="get" action="alarm/detail.jsp">
+<form method="get" action="alarm/detail.htm">
   <p>
     Get&nbsp;details&nbsp;for&nbsp;Alarm&nbsp;ID:
     <br/>

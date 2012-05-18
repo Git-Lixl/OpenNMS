@@ -295,6 +295,7 @@
         <property name="redirectView" value="/event/list.htm"/>
     </bean>
 
+    <alias name="/alarm/detail.htm" alias="/alarm/detail.jsp"/>
     <bean name="/alarm/detail.htm" class="org.opennms.web.controller.alarm.AlarmDetailController">
         <property name="webAlarmRepository" ref="webAlarmRepository"/>
     </bean>
