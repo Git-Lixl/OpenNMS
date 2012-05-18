@@ -91,10 +91,12 @@ public class AlarmDetailController extends AbstractController {
         int alarmId;
         String alarmIdString = "";
 
+        // Try to parse alarm ID as string to integer
         try {
             alarmIdString = httpServletRequest.getParameter("id");
             alarmId = Integer.parseInt(alarmIdString);
 
+            // Get alarm by ID
             m_alarm = m_webAlarmRepository.getAlarm(alarmId);
             logger.debug("Alarm retrieved: '{}'", m_alarm.toString());
         } catch (NumberFormatException e) {
@@ -103,6 +105,7 @@ public class AlarmDetailController extends AbstractController {
             logger.error("Could not retrieve alarm from webAlarmRepository for ID='{}'", alarmIdString);
         }
 
+        // return to view WEB-INF/jsp/alarm/detail.jsp
         return new ModelAndView("alarm/detail", "alarm", m_alarm);
     }
 }
