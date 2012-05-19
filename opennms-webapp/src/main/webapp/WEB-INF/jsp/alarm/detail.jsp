@@ -46,6 +46,9 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@taglib tagdir="/WEB-INF/tags/form" prefix="form" %>
 
+<%@page import="org.opennms.web.XssRequestWrapper"%>
+<%@page import="org.opennms.web.alarm.Alarm" %>
+
 <%!
 
 	public String alarmTicketLink(Alarm alarm) {
@@ -60,27 +63,11 @@
 %>
 
 <%
-    String alarmIdString = request.getParameter( "id" );
-
-    if( alarmIdString == null ) {
-        throw new org.opennms.web.MissingParameterException( "id" );
-    }
-
-    int alarmId = -1;
-
-    try {
-        alarmId = WebSecurityUtils.safeParseInt( WebSecurityUtils.sanitizeString(alarmIdString, false) );
-    }
-    catch( NumberFormatException e ) {
-        throw new org.opennms.web.alarm.AlarmIdNotFoundException( "The alarm id must be an integer.", alarmIdString );
-    }
-
-    WebAlarmRepository webAlarmRepository;
-    //Alarm alarm = AlarmFactory.getAlarms( alarmId );
-    Alarm alarm = webAlarmRepository.getAlarm(alarmId);
+    XssRequestWrapper req = new XssRequestWrapper(request);
+    Alarm alarm = (Alarm) request.getAttribute( "alarm" );
     
     if( alarm == null ) {
-        throw new org.opennms.web.alarm.AlarmIdNotFoundException( "An alarm with this id was not found.", String.valueOf(alarmId) );
+        throw new ServletException( "Missing alarm request attribute." );
     }
     
     pageContext.setAttribute("alarm", alarm);

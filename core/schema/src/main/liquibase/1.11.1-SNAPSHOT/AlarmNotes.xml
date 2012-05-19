@@ -17,24 +17,24 @@
             <column name="updated" type="DATETIME"/>
             <column name="author" type="varchar(256)"/>
             <column name="body" type="text"/>
-            <column name="reductionKey" type="varchar(256)"/>
+            <column name="reductionkey" type="varchar(256)"/>
             <column name="type" type="varchar(64)"/>
         </createTable>
         <addPrimaryKey tableName="memos" columnNames="id"/>
         <addColumn tableName="alarms">
-            <column name="stickyMemo" type="integer"/>
-            <column name="reductionKeyMemo" type="integer"/>
+            <column name="stickymemo" type="integer"/>
+            <column name="reductionkeymemo" type="integer"/>
         </addColumn>        
-        <addForeignKeyConstraint baseTableName="alarms" baseColumnNames="stickyMemo" constraintName="fk_stickyMemo" referencedTableName="memos" referencedColumnNames="id"/>
-        <addForeignKeyConstraint baseTableName="alarms" baseColumnNames="reductionKeyMemo" constraintName="fk_reductionKeyMemo" referencedTableName="memos" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="alarms" baseColumnNames="stickymemo" constraintName="fk_stickyMemo" referencedTableName="memos" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="alarms" baseColumnNames="reductionkeymemo" constraintName="fk_reductionKeyMemo" referencedTableName="memos" referencedColumnNames="id"/>
         
         <rollback>
             <dropSequence sequenceName="memoNxtId"/>
             <dropTable tableName="memos"/>
             <dropForeignKeyConstraint baseTableName="alarms" constraintName="fk_stickyMemo" />
             <dropForeignKeyConstraint baseTableName="alarms" constraintName="fk_reductionKeyMemo" />
-            <dropColumn tableName="alarms" columnName="stickyMemo" />
-            <dropColumn tableName="alarms" columnName="reductionKeyMemo" />
+            <dropColumn tableName="alarms" columnName="stickymemo" />
+            <dropColumn tableName="alarms" columnName="reductionkeymemo" />
         </rollback>
     </changeSet>
 

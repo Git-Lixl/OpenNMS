@@ -184,12 +184,8 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
     
     private Map<String, String> m_details;
 
-    @OneToOne(cascade=CascadeType.ALL)
-    @Column(name="stickymemo")
     private OnmsMemo m_stickyMemo;
     
-    @OneToOne
-    @Column(name="reductionkeymemo")
     private OnmsReductionKeyMemo m_reductionKeyMemo;
     
     /**
@@ -1037,7 +1033,9 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
     public void setIfIndex(Integer ifIndex) {
         m_ifIndex = ifIndex;
     }
-
+    
+    @OneToOne
+    @JoinColumn(name="reductionkeymemo")
     public OnmsReductionKeyMemo getReductionKeyMemo() {
         return m_reductionKeyMemo;
     }
@@ -1046,6 +1044,8 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
         this.m_reductionKeyMemo = reductionKeyMemo;
     }
 
+    @OneToOne(cascade=CascadeType.ALL)
+    @JoinColumn(name="stickymemo")
     public OnmsMemo getStickyMemo() {
         return m_stickyMemo;
     }
