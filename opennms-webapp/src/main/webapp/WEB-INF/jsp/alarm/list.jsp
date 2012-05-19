@@ -349,12 +349,12 @@
           <td class="divider bright" valign="middle" rowspan="1">
             
             <a href="<%= Util.calculateUrlBase(request, "alarm/detail.htm?id=" + alarms[i].getId()) %>"><%=alarms[i].getId()%></a>
-            <c:if test="<%= alarms[i].getStickyNote() != null%>">
-                <img src="images/AlarmNotes/StickyNote.png" width="20" height="20" alt="<%=alarms[i].getStickyNote()%>"/>  
+            <c:if test="<%= alarms[i].getStickyMemo().getId() != null%>">
+                <img src="images/AlarmNotes/StickyNote.png" width="20" height="20" alt="<%=alarms[i].getStickyMemo().getBody() %>"/>  
             </c:if>
             
-            <c:if test="<%= alarms[i].getStickyNote() != null%>">
-                <img src="images/AlarmNotes/JornalNote.png" width="20" height="20" alt="<%=alarms[i].getStickyNote()%>"/>        
+            <c:if test="<%= alarms[i].getReductionKeyMemo().getId() != null%>">
+                <img src="images/AlarmNotes/JournalNote.png" width="20" height="20" alt="<%=alarms[i].getReductionKeyMemo().getBody() %>"/>        
             </c:if>
 
                 

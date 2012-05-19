@@ -158,9 +158,11 @@ public class Alarm {
     /** The human-readable name of the node of this alarm. Can be null. */
     protected String nodeLabel;
     
-    protected Memo stickyMemo;
+    /** sticky memo to this alarm, can't be null */
+    protected Memo stickyMemo = new Memo();
     
-    protected ReductionKeyMemo reductionKeyMemo;
+    /** journal memo to the reductionkey of this alarm, can be null */
+    protected Memo reductionKeyMemo = new ReductionKeyMemo();
     
     /**
      * Empty constructor to create an empty <code>Alarm</code> instance. All
@@ -540,7 +542,7 @@ public class Alarm {
         return (this.serviceName);
     }
 
-    public ReductionKeyMemo getReductionKeyMemo() {
+    public Memo getReductionKeyMemo() {
         return reductionKeyMemo;
     }
 

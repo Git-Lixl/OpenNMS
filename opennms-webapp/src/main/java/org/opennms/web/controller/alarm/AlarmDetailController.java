@@ -43,8 +43,6 @@ import javax.servlet.http.HttpServletResponse;
  * <p>AlarmDetailController class.</p>
  *
  * @author Ronny Trommer <ronny@opennms.org>
- * @version $Id: $
- * @since 1.8.1
  */
 public class AlarmDetailController extends AbstractController {
 

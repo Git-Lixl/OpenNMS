@@ -190,7 +190,7 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
     
     @OneToOne
     @Column(name="reductionkeymemo")
-    private OnmsMemo m_reductionKeyMemo;
+    private OnmsReductionKeyMemo m_reductionKeyMemo;
     
     /**
      * default constructor
@@ -1038,11 +1038,11 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
         m_ifIndex = ifIndex;
     }
 
-    public OnmsMemo getReductionKeyMemo() {
+    public OnmsReductionKeyMemo getReductionKeyMemo() {
         return m_reductionKeyMemo;
     }
 
-    public void setReductionKeyMemo(OnmsMemo reductionKeyMemo) {
+    public void setReductionKeyMemo(OnmsReductionKeyMemo reductionKeyMemo) {
         this.m_reductionKeyMemo = reductionKeyMemo;
     }
 

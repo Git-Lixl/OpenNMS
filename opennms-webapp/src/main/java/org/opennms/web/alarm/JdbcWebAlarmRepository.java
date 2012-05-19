@@ -138,6 +138,16 @@ public class JdbcWebAlarmRepository implements WebAlarmRepository, InitializingB
             }
         };
     }
+
+    @Override
+    public void updateStickyMemo(Integer alarmId, String body, String user) {
+        throw new UnsupportedOperationException("Not supported yet. JdbcWebAlarmRepositony is deprecated.");
+    }
+
+    @Override
+    public void updateReductionKeyMemo(Integer alarmId, String body, String user) {
+        throw new UnsupportedOperationException("Not supported yet. JdbcWebAlarmRepositony is deprecated.");
+    }
     
     private static class AlarmMapper implements ParameterizedRowMapper<Alarm> {
         public Alarm mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -180,10 +190,10 @@ public class JdbcWebAlarmRepository implements WebAlarmRepository, InitializingB
             alarm.nodeLabel = rs.getString("nodeLabel");
             alarm.serviceName = rs.getString("serviceName");
             
-            alarm.stickyNote = rs.getString("stickyNote");
-            alarm.stickyNoteCreate = getTimestamp("stickyNoteCreate", rs);
-            alarm.stickyNoteUpdate = getTimestamp("stickyNoteUpdate", rs);
-            alarm.stickyNoteUser = rs.getString("stickyNoteUser");
+//            alarm.stickyNote = rs.getString("stickyNote");
+//            alarm.stickyNoteCreate = getTimestamp("stickyNoteCreate", rs);
+//            alarm.stickyNoteUpdate = getTimestamp("stickyNoteUpdate", rs);
+//            alarm.stickyNoteUser = rs.getString("stickyNoteUser");
             return alarm;
             
         }

@@ -41,6 +41,7 @@
 
 <%@page import="org.opennms.web.alarm.Alarm" %>
 
+
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@taglib tagdir="/WEB-INF/tags/form" prefix="form" %>
@@ -74,8 +75,10 @@
         throw new org.opennms.web.alarm.AlarmIdNotFoundException( "The alarm id must be an integer.", alarmIdString );
     }
 
-    Alarm alarm = AlarmFactory.getAlarms( alarmId );
-
+    WebAlarmRepository webAlarmRepository;
+    //Alarm alarm = AlarmFactory.getAlarms( alarmId );
+    Alarm alarm = webAlarmRepository.getAlarm(alarmId);
+    
     if( alarm == null ) {
         throw new org.opennms.web.alarm.AlarmIdNotFoundException( "An alarm with this id was not found.", String.valueOf(alarmId) );
     }
@@ -242,17 +245,17 @@
         </tr>
 	<tr class="<%=alarm.getSeverity().getLabel()%>">
             <td>Sticky Note</td>
-            <td><%=alarm.getStickyNote()%></td>
-            <td>User <%=alarm.getStickyNoteUser()%></td>
-            <td>Created <%=alarm.getStickyNoteCreate()%></td>
-            <td>Updated <%=alarm.getStickyNoteUpdate()%></td>
+            <td><%=alarm.getStickyMemo().getBody() %></td>
+            <td>User <%=alarm.getStickyMemo().getAuthor() %></td>
+            <td>Created <%=alarm.getStickyMemo().getCreated() %></td>
+            <td>Updated <%=alarm.getStickyMemo().getUpdated() %></td>
         </tr>
         <tr class="<%=alarm.getSeverity().getLabel()%>">
             <td>Journal Note</td>
-            <td><%=alarm.getStickyNote()%></td>
-            <td>User <%=alarm.getStickyNoteUser()%></td>
-            <td>Created <%=alarm.getStickyNoteCreate()%></td>
-            <td>Updated <%=alarm.getStickyNoteUpdate()%></td>
+            <td><%=alarm.getReductionKeyMemo().getBody() %></td>
+            <td>User <%=alarm.getReductionKeyMemo().getAuthor() %></td>
+            <td>Created <%=alarm.getReductionKeyMemo().getCreated() %></td>
+            <td>Updated <%=alarm.getReductionKeyMemo().getUpdated() %></td>
         </tr>
       </table>
       

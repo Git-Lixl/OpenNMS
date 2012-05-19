@@ -2,8 +2,12 @@ package org.opennms.web.alarm;
 
 import java.io.Serializable;
 import java.util.Date;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
-class Memo implements Serializable {
+/**
+ * <p>Web-model class for a memo </p>
+ */
+public class Memo implements Serializable {
     
     private Integer id;
 
@@ -53,5 +57,10 @@ class Memo implements Serializable {
 
     public void setUpdated(Date updated) {
         this.updated = updated;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }
