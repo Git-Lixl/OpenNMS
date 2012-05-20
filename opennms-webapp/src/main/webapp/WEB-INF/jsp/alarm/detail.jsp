@@ -234,12 +234,10 @@
                 <textarea name="stickyMemoBody" ><%=alarm.getStickyMemo().getBody() != null ? alarm.getStickyMemo().getBody() : ""%></textarea>
                 <br/>
                 <input type="hidden" name="alarmId" value="<%=alarm.getId()%>"/>
-                <input type="hidden" name="redirect" value="<%=request.getServletPath() + "?" + request.getQueryString()%>" />
                 <form:input type="submit" value="Save" />    
             </form>
             <form method="post" action="alarm/clearSticky.htm">
                 <input type="hidden" name="alarmId" value="<%=alarm.getId()%>"/>
-                <input type="hidden" name="redirect" value="<%=request.getServletPath() + "?" + request.getQueryString()%>" />
                 <form:input type="submit" value="Clear" />    
             </form>
         </td>
@@ -249,12 +247,10 @@
                 <textarea name="journalMemoBody" ><%=alarm.getReductionKeyMemo().getBody() != null ? alarm.getReductionKeyMemo().getBody() : ""%></textarea>
                 <br/>
                 <input type="hidden" name="alarmId" value="<%=alarm.getId()%>"/>
-                <input type="hidden" name="redirect" value="<%=request.getServletPath() + "?" + request.getQueryString()%>" />
                 <form:input type="submit" value="Save" />    
             </form>
             <form method="post" action="alarm/clearJournal.htm">
                 <input type="hidden" name="alarmId" value="<%=alarm.getId()%>"/>
-                <input type="hidden" name="redirect" value="<%=request.getServletPath() + "?" + request.getQueryString()%>" />
                 <form:input type="submit" value="Clear" />    
             </form>
         </td>
@@ -299,7 +295,7 @@
                 <form method="post" action="alarm/acknowledge">
                     <input type="hidden" name="actionCode" value="<%=action%>" />
                     <input type="hidden" name="alarm" value="<%=alarm.getId()%>"/>
-                    <input type="hidden" name="redirect" value="<%= request.getServletPath() + "?" + request.getQueryString()%>" />
+                    <input type="hidden" name="redirect" value="<%= "detail.htm" + "?" + request.getQueryString()%>" />
                     <input type="submit" value="<%=ackButtonName%>" />
                 </form>
             </td>
@@ -311,7 +307,7 @@
             <td>
                 <form method="post" action="alarm/changeSeverity">
                     <input type="hidden" name="alarm" value="<%=alarm.getId()%>"/>
-                    <input type="hidden" name="redirect" value="<%= request.getServletPath() + "?" + request.getQueryString()%>" />	  
+                    <input type="hidden" name="redirect" value="<%= "detail.htm" + "?" + request.getQueryString()%>" />	  
                     <select name="actionCode">
                         <%if (showEscalate) {%>
                         <option value="<%=escalateAction%>">Escalate</option>
@@ -346,19 +342,19 @@
 
 <form method="post" action="alarm/ticket/create.htm">
     <input type="hidden" name="alarm" value="<%=alarm.getId()%>"/>
-    <input type="hidden" name="redirect" value="<%=request.getServletPath() + "?" + request.getQueryString()%>" />
+    <input type="hidden" name="redirect" value="<%="detail.htm" + "?" + request.getQueryString()%>" />
     <form:input type="submit" value="Create Ticket" disabled="${(!empty alarm.troubleTicketState) && (alarm.troubleTicketState != 'CREATE_FAILED')}" />
 </form>
 
 <form method="post" action="alarm/ticket/update.htm">
     <input type="hidden" name="alarm" value="<%=alarm.getId()%>"/>
-    <input type="hidden" name="redirect" value="<%=request.getServletPath() + "?" + request.getQueryString()%>" />
+    <input type="hidden" name="redirect" value="<%="detail.htm" + "?" + request.getQueryString()%>" />
     <form:input type="submit" value="Update Ticket" disabled="${(empty alarm.troubleTicket)}"/>
 </form>
 
 <form method="post" action="alarm/ticket/close.htm">
     <input type="hidden" name="alarm" value="<%=alarm.getId()%>"/>
-    <input type="hidden" name="redirect" value="<%=request.getServletPath() + "?" + request.getQueryString()%>" />
+    <input type="hidden" name="redirect" value="<%="detail.htm" + "?" + request.getQueryString()%>" />
     <form:input type="submit" value="Close Ticket" disabled="${(empty alarm.troubleTicketState) || ((alarm.troubleTicketState != 'OPEN') && (alarm.troubleTicketState != 'CLOSE_FAILED')) }" />
 </form>
 
