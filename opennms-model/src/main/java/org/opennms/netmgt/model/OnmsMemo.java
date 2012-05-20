@@ -93,6 +93,14 @@ public class OnmsMemo implements Serializable {
         return m_updated;
     }
 
+    public void setCreated(Date created) {
+        this.m_created = created;
+    }
+
+    public void setUpdated(Date updated) {
+        this.m_updated = updated;
+    }
+    
     public String getAuthor() {
         return m_author;
     }

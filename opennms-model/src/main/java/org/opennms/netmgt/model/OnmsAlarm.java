@@ -1034,8 +1034,8 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
         m_ifIndex = ifIndex;
     }
     
-    @OneToOne
-    @JoinColumn(name="reductionkeymemo")
+    @ManyToOne
+    @JoinColumn(name="reductionKey", referencedColumnName="reductionkey", updatable=false, insertable=false)
     public OnmsReductionKeyMemo getReductionKeyMemo() {
         return m_reductionKeyMemo;
     }

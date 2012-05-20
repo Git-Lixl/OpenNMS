@@ -35,6 +35,7 @@ import org.hibernate.criterion.Restrictions;
 import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.AlarmDao;
+import org.opennms.netmgt.dao.MemoDao;
 import org.opennms.netmgt.model.*;
 import org.opennms.netmgt.model.acknowledgments.AckService;
 import org.opennms.web.alarm.filter.AlarmCriteria;
@@ -57,6 +58,9 @@ public class DaoWebAlarmRepository implements WebAlarmRepository, InitializingBe
     @Autowired
     AlarmDao m_alarmDao;
 
+    @Autowired
+    MemoDao m_memoDao;
+    
     @Autowired
     AckService m_ackService;
 
@@ -366,23 +370,57 @@ public class DaoWebAlarmRepository implements WebAlarmRepository, InitializingBe
     }
 
     @Override
+    @Transactional
     public void updateStickyMemo(Integer alarmId, String body, String user) {
         OnmsAlarm onmsAlarm = m_alarmDao.get(alarmId);
         if (onmsAlarm != null) {
+            if (onmsAlarm.getStickyMemo() == null) {
+                onmsAlarm.setStickyMemo(new OnmsMemo());
+                onmsAlarm.getStickyMemo().setCreated(new Date());
+            } 
             onmsAlarm.getStickyMemo().setBody(body);
             onmsAlarm.getStickyMemo().setAuthor(user);
+            onmsAlarm.getStickyMemo().setUpdated(new Date());
             m_alarmDao.saveOrUpdate(onmsAlarm);
         }
     }
 
-    @Override
+    @Override    
+    @Transactional
     public void updateReductionKeyMemo(Integer alarmId, String body, String user) {
         OnmsAlarm onmsAlarm = m_alarmDao.get(alarmId);
         if (onmsAlarm != null) {
-            onmsAlarm.getReductionKeyMemo().setBody(body);
-            onmsAlarm.getReductionKeyMemo().setAuthor(user);
-            onmsAlarm.getReductionKeyMemo().setReductionKey(onmsAlarm.getReductionKey());
-            m_alarmDao.saveOrUpdate(onmsAlarm);
+            OnmsReductionKeyMemo memo = onmsAlarm.getReductionKeyMemo();
+            if(memo == null) {
+                memo = new OnmsReductionKeyMemo();
+                memo.setCreated(new Date());
+            }
+            memo.setBody(body);
+            memo.setAuthor(user);
+            memo.setReductionKey(onmsAlarm.getReductionKey());
+            memo.setUpdated(new Date());
+            m_memoDao.saveOrUpdate(memo);
+            onmsAlarm.setReductionKeyMemo(memo);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeStickyMemo(Integer alarmId) {
+        OnmsAlarm onmsAlarm = m_alarmDao.get(alarmId);
+        if (onmsAlarm != null) {
+            m_memoDao.delete(onmsAlarm.getStickyMemo());
+            onmsAlarm.setStickyMemo(null);
+        } 
+    }
+
+    @Override
+    @Transactional
+    public void removeReductionKeyMemo(int alarmId) {
+        OnmsAlarm onmsAlarm = m_alarmDao.get(alarmId);
+        if (onmsAlarm != null) {
+            m_memoDao.delete(onmsAlarm.getReductionKeyMemo());
+            onmsAlarm.setReductionKeyMemo(null);
         }
     }
 }

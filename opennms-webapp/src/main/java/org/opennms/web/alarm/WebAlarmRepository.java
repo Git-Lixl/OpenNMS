@@ -157,4 +157,8 @@ public interface WebAlarmRepository {
      * ReductionKeyMemo aka JournalMemo
      */
     public void updateReductionKeyMemo(Integer alarmId, String body, String user);
+
+    public void removeStickyMemo(Integer alarmId);
+
+    public void removeReductionKeyMemo(int alarmId);
 }

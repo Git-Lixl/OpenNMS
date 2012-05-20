@@ -1,31 +1,28 @@
-/*******************************************************************************
+/**
+ * *****************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2010-2011 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2011 The OpenNMS Group, Inc.
+ * Copyright (C) 2010-2011 The OpenNMS Group, Inc. OpenNMS(R) is Copyright (C)
+ * 1999-2011 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
- * OpenNMS(R) is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published
- * by the Free Software Foundation, either version 3 of the License,
- * or (at your option) any later version.
+ * OpenNMS(R) is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
  *
- * OpenNMS(R) is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * OpenNMS(R) is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with OpenNMS(R).  If not, see:
- *      http://www.gnu.org/licenses/
+ * You should have received a copy of the GNU General Public License along with
+ * OpenNMS(R). If not, see: http://www.gnu.org/licenses/
  *
- * For more information contact:
- *     OpenNMS(R) Licensing <license@opennms.org>
- *     http://www.opennms.org/
- *     http://www.opennms.com/
- *******************************************************************************/
-
+ * For more information contact: OpenNMS(R) Licensing <license@opennms.org>
+ * http://www.opennms.org/ http://www.opennms.com/
+ * *****************************************************************************
+ */
 package org.opennms.web.controller.alarm;
 
 import org.opennms.web.alarm.Alarm;
@@ -34,17 +31,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.AbstractController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 
 /**
  * <p>AlarmDetailController class.</p>
  *
  * @author Ronny Trommer <ronny@opennms.org>
  */
-public class AlarmDetailController extends AbstractController {
+public class AlarmDetailController extends MultiActionController {
 
     /**
      * OpenNMS alarm repository
@@ -64,7 +61,8 @@ public class AlarmDetailController extends AbstractController {
     /**
      * <p>setWebAlarmRepository</p>
      *
-     * @param webAlarmRepository a {@link org.opennms.web.alarm.WebAlarmRepository} object.
+     * @param webAlarmRepository a {@link org.opennms.web.alarm.WebAlarmRepository}
+     * object.
      */
     public void setWebAlarmRepository(WebAlarmRepository webAlarmRepository) {
         m_webAlarmRepository = webAlarmRepository;
@@ -81,11 +79,19 @@ public class AlarmDetailController extends AbstractController {
 
     /**
      * {@inheritDoc}
+     */
+    @Override
+    protected ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        logger.debug("AlarmDetailController handleRequestInternal called");
+        return super.handleRequestInternal(request, response);
+    }
+
+    /**
+     * {@inheritDoc}
      *
      * Display alarm detail page
      */
-    @Override
-    protected ModelAndView handleRequestInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+    public ModelAndView detail(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
         int alarmId;
         String alarmIdString = "";
 
@@ -104,6 +110,92 @@ public class AlarmDetailController extends AbstractController {
         }
 
         // return to view WEB-INF/jsp/alarm/detail.jsp
+        return new ModelAndView("alarm/detail", "alarm", m_alarm);
+    }
+
+    public ModelAndView clearSticky(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+        logger.debug("CLEAR STICKY 9247 parse alarm ID '{}' to integer.", httpServletRequest.getParameter("alarmId"));
+        int alarmId;
+        String alarmIdString = "";
+
+        // Try to parse alarm ID from string to integer
+        try {
+            alarmIdString = httpServletRequest.getParameter("alarmId");
+            alarmId = Integer.parseInt(alarmIdString);
+            m_webAlarmRepository.removeStickyMemo(alarmId);
+
+            m_alarm = m_webAlarmRepository.getAlarm(alarmId);
+
+        } catch (NumberFormatException e) {
+            logger.error("Could not parse alarm ID '{}' to integer.", httpServletRequest.getParameter("alarmId"));
+        } catch (Exception e) {
+            logger.error("Could not retrieve alarm from webAlarmRepository for ID='{}'", alarmIdString);
+        }
+        return new ModelAndView("alarm/detail", "alarm", m_alarm);
+    }
+
+    public ModelAndView saveSticky(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+        logger.debug("SAVE STICKY 9247 Could not parse alarm ID '{}' to integer.", httpServletRequest.getParameter("alarmId"));
+        int alarmId;
+        String alarmIdString = "";
+
+        // Try to parse alarm ID from string to integer
+        try {
+            alarmIdString = httpServletRequest.getParameter("alarmId");
+            alarmId = Integer.parseInt(alarmIdString);
+            String stickyMemoBody = httpServletRequest.getParameter("stickyMemoBody");
+            m_webAlarmRepository.updateStickyMemo(alarmId, stickyMemoBody, httpServletRequest.getRemoteUser());
+            
+            m_alarm = m_webAlarmRepository.getAlarm(alarmId);
+
+        } catch (NumberFormatException e) {
+            logger.error("Could not parse alarm ID '{}' to integer.", httpServletRequest.getParameter("alarmId"));
+        } catch (Exception e) {
+            logger.error("Could not retrieve alarm from webAlarmRepository for ID='{}'", alarmIdString);
+        }
+        return new ModelAndView("alarm/detail", "alarm", m_alarm);
+    }
+    
+    public ModelAndView clearJournal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+        logger.debug("CLEAR Journal 9247 parse alarm ID '{}' to integer.", httpServletRequest.getParameter("alarmId"));
+        int alarmId;
+        String alarmIdString = "";
+
+        // Try to parse alarm ID from string to integer
+        try {
+            alarmIdString = httpServletRequest.getParameter("alarmId");
+            alarmId = Integer.parseInt(alarmIdString);
+            m_webAlarmRepository.removeReductionKeyMemo(alarmId);
+
+            m_alarm = m_webAlarmRepository.getAlarm(alarmId);
+
+        } catch (NumberFormatException e) {
+            logger.error("Could not parse alarm ID '{}' to integer.", httpServletRequest.getParameter("alarmId"));
+        } catch (Exception e) {
+            logger.error("Could not retrieve alarm from webAlarmRepository for ID='{}'", alarmIdString);
+        }
+        return new ModelAndView("alarm/detail", "alarm", m_alarm);
+    }
+
+    public ModelAndView saveJournal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+        logger.debug("SAVE Journal 9247 Could not parse alarm ID '{}' to integer.", httpServletRequest.getParameter("alarmId"));
+        int alarmId;
+        String alarmIdString = "";
+
+        // Try to parse alarm ID from string to integer
+        try {
+            alarmIdString = httpServletRequest.getParameter("alarmId");
+            alarmId = Integer.parseInt(alarmIdString);
+            String journalMemoBody = httpServletRequest.getParameter("journalMemoBody");
+            m_webAlarmRepository.updateReductionKeyMemo(alarmId, journalMemoBody, httpServletRequest.getRemoteUser());
+
+            m_alarm = m_webAlarmRepository.getAlarm(alarmId);
+
+        } catch (NumberFormatException e) {
+            logger.error("Could not parse alarm ID '{}' to integer.", httpServletRequest.getParameter("alarmId"));
+        } catch (Exception e) {
+            logger.error("Could not retrieve alarm from webAlarmRepository for ID='{}'", alarmIdString);
+        }
         return new ModelAndView("alarm/detail", "alarm", m_alarm);
     }
 }
