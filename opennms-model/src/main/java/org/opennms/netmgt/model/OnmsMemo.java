@@ -28,12 +28,16 @@ package org.opennms.netmgt.model;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.*;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * <p>Generic memo for any element inside OpenNMS</p>
  *
  * @author <a href="mailto:Markus@OpenNMS.com">Markus Neumann</a>
  */
+@XmlRootElement(name="memo")
 @Entity
 @Table(name = "memos")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -47,6 +51,7 @@ public class OnmsMemo implements Serializable {
     @Column(name = "id", nullable = false)
     @SequenceGenerator(name = "memoSequence", sequenceName = "memoNxtId")
     @GeneratedValue(generator = "memoSequence")
+    @XmlAttribute(name="id")
     private Integer m_id;
 
     @Column(name = "body")
@@ -107,5 +112,5 @@ public class OnmsMemo implements Serializable {
 
     public void setAuthor(String author) {
         this.m_author = author;
-    } 
+    }
 }

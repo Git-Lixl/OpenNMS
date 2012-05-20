@@ -1036,6 +1036,7 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
     
     @ManyToOne
     @JoinColumn(name="reductionKey", referencedColumnName="reductionkey", updatable=false, insertable=false)
+    @XmlElement(name="reductionKeyMemo")
     public OnmsReductionKeyMemo getReductionKeyMemo() {
         return m_reductionKeyMemo;
     }
@@ -1046,6 +1047,7 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
 
     @OneToOne(cascade=CascadeType.ALL)
     @JoinColumn(name="stickymemo")
+    @XmlElement(name="stickyMemo")
     public OnmsMemo getStickyMemo() {
         return m_stickyMemo;
     }

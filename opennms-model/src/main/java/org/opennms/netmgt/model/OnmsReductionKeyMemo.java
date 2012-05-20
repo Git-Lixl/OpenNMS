@@ -28,6 +28,8 @@ package org.opennms.netmgt.model;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * <p>Specific memo which is attached to every alarm with a matching reduction
@@ -35,6 +37,7 @@ import javax.persistence.Entity;
  *
  * @author <a href="mailto:Markus@OpenNMS.com">Markus Neumann</a>
  */
+@XmlRootElement(name = "reductionKeyMemo")
 @Entity
 @DiscriminatorValue(value="ReductionKeyMemo")
 public class OnmsReductionKeyMemo extends OnmsMemo {
@@ -51,4 +54,5 @@ public class OnmsReductionKeyMemo extends OnmsMemo {
     public void setReductionKey(String reductionKey) {
         this.m_reductionKey = reductionKey;
     }
+    
 }
