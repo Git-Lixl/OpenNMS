@@ -25,7 +25,7 @@
             <column name="stickymemo" type="integer"/>
         </addColumn>        
         
-        <addForeignKeyConstraint baseTableName="alarms" baseColumnNames="stickymemo" constraintName="fk_stickyMemo" referencedTableName="memos" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="alarms" baseColumnNames="stickymemo" constraintName="fk_stickyMemo" referencedTableName="memos" referencedColumnNames="id" deleteCascade="true"/>
          
         <rollback>
             <dropSequence sequenceName="memonxtid"/>
