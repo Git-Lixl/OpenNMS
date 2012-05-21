@@ -955,16 +955,18 @@ create table usersNotified (
 
 create index userid_notifyid_idx on usersNotified(userID, notifyID);
 
---#TODO comment
-create table memos {
-    id          INTEGER, CONSTRAINT pk_memosID PRIMARY KEY(id),
-    body        text,
-    author      varchar(256),
-    reductionkey varchar(256),
-    updated     timestamp with time zone,
-    created     timestamp with time zone
-};
-
+--#################################
+--# This table contains memos used by alarms to represent StickyMemos and Journal / ReductionKeyMemos
+create table memos (
+  id integer NOT NULL,
+  created timestamp with time zone,
+  updated timestamp with time zone,
+  author character varying(256),
+  body text,
+  reductionkey character varying(256),
+  type character varying(64),
+  CONSTRAINT memos_pkey PRIMARY KEY (id)
+);
 --########################################################################
 --#
 --# This table contains the following fields:
@@ -1039,8 +1041,7 @@ create table alarms (
         ifIndex                 integer,
         clearKey		VARCHAR(256),
         eventParms              text,
-        stickymemo              INTEGER, CONSTRAINT fk_stickymemo FOREIGN KEY (stickymemo) REFERENCES memos(id),
-        reductionkeymemo        INTEGER, CONSTRAINT fk_reductionkeymemo FOREIGN KEY (reductionkeymemo) REFERENCES memos(id)
+        stickymemo              INTEGER, CONSTRAINT "fk_stickyMemo" FOREIGN KEY (stickymemo) REFERENCES memos (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE,
 );
 
 CREATE INDEX alarm_uei_idx ON alarms(eventUei);
