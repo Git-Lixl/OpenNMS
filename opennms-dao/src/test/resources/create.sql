@@ -1002,6 +1002,7 @@ create table memos (
 --# suppressedTime : time the alarm was suppressed
 --# alarmAckUser : user that acknowledged the alarm
 --# alarmAckTime : time user Ack'd the alarm
+--# stickymemo  : reference to the memo table
 --########################################################################
 
 create table alarms (
@@ -1038,10 +1039,11 @@ create table alarms (
 	x733AlarmType           VARCHAR(31),
 	x733ProbableCause       INTEGER default 0 not null,
 	qosAlarmState           VARCHAR(31),
-        ifIndex                 integer,
-        clearKey		VARCHAR(256),
+        ifIndex                 INTEGER,
+        clearKey                VARCHAR(256),
         eventParms              text,
-        stickymemo              INTEGER, CONSTRAINT "fk_stickyMemo" FOREIGN KEY (stickymemo) REFERENCES memos (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE,
+        stickymemo              INTEGER, 
+        CONSTRAINT fk_stickyMemo FOREIGN KEY (stickymemo) REFERENCES memos ON DELETE CASCADE
 );
 
 CREATE INDEX alarm_uei_idx ON alarms(eventUei);

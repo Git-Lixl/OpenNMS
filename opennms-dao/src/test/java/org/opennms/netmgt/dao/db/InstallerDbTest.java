@@ -46,7 +46,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.junit.Ignore;
 
 import org.opennms.test.ThrowableAnticipator;
 import org.springframework.util.StringUtils;
@@ -119,33 +118,33 @@ public class InstallerDbTest extends TemporaryDatabaseTestCase {
 
     // XXX this should be an integration test
     //TODO Tak fix with alarm memos
-//    public void testCreateTablesTwice() throws Exception {
-//        // First pass.
-//        getInstallerDb().createSequences();
-//        getInstallerDb().updatePlPgsql();
-//        getInstallerDb().addStoredProcedures();
-//
-//        getInstallerDb().createTables();
-//
-//        /*
-//         * Second pass. We don't care about the output from this, so we clear
-//         * the ByteArrayOutputStream after we call createSequences(). It's
-//         * important to test the sequence part, and do it first, because the
-//         * tables depend on sequences for their ID column.
-//         */
-//        getInstallerDb().createSequences();
-//        getInstallerDb().updatePlPgsql();
-//        getInstallerDb().addStoredProcedures();
-//
-//        /*
-//         * Create a new ByteArrayOutputStream so we can look for UPTODATE for
-//         * every table
-//         */
-//        resetOutputStream();
-//        getInstallerDb().createTables();
-//
-//        assertNoTablesHaveChanged();
-//    }
+    public void testCreateTablesTwice() throws Exception {
+        // First pass.
+        getInstallerDb().createSequences();
+        getInstallerDb().updatePlPgsql();
+        getInstallerDb().addStoredProcedures();
+
+        getInstallerDb().createTables();
+
+        /*
+         * Second pass. We don't care about the output from this, so we clear
+         * the ByteArrayOutputStream after we call createSequences(). It's
+         * important to test the sequence part, and do it first, because the
+         * tables depend on sequences for their ID column.
+         */
+        getInstallerDb().createSequences();
+        getInstallerDb().updatePlPgsql();
+        getInstallerDb().addStoredProcedures();
+
+        /*
+         * Create a new ByteArrayOutputStream so we can look for UPTODATE for
+         * every table
+         */
+        resetOutputStream();
+        getInstallerDb().createTables();
+
+        assertNoTablesHaveChanged();
+    }
     
     public void testInsertCriteria() throws Exception {
         getInstallerDb().createSequences();

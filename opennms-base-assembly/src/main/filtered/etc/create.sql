@@ -82,7 +82,7 @@ drop sequence nodeNxtId;
 drop sequence serviceNxtId;
 drop sequence eventsNxtId;
 drop sequence alarmsNxtId;
---drop sequence memoNxtId;
+drop sequence memoNxtId;
 drop sequence outageNxtId;
 drop sequence notifyNxtId;
 drop sequence userNotifNxtId;
@@ -152,7 +152,7 @@ create sequence eventsNxtId minvalue 1;
 create sequence alarmsNxtId minvalue 1;
 
 --# Sequence for the id colomn in  memos table 
---create sequence memoNxtId minvalue 1;
+create sequence memoNxtId minvalue 1;
 
 --# Sequence for the outageID column in the outages table
 --#          sequence,   column,  table
@@ -957,7 +957,6 @@ create index userid_notifyid_idx on usersNotified(userID, notifyID);
 
 --#################################
 --# This table contains memos used by alarms to represent StickyMemos and Journal / ReductionKeyMemos
-
 create table memos (
   id integer NOT NULL,
   created timestamp with time zone,
@@ -968,7 +967,6 @@ create table memos (
   type character varying(64),
   CONSTRAINT memos_pkey PRIMARY KEY (id)
 );
-
 --########################################################################
 --#
 --# This table contains the following fields:
@@ -1045,7 +1043,7 @@ create table alarms (
     clearKey                VARCHAR(256),
     eventParms              text,
     stickymemo              INTEGER, 
-    CONSTRAINT fk_stickyMemo FOREIGN KEY (stickymemo) REFERENCES memos ON DELETE CASCADE
+    CONSTRAINT fk_stickyMemo FOREIGN KEY (stickymemo) REFERENCES memos(id) ON DELETE CASCADE
 );
 
 CREATE INDEX alarm_uei_idx ON alarms(eventUei);
