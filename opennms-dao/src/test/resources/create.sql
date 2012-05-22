@@ -1044,8 +1044,7 @@ create table alarms (
         ifIndex                 INTEGER,
         clearKey                VARCHAR(256),
         eventParms              text,
-        stickymemo              INTEGER, 
-        CONSTRAINT fk_stickyMemo FOREIGN KEY (stickymemo) REFERENCES memos ON DELETE CASCADE
+        stickymemo              INTEGER, CONSTRAINT fk_stickyMemo FOREIGN KEY (stickymemo) REFERENCES memos (id) ON DELETE CASCADE
 );
 
 CREATE INDEX alarm_uei_idx ON alarms(eventUei);
