@@ -151,7 +151,9 @@ create sequence eventsNxtId minvalue 1;
 --# install: alarmsNxtId alarmId alarms
 create sequence alarmsNxtId minvalue 1;
 
---# Sequence for the id colomn in  memos table 
+--# Sequence for the id column in the memos table
+--#          sequence,   column, table
+--# install: memoNxtId id memos
 create sequence memoNxtId minvalue 1;
 
 --# Sequence for the outageID column in the outages table

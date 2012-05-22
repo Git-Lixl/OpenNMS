@@ -117,7 +117,6 @@ public class InstallerDbTest extends TemporaryDatabaseTestCase {
     }
 
     // XXX this should be an integration test
-    //TODO Tak fix with alarm memos
     public void testCreateTablesTwice() throws Exception {
         // First pass.
         getInstallerDb().createSequences();
