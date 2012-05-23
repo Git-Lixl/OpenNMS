@@ -1055,7 +1055,6 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
     public void setStickyMemo(OnmsMemo stickyMemo) {
         this.m_stickyMemo = stickyMemo;
     }
-
     
     /** {@inheritDoc} */
     public void acknowledge(String user) {

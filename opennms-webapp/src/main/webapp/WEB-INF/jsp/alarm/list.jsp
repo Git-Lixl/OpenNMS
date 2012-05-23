@@ -356,7 +356,6 @@
             <c:if test="<%= alarms[i].getReductionKeyMemo().getId() != null%>">
                 <img src="images/AlarmNotes/JournalNote.png" width="20" height="20" alt="<%=alarms[i].getReductionKeyMemo().getBody() %>"/>        
             </c:if>
-
                 
           <c:if test="${param.display == 'long'}">
             <% if(alarms[i].getUei() != null) { %>
