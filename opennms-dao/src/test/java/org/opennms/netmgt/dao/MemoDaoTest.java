@@ -1,49 +1,41 @@
-/**
- * *****************************************************************************
+/*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2006-2011 The OpenNMS Group, Inc. OpenNMS(R) is Copyright (C)
- * 1999-2011 The OpenNMS Group, Inc.
+ * Copyright (C) 2006-2011 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2011 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
- * OpenNMS(R) is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
+ * OpenNMS(R) is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  *
- * OpenNMS(R) is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * OpenNMS(R) is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along with
- * OpenNMS(R). If not, see: http://www.gnu.org/licenses/
+ * You should have received a copy of the GNU General Public License
+ * along with OpenNMS(R).  If not, see:
+ *      http://www.gnu.org/licenses/
  *
- * For more information contact: OpenNMS(R) Licensing <license@opennms.org>
- * http://www.opennms.org/ http://www.opennms.com/
- ******************************************************************************
- */
+ * For more information contact:
+ *     OpenNMS(R) Licensing <license@opennms.org>
+ *     http://www.opennms.org/
+ *     http://www.opennms.com/
+ *******************************************************************************/
+
 package org.opennms.netmgt.dao;
 
 import java.util.Date;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import org.junit.Ignore;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
+import static org.junit.Assert.*;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
-import org.opennms.core.utils.BeanUtils;
-
 import org.opennms.netmgt.dao.db.JUnitConfigurationEnvironment;
 import org.opennms.netmgt.dao.db.JUnitTemporaryDatabase;
-import org.opennms.netmgt.model.OnmsAlarm;
-import org.opennms.netmgt.model.OnmsEvent;
-import org.opennms.netmgt.model.OnmsMemo;
-import org.opennms.netmgt.model.OnmsNode;
-
+import org.opennms.netmgt.model.*;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -51,7 +43,7 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
-@ContextConfiguration(locations = {
+@ContextConfiguration(locations={
     "classpath:/META-INF/opennms/applicationContext-dao.xml",
     "classpath:/META-INF/opennms/applicationContext-databasePopulator.xml",
     "classpath:/META-INF/opennms/applicationContext-setupIpLike-enabled.xml",
@@ -59,8 +51,6 @@ import org.springframework.transaction.annotation.Transactional;
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase(dirtiesContext = false)
-@Ignore
-//TODO setup this testclass
 public class MemoDaoTest implements InitializingBean {
 
     @Autowired
@@ -77,7 +67,7 @@ public class MemoDaoTest implements InitializingBean {
 
     @Autowired
     private MemoDao m_memoDao;
-
+    
     @Autowired
     private DatabasePopulator m_databasePopulator;
 
@@ -85,7 +75,8 @@ public class MemoDaoTest implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        BeanUtils.assertAutowiring(this);
+        //TODO fix BeanUtils import
+        //BeanUtils.assertAutowiring(this);
     }
 
     @BeforeTransaction
@@ -100,10 +91,10 @@ public class MemoDaoTest implements InitializingBean {
             m_populated = true;
         }
     }
-
+    
     @Test
     @Transactional
-    public void testAddMemoToExistingAlarm() {
+    public void testAddStickyMemoToExistingAlarm() {
         OnmsEvent event = new OnmsEvent();
         event.setEventLog("Y");
         event.setEventDisplay("Y");
@@ -126,6 +117,7 @@ public class MemoDaoTest implements InitializingBean {
         alarm.setLastEvent(event);
         alarm.setCounter(1);
         alarm.setDistPoller(m_distPollerDao.load("localhost"));
+        alarm.setReductionKey("fristReductionKey");
 
         m_alarmDao.save(alarm);
         // It works we're so smart! hehe
@@ -134,16 +126,22 @@ public class MemoDaoTest implements InitializingBean {
         assertEquals("uei://org/opennms/test/EventDaoTest", newAlarm.getUei());
         assertEquals(alarm.getLastEvent().getId(), newAlarm.getLastEvent().getId());
         
-        
         final OnmsMemo memo = new OnmsMemo();
-        memo.setBody("blabody");
-        memo.setAuthor("tak");
+        memo.setBody("Call me Ishmael...");
+        memo.setAuthor("Herman Melville");
+        Date memoCreation = new Date(); 
+        memo.setCreated(memoCreation);
         newAlarm.setStickyMemo(memo);
         
-        m_alarmDao.update(alarm);
+        m_alarmDao.update(newAlarm);
+        m_alarmDao.flush();
+        
+        assertNotNull(newAlarm.getStickyMemo().getId());        
+        assertNotNull(newAlarm.getStickyMemo().getCreated());
+        assertNotNull(newAlarm.getStickyMemo().getAuthor());
+        assertNotNull(newAlarm.getStickyMemo().getBody());
         
         assertNotNull(alarm.getStickyMemo().getId());
-        assertNotNull(alarm.getStickyMemo().getUpdated());
         assertNotNull(alarm.getStickyMemo().getCreated());
         assertNotNull(alarm.getStickyMemo().getAuthor());
         assertNotNull(alarm.getStickyMemo().getBody());

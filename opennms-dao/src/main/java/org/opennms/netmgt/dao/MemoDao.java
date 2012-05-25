@@ -33,6 +33,6 @@ import org.opennms.netmgt.model.OnmsMemo;
 /**
  * @author <a href="mailto:Markus@OpenNMS.com">Markus Neumann</a>
  */
-public interface MemoDao extends OnmsDao<OnmsMemo, Long> {
+public interface MemoDao extends OnmsDao<OnmsMemo, Integer> {
     
 }

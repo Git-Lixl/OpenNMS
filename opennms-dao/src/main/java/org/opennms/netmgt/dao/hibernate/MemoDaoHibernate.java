@@ -31,7 +31,7 @@ import org.opennms.netmgt.model.OnmsMemo;
 /**
  * @author <a href="mailto:Markus@OpenNMS.com">Markus Neumann</a>
  */
-public class MemoDaoHibernate extends AbstractDaoHibernate<OnmsMemo, Long> implements MemoDao {
+public class MemoDaoHibernate extends AbstractDaoHibernate<OnmsMemo, Integer> implements MemoDao {
 
     /**
      * <p>Constructor for MemoDaoHibernate.</p>
