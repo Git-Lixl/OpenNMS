@@ -23,6 +23,7 @@
     <module>javamail</module>
     <module>jaxb</module>
     <module>jcifs</module>
+    <module>jclouds-chef</module>
     <module>jdbc-pool</module>
     <module>jersey</module>
     <module>jfreechart</module>
