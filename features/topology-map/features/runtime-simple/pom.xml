@@ -9,11 +9,11 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.osgi.features.topology</groupId>
-  <artifactId>opennms-topology-dev</artifactId>
+  <artifactId>opennms-topology-runtime-simple</artifactId>
 
-  <name>OpenNMS :: Topology :: Development</name>
+  <name>OpenNMS :: Topology :: Runtime (Simple)</name>
 
-  <description>Useful utilities for the OpenNMS OSGi container.</description>
+  <description>Simple runtime and plugins for the OpenNMS topology web app.</description>
 
   <packaging>pom</packaging>
 
@@ -26,9 +26,9 @@
           <repositories>
             <repository>mvn:${project.groupId}/opennms-topology-runtime-base/${project.version}/xml/features</repository>
           </repositories>
-          <bundles>
-            <bundle>wrap:mvn:junit/junit/${junit.version}</bundle>
-          </bundles>
+          <features>
+            <feature>opennms-topology-runtime-base</feature>
+          </features>
         </configuration>
       </plugin>
     </plugins>
@@ -45,11 +45,10 @@
     </dependency>
 
     <dependency>
-      <groupId>org.opennms.features.topology</groupId>
-      <artifactId>shell</artifactId>
+      <groupId>org.opennms.features.topology.plugins.topo</groupId>
+      <artifactId>simple</artifactId>
       <version>${project.version}</version>
     </dependency>
-
   </dependencies>
 
 </project>
