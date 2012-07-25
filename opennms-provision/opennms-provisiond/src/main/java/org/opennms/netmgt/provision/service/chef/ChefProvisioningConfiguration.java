@@ -28,54 +28,165 @@
 
 package org.opennms.netmgt.provision.service.chef;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.jclouds.chef.ChefApi;
-import org.opennms.core.utils.LogUtils;
+import org.jclouds.chef.domain.DatabagItem;
+
+import com.google.common.collect.Lists;
 
 public class ChefProvisioningConfiguration {
-    private ChefProvisioningConfiguration m_defaultConfig;
-    private Map<String,ChefProvisioningConfiguration> m_envConfigMap;
+    private JSONObject m_configJSON;
+    private JSONObject m_configCloudJSON;
+
+    private final String PARM_NODE_LABEL_SOURCE = "node_label_source";
+    private String m_nodeLabelSource;
     
-    private boolean m_makeNodes;
-    private boolean m_makeInterfaces;
-    private boolean m_makeRfc1918Interfaces;
+    private final String PARM_CRITICAL_PATH_DEFAULT_GW = "critical_path_default_gateway";
+    private boolean m_criticalPathDefaultGateway;
     
-    private ChefProvisioningConfiguration() {
-        m_makeNodes = true;
-        m_makeInterfaces = true;
-        m_makeRfc1918Interfaces = true;
-        m_defaultConfig = this;
-    }
+    private final String PARM_SNMP_PRIMARY_INTERFACE = "snmp_primary_interface";
+    private final String PARM_VAL_SNMP_PRIMARY_AUTOMATIC = "automatic";
+    private final String PARM_VAL_SNMP_PRIMARY_CLOUD_PUBLIC = "cloud-public";
+    private final String PARM_VAL_SNMP_PRIMARY_CLOUD_PRIVATE = "cloud-private";
+    private String m_snmpPrimaryInterface;
+    
+    private final String PARM_SUPPRESS_NON_CLOUD_INTERFACES = "suppress_non_cloud_interfaces";
+    private Map<String,Boolean> m_suppressNonCloudInterfaces;
+    
+    private final String PARM_SUPPRESS_CLOUD_INTERFACES = "suppress_cloud_interfaces";
+    private Map<String,Boolean> m_suppressCloudInterfaces;
+
+    private final String PARM_SUPPRESS_CLOUD_LOCAL_INTERFACES = "suppress_cloud_local_interfaces";
+    private Map<String,Boolean> m_suppressCloudLocalInterfaces;
+    
+    private final String PARM_SUPPRESS_CLOUD_PUBLIC_INTERFACES = "suppress_cloud_public_interfaces";
+    private Map<String,Boolean> m_suppressCloudPublicInterfaces;
     
     public ChefProvisioningConfiguration(ChefApi api) {
-        m_makeNodes = Boolean.valueOf(api.getDatabagItem("opennms", "make_nodes").toString());
-        m_makeInterfaces = Boolean.valueOf(api.getDatabagItem("opennms", "make_interfaces").toString());
-        m_makeRfc1918Interfaces = Boolean.valueOf(api.getDatabagItem("opennms", "make_rfc1918_interfaces").toString());
-        m_defaultConfig = this;
-    }
-    
-    public ChefProvisioningConfiguration getDefaultConfig() {
-        return m_defaultConfig;
-    }
-    
-    public ChefProvisioningConfiguration getConfigForEnvironment(String environment) {
-        if (m_envConfigMap.containsKey(environment)) {
-            LogUtils.debugf(getClass(), "getConfigForEnvironment: Specific config exists for Chef environment '%s', making composite config", environment);
-            return makeCompositeConfig(m_envConfigMap.get(environment));
-        } else {
-            LogUtils.debugf(getClass(), "getConfigForEnvironment: No specific config exists for Chef environment '%s', returning default config", environment);
-            return m_defaultConfig;
-        }
-    }
-    
-    private ChefProvisioningConfiguration makeCompositeConfig(ChefProvisioningConfiguration specificConfig) {
-        if (specificConfig == specificConfig.getDefaultConfig()) {
-            LogUtils.debugf(getClass(), "makeCompositeConfig: This config is the same as the default, returning the default config");
-            return m_defaultConfig;
+        m_configJSON = null;
+        DatabagItem reqConfig = api.getDatabagItem("opennms", "requisitions");
+        if (reqConfig != null) {
+            try {
+                m_configJSON = new JSONObject(reqConfig.toString());
+            } catch (JSONException e) {
+                // Well, we tried, didn't we?
+            }
         }
         
-        return m_defaultConfig;
+        if (m_configJSON != null) {
+            m_configCloudJSON = m_configJSON.optJSONObject("cloud");
+        }
+        
+        m_nodeLabelSource = safeGetStringFromJSONConfig(PARM_NODE_LABEL_SOURCE, "name");
+        m_criticalPathDefaultGateway = safeGetBooleanFromJSONConfig(PARM_CRITICAL_PATH_DEFAULT_GW, true);
+        m_snmpPrimaryInterface = safeGetStringFromJSONConfig(PARM_SNMP_PRIMARY_INTERFACE, "automatic");
+
+        List<String> knownCloudProviders = Lists.newArrayList("default", "ec2", "rackspace", "eucalyptus");
+        for (String cloudProvider : knownCloudProviders) {
+            m_suppressNonCloudInterfaces.put(cloudProvider, safeGetBooleanFromCloudJSONConfig("ec2", PARM_SUPPRESS_NON_CLOUD_INTERFACES, true));
+            m_suppressCloudInterfaces.put(cloudProvider, safeGetBooleanFromCloudJSONConfig(cloudProvider, PARM_SUPPRESS_CLOUD_INTERFACES, false));
+            m_suppressCloudLocalInterfaces.put(cloudProvider, safeGetBooleanFromCloudJSONConfig(cloudProvider, PARM_SUPPRESS_CLOUD_LOCAL_INTERFACES, true));
+            m_suppressCloudPublicInterfaces.put(cloudProvider, safeGetBooleanFromCloudJSONConfig(cloudProvider, PARM_SUPPRESS_CLOUD_PUBLIC_INTERFACES, false));
+        }
     }
+
+    /**
+     * 
+     * @return the setting of nodeLabelSource
+     */
+    public String getNodeLabelSource() {
+        return m_nodeLabelSource;
+    }
+    
+    /**
+     * @return the setting of criticalPathDefaultGateway
+     */
+    public boolean isCriticalPathDefaultGateway() {
+        return m_criticalPathDefaultGateway;
+    }
+
+    /**
+     * @return One of "automatic", "cloud-public", or "cloud-private"
+     */
+    public String getSnmpPrimaryInterface() {
+        return m_snmpPrimaryInterface;
+    }
+    
+    /**
+     * @param cloudProvider the name of a cloud provider
+     * @return the setting of suppressNonCloudInterfaces for that provider
+     */
+    public boolean isSuppressNonCloudInterfaces(String cloudProvider) {
+        if (m_suppressNonCloudInterfaces.containsKey(cloudProvider)) {
+            return m_suppressNonCloudInterfaces.get(cloudProvider);
+        } else {
+            return m_suppressNonCloudInterfaces.get("default");
+        }
+    }
+
+    /**
+     * @param cloudProvider the name of a cloud provider
+     * @return the setting of suppressCloudLocalInterfaces for that provider
+     */
+    public boolean isSuppressCloudLocalInterfaces(String cloudProvider) {
+        if (m_suppressCloudLocalInterfaces.containsKey(cloudProvider)) {
+            return m_suppressCloudLocalInterfaces.get(cloudProvider);
+        } else {
+            return m_suppressCloudLocalInterfaces.get("default");
+        }
+    }
+
+    /**
+     * @param cloudProvider the name of a cloud provider
+     * @return the setting of suppressCloudPublicInterfaces for that provider
+     */
+    public boolean isSuppressCloudPublicInterfaces(String cloudProvider) {
+        if (m_suppressCloudPublicInterfaces.containsKey(cloudProvider)) {
+            return m_suppressCloudPublicInterfaces.get(cloudProvider);
+        } else {
+            return m_suppressCloudPublicInterfaces.get("default");
+        }
+    }
+
+    /**
+     * @param cloudProvider the name of a cloud provider
+     * @return the setting of suppressCloudInterfaces for that provider
+     */
+    public boolean isSuppressCloudInterfaces(String cloudProvider) {
+        if (m_suppressCloudInterfaces.containsKey(cloudProvider)) {
+            return m_suppressCloudInterfaces.get(cloudProvider);
+        } else {
+            return m_suppressCloudInterfaces.get("default");
+        }
+    }
+    
+    private boolean safeGetBooleanFromCloudJSONConfig(String cloudProvider, String key, boolean defaultValue) {
+        return defaultValue;
+    }
+
+    private boolean safeGetBooleanFromJSONConfig(String key, boolean defaultValue) {
+        boolean retValue;
+        try {
+            retValue = m_configJSON.getBoolean(key);
+        } catch (Throwable t) {
+            retValue = defaultValue;
+        }
+        return retValue;
+    }
+    
+    private String safeGetStringFromJSONConfig(String key, String defaultValue) {
+        String retValue;
+        try {
+            retValue = m_configJSON.getString(key);
+        } catch (Throwable t) {
+            retValue = defaultValue;
+        }
+        return retValue;
+    }
+
 }

@@ -32,38 +32,33 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLDecoder;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.commons.lang.StringUtils;
-import org.jclouds.Context;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.jclouds.ContextBuilder;
 import org.jclouds.chef.ChefApi;
 import org.jclouds.chef.ChefContext;
 import org.jclouds.chef.domain.Node;
 import org.jclouds.chef.domain.SearchResult;
+import org.jclouds.domain.JsonBall;
 import org.opennms.core.utils.LogUtils;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
-import org.xbill.DNS.AAAARecord;
-import org.xbill.DNS.ARecord;
-import org.xbill.DNS.Record;
-import org.xbill.DNS.Type;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -76,11 +71,11 @@ import com.google.common.io.Files;
  *
  * @author <a href="mailto:jeffg@opennms.org">Jeff Gehlbach</a>
  */
+/**
+ * @author jeffg
+ *
+ */
 public class ChefRequisitionUrlConnection extends URLConnection {
-
-    private static final String SEARCH_QUERY_ARG = "q";
-    
-    private static final String QUERY_ARG_SEPARATOR = "&";
 
     /** Constant <code>URL_SCHEME="chef://"</code> */
     public static final String URL_SCHEME = "chef://";
@@ -100,7 +95,9 @@ public class ChefRequisitionUrlConnection extends URLConnection {
     
     private String m_credential;
     
-    private String[] m_services;
+    private URL m_chefApiURL;
+    
+    private ChefProvisioningConfiguration m_chefProvisioningConfig;
     
     /**
      * <p>Constructor for ChefRequisitionUrlConnection.</p>
@@ -111,20 +108,23 @@ public class ChefRequisitionUrlConnection extends URLConnection {
     protected ChefRequisitionUrlConnection(URL url) throws MalformedURLException {
         super(url);
         validateChefUrl(url);
-        m_port = url.getPort() == -1 ? 4000 : url.getPort();
         m_scheme = parseScheme(url);
+
+        if (url.getPort() == -1) {
+            if ("https".equals(m_scheme)) {
+                m_port = 443;
+            } else {
+                m_port = 4000;
+            }
+        } else {
+            m_port = url.getPort();
+        }
+
         m_foreignSource = parseForeignSource(url);
         m_identity = parseChefUserIdentity(url);
         m_credential = getChefUserCredential(url);
         m_url = url;
-        
-        ChefContext con = ContextBuilder.newBuilder("chef").endpoint(getUnderlyingChefURL().toString()).credentials(m_identity, m_credential).build();
-        ChefApi api = con.getApi();
-        
-        SearchResult<? extends Node> chefNodes = api.searchNodes();
-        for (Node node : chefNodes) {
-            node.getName();
-        }
+        m_chefApiURL = getUnderlyingChefURL();
     }
     
     protected URL getUnderlyingChefURL() throws MalformedURLException {
@@ -132,25 +132,22 @@ public class ChefRequisitionUrlConnection extends URLConnection {
     }
     
     protected String parseChefUserIdentity(URL url) {
-        String identity = "unspecified";
         String userInfo = url.getUserInfo();
-        if (userInfo == null) return identity;
-        if (StringUtils.countMatches(userInfo, ":") >= 1) {
-            String[] components = userInfo.split(":", 2);
-            identity = components[0];
+        if (userInfo == null) {
+            return "unspecified";
+        } else {
+            return userInfo;
         }
-        return identity;
     }
     
     protected String getChefUserCredential(URL url) {
-        String credential = "unspecified";
+        String chefKeysDirectory = System.getProperty("chef.keysDirectory", "/etc/chef");
+        
         String userInfo = url.getUserInfo();
-        if (userInfo == null) return credential;
-        if (StringUtils.countMatches(userInfo, ":") >= 1) {
-            String[] components = userInfo.split(":", 2);
-            credential = readChefUserPrivateKey(components[1]);
-        }
-        return credential;
+        if (userInfo == null) return "unspecified";
+        
+        String keyPath = chefKeysDirectory + File.separator + userInfo + ".pem"; 
+        return readChefUserPrivateKey(keyPath);
     }
     
     protected String readChefUserPrivateKey(String pathname) {
@@ -194,7 +191,7 @@ public class ChefRequisitionUrlConnection extends URLConnection {
             stream = new ByteArrayInputStream(jaxBMarshal(r).getBytes());
         } catch (Throwable e) {
             String message = "Problem getting input stream: "+e;
-            log().warn(message, e);
+            LogUtils.warnf(getClass(), message, e);
             throw new IOExceptionWithCause(message,e );
         }
         
@@ -208,56 +205,166 @@ public class ChefRequisitionUrlConnection extends URLConnection {
      *   against the Chef Server API as specified in the URL
      */
     private Requisition buildRequisitionFromChefOutput() {
-        Requisition r = new Requisition();
-        return r;
+        Requisition req = new Requisition();
+        
+        ChefContext con = ContextBuilder.newBuilder("chef").endpoint(m_chefApiURL.toString()).credentials(m_identity, m_credential).build();
+        ChefApi api = con.getApi();
+        
+        m_chefProvisioningConfig = new ChefProvisioningConfiguration(api);
+        SearchResult<? extends Node> chefNodes = api.searchNodes();
+        for (Node chefNode : chefNodes) {
+            req.putNode(createRequisitionNode(chefNode));
+        }
+        
+        return req;
     }
-    
+
     /**
      * Creates an instance of the JaxB annotated RequisitionNode class.
      * 
-     * @param rec
-     * @return a populated RequisitionNode based on defaults and data from the
-     *   A record returned from a DNS zone transfer query.
+     * @param chefNode a node object from the Chef API
+     * @return a populated RequisitionNode based on the data for the
+     *   Chef API node object
      */
-    private RequisitionNode createRequisitionNode(Record rec) {
-        String addr = null;
-        if ("A".equals(Type.string(rec.getType()))) {
-            ARecord arec = (ARecord)rec;
-            addr = StringUtils.stripStart(arec.getAddress().toString(), "/");
-        } else if ("AAAA".equals(Type.string(rec.getType()))) {
-            AAAARecord aaaarec = (AAAARecord)rec;
-            addr = aaaarec.rdataToString();
-        } else {
-            throw new IllegalArgumentException("Invalid record type " + Type.string(rec.getType()) + ". A or AAAA expected.");
-        }
+    private RequisitionNode createRequisitionNode(Node chefNode) {
+        RequisitionNode reqNode = new RequisitionNode();
+        
+        reqNode.setForeignId(chefNode.getName());
+        reqNode.setBuilding(getForeignSource());
 
-        RequisitionNode n = new RequisitionNode();
-        
-        String host = rec.getName().toString();
-        String nodeLabel = StringUtils.stripEnd(StringUtils.stripStart(host, "."), ".");
+        handleNodeCategories(chefNode, reqNode);
+        handleInterfaces(chefNode, reqNode);
+        // TODO: Assets
 
-        n.setBuilding(getForeignSource());
-        
-        n.setNodeLabel(nodeLabel);
-        
-        RequisitionInterface i = new RequisitionInterface();
-        i.setDescr("DNS-" + Type.string(rec.getType()));
-        i.setIpAddr(addr);
-        i.setSnmpPrimary(PrimaryType.PRIMARY);
-        i.setManaged(Boolean.TRUE);
-        i.setStatus(Integer.valueOf(1));
-        
-        for (String service : m_services) {
-            service = service.trim();
-            i.insertMonitoredService(new RequisitionMonitoredService(service));
-            log().debug("Adding provisioned service " + service);
-            }
-        
-        n.putInterface(i);
-        
-        return n;
+        return reqNode;
     }
-
+    
+    private void handleInterfaces(Node chefNode, RequisitionNode reqNode) {
+        Set<RequisitionInterface> reqIfaces = new HashSet<RequisitionInterface>();
+        
+        JSONObject cloud = getCloudData(chefNode);
+        JSONObject network = getAutomaticNetworkData(chefNode);
+        
+        if (network == null && cloud == null) {
+            LogUtils.warnf(getClass(), "Chef node '%s' in foreign-source '%s' has neither cloud nor network info in its automatic data, skipping interfaces altogether", chefNode.getName(), m_foreignSource);
+            return;
+        }
+        
+        if (cloud == null) {
+            LogUtils.infof(getClass(), "Chef node '%s' in foreign-source '%s' has no automatic cloud data, not trying to make cloud interfaces", chefNode.getName(), m_foreignSource);
+        } else if (! m_chefProvisioningConfig.isSuppressCloudInterfaces(cloud.optString("provider", "default"))) {
+            if (! m_chefProvisioningConfig.isSuppressCloudLocalInterfaces(cloud.optString("provider", "default"))) {
+                reqIfaces.addAll(makeCloudInterfaces(cloud, "private_ips"));
+            }
+            if (! m_chefProvisioningConfig.isSuppressCloudPublicInterfaces(cloud.optString("provider", "default"))) {
+                reqIfaces.addAll(makeCloudInterfaces(cloud, "public_ips"));
+            }
+        }
+        
+        if (network == null && cloud != null) {
+            LogUtils.infof(getClass(), "Chef node '%s' in foreign-source '%s' has no automatic network data, not trying to make non-cloud interfaces", chefNode.getName(), m_foreignSource);
+        } else if (! m_chefProvisioningConfig.isSuppressNonCloudInterfaces(cloud.optString("provider", "default"))) {
+            reqIfaces.addAll(makeAutomaticInterfaces(network));
+        }
+        
+        for (RequisitionInterface reqIf : reqIfaces) {
+            reqNode.putInterface(reqIf);
+        }
+    }
+    
+    private Set<RequisitionInterface> makeCloudInterfaces(JSONObject cloud, String key) {
+        Set<RequisitionInterface> ifaces = new HashSet<RequisitionInterface>();
+        JSONArray ifaceArray = cloud.optJSONArray(key);
+        for (int i = 0; i < ifaceArray.length(); i++) {
+            String ifAddr = ifaceArray.optString(i);
+            if (!"".equals(ifAddr)) {
+                LogUtils.debugf(getClass(), "Adding cloud.%s member '%s' in foreign-source '%s'", key, ifAddr, m_foreignSource);
+                RequisitionInterface reqIf = new RequisitionInterface();
+                reqIf.setIpAddr(ifAddr);
+                reqIf.setDescr("cloud(" + cloud.optString("provider") + ") " + key);
+                reqIf.setManaged(Boolean.TRUE);
+                reqIf.setStatus(Integer.valueOf(1));
+                if ("public_ips".equals(m_chefProvisioningConfig.getSnmpPrimaryInterface()) && "public_ips".equals(key)) {
+                    if (ifaces.size() == 0) {
+                        reqIf.setSnmpPrimary(PrimaryType.PRIMARY);
+                    } else {
+                        reqIf.setSnmpPrimary(PrimaryType.SECONDARY);
+                    }
+                } else if ("private_ips".equals(m_chefProvisioningConfig.getSnmpPrimaryInterface()) && "private_ips".equals(key)) {
+                    if (ifaces.size() == 0) {
+                        reqIf.setSnmpPrimary(PrimaryType.PRIMARY);
+                    } else {
+                        reqIf.setSnmpPrimary(PrimaryType.SECONDARY);
+                    }
+                } else {
+                    reqIf.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
+                }
+                ifaces.add(reqIf);
+            }
+        }
+        return ifaces;
+    }
+    
+    private Set<RequisitionInterface> makeAutomaticInterfaces(JSONObject automatic) {
+        Set<RequisitionInterface> ifaces = new HashSet<RequisitionInterface>();
+        String ifAddr = automatic.optString("ipaddress");
+        if ("".equals(ifAddr)) {
+            LogUtils.warnf(getClass(), "Empty value for automatic.ipaddress, returning empty set of automatic interfaces in foreign-source '%s'", m_foreignSource);
+            return ifaces;
+        } else if (ifAddr.startsWith("127.") || ifAddr.toLowerCase().startsWith("fe80:")) {
+            LogUtils.warnf(getClass(), "Value '%s' of automatic.ipaddress is link-local, returning empty set of automatic interfaces in foreign-source '%s'", ifAddr, m_foreignSource);
+            return ifaces;
+        } else {
+            RequisitionInterface reqIf = new RequisitionInterface();
+            reqIf.setIpAddr(ifAddr.trim().toLowerCase());
+            reqIf.setDescr("automatic.ipaddress");
+            reqIf.setManaged(Boolean.TRUE);
+            reqIf.setStatus(Integer.valueOf(1));
+            if ("automatic".equals(m_chefProvisioningConfig.getSnmpPrimaryInterface())) {
+                if (ifaces.size() == 0) {
+                    reqIf.setSnmpPrimary(PrimaryType.PRIMARY);
+                } else {
+                    reqIf.setSnmpPrimary(PrimaryType.SECONDARY);
+                }
+            } else {
+                reqIf.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
+            }
+            ifaces.add(reqIf);
+        }
+        return ifaces;
+    }
+    
+    private void handleNodeCategories(Node chefNode, RequisitionNode reqNode) {
+        reqNode.putCategory(new RequisitionCategory("ChefNode"));
+        // TODO get Node.chefEnvironment implemented upstream in jclouds-chef
+        reqNode.putCategory(new RequisitionCategory(makeNodeCategoryName("ChefEnv_", chefNode.getChefEnvironment())));
+        
+        Map<String,JsonBall> automatic = chefNode.getAutomatic();
+        if (automatic.containsKey("roles")) {
+            try {
+                JSONArray roles = new JSONArray(automatic.get("roles").toString());
+                for (int i = 0; i < roles.length(); i++) {
+                    reqNode.putCategory(new RequisitionCategory(makeNodeCategoryName("ChefRole_", roles.getString(i))));
+                }
+            } catch (JSONException e) {
+                LogUtils.warnf(getClass(), e, "Caught JSONException while extracting roles for Chef node '%s' in foreign-source '%s'. No role-based node categories will be assigned on resulting OpenNMS node.", chefNode.getName(), m_foreignSource);
+            }
+        }
+    }
+    
+    private String makeNodeCategoryName(String prefix, String remainder) {
+        StringBuilder bldr = new StringBuilder(prefix);
+        bldr.append(remainder.trim().replaceAll("\\W", "_"));
+        String result = bldr.toString();
+        
+        if (result.length() > 64) {
+            String truncResult = result.substring(0, 64);
+            LogUtils.warnf(getClass(), "Truncating generated node category name '%s' to '%s' (64-character limit)", result, truncResult);
+            return truncResult;
+        }
+        return result;
+    }
+    
     /**
      * Utility to marshal the Requisition class into XML.
      * 
@@ -305,17 +412,6 @@ public class ChefRequisitionUrlConnection extends URLConnection {
     public URL getUrl() {
         return m_url;
     }
-    
-    private static List<String> tokenizeQueryArgs(String query) throws IllegalArgumentException {
-        
-        if (query == null) {
-            throw new IllegalArgumentException("The URL query is null");
-        }
-
-        List<String> queryArgs = Arrays.asList(StringUtils.split(query, QUERY_ARG_SEPARATOR));
-
-        return queryArgs;
-    }
 
     /**
      * Validate the format is:
@@ -338,7 +434,7 @@ public class ChefRequisitionUrlConnection extends URLConnection {
         }
         String[] paths = path.split("/");
         if (!"http".equalsIgnoreCase(paths[0]) && !"https".equalsIgnoreCase(paths[0])) {
-            throw new MalformedURLException("The specified chef URL's first path component must be either 'http' or 'https': " +url);
+            throw new MalformedURLException("The specified chef URL's first path component is '" + paths[0] + "' but it must be either 'http' or 'https': " +url);
         }
     }
 
@@ -406,16 +502,28 @@ public class ChefRequisitionUrlConnection extends URLConnection {
         
         String endpointPath = path;
         if( path != null && StringUtils.countMatches(path, "/") >= 2) {
-            String[] paths = path.split("/");
+            String[] paths = path.split("/", 3);
             endpointPath = paths[2];
         }
-        return endpointPath;
+        return "/" + endpointPath;
     }
     
-    private static ThreadCategory log() {
-        return ThreadCategory.getInstance(ChefRequisitionUrlConnection.class);
+    protected JSONObject getCloudData(Node chefNode) {
+        try {
+            return new JSONObject(chefNode.getAutomatic().get("cloud").toString());
+        } catch (JSONException e) {
+            return null;
+        }
     }
-
+    
+    protected JSONObject getAutomaticNetworkData(Node chefNode) {
+        try {
+            return new JSONObject(chefNode.getAutomatic().get("network").toString());
+        } catch (JSONException e) {
+            LogUtils.warnf(getClass(), e, "No automatic network data found on Chef node '%s' in foreign-source '%s', this should not be", chefNode.getName(), m_foreignSource);
+            return null;
+        }
+    }
 
     /**
      * <p>setForeignSource</p>
@@ -435,5 +543,12 @@ public class ChefRequisitionUrlConnection extends URLConnection {
     public String getForeignSource() {
         return m_foreignSource;
     }
-
+    
+    /**
+     * @return A URL object representing the underlying endpoint for
+     *   the Chef Server API
+     */
+    public URL getChefApiURL() {
+        return m_chefApiURL;
+    }
 }

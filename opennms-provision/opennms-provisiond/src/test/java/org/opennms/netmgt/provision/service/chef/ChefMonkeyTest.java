@@ -30,6 +30,10 @@ package org.opennms.netmgt.provision.service.chef;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
+import junit.framework.Assert;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -38,8 +42,8 @@ import org.jclouds.chef.ChefApi;
 import org.jclouds.chef.ChefContext;
 import org.jclouds.chef.domain.Node;
 import org.jclouds.chef.domain.SearchResult;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -54,9 +58,8 @@ import com.google.common.io.Files;
 public class ChefMonkeyTest {
 
     @Test
-    @Ignore
+    //@Ignore
     public void testConnectToPlatform() throws IOException, JSONException {
-        
         String cred = Files.toString(new File("/home/jeffg/.chef/jeffg.pem"), Charsets.UTF_8);
         ContextBuilder cb = ContextBuilder.newBuilder("chef").endpoint("https://api.opscode.com/organizations/jeffgtesting").credentials("jeffg", cred);
         ChefContext con = cb.build();
@@ -64,10 +67,11 @@ public class ChefMonkeyTest {
         ChefApi api = con.getApi();
         SearchResult<? extends Node> chefNodes = api.searchNodes();
         
+        JSONObject radiant = new JSONObject(api.getDatabagItem("apps", "radiant").toString());
+        System.out.println("radiant repository from Databag 'apps/radiant' is '" + radiant.getString("repository") + "'");
         for (String dbagName : api.listDatabags()) {
             System.out.println("Databag: " + dbagName);
             for (String dbagItemName : api.listDatabagItems(dbagName)) {
-                // System.out.println("DatabagItem: " + dbagItemName);
                 System.out.println("DatabagItem '" + dbagItemName + "': " + api.getDatabagItem(dbagName, dbagItemName));
             }
         }
@@ -78,7 +82,7 @@ public class ChefMonkeyTest {
                 JSONObject cloud = new JSONObject(node.getAutomatic().get("cloud").toString());
                 System.out.println("\tCloud provider: " + cloud.getString("provider"));
             }
-            System.out.println(node.toString());
+            System.out.println("Node in environment '" + node.getChefEnvironment() + "': " + node.toString());
         }
     }
 
