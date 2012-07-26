@@ -105,8 +105,6 @@ public class ChefRequisitionUrlConnectionTest {
 
     @Test
     public void hcGetInputStream() throws IOException {
-        System.setProperty("chef.identity", "jeffg");
-        System.setProperty("chef.credential", "/etc/chef/jeffg.pem");
         URLConnection c = new ChefRequisitionUrlConnection(new URL(TEST_URL));
         InputStream s = c.getInputStream();
         Assert.assertNotNull(s);

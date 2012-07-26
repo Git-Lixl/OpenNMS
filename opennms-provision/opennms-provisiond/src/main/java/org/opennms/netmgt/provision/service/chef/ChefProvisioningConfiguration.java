@@ -28,7 +28,7 @@
 
 package org.opennms.netmgt.provision.service.chef;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,16 +56,16 @@ public class ChefProvisioningConfiguration {
     private String m_snmpPrimaryInterface;
     
     private final String PARM_SUPPRESS_NON_CLOUD_INTERFACES = "suppress_non_cloud_interfaces";
-    private Map<String,Boolean> m_suppressNonCloudInterfaces;
+    private Map<String,Boolean> m_suppressNonCloudInterfaces = new HashMap<String,Boolean>();
     
     private final String PARM_SUPPRESS_CLOUD_INTERFACES = "suppress_cloud_interfaces";
-    private Map<String,Boolean> m_suppressCloudInterfaces;
+    private Map<String,Boolean> m_suppressCloudInterfaces = new HashMap<String,Boolean>();
 
     private final String PARM_SUPPRESS_CLOUD_LOCAL_INTERFACES = "suppress_cloud_local_interfaces";
-    private Map<String,Boolean> m_suppressCloudLocalInterfaces;
+    private Map<String,Boolean> m_suppressCloudLocalInterfaces = new HashMap<String,Boolean>();
     
     private final String PARM_SUPPRESS_CLOUD_PUBLIC_INTERFACES = "suppress_cloud_public_interfaces";
-    private Map<String,Boolean> m_suppressCloudPublicInterfaces;
+    private Map<String,Boolean> m_suppressCloudPublicInterfaces = new HashMap<String,Boolean>();
     
     public ChefProvisioningConfiguration(ChefApi api) {
         m_configJSON = null;

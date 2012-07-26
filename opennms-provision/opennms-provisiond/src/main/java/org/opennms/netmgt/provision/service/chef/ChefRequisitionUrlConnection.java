@@ -71,10 +71,6 @@ import com.google.common.io.Files;
  *
  * @author <a href="mailto:jeffg@opennms.org">Jeff Gehlbach</a>
  */
-/**
- * @author jeffg
- *
- */
 public class ChefRequisitionUrlConnection extends URLConnection {
 
     /** Constant <code>URL_SCHEME="chef://"</code> */
@@ -151,6 +147,7 @@ public class ChefRequisitionUrlConnection extends URLConnection {
     }
     
     protected String readChefUserPrivateKey(String pathname) {
+        LogUtils.debugf(getClass(), "Will attempt to read Chef private key from file '%s'", pathname);
         File pemFile = new File(pathname);
         if (!pemFile.exists()) {
             LogUtils.errorf(getClass(), "Cannot read Chef private key from file '%s' because file does not exist", pathname);
@@ -159,11 +156,13 @@ public class ChefRequisitionUrlConnection extends URLConnection {
             LogUtils.errorf(getClass(), "Cannot read Chef private key from file '%s' because file is not readable", pathname);
         }
         try {
-            return Files.toString(pemFile, Charsets.UTF_8);
+            String cred = Files.toString(pemFile, Charsets.UTF_8);
+            LogUtils.debugf(getClass(), "Successfully read %d bytes from Chef private key PEM file '%s'", cred.length(), pemFile);
+            return cred;
         } catch (IOException ioe) {
             LogUtils.errorf(getClass(), ioe, "Failed to read Chef private key from file '%s'", pathname);
         }
-        return null;
+        return "";
     }
    
     /**
@@ -191,7 +190,7 @@ public class ChefRequisitionUrlConnection extends URLConnection {
             stream = new ByteArrayInputStream(jaxBMarshal(r).getBytes());
         } catch (Throwable e) {
             String message = "Problem getting input stream: "+e;
-            LogUtils.warnf(getClass(), message, e);
+            LogUtils.warnf(getClass(), e, message);
             throw new IOExceptionWithCause(message,e );
         }
         
@@ -207,7 +206,11 @@ public class ChefRequisitionUrlConnection extends URLConnection {
     private Requisition buildRequisitionFromChefOutput() {
         Requisition req = new Requisition();
         
-        ChefContext con = ContextBuilder.newBuilder("chef").endpoint(m_chefApiURL.toString()).credentials(m_identity, m_credential).build();
+        LogUtils.debugf(getClass(), "Creating ContextBuilder for Chef API connection to %s with identity '%s' and %d bytes of credentials", m_chefApiURL, m_identity, m_credential.length());
+        ContextBuilder cb = ContextBuilder.newBuilder("chef").endpoint(m_chefApiURL.toString()).credentials(m_identity, m_credential);
+        LogUtils.debugf(getClass(), "Got ContextBuilder, building.");
+        ChefContext con = cb.build();
+        LogUtils.debugf(getClass(), "Connected to Chef API '%s' as user '%s'", con.getId(), con.getIdentity());
         ChefApi api = con.getApi();
         
         m_chefProvisioningConfig = new ChefProvisioningConfiguration(api);
@@ -231,6 +234,7 @@ public class ChefRequisitionUrlConnection extends URLConnection {
         
         reqNode.setForeignId(chefNode.getName());
         reqNode.setBuilding(getForeignSource());
+        reqNode.setNodeLabel(determineNodeLabel(chefNode));
 
         handleNodeCategories(chefNode, reqNode);
         handleInterfaces(chefNode, reqNode);
@@ -239,11 +243,24 @@ public class ChefRequisitionUrlConnection extends URLConnection {
         return reqNode;
     }
     
+    private String determineNodeLabel(Node chefNode) {
+        String source = m_chefProvisioningConfig.getNodeLabelSource();
+        if (!"name".equals(source)) {
+            LogUtils.warnf(getClass(), "Node label source '%s' ignored -- sources other than 'name' are not yet implemented", source);
+        }
+        return chefNode.getName();
+    }
+    
     private void handleInterfaces(Node chefNode, RequisitionNode reqNode) {
         Set<RequisitionInterface> reqIfaces = new HashSet<RequisitionInterface>();
         
         JSONObject cloud = getCloudData(chefNode);
         JSONObject network = getAutomaticNetworkData(chefNode);
+        
+        String cloudProvider = "default";
+        if (cloud != null) {
+            cloudProvider = cloud.optString("provider", "default");
+        }
         
         if (network == null && cloud == null) {
             LogUtils.warnf(getClass(), "Chef node '%s' in foreign-source '%s' has neither cloud nor network info in its automatic data, skipping interfaces altogether", chefNode.getName(), m_foreignSource);
@@ -263,7 +280,7 @@ public class ChefRequisitionUrlConnection extends URLConnection {
         
         if (network == null && cloud != null) {
             LogUtils.infof(getClass(), "Chef node '%s' in foreign-source '%s' has no automatic network data, not trying to make non-cloud interfaces", chefNode.getName(), m_foreignSource);
-        } else if (! m_chefProvisioningConfig.isSuppressNonCloudInterfaces(cloud.optString("provider", "default"))) {
+        } else if (! m_chefProvisioningConfig.isSuppressNonCloudInterfaces(cloudProvider)) {
             reqIfaces.addAll(makeAutomaticInterfaces(network));
         }
         
@@ -509,9 +526,15 @@ public class ChefRequisitionUrlConnection extends URLConnection {
     }
     
     protected JSONObject getCloudData(Node chefNode) {
+        Map<String,JsonBall> automatic = chefNode.getAutomatic();
+        if (!automatic.containsKey("cloud")) {
+            LogUtils.debugf(getClass(), "Chef node '%s' has no automatic cloud data", chefNode.getName());
+            return null;
+        }
         try {
             return new JSONObject(chefNode.getAutomatic().get("cloud").toString());
         } catch (JSONException e) {
+            LogUtils.warnf(getClass(), e, "Caught exception while getting automatic cloud data for Chef node '%s'", chefNode.getName());
             return null;
         }
     }

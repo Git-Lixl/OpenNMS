@@ -60,7 +60,7 @@ public class ChefMonkeyTest {
     @Test
     //@Ignore
     public void testConnectToPlatform() throws IOException, JSONException {
-        String cred = Files.toString(new File("/home/jeffg/.chef/jeffg.pem"), Charsets.UTF_8);
+        String cred = Files.toString(new File("/etc/chef/jeffg.pem"), Charsets.UTF_8);
         ContextBuilder cb = ContextBuilder.newBuilder("chef").endpoint("https://api.opscode.com/organizations/jeffgtesting").credentials("jeffg", cred);
         ChefContext con = cb.build();
         
