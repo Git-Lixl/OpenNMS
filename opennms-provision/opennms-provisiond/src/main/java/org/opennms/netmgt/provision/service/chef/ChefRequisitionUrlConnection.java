@@ -352,9 +352,9 @@ public class ChefRequisitionUrlConnection extends URLConnection {
     }
     
     private void handleNodeCategories(Node chefNode, RequisitionNode reqNode) {
-        reqNode.putCategory(new RequisitionCategory("ChefNode"));
-        // TODO get Node.chefEnvironment implemented upstream in jclouds-chef
+        // TODO Update Maven dependency for jclouds-chef after 1.5.0.beta.9 (includes my chefEnvironment work)
         reqNode.putCategory(new RequisitionCategory(makeNodeCategoryName("ChefEnv_", chefNode.getChefEnvironment())));
+        reqNode.putCategory(new RequisitionCategory("ChefNode"));
         
         Map<String,JsonBall> automatic = chefNode.getAutomatic();
         if (automatic.containsKey("roles")) {
@@ -432,7 +432,7 @@ public class ChefRequisitionUrlConnection extends URLConnection {
 
     /**
      * Validate the format is:
-     *   chef://<chef-server>/<environment>/[<foreign-source>]?expression=<search-expr>
+     *   chef://<chef-server>/<scheme>/<foreign-source>/<endpoint-path>
      *
      *   there should be only one argument in the path
      *   there should only be one query parameter
