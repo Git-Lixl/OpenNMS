@@ -45,7 +45,6 @@ import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
-import org.opennms.netmgt.provision.service.dns.DnsUrlFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -214,7 +213,7 @@ public class ProvisionServiceTest implements InitializingBean {
         try {
             new URL("dns://localhost:53/localhos");
         } catch (MalformedURLException e) {
-            URL.setURLStreamHandlerFactory(new DnsUrlFactory());
+            URL.setURLStreamHandlerFactory(new ProvisioningUrlFactory());
         }
 
     }

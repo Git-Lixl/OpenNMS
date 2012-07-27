@@ -43,6 +43,7 @@ import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.netmgt.provision.persist.MockForeignSourceRepository;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
+import org.opennms.netmgt.provision.service.ProvisioningUrlFactory;
 import org.springframework.core.io.UrlResource;
 
 public class HandlerTest {
@@ -60,7 +61,7 @@ public class HandlerTest {
         try {
             new URL(DNS_URL);
         } catch (MalformedURLException e) {
-            URL.setURLStreamHandlerFactory(new DnsUrlFactory());
+            URL.setURLStreamHandlerFactory(new ProvisioningUrlFactory());
         }
         
     }

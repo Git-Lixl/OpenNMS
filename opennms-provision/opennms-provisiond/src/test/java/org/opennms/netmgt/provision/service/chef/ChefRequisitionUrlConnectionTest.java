@@ -34,35 +34,21 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-
 import junit.framework.Assert;
 
-import org.exolab.castor.xml.MarshalException;
-import org.exolab.castor.xml.ValidationException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.core.test.dns.JUnitDNSServerExecutionListener;
-import org.opennms.core.test.dns.annotations.DNSEntry;
-import org.opennms.core.test.dns.annotations.DNSZone;
-import org.opennms.core.test.dns.annotations.JUnitDNSServer;
-import org.opennms.netmgt.provision.persist.requisition.Requisition;
-import org.opennms.netmgt.provision.service.dns.DnsRequisitionUrlConnection;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.opennms.netmgt.provision.service.ProvisioningUrlFactory;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * This class tests the new "dns" protocol handling created for the Provisioner.
+ * This class tests the new "chef" protocol handling created for the Provisioner.
  * 
- * @author <a href="mailto:david@opennms.org">David Hustace</a>
+ * @author <a href="mailto:jeffg@opennms.org">Jeff Gehlbach</a>
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -82,7 +68,7 @@ public class ChefRequisitionUrlConnectionTest {
         try {
             new URL(TEST_URL);
         } catch (MalformedURLException e) {
-            URL.setURLStreamHandlerFactory(new ChefUrlFactory());
+            URL.setURLStreamHandlerFactory(new ProvisioningUrlFactory());
         }
         
     }

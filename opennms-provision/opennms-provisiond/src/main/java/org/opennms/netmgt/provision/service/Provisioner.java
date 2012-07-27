@@ -55,7 +55,6 @@ import org.opennms.netmgt.model.events.EventForwarder;
 import org.opennms.netmgt.model.events.EventUtils;
 import org.opennms.netmgt.model.events.annotations.EventHandler;
 import org.opennms.netmgt.model.events.annotations.EventListener;
-import org.opennms.netmgt.provision.service.dns.DnsUrlFactory;
 import org.opennms.netmgt.provision.service.lifecycle.LifeCycleInstance;
 import org.opennms.netmgt.provision.service.lifecycle.LifeCycleRepository;
 import org.opennms.netmgt.provision.service.operations.NoOpProvisionMonitor;
@@ -217,7 +216,7 @@ public class Provisioner implements SpringServiceDaemon {
         try {
             new URL("dns://localhost/localhost");
         } catch (MalformedURLException e) {
-            URL.setURLStreamHandlerFactory(new DnsUrlFactory());
+            URL.setURLStreamHandlerFactory(new ProvisioningUrlFactory());
         }
             
     }

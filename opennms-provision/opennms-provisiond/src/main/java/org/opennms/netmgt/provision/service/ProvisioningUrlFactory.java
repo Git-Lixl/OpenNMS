@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2009-2011 The OpenNMS Group, Inc.
+ * Copyright (C) 2009-2012 The OpenNMS Group, Inc.
  * OpenNMS(R) is Copyright (C) 1999-2011 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
@@ -26,38 +26,32 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.provision.service.dns;
-
-import static org.junit.Assert.*;
+package org.opennms.netmgt.provision.service;
 
 import java.net.URLStreamHandler;
+import java.net.URLStreamHandlerFactory;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.opennms.core.test.MockLogAppender;
-import org.opennms.netmgt.provision.service.ProvisioningUrlFactory;
+import org.opennms.netmgt.provision.service.chef.ChefRequisitionUrlConnection;
+import org.opennms.netmgt.provision.service.dns.DnsRequisitionUrlConnection;
 
-public class FactoryTest {
+/**
+ * <p>DnsUrlFactory class.</p>
+ *
+ * @author <A HREF="Benjamin Reed">ranger@opennms.org</A>
+ * @author <A HREF="Jeff Gehlbach">jeffg@opennms.org</A>
+ * @version $Id: $
+ */
+public class ProvisioningUrlFactory implements URLStreamHandlerFactory {
 
-    @Before
-    public void setUp() {
-        MockLogAppender.setupLogging();
-    }
-
-    @Test
-    public void dwCreateURLStreamHandler() {
-        
-        ProvisioningUrlFactory f = new ProvisioningUrlFactory();
-        URLStreamHandler handler = f.createURLStreamHandler("abc");
-        assertNull(handler);
-        
-        handler = f.createURLStreamHandler("dns");
-        
-        assertNotNull(handler);
-        
-        assertTrue(handler instanceof java.net.URLStreamHandler);
-        assertTrue(handler instanceof org.opennms.netmgt.provision.service.dns.Handler);
-        
+    /** {@inheritDoc} */
+    public URLStreamHandler createURLStreamHandler(String protocol) {
+        if (DnsRequisitionUrlConnection.PROTOCOL.equals(protocol)) {
+            return new org.opennms.netmgt.provision.service.dns.Handler();
+        } else if (ChefRequisitionUrlConnection.PROTOCOL.equals(protocol)) {
+            return new org.opennms.netmgt.provision.service.chef.Handler();
+        } else {
+            return null;
+        }
     }
 
 }

@@ -52,6 +52,7 @@ import org.opennms.core.test.dns.annotations.DNSEntry;
 import org.opennms.core.test.dns.annotations.DNSZone;
 import org.opennms.core.test.dns.annotations.JUnitDNSServer;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
+import org.opennms.netmgt.provision.service.ProvisioningUrlFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.test.context.ContextConfiguration;
@@ -84,7 +85,7 @@ public class DnsRequisitionUrlConnectionTest {
         try {
             new URL(TEST_URL);
         } catch (MalformedURLException e) {
-            URL.setURLStreamHandlerFactory(new DnsUrlFactory());
+            URL.setURLStreamHandlerFactory(new ProvisioningUrlFactory());
         }
         
     }
