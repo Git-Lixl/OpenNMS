@@ -39,7 +39,8 @@ import java.util.Date;
  * @version $Id: $
  */
 public class OnmsPollModel implements Serializable {
-    private static final long serialVersionUID = 5288536977670149130L;
+    //private static final long serialVersionUID = 5288536977670149130L;
+    private static final long serialVersionUID = 1L;
     
     private long m_pollInterval;
     

@@ -44,7 +44,8 @@ import org.opennms.netmgt.model.PollStatus;
  */
 public class ServicePollState implements Comparable<ServicePollState>, Serializable {
 
-    private static final long serialVersionUID = -8169533436306268574L;
+    //private static final long serialVersionUID = -8169533436306268574L;
+    private static final long serialVersionUID = 1L;
 
     private PolledService m_polledService;
     private int m_index;
