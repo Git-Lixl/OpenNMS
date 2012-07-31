@@ -42,7 +42,7 @@ import org.opennms.netmgt.config.threshd.Parameter;
 import org.opennms.netmgt.config.threshd.Service;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.EventProxy;
-import org.opennms.netmgt.poller.InetNetworkInterface;
+import org.opennms.netmgt.poller.IPv4NetworkInterface;
 import org.opennms.netmgt.scheduler.LegacyScheduler;
 import org.opennms.netmgt.scheduler.ReadyRunnable;
 
@@ -56,7 +56,7 @@ import org.opennms.netmgt.scheduler.ReadyRunnable;
  *
  * @deprecated Thresholding now done in CollectableService (in collectd) 
  */
-final class ThresholdableService extends InetNetworkInterface implements ThresholdNetworkInterface, ReadyRunnable {
+final class ThresholdableService extends IPv4NetworkInterface implements ThresholdNetworkInterface, ReadyRunnable {
 	/**
 	 * 
 	 */

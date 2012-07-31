@@ -32,7 +32,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.netmgt.poller.InetNetworkInterface;
+import org.opennms.netmgt.poller.IPv4NetworkInterface;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
 
@@ -72,7 +72,7 @@ public class MockMonitoredService implements MonitoredService {
     }
 
     public NetworkInterface<InetAddress> getNetInterface() {
-        return new InetNetworkInterface(m_inetAddr);
+        return new IPv4NetworkInterface(m_inetAddr);
     }
 
     public InetAddress getAddress() {

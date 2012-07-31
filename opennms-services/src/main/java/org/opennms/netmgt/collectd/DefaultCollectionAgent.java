@@ -38,7 +38,7 @@ import org.opennms.core.utils.LogUtils;
 import org.opennms.netmgt.config.SnmpPeerFactory;
 import org.opennms.netmgt.dao.IpInterfaceDao;
 import org.opennms.netmgt.model.PrimaryType;
-import org.opennms.netmgt.poller.InetNetworkInterface;
+import org.opennms.netmgt.poller.IPv4NetworkInterface;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -48,7 +48,7 @@ import org.springframework.transaction.PlatformTransactionManager;
  * @author ranger
  * @version $Id: $
  */
-public class DefaultCollectionAgent extends InetNetworkInterface implements CollectionAgent {
+public class DefaultCollectionAgent extends IPv4NetworkInterface implements CollectionAgent {
 
     /**
      * 

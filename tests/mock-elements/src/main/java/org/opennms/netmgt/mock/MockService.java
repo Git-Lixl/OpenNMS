@@ -35,7 +35,7 @@ import java.util.List;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.netmgt.model.PollStatus;
-import org.opennms.netmgt.poller.InetNetworkInterface;
+import org.opennms.netmgt.poller.IPv4NetworkInterface;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
 import org.opennms.netmgt.xml.event.Event;
@@ -371,7 +371,7 @@ public class MockService extends MockElement implements MonitoredService {
      */
     public NetworkInterface<InetAddress> getNetInterface() {
         if (m_netAddr == null)
-            m_netAddr = new InetNetworkInterface(getAddress());
+            m_netAddr = new IPv4NetworkInterface(getAddress());
         
         return m_netAddr;
     }

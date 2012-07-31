@@ -37,7 +37,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.model.OnmsMonitoredService;
-import org.opennms.netmgt.poller.InetNetworkInterface;
+import org.opennms.netmgt.poller.IPv4NetworkInterface;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
 
@@ -51,7 +51,7 @@ public class PolledService implements MonitoredService, Serializable, Comparable
     
     private static final long serialVersionUID = 2L;
 
-    private final InetNetworkInterface m_netInterface;
+    private final IPv4NetworkInterface m_netInterface;
     private final Map<String,Object> m_monitorConfiguration;
     private final OnmsPollModel m_pollModel;
     private final Integer m_serviceId;
@@ -71,7 +71,7 @@ public class PolledService implements MonitoredService, Serializable, Comparable
         m_nodeId = monitoredService.getNodeId();
         m_nodeLabel = monitoredService.getIpInterface().getNode().getLabel();
         m_svcName = monitoredService.getServiceName();
-        m_netInterface = new InetNetworkInterface(monitoredService.getIpInterface().getIpAddress());
+        m_netInterface = new IPv4NetworkInterface(monitoredService.getIpInterface().getIpAddress());
 		m_monitorConfiguration = monitorConfiguration;
 		m_pollModel = pollModel;
 	}

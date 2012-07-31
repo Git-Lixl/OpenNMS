@@ -17,7 +17,7 @@ import org.opennms.core.test.annotations.JUnitHttpServer;
 import org.opennms.core.test.annotations.Webapp;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.model.PollStatus;
-import org.opennms.netmgt.poller.InetNetworkInterface;
+import org.opennms.netmgt.poller.IPv4NetworkInterface;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
 import org.opennms.netmgt.poller.monitors.SeleniumMonitor;
@@ -74,7 +74,7 @@ public class SeleniumMonitorTest {
 
         @Override
         public NetworkInterface<InetAddress> getNetInterface() {
-            return new InetNetworkInterface(m_inetAddr);
+            return new IPv4NetworkInterface(m_inetAddr);
         }
 
         @Override

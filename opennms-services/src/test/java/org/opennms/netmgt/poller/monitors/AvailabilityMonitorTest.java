@@ -36,7 +36,7 @@ import junit.framework.TestCase;
 
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.model.PollStatus;
-import org.opennms.netmgt.poller.InetNetworkInterface;
+import org.opennms.netmgt.poller.IPv4NetworkInterface;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
 import org.opennms.netmgt.poller.ServiceMonitor;
@@ -79,7 +79,7 @@ public class AvailabilityMonitorTest extends TestCase {
                 return InetAddressUtils.str(getAddress());
             }
             public NetworkInterface<InetAddress> getNetInterface() {
-                return new InetNetworkInterface(getAddress());
+                return new IPv4NetworkInterface(getAddress());
             }
             public int getNodeId() {
                 return 0;

@@ -42,7 +42,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.model.PollStatus;
-import org.opennms.netmgt.poller.InetNetworkInterface;
+import org.opennms.netmgt.poller.IPv4NetworkInterface;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
 
@@ -63,7 +63,7 @@ public class MobileMsgSequenceMonitorTest {
 			}
 
 			public NetworkInterface<InetAddress> getNetInterface() {
-				return new InetNetworkInterface(getAddress());
+				return new IPv4NetworkInterface(getAddress());
 			}
 
 			public int getNodeId() {
