@@ -36,6 +36,7 @@ import java.util.Iterator;
 
 import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.ThreadCategory;
+import org.opennms.core.utils.url.GenericURLFactory;
 import org.opennms.netmgt.config.provisiond.RequisitionDef;
 import org.opennms.netmgt.dao.ProvisiondConfigurationDao;
 import org.quartz.CronTrigger;
@@ -95,14 +96,8 @@ public class ImportScheduler implements InitializingBean {
             log().fatal("afterPropertiesSet: couldn't set proper JobFactory for scheduler: "+e, e);
         }
 
-        
-        //TODO: this needs to be done in application context
-        try {
-            new URL("dns://host/zone");
-        } catch (MalformedURLException e) {
-            URL.setURLStreamHandlerFactory(new ProvisioningUrlFactory());
-        }
-        
+        GenericURLFactory.initialize();
+
         buildImportSchedule();
     }
     

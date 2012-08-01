@@ -45,6 +45,7 @@ import org.opennms.core.tasks.Task;
 import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.ThreadCategory;
+import org.opennms.core.utils.url.GenericURLFactory;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.config.SnmpAgentConfigFactory;
 import org.opennms.netmgt.daemon.SpringServiceDaemon;
@@ -209,16 +210,7 @@ public class Provisioner implements SpringServiceDaemon {
     @Override
     public void afterPropertiesSet() throws Exception {
         BeanUtils.assertAutowiring(this);
-        
-
-        //since this class depends on the Import Schedule, the UrlFactory should already
-        //be registered in the URL class.. but, just in-case...
-        try {
-            new URL("dns://localhost/localhost");
-        } catch (MalformedURLException e) {
-            URL.setURLStreamHandlerFactory(new ProvisioningUrlFactory());
-        }
-            
+        GenericURLFactory.initialize();
     }
     
     /**

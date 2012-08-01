@@ -1,6 +1,7 @@
 package org.opennms.features.topology.app.internal;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.opennms.features.topology.api.DisplayState;
 import org.opennms.features.topology.api.TopologyProvider;
@@ -19,13 +20,15 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Slider;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.Window.CloseEvent;
 
-public class TopologyWidgetTestApplication extends Application implements CommandUpdateListener{
+public class TopologyWidgetTestApplication extends Application implements CommandUpdateListener, MenuItemUpdateListener{
 	
 	private Window m_window;
     private TopologyComponent m_topologyComponent;
@@ -37,6 +40,7 @@ public class TopologyWidgetTestApplication extends Application implements Comman
     
     public TopologyWidgetTestApplication(CommandManager commandManager, TopologyProvider topologyProvider) {
         m_commandManager = commandManager;
+        m_commandManager.addMenuItemUpdateListener(this);
         m_graphContainer = new SimpleGraphContainer(topologyProvider);
     }
     
@@ -59,6 +63,7 @@ public class TopologyWidgetTestApplication extends Application implements Comman
         
         m_topologyComponent = new TopologyComponent(m_graphContainer);
         m_topologyComponent.setSizeFull();
+        m_topologyComponent.addMenuItemStateListener(this);
         
         final Property scale = m_graphContainer.getProperty(DisplayState.SCALE);
         final Slider slider = new Slider(1, 4);
@@ -101,6 +106,17 @@ public class TopologyWidgetTestApplication extends Application implements Comman
 				m_graphContainer.redoLayout();
 			}
 		});
+        
+        getMainWindow().addListener(new Window.CloseListener() {
+            
+            @Override
+            public void windowClose(CloseEvent e) {
+               if(e.getWindow().getName().equals("Auth Window")){
+                   getMainWindow().executeJavaScript("document.getElementById(\"termFocusPanel\").focus();");
+               }
+                
+            }
+        });
         
         
         VerticalLayout vLayout = new VerticalLayout();
@@ -156,6 +172,23 @@ public class TopologyWidgetTestApplication extends Application implements Comman
         }
         return tree;
     }
+    
+    
+    public void updateMenuItems() {
+        updateMenuItems(m_menuBar.getItems());
+        m_menuBar.requestRepaint();
+    }
+
+    private void updateMenuItems(List<MenuItem> menuItems) {
+        for(MenuItem menuItem : menuItems) {
+            if(menuItem.hasChildren()) {
+                updateMenuItems(menuItem.getChildren());
+            }else {
+                m_commandManager.updateMenuItem(menuItem, m_graphContainer, getMainWindow());
+            }
+        }
+    }
+
 
     @Override
     public void menuBarUpdated(CommandManager commandManager) {
@@ -166,6 +199,7 @@ public class TopologyWidgetTestApplication extends Application implements Comman
         m_menuBar = commandManager.getMenuBar(m_graphContainer, getMainWindow());
         m_menuBar.setWidth("100%");
         m_layout.addComponent(m_menuBar, "top: 0px; left: 0px; right:0px;");
+        updateMenuItems();
     }
 
 }
