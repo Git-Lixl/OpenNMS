@@ -37,7 +37,6 @@ import org.junit.Test;
 import org.opennms.core.utils.url.GenericURLFactory;
 import org.opennms.core.utils.url.GenericURLStreamHandler;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.netmgt.provision.service.ProvisioningUrlFactory;
 
 public class FactoryTest {
 

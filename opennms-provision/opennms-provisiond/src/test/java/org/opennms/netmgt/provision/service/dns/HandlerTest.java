@@ -36,7 +36,6 @@ import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.utils.url.GenericURLFactory;
 import org.opennms.netmgt.provision.persist.MockForeignSourceRepository;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
-import org.opennms.netmgt.provision.service.ProvisioningUrlFactory;
 import org.springframework.core.io.UrlResource;
 
 import java.io.IOException;

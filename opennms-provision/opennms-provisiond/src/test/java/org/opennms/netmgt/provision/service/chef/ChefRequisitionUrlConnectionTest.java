@@ -41,7 +41,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.netmgt.provision.service.ProvisioningUrlFactory;
+import org.opennms.core.utils.url.GenericURLFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -64,13 +64,8 @@ public class ChefRequisitionUrlConnectionTest {
 
     @Before
     public void registerFactory() {
-        
-        try {
-            new URL(TEST_URL);
-        } catch (MalformedURLException e) {
-            URL.setURLStreamHandlerFactory(new ProvisioningUrlFactory());
-        }
-        
+        GenericURLFactory.initialize();
+        GenericURLFactory.getInstance().addURLConnection("chef", "org.opennms.netmgt.provision.service.chef.ChefRequisitionUrlConnection");
     }
     
     @Test
