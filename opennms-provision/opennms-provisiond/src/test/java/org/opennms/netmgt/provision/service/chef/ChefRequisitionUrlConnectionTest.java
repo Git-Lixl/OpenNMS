@@ -30,9 +30,11 @@ package org.opennms.netmgt.provision.service.chef;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.CharBuffer;
 
 import junit.framework.Assert;
 
@@ -44,6 +46,8 @@ import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.utils.url.GenericURLFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.mchange.v1.io.InputStreamUtils;
 
 /**
  * This class tests the new "chef" protocol handling created for the Provisioner.
@@ -89,6 +93,7 @@ public class ChefRequisitionUrlConnectionTest {
         URLConnection c = new ChefRequisitionUrlConnection(new URL(TEST_URL));
         InputStream s = c.getInputStream();
         Assert.assertNotNull(s);
+        System.out.println(InputStreamUtils.getContentsAsString(s));
         s.close();
     }
 }
