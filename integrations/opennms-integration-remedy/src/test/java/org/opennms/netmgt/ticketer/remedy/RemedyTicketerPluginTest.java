@@ -25,8 +25,8 @@ public class RemedyTicketerPluginTest extends TestCase {
 	        
 	        m_ticket = new Ticket();
 	        m_ticket.setState(Ticket.State.OPEN);
-	        m_ticket.setSummary("Created From java client");
-	        m_ticket.setDetails("Detail for ticket: ");
+	        m_ticket.setSummary("Test OpenNMS Integration");
+	        m_ticket.setDetails("Created by Axis java client");
 			m_ticket.setUser("antonio@opennms.it");
 			
 	}
