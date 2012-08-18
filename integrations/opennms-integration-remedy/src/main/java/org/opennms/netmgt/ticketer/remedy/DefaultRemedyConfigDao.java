@@ -70,14 +70,24 @@ public class DefaultRemedyConfigDao {
 		return "CET";
 	}
 	
-	String getCreateEndpoint() {
-		//return getProperties().getString("remedy.createendpoint");
-		return "http://172.20.0.76:8180/arsys/services/ARService?server=itts3h&webService=HPD_IncidentInterface_Create_WS";
+	String getServerUrl() {
+		//return getProperties().getString("remedy.serverurl");
+		return "http://172.20.0.76:8180/arsys/services/ARService";
 	}
 
-	String getEndpoint() {
+	String getServer() {
+		//return getProperties().getString("remedy.server");
+		return "itts3h";
+	}
+
+	String getCreateWSName() {
+		//return getProperties().getString("remedy.createws");
+		return "HPD_IncidentInterface_Create_WS";
+	}
+
+	String getWSName() {
 		//return getProperties().getString("remedy.endpoint");
-		return "http://172.20.0.76:8180/arsys/services/ARService?server=itts3h&webService=HPD_IncidentInterface_WS";
+		return "HPD_IncidentInterface_WS";
 	}
 
 	String getServiceCI() {
@@ -113,6 +123,26 @@ public class DefaultRemedyConfigDao {
 	String getCategorizationtier3() {
 		//return getProperties().getString("remedy.categorizationtier3");
 		return "Non bloccante";
+	}
+
+	String getStatusNew() {
+		//return getProperties().getString("remedy.status.new");
+		return "New";
+	}
+
+	String getStatusOpen() {
+		//return getProperties().getString("remedy.status.open");
+		return "In Progress";
+	}
+	
+	String getStatusClosed() {
+		//return getProperties().getString("remedy.status.closed");
+		return "Closed";		
+	}
+
+	String getStatusCancelled() {
+		//return getProperties().getString("remedy.status.cancelled");
+		return "Cancelled";		
 	}
 
 }

@@ -54,6 +54,7 @@ import org.opennms.integration.remedy.ticketservice.UrgencyType;
 
 
 import org.opennms.api.integration.ticketing.*;
+import org.opennms.api.integration.ticketing.Ticket.State;
 
 /**
  * OpenNMS Trouble Ticket Plugin API implementation for Remedy
@@ -66,11 +67,20 @@ public class RemedyTicketerPlugin implements Plugin {
     
 	private DefaultRemedyConfigDao m_configDao; 
 	
-	private String m_endpoint; 
-	private String m_createendpoint; 
+	private String m_serverurl;
+	private String m_server;
+	private String m_wsName; 
+	private String m_createWsName; 
 	
 	private final static String ACTION_CREATE="CREATE";
 
+	// Remember:
+	// Summary ---> alarm logmsg
+	// Details ---> alarm descr
+	// State   ---> OPEN,CLOSE, CANCELLED
+	// User    ---> The owner of the ticket --who create the ticket
+	// Attributes --->list of free form attributes in the Ticket.  Typically, from
+    // the OnmsAlarm attributes.
 	
 	/**
 	 * <p>Constructor for OtrsTicketerPlugin.</p>
@@ -78,8 +88,10 @@ public class RemedyTicketerPlugin implements Plugin {
 	public RemedyTicketerPlugin() {
 		
 		m_configDao = new DefaultRemedyConfigDao();
-		m_endpoint = m_configDao.getEndpoint();
-		m_createendpoint = m_configDao.getCreateEndpoint();
+		m_serverurl = m_configDao.getServerUrl();
+		m_server = m_configDao.getServer();
+		m_wsName = m_configDao.getWSName();
+		m_createWsName = m_configDao.getCreateWSName();
 	}
 
 	/** {@inheritDoc} */
@@ -94,7 +106,7 @@ public class RemedyTicketerPlugin implements Plugin {
 		    
 		} else {
 		    
-		    HPD_IncidentInterface_WSPortTypePortType port = getTicketServicePort(m_endpoint);
+		    HPD_IncidentInterface_WSPortTypePortType port = getTicketServicePort(m_serverurl,m_server,m_wsName);
 	   
 		    if (port != null) {
 			    try {
@@ -102,6 +114,7 @@ public class RemedyTicketerPlugin implements Plugin {
 					opennmsTicket.setId(ticketId);
 					opennmsTicket.setSummary(outputmap.getSummary());
 					opennmsTicket.setDetails(outputmap.getNotes());
+					opennmsTicket.setState(remedyToOpenNMSState(outputmap.getStatus()));
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}    
@@ -114,36 +127,86 @@ public class RemedyTicketerPlugin implements Plugin {
 	}
 
 
+	private State remedyToOpenNMSState(StatusType status) {
+		State state = State.OPEN;
+		if (status.toString().equals(m_configDao.getStatusClosed())) {
+			state = State.CLOSED;
+		} else if (status.toString().equals(m_configDao.getStatusCancelled()))
+			state = State.CANCELLED;
+		return state;
+	}
+
 	/** {@inheritDoc} */
 	public void saveOrUpdate(Ticket newTicket) throws PluginException {
 		
 		if ((newTicket.getId() == null) ) {
 			save(newTicket);
 		} else {
-			update(newTicket);
+    		update(newTicket);
 		}					
 	}
     
     private void update(Ticket newTicket) throws PluginException {
-		HPD_IncidentInterface_WSPortTypePortType port = getTicketServicePort(m_endpoint);
-		try {
-			port.helpDesk_Modify_Service(getRemedySetInputMap(newTicket) , getRemedyAuthenticationHeader());
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
+    	
+    	HPD_IncidentInterface_WSPortTypePortType port = getTicketServicePort(m_serverurl,m_server,m_wsName);
+    	if (port != null) {
+    		try {
+    			GetOutputMap remedy = port.helpDesk_Query_Service(getRemedyInputMap(newTicket.getId()), getRemedyAuthenticationHeader());
+    			if (remedy == null)
+					log().debug("update: Remedy: Cannot find incident with incindent_number: " + newTicket.getId());
+				else
+					port.helpDesk_Modify_Service(getRemedySetInputMap(newTicket,remedy) , getRemedyAuthenticationHeader());
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+    	}
 		
 	}
 
-    private SetInputMap getRemedySetInputMap(Ticket newTicket) {
+    private SetInputMap getRemedySetInputMap(Ticket newTicket,GetOutputMap output) {
 		SetInputMap parameters = new SetInputMap();
 		parameters.setIncident_Number(newTicket.getId());
 		parameters.setSummary(newTicket.getSummary());
 		parameters.setNotes(newTicket.getDetails());
-		parameters.setStatus(StatusType.value2);
+		State remedyState = remedyToOpenNMSState(output.getStatus());
+		if (newTicket.getState().name().equals(remedyState.name()))
+			parameters.setStatus(output.getStatus());
+		else 
+			parameters.setStatus(opennmsToRemedyState(newTicket.getState()));
 		return parameters;
     }
     
-    private GetInputMap getRemedyInputMap(String ticketId) {
+    private StatusType opennmsToRemedyState(State state) {
+		StatusType remedyStatus;
+		
+		log().debug("getting otrs state from OpenNMS State " + state.toString());
+
+        switch (state) {
+        
+            case OPEN:
+            	// ticket is new
+            	remedyStatus = StatusType.fromValue(m_configDao.getStatusOpen());
+            	break;
+            case CANCELLED:
+            	// not sure how often we see this
+            	remedyStatus = StatusType.fromValue(m_configDao.getStatusCancelled());
+            	break;
+            case CLOSED:
+                // closed successful
+            	remedyStatus = StatusType.fromValue(m_configDao.getStatusClosed());
+                break;
+            default:
+            	log().debug("No valid OpenNMS state on ticket");
+            	remedyStatus = StatusType.fromValue(m_configDao.getStatusOpen());
+        }
+        
+        log().debug("OpenNMS state was        " + state.toString());
+        log().debug("setting Remedy state ID to " + remedyStatus.toString());
+        
+        return remedyStatus;
+	}
+
+	private GetInputMap getRemedyInputMap(String ticketId) {
 		GetInputMap parameters = new GetInputMap();
 		parameters.setIncident_Number(ticketId);
 		return parameters;
@@ -154,62 +217,49 @@ public class RemedyTicketerPlugin implements Plugin {
 		AuthenticationInfo request_header = new AuthenticationInfo();
 		request_header.setUserName(m_configDao.getUserName());
 		request_header.setPassword(m_configDao.getPassword());
-//		request_header.setAuthentication(m_configDao.getAuthentication());
-//		request_header.setLocale(m_configDao.getLocale());
-//		request_header.setTimeZone(m_configDao.getTimeZone());
+		String authentication = m_configDao.getAuthentication();
+		if (authentication != null )
+			request_header.setAuthentication(authentication);
+		String locale = m_configDao.getLocale();
+		if (locale != null) 
+			request_header.setLocale(locale);
+		String timezone = m_configDao.getTimeZone();
+		if (timezone != null)
+			request_header.setTimeZone(timezone);
 		return request_header;
     }
 
     
     private CreateInputMap getRemedyCreateInputMap(Ticket newTicket) {
 
-    	String first_Name=m_configDao.getFirstName();
-		String last_Name=m_configDao.getLastName();
-		
-		String categorization_Tier_1=m_configDao.getCategorizationtier1();		
-		String categorization_Tier_2=m_configDao.getCategorizationtier2();
-		String categorization_Tier_3=m_configDao.getCategorizationtier3();
-		
-		String summary=newTicket.getSummary();
-		
-		String notes=newTicket.getDetails();
-
-		String serviceCI=m_configDao.getServiceCI();
-		String serviceCI_ReconID=m_configDao.getServiceCIReconID();
-
-		ImpactType impact=ImpactType.value4;
-		Reported_SourceType reported_Source=Reported_SourceType.value1;
-		Service_TypeType service_Type=Service_TypeType.value1;
-		StatusType status=StatusType.value1;
-		UrgencyType urgency=UrgencyType.value4;
-
-
 		CreateInputMap createInputMap = new CreateInputMap();
 		
-		createInputMap.setFirst_Name(first_Name);
-		createInputMap.setLast_Name(last_Name);
-		createInputMap.setSummary(summary);
-		createInputMap.setNotes(notes);
-		createInputMap.setServiceCI(serviceCI);
-		createInputMap.setServiceCI_ReconID(serviceCI_ReconID);
-		createInputMap.setImpact(impact);
-		createInputMap.setReported_Source(reported_Source);
-		createInputMap.setService_Type(service_Type);
-		createInputMap.setUrgency(urgency);
-		createInputMap.setStatus(status);
-		createInputMap.setAction(ACTION_CREATE);
-		createInputMap.setCategorization_Tier_1(categorization_Tier_1);
-		createInputMap.setCategorization_Tier_2(categorization_Tier_2);
-		createInputMap.setCategorization_Tier_3(categorization_Tier_3);
+		// the only data setted by the opennms ticket alarm
+		createInputMap.setSummary(newTicket.getSummary());
+		createInputMap.setNotes(newTicket.getDetails());
 		
-				
+		// all this is mandatory and set using the configuration file
+		createInputMap.setFirst_Name(m_configDao.getFirstName());
+		createInputMap.setLast_Name(m_configDao.getLastName());		
+		createInputMap.setServiceCI(m_configDao.getServiceCI());
+		createInputMap.setServiceCI_ReconID(m_configDao.getServiceCIReconID());
+		createInputMap.setImpact(ImpactType.value4);
+		createInputMap.setReported_Source(Reported_SourceType.value1);
+		createInputMap.setService_Type(Service_TypeType.value1);
+		createInputMap.setUrgency(UrgencyType.value4);
+		createInputMap.setStatus(StatusType.value1);
+		createInputMap.setAction(ACTION_CREATE);
+		createInputMap.setCategorization_Tier_1(m_configDao.getCategorizationtier1());
+		createInputMap.setCategorization_Tier_2(m_configDao.getCategorizationtier2());
+		createInputMap.setCategorization_Tier_3(m_configDao.getCategorizationtier3());
+						
 		return createInputMap;
 
 		
     }
 
     private void save(Ticket newTicket) throws PluginException {
-    	HPD_IncidentInterface_Create_WSPortTypePortType port = getCreateTicketServicePort(m_createendpoint);
+    	HPD_IncidentInterface_Create_WSPortTypePortType port = getCreateTicketServicePort(m_serverurl,m_server,m_createWsName);
     	try {
 			String incident_number = port.helpDesk_Submit_Service(getRemedyAuthenticationHeader(), getRemedyCreateInputMap(newTicket)).getIncident_Number();
 			log().debug("created new remedy ticket with reported incident number: " + incident_number);
@@ -226,14 +276,14 @@ public class RemedyTicketerPlugin implements Plugin {
      * @return TicketServicePort to connect to the remote service.
      */
     
-    private HPD_IncidentInterface_WSPortTypePortType getTicketServicePort(String address) throws PluginException {
+    private HPD_IncidentInterface_WSPortTypePortType getTicketServicePort(String address, String servername, String wsname) throws PluginException {
         
         HPD_IncidentInterface_WSServiceLocator service = new HPD_IncidentInterface_WSServiceLocator();
         
         HPD_IncidentInterface_WSPortTypePortType port = null;
 
         try {
-           service.setEndpointAddress("HPD_IncidentInterface_WSPortTypeSoap", address);
+           service.setEndpointAddress(wsname, address+"?server="+servername+"&webService="+wsname);
            port = service.getHPD_IncidentInterface_WSPortTypeSoap();
         } catch (ServiceException e) {
             log().error("Failed initialzing Remedy TicketServicePort" + e);
@@ -250,14 +300,14 @@ public class RemedyTicketerPlugin implements Plugin {
      * @return TicketServicePort to connect to the remote service.
      */
     
-    private HPD_IncidentInterface_Create_WSPortTypePortType getCreateTicketServicePort(String address) throws PluginException {
+    private HPD_IncidentInterface_Create_WSPortTypePortType getCreateTicketServicePort(String address, String servername, String wsname) throws PluginException {
         
 		HPD_IncidentInterface_Create_WSServiceLocator service = new HPD_IncidentInterface_Create_WSServiceLocator();
         
         HPD_IncidentInterface_Create_WSPortTypePortType port = null;
 
         try {
-           service.setEndpointAddress("HPD_IncidentInterface_Create_WSPortTypeSoap", address);
+           service.setEndpointAddress(wsname, address+"?server="+servername+"&webService="+wsname);
            port = service.getHPD_IncidentInterface_Create_WSPortTypeSoap();
         } catch (ServiceException e) {
             log().error("Failed initialzing Remedy TicketServicePort" + e);
@@ -275,24 +325,5 @@ public class RemedyTicketerPlugin implements Plugin {
 	ThreadCategory log() {
 		return ThreadCategory.getInstance(getClass());
 	}
-
-    /**
-     * <p>getEndpoint</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getEndpoint() {
-        return m_endpoint;
-    }
-
-    /**
-     * <p>setEndpoint</p>
-     *
-     * @param endpoint a {@link java.lang.String} object.
-     */
-    public void setEndpoint(String endpoint) {
-        m_endpoint = endpoint;
-    }
-	
 	
 }

@@ -6,9 +6,6 @@ import org.opennms.api.integration.ticketing.PluginException;
 import org.opennms.api.integration.ticketing.Ticket;
 import org.opennms.api.integration.ticketing.Ticket.State;
 
-import java.util.Date;
-
-
 public class RemedyTicketerPluginTest extends TestCase {
 
 	
@@ -41,9 +38,7 @@ public class RemedyTicketerPluginTest extends TestCase {
             
         } catch (PluginException e) {
             e.printStackTrace();
-        }
-		
-		
+        }		
 	}	
 	
 	public void testGet() {
