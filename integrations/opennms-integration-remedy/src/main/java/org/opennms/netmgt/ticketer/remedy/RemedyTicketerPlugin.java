@@ -67,10 +67,10 @@ public class RemedyTicketerPlugin implements Plugin {
     
 	private DefaultRemedyConfigDao m_configDao; 
 	
-	private String m_serverurl;
-	private String m_server;
-	private String m_wsName; 
-	private String m_createWsName; 
+	private String m_endpoint;
+	private String m_portname;
+	private String m_createendpoint; 
+	private String m_createportname; 
 	
 	private final static String ACTION_CREATE="CREATE";
 
@@ -88,10 +88,10 @@ public class RemedyTicketerPlugin implements Plugin {
 	public RemedyTicketerPlugin() {
 		
 		m_configDao = new DefaultRemedyConfigDao();
-		m_serverurl = m_configDao.getServerUrl();
-		m_server = m_configDao.getServer();
-		m_wsName = m_configDao.getWSName();
-		m_createWsName = m_configDao.getCreateWSName();
+		m_endpoint = m_configDao.getEndPoint();
+		m_portname = m_configDao.getPortName();
+		m_createendpoint = m_configDao.getCreateEndPoint();
+		m_createportname = m_configDao.getCreatePortName();
 	}
 
 	/** {@inheritDoc} */
@@ -106,7 +106,7 @@ public class RemedyTicketerPlugin implements Plugin {
 		    
 		} else {
 		    
-		    HPD_IncidentInterface_WSPortTypePortType port = getTicketServicePort(m_serverurl,m_server,m_wsName);
+		    HPD_IncidentInterface_WSPortTypePortType port = getTicketServicePort(m_portname,m_endpoint);
 	   
 		    if (port != null) {
 			    try {
@@ -148,7 +148,7 @@ public class RemedyTicketerPlugin implements Plugin {
     
     private void update(Ticket newTicket) throws PluginException {
     	
-    	HPD_IncidentInterface_WSPortTypePortType port = getTicketServicePort(m_serverurl,m_server,m_wsName);
+    	HPD_IncidentInterface_WSPortTypePortType port = getTicketServicePort(m_portname,m_endpoint);
     	if (port != null) {
     		try {
     			GetOutputMap remedy = port.helpDesk_Query_Service(getRemedyInputMap(newTicket.getId()), getRemedyAuthenticationHeader());
@@ -259,7 +259,7 @@ public class RemedyTicketerPlugin implements Plugin {
     }
 
     private void save(Ticket newTicket) throws PluginException {
-    	HPD_IncidentInterface_Create_WSPortTypePortType port = getCreateTicketServicePort(m_serverurl,m_server,m_createWsName);
+    	HPD_IncidentInterface_Create_WSPortTypePortType port = getCreateTicketServicePort(m_createportname,m_createendpoint);
     	try {
 			String incident_number = port.helpDesk_Submit_Service(getRemedyAuthenticationHeader(), getRemedyCreateInputMap(newTicket)).getIncident_Number();
 			log().debug("created new remedy ticket with reported incident number: " + incident_number);
@@ -276,14 +276,14 @@ public class RemedyTicketerPlugin implements Plugin {
      * @return TicketServicePort to connect to the remote service.
      */
     
-    private HPD_IncidentInterface_WSPortTypePortType getTicketServicePort(String address, String servername, String wsname) throws PluginException {
+    private HPD_IncidentInterface_WSPortTypePortType getTicketServicePort(String portname, String endpoint) throws PluginException {
         
         HPD_IncidentInterface_WSServiceLocator service = new HPD_IncidentInterface_WSServiceLocator();
         
         HPD_IncidentInterface_WSPortTypePortType port = null;
 
         try {
-           service.setEndpointAddress(wsname, address+"?server="+servername+"&webService="+wsname);
+           service.setEndpointAddress(portname, endpoint);
            port = service.getHPD_IncidentInterface_WSPortTypeSoap();
         } catch (ServiceException e) {
             log().error("Failed initialzing Remedy TicketServicePort" + e);
@@ -300,14 +300,14 @@ public class RemedyTicketerPlugin implements Plugin {
      * @return TicketServicePort to connect to the remote service.
      */
     
-    private HPD_IncidentInterface_Create_WSPortTypePortType getCreateTicketServicePort(String address, String servername, String wsname) throws PluginException {
+    private HPD_IncidentInterface_Create_WSPortTypePortType getCreateTicketServicePort(String portname, String endpoint) throws PluginException {
         
 		HPD_IncidentInterface_Create_WSServiceLocator service = new HPD_IncidentInterface_Create_WSServiceLocator();
         
         HPD_IncidentInterface_Create_WSPortTypePortType port = null;
-
+        
         try {
-           service.setEndpointAddress(wsname, address+"?server="+servername+"&webService="+wsname);
+           service.setEndpointAddress(portname, endpoint);
            port = service.getHPD_IncidentInterface_Create_WSPortTypeSoap();
         } catch (ServiceException e) {
             log().error("Failed initialzing Remedy TicketServicePort" + e);

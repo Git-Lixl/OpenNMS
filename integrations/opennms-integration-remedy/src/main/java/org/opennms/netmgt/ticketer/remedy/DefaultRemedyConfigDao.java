@@ -70,24 +70,24 @@ public class DefaultRemedyConfigDao {
 		return "CET";
 	}
 	
-	String getServerUrl() {
-		//return getProperties().getString("remedy.serverurl");
-		return "http://172.20.0.76:8180/arsys/services/ARService";
-	}
-
-	String getServer() {
-		//return getProperties().getString("remedy.server");
-		return "itts3h";
-	}
-
-	String getCreateWSName() {
-		//return getProperties().getString("remedy.createws");
-		return "HPD_IncidentInterface_Create_WS";
-	}
-
-	String getWSName() {
+	String getEndPoint() {
 		//return getProperties().getString("remedy.endpoint");
-		return "HPD_IncidentInterface_WS";
+		return "http://172.20.0.76:8180/arsys/services/ARService?server=itts3h&webService=HPD_IncidentInterface_WS";
+	}
+
+	String getPortName() {
+		//return getProperties().getString("remedy.portname");
+		return "HPD_IncidentInterface_WSPortTypeSoap";
+	}
+
+	String getCreateEndPoint() {
+		//return getProperties().getString("remedy.createendpoint");
+		return "http://172.20.0.76:8180/arsys/services/ARService?server=itts3h&webService=HPD_IncidentInterface_Create_WS";
+	}
+
+	String getCreatePortName() {
+		//return getProperties().getString("remedy.createportname");
+		return "HPD_IncidentInterface_Create_WSPortTypeSoap";
 	}
 
 	String getServiceCI() {
