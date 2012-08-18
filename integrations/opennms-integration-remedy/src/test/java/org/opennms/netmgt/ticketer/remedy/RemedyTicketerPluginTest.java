@@ -42,7 +42,7 @@ public class RemedyTicketerPluginTest extends TestCase {
 	}	
 	
 	public void testGet() {
-		String ticketId = "INC000000059157";
+		String ticketId = "INC000000072801";
 		try {
 			Ticket ticket = m_ticketer.get(ticketId);
 			assertEquals(ticketId, ticket.getId());
