@@ -41,7 +41,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class OnmsMonitoringLocationDefinition implements Serializable {
 
-    private static final long serialVersionUID = 1389369619460044379L;
+    // private static final long serialVersionUID = 1389369619460044379L;
+    private static final long serialVersionUID = 2L;
 
     private String m_area;
     private String m_name;
