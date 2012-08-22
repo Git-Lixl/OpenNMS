@@ -1,5 +1,7 @@
 package org.opennms.netmgt.ticketer.remedy;
 
+import java.util.Date;
+
 import junit.framework.TestCase;
 
 import org.opennms.api.integration.ticketing.PluginException;
@@ -26,7 +28,7 @@ public class RemedyTicketerPluginTest extends TestCase {
 	        m_ticket = new Ticket();
 	        m_ticket.setState(Ticket.State.OPEN);
 	        m_ticket.setSummary("Test OpenNMS Integration");
-	        m_ticket.setDetails("Created by Axis java client");
+	        m_ticket.setDetails("Created by Axis java client. Date: "+ new Date());
 			m_ticket.setUser("antonio@opennms.it");
 			
 	}
@@ -42,7 +44,7 @@ public class RemedyTicketerPluginTest extends TestCase {
 	}	
 	
 	public void testGet() {
-		String ticketId = "INC000000072801";
+		String ticketId = "INC000000072901";
 		try {
 			Ticket ticket = m_ticketer.get(ticketId);
 			assertEquals(ticketId, ticket.getId());
@@ -57,14 +59,4 @@ public class RemedyTicketerPluginTest extends TestCase {
 		
 	}
 	
-	 private void assertTicketEquals(Ticket existing, Ticket retrieved) {
-	        assertEquals(existing.getId(), retrieved.getId());
-	        assertEquals(existing.getState(), retrieved.getState());
-	        assertEquals(existing.getUser(), retrieved.getUser());
-	        assertEquals(existing.getSummary(), retrieved.getSummary());
-	        if (retrieved.getDetails().indexOf(existing.getDetails()) <= 0 ) {
-	        	fail("could not find " + existing.getDetails() + " in " + retrieved.getDetails());
-	        }
-	 }	 
-
 }
