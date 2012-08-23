@@ -222,8 +222,7 @@ public class RemedyTicketerPlugin implements Plugin {
 				new byte[0], 
 				0);
 				
-		parameters.setSummary(ticket.getSummary());
-		parameters.setNotes(ticket.getDetails());
+		parameters.setNotes(ticket.getSummary()+ticket.getDetails());
 		State remedyState = remedyToOpenNMSState(output.getStatus());
 		if (ticket.getState().name().equals(remedyState.name()))
 			parameters.setStatus(output.getStatus());
@@ -292,8 +291,8 @@ public class RemedyTicketerPlugin implements Plugin {
 		CreateInputMap createInputMap = new CreateInputMap();
 		
 		// the only data setted by the opennms ticket alarm
-		createInputMap.setSummary(newTicket.getSummary());
-		createInputMap.setNotes(newTicket.getDetails());
+		createInputMap.setSummary(m_configDao.getSummary());
+		createInputMap.setNotes(newTicket.getSummary() + newTicket.getDetails());
 		
 		// all this is mandatory and set using the configuration file
 		createInputMap.setFirst_Name(m_configDao.getFirstName());

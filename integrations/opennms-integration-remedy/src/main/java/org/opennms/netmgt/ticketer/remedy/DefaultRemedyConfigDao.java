@@ -144,5 +144,10 @@ public class DefaultRemedyConfigDao {
 		//return getProperties().getString("remedy.status.cancelled");
 		return "Cancelled";		
 	}
+	
+	String getSummary() {
+		//return getProperties().getString("remedy.summary");
+		return "Opennms Web Service Created Ticket";
+	}
 
 }
