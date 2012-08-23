@@ -44,19 +44,31 @@ public class RemedyTicketerPluginTest extends TestCase {
 	}	
 	
 	public void testGet() {
-		String ticketId = "INC000000072901";
+		String ticketId = "INC000000073001";
 		try {
 			Ticket ticket = m_ticketer.get(ticketId);
 			assertEquals(ticketId, ticket.getId());
-			System.out.println(ticket.getDetails());
-			System.out.println(ticket.getSummary());
-			System.out.println(ticket.getUser());
+			System.out.println("TicketId: "+ticket.getId());
+			System.out.println("Summary: "+ticket.getSummary());
+			System.out.println("Details: "+ticket.getDetails());
+			System.out.println("User: " + ticket.getUser());
 			State state = ticket.getState();
-			System.out.println(state);
+			System.out.println("State: "+ state);
 		} catch (PluginException e) {
 			e.printStackTrace();
 		}
 		
+	}
+	
+	public void testUpdate() {
+		String ticketId = "INC000000073001";
+		m_ticket.setId(ticketId);
+		m_ticket.setDetails(m_ticket.getDetails() + " - Modified by Antonio@opennms.it: " + new Date());
+		try {
+			m_ticketer.saveOrUpdate(m_ticket);
+		} catch (PluginException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }

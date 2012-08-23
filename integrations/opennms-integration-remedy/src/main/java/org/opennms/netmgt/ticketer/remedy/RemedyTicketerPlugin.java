@@ -32,6 +32,8 @@
 package org.opennms.netmgt.ticketer.remedy;
 
 import java.rmi.RemoteException;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.xml.rpc.ServiceException;
 
@@ -51,6 +53,10 @@ import org.opennms.integration.remedy.ticketservice.Service_TypeType;
 import org.opennms.integration.remedy.ticketservice.SetInputMap;
 import org.opennms.integration.remedy.ticketservice.StatusType;
 import org.opennms.integration.remedy.ticketservice.UrgencyType;
+import org.opennms.integration.remedy.ticketservice.VIPType;
+import org.opennms.integration.remedy.ticketservice.Work_Info_SourceType;
+import org.opennms.integration.remedy.ticketservice.Work_Info_TypeType;
+import org.opennms.integration.remedy.ticketservice.Work_Info_View_AccessType;
 
 
 import org.opennms.api.integration.ticketing.*;
@@ -115,6 +121,7 @@ public class RemedyTicketerPlugin implements Plugin {
 					opennmsTicket.setSummary(outputmap.getSummary());
 					opennmsTicket.setDetails(outputmap.getNotes());
 					opennmsTicket.setState(remedyToOpenNMSState(outputmap.getStatus()));
+					opennmsTicket.setUser(outputmap.getAssigned_Group());
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}    
@@ -146,16 +153,16 @@ public class RemedyTicketerPlugin implements Plugin {
 		}					
 	}
     
-    private void update(Ticket newTicket) throws PluginException {
+    private void update(Ticket ticket) throws PluginException {
     	
     	HPD_IncidentInterface_WSPortTypePortType port = getTicketServicePort(m_portname,m_endpoint);
     	if (port != null) {
     		try {
-    			GetOutputMap remedy = port.helpDesk_Query_Service(getRemedyInputMap(newTicket.getId()), getRemedyAuthenticationHeader());
+    			GetOutputMap remedy = port.helpDesk_Query_Service(getRemedyInputMap(ticket.getId()), getRemedyAuthenticationHeader());
     			if (remedy == null)
-					log().debug("update: Remedy: Cannot find incident with incindent_number: " + newTicket.getId());
+					log().debug("update: Remedy: Cannot find incident with incindent_number: " + ticket.getId());
 				else
-					port.helpDesk_Modify_Service(getRemedySetInputMap(newTicket,remedy) , getRemedyAuthenticationHeader());
+					port.helpDesk_Modify_Service(getRemedySetInputMap(ticket,remedy) , getRemedyAuthenticationHeader());
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -163,16 +170,65 @@ public class RemedyTicketerPlugin implements Plugin {
 		
 	}
 
-    private SetInputMap getRemedySetInputMap(Ticket newTicket,GetOutputMap output) {
-		SetInputMap parameters = new SetInputMap();
-		parameters.setIncident_Number(newTicket.getId());
-		parameters.setSummary(newTicket.getSummary());
-		parameters.setNotes(newTicket.getDetails());
+    private SetInputMap getRemedySetInputMap(Ticket ticket,GetOutputMap output) {
+    	Calendar cal = Calendar.getInstance();
+    	cal.setTime(new Date());
+		SetInputMap parameters = new SetInputMap(
+				output.getCategorization_Tier_1(), 
+				output.getCategorization_Tier_2(), 
+				output.getCategorization_Tier_3(),
+				output.getClosure_Manufacturer(), 
+				output.getClosure_Product_Category_Tier1(), 
+				output.getClosure_Product_Category_Tier2(), 
+				output.getClosure_Product_Category_Tier3(), 
+				output.getClosure_Product_Model_Version(), 
+				output.getClosure_Product_Name(), 
+				output.getCompany(), 
+				output.getSummary(), 
+				output.getNotes(), 
+				output.getImpact(), 
+				output.getManufacturer(), 
+				output.getProduct_Categorization_Tier_1(), 
+				output.getProduct_Categorization_Tier_2(), 
+				output.getProduct_Categorization_Tier_3(), 
+				output.getProduct_Model_Version(), 
+				output.getProduct_Name(), 
+				output.getReported_Source(), 
+				output.getResolution(), 
+				output.getResolution_Category(), 
+				output.getResolution_Category_Tier_2(), 
+				output.getResolution_Category_Tier_3(), 
+				"", 
+				output.getService_Type(), 
+				output.getStatus(), 
+				output.getUrgency(), 
+				ACTION_CREATE, 
+				"",
+				"", 
+				Work_Info_TypeType.value10, 
+				cal,
+				Work_Info_SourceType.value1, 
+				VIPType.No, 
+				Work_Info_View_AccessType.Public, 
+				ticket.getId(), 
+				output.getStatus_Reason(), 
+				output.getServiceCI(), 
+				output.getServiceCI_ReconID(), 
+				output.getHPD_CI(), 
+				output.getHPD_CI_ReconID(), 
+				output.getHPD_CI_FormName(), 
+				output.getZ1D_CI_FormName(), 
+				"", 
+				new byte[0], 
+				0);
+				
+		parameters.setSummary(ticket.getSummary());
+		parameters.setNotes(ticket.getDetails());
 		State remedyState = remedyToOpenNMSState(output.getStatus());
-		if (newTicket.getState().name().equals(remedyState.name()))
+		if (ticket.getState().name().equals(remedyState.name()))
 			parameters.setStatus(output.getStatus());
 		else 
-			parameters.setStatus(opennmsToRemedyState(newTicket.getState()));
+			parameters.setStatus(opennmsToRemedyState(ticket.getState()));
 		return parameters;
     }
     
@@ -217,6 +273,7 @@ public class RemedyTicketerPlugin implements Plugin {
 		AuthenticationInfo request_header = new AuthenticationInfo();
 		request_header.setUserName(m_configDao.getUserName());
 		request_header.setPassword(m_configDao.getPassword());
+
 		String authentication = m_configDao.getAuthentication();
 		if (authentication != null )
 			request_header.setAuthentication(authentication);

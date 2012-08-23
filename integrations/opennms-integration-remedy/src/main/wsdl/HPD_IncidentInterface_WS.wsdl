@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions targetNamespace="urn:HPD_IncidentInterface_WS" xmlns:s0="urn:HPD_IncidentInterface_WS" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<wsdl:definitions 
+	targetNamespace="HPD_IncidentInterface_WS" 
+	xmlns:s0="HPD_IncidentInterface_WS" 
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+	xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" 
+	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
  <wsdl:types>
-  <xsd:schema elementFormDefault="qualified" targetNamespace="urn:HPD_IncidentInterface_WS">
+  <xsd:schema elementFormDefault="qualified" targetNamespace="HPD_IncidentInterface_WS">
    <xsd:element name="HelpDesk_Query_Service" type="s0:GetInputMap"/>
    <xsd:complexType name="GetInputMap">
     <xsd:sequence>
@@ -449,7 +455,7 @@
 
       <wsdl:operation name="HelpDesk_Query_Service">
 
-         <soap:operation soapAction="urn:HPD_IncidentInterface_WS/HelpDesk_Query_Service" style="document"/>
+         <soap:operation soapAction="HPD_IncidentInterface_WS/HelpDesk_Query_Service" style="document"/>
 
          <wsdl:input>
 
@@ -457,7 +463,7 @@
 
             </soap:header>
 
-            <soap:body message="s0:HelpDesk_Query_ServiceSoapIn" part="parameters" use="literal"/>
+            <soap:body use="literal"/>
 
          </wsdl:input>
 
@@ -471,7 +477,7 @@
 
       <wsdl:operation name="HelpDesk_QueryList_Service">
 
-         <soap:operation soapAction="urn:HPD_IncidentInterface_WS/HelpDesk_QueryList_Service" style="document"/>
+         <soap:operation soapAction="HPD_IncidentInterface_WS/HelpDesk_QueryList_Service" style="document"/>
 
          <wsdl:input>
 
@@ -479,7 +485,7 @@
 
             </soap:header>
 
-            <soap:body message="s0:HelpDesk_QueryList_ServiceSoapIn" part="parameters" use="literal"/>
+            <soap:body use="literal"/>
 
          </wsdl:input>
 
@@ -493,7 +499,7 @@
 
       <wsdl:operation name="HelpDesk_Modify_Service">
 
-         <soap:operation soapAction="urn:HPD_IncidentInterface_WS/HelpDesk_Modify_Service" style="document"/>
+         <soap:operation soapAction="HPD_IncidentInterface_WS/HelpDesk_Modify_Service" style="document"/>
 
          <wsdl:input>
 
@@ -501,7 +507,7 @@
 
             </soap:header>
 
-            <soap:body message="s0:HelpDesk_Modify_ServiceSoapIn" part="parameters" use="literal"/>
+            <soap:body use="literal"/>
 
          </wsdl:input>
 
