@@ -105,6 +105,21 @@ public class DefaultRemedyConfigDao {
 		return "Opennms";
 	}
 
+	String getAssignedGroup() {
+		//return getProperties().getString("remedy.assignedgroup");
+		return "TNnet";
+	}
+
+	String getAssignedSupportCompany() {
+		//return getProperties().getString("remedy.assignedsupportcompany");
+		return "Trentino Network srl";
+	}
+
+	String getAssignedSupportOrganization() {
+		//return getProperties().getString("remedy.assignedsupportorganization");
+		return "Centro Gestione Rete";
+	}
+
 	String getLastName() {
 		//return getProperties().getString("remedy.lastname");
 		return "Tnn";
@@ -130,9 +145,24 @@ public class DefaultRemedyConfigDao {
 		return "New";
 	}
 
-	String getStatusOpen() {
-		//return getProperties().getString("remedy.status.open");
+	String getStatusAssigned() {
+		//return getProperties().getString("remedy.status.assigned");
+		return "Assigned";
+	}
+
+	String getStatusInProgress() {
+		//return getProperties().getString("remedy.status.inprogress");
 		return "In Progress";
+	}
+
+	String getStatusPending() {
+		//return getProperties().getString("remedy.status.pending");
+		return "Pending";
+	}
+
+	String getStatusResolved() {
+		//return getProperties().getString("remedy.status.resolved");
+		return "Resolved";
 	}
 	
 	String getStatusClosed() {
@@ -148,6 +178,26 @@ public class DefaultRemedyConfigDao {
 	String getSummary() {
 		//return getProperties().getString("remedy.summary");
 		return "Opennms Web Service Created Ticket";
+	}
+	
+	String getUrgencyCritical() {
+		//return getProperties().getString("remedy.urgencycritical");
+		return "1-Critical";
+	}
+
+	String getUrgencyHigh() {
+		//return getProperties().getString("remedy.urgencyhigh");
+		return "2-High";
+	}
+
+	String getUrgencyMedium() {
+		//return getProperties().getString("remedy.urgencymedium");
+		return "3-Medium";
+	}
+
+	String getUrgencyLow() {
+		//return getProperties().getString("remedy.urgencylow");
+		return "4-Low";
 	}
 
 }

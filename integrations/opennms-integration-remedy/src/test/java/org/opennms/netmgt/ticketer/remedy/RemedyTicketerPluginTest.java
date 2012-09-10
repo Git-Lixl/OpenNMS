@@ -18,6 +18,7 @@ public class RemedyTicketerPluginTest extends TestCase {
 	
 	Ticket m_ticket;
 	
+	String m_ticketId;
 	 @Override
 	 protected void setUp() throws Exception {
 	        
@@ -37,17 +38,19 @@ public class RemedyTicketerPluginTest extends TestCase {
 	    		
 		try {
             m_ticketer.saveOrUpdate(m_ticket);
-            
+            m_ticketId = m_ticket.getId();
+            System.out.println("Got TicketId");
         } catch (PluginException e) {
             e.printStackTrace();
         }		
 	}	
 	
 	public void testGet() {
-		String ticketId = "INC000000073001";
+		if (m_ticketId == null)
+			testSave();
 		try {
-			Ticket ticket = m_ticketer.get(ticketId);
-			assertEquals(ticketId, ticket.getId());
+			Ticket ticket = m_ticketer.get(m_ticketId);
+			assertEquals(m_ticketId, ticket.getId());
 			System.out.println("TicketId: "+ticket.getId());
 			System.out.println("Summary: "+ticket.getSummary());
 			System.out.println("Details: "+ticket.getDetails());
@@ -60,15 +63,97 @@ public class RemedyTicketerPluginTest extends TestCase {
 		
 	}
 	
-	public void testUpdate() {
-		String ticketId = "INC000000073001";
-		m_ticket.setId(ticketId);
-		m_ticket.setDetails(m_ticket.getDetails() + " - Modified by Antonio@opennms.it: " + new Date());
+	public void testOpenCloseStatus() {
+		if (m_ticketId == null)
+			testSave();
 		try {
+			// Close the Ticket
+			m_ticket.setState(State.CLOSED);
 			m_ticketer.saveOrUpdate(m_ticket);
+			
+			Ticket ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.CLOSED, ticket.getState());
+
+			//Reopen The Ticket
+			m_ticket.setState(State.OPEN);
+			m_ticketer.saveOrUpdate(m_ticket);
+			
+			ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.OPEN, ticket.getState());			
 		} catch (PluginException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
+	public void testOpenToCancelledStatus() {
+		if (m_ticketId == null)
+			testSave();
+		try {
+			Ticket ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.OPEN, ticket.getState());
+
+			//Cancel the Ticket
+			m_ticket.setState(State.CANCELLED);
+			m_ticketer.saveOrUpdate(m_ticket);
+			
+			ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.CANCELLED, ticket.getState());
+			
+			// try to re open
+			m_ticket.setState(State.OPEN);
+			m_ticketer.saveOrUpdate(m_ticket);
+			// but still cancelled
+			ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.CANCELLED, ticket.getState());
+
+			// try to close
+			m_ticket.setState(State.CLOSED);
+			m_ticketer.saveOrUpdate(m_ticket);
+			// but still cancelled
+			ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.CANCELLED, ticket.getState());
+		} catch (PluginException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void testClosedToCancelledStatus() {
+		if (m_ticketId == null)
+			testSave();
+		try {
+			Ticket ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.OPEN, ticket.getState());
+
+			//Close the Ticket
+			m_ticket.setState(State.CLOSED);
+			m_ticketer.saveOrUpdate(m_ticket);
+			
+			ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.CLOSED, ticket.getState());
+
+			//Cancel the Ticket
+			m_ticket.setState(State.CANCELLED);
+			m_ticketer.saveOrUpdate(m_ticket);
+			
+			ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.CANCELLED, ticket.getState());
+			
+			// try to re open
+			m_ticket.setState(State.OPEN);
+			m_ticketer.saveOrUpdate(m_ticket);
+			// but still cancelled
+			ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.CANCELLED, ticket.getState());
+
+			// try to close
+			m_ticket.setState(State.CLOSED);
+			m_ticketer.saveOrUpdate(m_ticket);
+			// but still cancelled
+			ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.CANCELLED, ticket.getState());
+		} catch (PluginException e) {
+			e.printStackTrace();
+		}
+	}
+
 }
