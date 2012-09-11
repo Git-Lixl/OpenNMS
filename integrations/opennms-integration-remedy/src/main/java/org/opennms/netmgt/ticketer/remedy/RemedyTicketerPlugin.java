@@ -113,12 +113,14 @@ public class RemedyTicketerPlugin implements Plugin {
 		    throw new PluginException("No Remedy ticketID available in OpenNMS Ticket");
 		    
 		} else {
-		    
+		    log().debug("get: search ticket with id: " +  ticketId);
 		    HPD_IncidentInterface_WSPortTypePortType port = getTicketServicePort(m_portname,m_endpoint);
 	   
 		    if (port != null) {
 			    try {
 					GetOutputMap outputmap = port.helpDesk_Query_Service(getRemedyInputMap(ticketId) , getRemedyAuthenticationHeader());
+					log().info("get: found ticket: "+ ticketId +" status: " + outputmap.getStatus().getValue());
+					log().info("get: found ticket: "+ ticketId +" urgency: " + outputmap.getUrgency().getValue());
 					opennmsTicket.setId(ticketId);
 					opennmsTicket.setSummary(outputmap.getSummary());
 					opennmsTicket.setDetails(outputmap.getNotes());
@@ -179,10 +181,11 @@ public class RemedyTicketerPlugin implements Plugin {
 				log().debug("update: Remedy: found urgency: "+output.getUrgency().getValue() +" - for ticket with incindent_number: " + ticket.getId());
 				output.setUrgency(getUrgency(ticket));
 				
-				log().debug("update: Remedy: current status: "+output.getStatus().getValue() +" - for ticket with incindent_number: " + ticket.getId());
+				log().debug("update: opennms status: "+ticket.getState().toString() +" - for ticket with incindent_number: " + ticket.getId());
+				
+				log().debug("update: Remedy: found status: "+output.getStatus().getValue() +" - for ticket with incindent_number: " + ticket.getId());
 				State outputState = remedyToOpenNMSState(output.getStatus());
-				log().debug("update: Remedy: correspondant opennms status: "+outputState.toString() +" - for ticket with incindent_number: " + ticket.getId());
-				log().debug("update: Remedy: updating opennms status: "+ticket.getState().toString() +" - for ticket with incindent_number: " + ticket.getId());
+				log().debug("update: Remedy: found opennms status: "+outputState.toString() +" - for ticket with incindent_number: " + ticket.getId());
 				if (! (ticket.getState() == outputState))
 					output = opennmsToRemedyState(output,ticket.getState());
 

@@ -34,29 +34,14 @@ public class RemedyTicketerPluginTest extends TestCase {
 			
 	}
 
-	public void testSave() {
+	public void testSaveAndGet() {
 	    		
 		try {
             m_ticketer.saveOrUpdate(m_ticket);
             m_ticketId = m_ticket.getId();
-            System.out.println("Got TicketId");
-        } catch (PluginException e) {
-            e.printStackTrace();
-        }		
-	}	
-	
-	public void testGet() {
-		if (m_ticketId == null)
-			testSave();
-		try {
 			Ticket ticket = m_ticketer.get(m_ticketId);
 			assertEquals(m_ticketId, ticket.getId());
-			System.out.println("TicketId: "+ticket.getId());
-			System.out.println("Summary: "+ticket.getSummary());
-			System.out.println("Details: "+ticket.getDetails());
-			System.out.println("User: " + ticket.getUser());
-			State state = ticket.getState();
-			System.out.println("State: "+ state);
+			assertEquals(State.OPEN, ticket.getState());
 		} catch (PluginException e) {
 			e.printStackTrace();
 		}
@@ -64,9 +49,10 @@ public class RemedyTicketerPluginTest extends TestCase {
 	}
 	
 	public void testOpenCloseStatus() {
-		if (m_ticketId == null)
-			testSave();
+		testSaveAndGet();
 		try {
+			assertEquals(State.OPEN, m_ticket.getState());			
+			
 			// Close the Ticket
 			m_ticket.setState(State.CLOSED);
 			m_ticketer.saveOrUpdate(m_ticket);
@@ -79,30 +65,12 @@ public class RemedyTicketerPluginTest extends TestCase {
 			m_ticketer.saveOrUpdate(m_ticket);
 			
 			ticket = m_ticketer.get(m_ticketId);
-			assertEquals(State.OPEN, ticket.getState());			
-		} catch (PluginException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void testOpenToCancelledStatus() {
-		if (m_ticketId == null)
-			testSave();
-		try {
-			Ticket ticket = m_ticketer.get(m_ticketId);
 			assertEquals(State.OPEN, ticket.getState());
-
+			
 			//Cancel the Ticket
 			m_ticket.setState(State.CANCELLED);
 			m_ticketer.saveOrUpdate(m_ticket);
 			
-			ticket = m_ticketer.get(m_ticketId);
-			assertEquals(State.CANCELLED, ticket.getState());
-			
-			// try to re open
-			m_ticket.setState(State.OPEN);
-			m_ticketer.saveOrUpdate(m_ticket);
-			// but still cancelled
 			ticket = m_ticketer.get(m_ticketId);
 			assertEquals(State.CANCELLED, ticket.getState());
 
@@ -112,14 +80,21 @@ public class RemedyTicketerPluginTest extends TestCase {
 			// but still cancelled
 			ticket = m_ticketer.get(m_ticketId);
 			assertEquals(State.CANCELLED, ticket.getState());
+
+			// try to re open
+			m_ticket.setState(State.OPEN);
+			m_ticketer.saveOrUpdate(m_ticket);
+			// but still cancelled
+			ticket = m_ticketer.get(m_ticketId);
+			assertEquals(State.CANCELLED, ticket.getState());
+
 		} catch (PluginException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public void testClosedToCancelledStatus() {
-		if (m_ticketId == null)
-			testSave();
+		testSaveAndGet();
 		try {
 			Ticket ticket = m_ticketer.get(m_ticketId);
 			assertEquals(State.OPEN, ticket.getState());
