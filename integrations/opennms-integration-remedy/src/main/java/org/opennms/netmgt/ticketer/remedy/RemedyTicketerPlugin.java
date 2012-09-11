@@ -52,6 +52,7 @@ import org.opennms.integration.remedy.ticketservice.Reported_SourceType;
 import org.opennms.integration.remedy.ticketservice.Service_TypeType;
 import org.opennms.integration.remedy.ticketservice.SetInputMap;
 import org.opennms.integration.remedy.ticketservice.StatusType;
+import org.opennms.integration.remedy.ticketservice.Status_ReasonType;
 import org.opennms.integration.remedy.ticketservice.UrgencyType;
 import org.opennms.integration.remedy.ticketservice.VIPType;
 import org.opennms.integration.remedy.ticketservice.Work_Info_SourceType;
@@ -79,6 +80,7 @@ public class RemedyTicketerPlugin implements Plugin {
 	private String m_createportname; 
 	
 	private final static String ACTION_CREATE="CREATE";
+	private final static String ACTION_MODIFY="MODIFY";
 
 	// Remember:
 	// Summary ---> alarm logmsg
@@ -164,7 +166,11 @@ public class RemedyTicketerPlugin implements Plugin {
 					return;
     			}
     			if (remedy.getStatus().getValue().equals(m_configDao.getStatusCancelled())) {
-					log().info("update: Remedy: Ticket Cancelled. Avoid updating ticket with incindent_number: " + ticket.getId());
+					log().info("update: Remedy: Ticket Cancelled. Not updating ticket with incindent_number: " + ticket.getId());
+    				return;
+    			}
+    			if (remedy.getStatus().getValue().equals(m_configDao.getStatusClosed())) {
+					log().info("update: Remedy: Ticket Closed. Not updating ticket with incindent_number: " + ticket.getId());
     				return;
     			}
 				SetInputMap output = getRemedySetInputMap(ticket,remedy); 
@@ -178,7 +184,7 @@ public class RemedyTicketerPlugin implements Plugin {
 				log().debug("update: Remedy: correspondant opennms status: "+outputState.toString() +" - for ticket with incindent_number: " + ticket.getId());
 				log().debug("update: Remedy: updating opennms status: "+ticket.getState().toString() +" - for ticket with incindent_number: " + ticket.getId());
 				if (! (ticket.getState() == outputState))
-					output.setStatus(opennmsToRemedyState(ticket.getState()));
+					output = opennmsToRemedyState(output,ticket.getState());
 
 				port.helpDesk_Modify_Service(output , getRemedyAuthenticationHeader());
 			} catch (RemoteException e) {
@@ -220,7 +226,7 @@ public class RemedyTicketerPlugin implements Plugin {
 				output.getService_Type(), 
 				output.getStatus(), 
 				output.getUrgency(), 
-				ACTION_CREATE, 
+				ACTION_MODIFY, 
 				"",
 				"", 
 				Work_Info_TypeType.value10, 
@@ -247,33 +253,32 @@ public class RemedyTicketerPlugin implements Plugin {
     	return UrgencyType.fromValue(m_configDao.getUrgencyLow());
     }
         
-    private StatusType opennmsToRemedyState(State state) {
-		StatusType remedyStatus;
-		
+    private SetInputMap opennmsToRemedyState(SetInputMap inputmap, State state) {
 		log().debug("getting remedy state from OpenNMS State: " + state.toString());
 
         switch (state) {
             case OPEN:
-            	// ticket is new
-            	remedyStatus = StatusType.fromValue(m_configDao.getStatusPending());
+            	inputmap.setStatus(StatusType.fromValue(m_configDao.getStatusPending()));
+            	inputmap.setStatus_Reason(Status_ReasonType.fromValue(m_configDao.getOpenStatusReason()));
             	break;
             case CANCELLED:
-            	// not sure how often we see this
-            	remedyStatus = StatusType.fromValue(m_configDao.getStatusCancelled());
+            	inputmap.setStatus(StatusType.fromValue(m_configDao.getStatusCancelled()));
+            	inputmap.setStatus_Reason(Status_ReasonType.fromValue(m_configDao.getCancelledStatusReason()));
             	break;
             case CLOSED:
-                // closed successful
-            	remedyStatus = StatusType.fromValue(m_configDao.getStatusClosed());
+            	inputmap.setStatus(StatusType.fromValue(m_configDao.getStatusResolved()));
+            	inputmap.setStatus_Reason(Status_ReasonType.fromValue(m_configDao.getResolvedStatusReason()));
+                inputmap.setResolution(m_configDao.getResolution());
                 break;
             default:
-            	log().debug("No valid OpenNMS state on ticket, setting to: " + m_configDao.getStatusPending());
-            	remedyStatus = StatusType.fromValue(m_configDao.getStatusPending());
+            	log().debug("No valid OpenNMS state on ticket skipping status change");
         }
         
         log().debug("OpenNMS state was        " + state.toString());
-        log().debug("setting Remedy state ID to " + remedyStatus.toString());
+        log().debug("setting Remedy state ID to " + inputmap.getStatus().getValue());
         
-        return remedyStatus;
+        
+        return inputmap;
 	}
 
 	private GetInputMap getRemedyInputMap(String ticketId) {

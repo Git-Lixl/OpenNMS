@@ -199,5 +199,24 @@ public class DefaultRemedyConfigDao {
 		//return getProperties().getString("remedy.urgencylow");
 		return "4-Low";
 	}
+	
+	String getResolution() {
+		//return getProperties().getString("remedy.resolution");
+		return "Chiusura da OpenNMS Web Service";
+	}
 
+	String getOpenStatusReason() {
+		//return getProperties().getString("remedy.openstatusreason");
+		return "Pending Original Incident";
+	}
+	
+	String getResolvedStatusReason() {
+		//return getProperties().getString("remedy.resolvedstatusreason");
+		return "Automated Resolution Reported";
+	}
+	
+	String getCancelledStatusReason() {
+		//return getProperties().getString("remedy.cancelledstatusreason");
+		return "No longer a Causal CI";
+	}
 }
