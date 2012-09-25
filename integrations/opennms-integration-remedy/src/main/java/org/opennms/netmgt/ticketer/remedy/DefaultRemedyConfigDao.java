@@ -74,7 +74,7 @@ public class DefaultRemedyConfigDao {
 		//return getProperties().getString("remedy.endpoint");
 		return "http://172.20.0.76:8180/arsys/services/ARService?server=itts3h&webService=HPD_IncidentInterface_WS";
 	}
-
+	
 	String getPortName() {
 		//return getProperties().getString("remedy.portname");
 		return "HPD_IncidentInterface_WSPortTypeSoap";
@@ -90,9 +90,23 @@ public class DefaultRemedyConfigDao {
 		return "HPD_IncidentInterface_Create_WSPortTypeSoap";
 	}
 
+	String getQueryListEndPoint() {
+		//return getProperties().getString("remedy.querylistendpoint");
+		return "http://172.20.0.76:8180/arsys/services/ARService?server=itts3h&amp;webService=ITN_CTM_Support_Group_Assoc_WS";
+	}
+
+	String getQueryListPortName() {
+		//return getProperties().getString("remedy.querylistportname");
+		return "QueryList_ServiceSoap";
+	}
+
+	String getQualification() {
+		//return getProperties().getString("remedy.qualification");
+		return "\'Login ID\' = \"opennmstnn\"";
+	}
 	String getServiceCI() {
 		//return getProperties().getString("remedy.serviceCI");
-	 return "Trentino Network Connettivitˆ [C.TNNCN]";
+	 return "Trentino Network Connettivitï¿½ [C.TNNCN]";
 	}
 	
 	String getServiceCIReconID() {
