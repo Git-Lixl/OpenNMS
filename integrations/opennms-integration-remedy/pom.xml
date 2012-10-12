@@ -21,7 +21,6 @@
 				</executions>
 				<configuration>
 					<urls>
-						<url>file:///${project.basedir}/src/main/wsdl/ITN_CTM_Support_Group_Assoc_WS.wsdl</url>
 						<url>file:///${project.basedir}/src/main/wsdl/HPD_IncidentInterface_WS.wsdl</url>
 						<url>file:///${project.basedir}/src/main/wsdl/HPD_IncidentInterface_Create_WS.wsdl</url>
 					</urls>
@@ -55,11 +54,6 @@
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.opennms</groupId>
-			<artifactId>opennms-test</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

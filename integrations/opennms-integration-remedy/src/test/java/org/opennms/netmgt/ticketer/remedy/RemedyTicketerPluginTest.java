@@ -1,16 +1,12 @@
 package org.opennms.netmgt.ticketer.remedy;
 
 import java.util.Date;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import org.opennms.api.integration.ticketing.PluginException;
 import org.opennms.api.integration.ticketing.Ticket;
 import org.opennms.api.integration.ticketing.Ticket.State;
-import org.opennms.integration.remedy.ticketservice.OutputMapping1;
-import org.opennms.integration.remedy.ticketservice.OutputMapping1GetListValues;
-import org.opennms.test.mock.MockLogAppender;
 
 public class RemedyTicketerPluginTest extends TestCase {
 
@@ -25,9 +21,7 @@ public class RemedyTicketerPluginTest extends TestCase {
 	String m_ticketId;
 	 @Override
 	 protected void setUp() throws Exception {
-		  Properties p = new Properties();
-	        p.setProperty("log4j.logger.org.apache.axis", "DEBUG");
-	        MockLogAppender.setupLogging(p);
+	        
 	        m_ticketer = new RemedyTicketerPlugin();
 	        
 	        m_configDao = new DefaultRemedyConfigDao();
@@ -40,19 +34,6 @@ public class RemedyTicketerPluginTest extends TestCase {
 			
 	}
 
-	public void testQueryList() {
-		try {
-			OutputMapping1 destinationGroups = m_ticketer.getDestinationGroup();
-			assertEquals(2, destinationGroups.getGetListValues().length);
-			for (OutputMapping1GetListValues value : destinationGroups.getGetListValues()) {
-				System.err.println(value.getCompany());
-				System.err.println(value.getSupport_Group_Name());
-				System.err.println(value.getSupport_Organization());
-			}
-		} catch (PluginException e) {
-			e.printStackTrace();
-		}
-	}
 	public void testSaveAndGet() {
 	    		
 		try {

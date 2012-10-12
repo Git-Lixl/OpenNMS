@@ -34,7 +34,6 @@ package org.opennms.netmgt.ticketer.remedy;
 import java.rmi.RemoteException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 import javax.xml.rpc.ServiceException;
 
@@ -48,11 +47,7 @@ import org.opennms.integration.remedy.ticketservice.HPD_IncidentInterface_Create
 import org.opennms.integration.remedy.ticketservice.HPD_IncidentInterface_Create_WSServiceLocator;
 import org.opennms.integration.remedy.ticketservice.HPD_IncidentInterface_WSPortTypePortType;
 import org.opennms.integration.remedy.ticketservice.HPD_IncidentInterface_WSServiceLocator;
-import org.opennms.integration.remedy.ticketservice.ITN_CTM_Support_Group_Assoc_WSServiceLocator;
 import org.opennms.integration.remedy.ticketservice.ImpactType;
-import org.opennms.integration.remedy.ticketservice.InputMapping1;
-import org.opennms.integration.remedy.ticketservice.OutputMapping1;
-import org.opennms.integration.remedy.ticketservice.QueryList_ServicePortType;
 import org.opennms.integration.remedy.ticketservice.Reported_SourceType;
 import org.opennms.integration.remedy.ticketservice.Service_TypeType;
 import org.opennms.integration.remedy.ticketservice.SetInputMap;
@@ -83,8 +78,6 @@ public class RemedyTicketerPlugin implements Plugin {
 	private String m_portname;
 	private String m_createendpoint; 
 	private String m_createportname; 
-	private String m_querylistendpoint;
-	private String m_querylistportname;
 	
 	private final static String ACTION_CREATE="CREATE";
 	private final static String ACTION_MODIFY="MODIFY";
@@ -107,22 +100,8 @@ public class RemedyTicketerPlugin implements Plugin {
 		m_portname = m_configDao.getPortName();
 		m_createendpoint = m_configDao.getCreateEndPoint();
 		m_createportname = m_configDao.getCreatePortName();
-		m_querylistendpoint = m_configDao.getQueryListEndPoint();
-		m_querylistportname = m_configDao.getQueryListPortName();
 	}
 
-	public OutputMapping1 getDestinationGroup() throws PluginException {
-		QueryList_ServicePortType port = getCreateQueryListServicePort(m_querylistportname, m_querylistendpoint);
-	    if (port != null) {
-		    try {
-		    	return port.getList(new InputMapping1(m_configDao.getQualification(),"" ,"" ),getRemedyAuthenticationHeader());
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}    
-	    }		
-		return null;
-	}
-	
 	/** {@inheritDoc} */
 	public Ticket get(String ticketId) throws PluginException {
 
@@ -413,24 +392,12 @@ public class RemedyTicketerPlugin implements Plugin {
            port = service.getHPD_IncidentInterface_Create_WSPortTypeSoap();
         } catch (ServiceException e) {
             log().error("Failed initialzing Remedy TicketServicePort" + e);
-            throw new PluginException("Failed initializing Remedy TicketServicePort");
+            throw new PluginException("Failed initialzing Remedy TicketServicePort");
         }
         
         return port;
     }
 
-    private QueryList_ServicePortType getCreateQueryListServicePort(String portname, String endpoint) throws PluginException {
-    	ITN_CTM_Support_Group_Assoc_WSServiceLocator service = new ITN_CTM_Support_Group_Assoc_WSServiceLocator();
-    	QueryList_ServicePortType port = null;
-    	try {
-    		service.setEndpointAddress(portname, endpoint);
-    		port = service.getQueryList_ServiceSoap();
-        } catch (ServiceException e) {
-            log().error("Failed initialzing Remedy TicketServicePort" + e);
-            throw new PluginException("Failed initializing Remedy QueryListPort");
-        }
-    	return port;
-    }
     /**
 	 * Convenience logging.
 	 * 
