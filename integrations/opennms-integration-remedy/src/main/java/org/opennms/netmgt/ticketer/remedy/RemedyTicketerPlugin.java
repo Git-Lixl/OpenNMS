@@ -82,6 +82,7 @@ public class RemedyTicketerPlugin implements Plugin {
 	private final static String ACTION_CREATE="CREATE";
 	private final static String ACTION_MODIFY="MODIFY";
 
+	private final static int MAX_SUMMARY_CHARS=255;
 	// Remember:
 	// Summary ---> alarm logmsg
 	// Details ---> alarm descr
@@ -253,16 +254,35 @@ public class RemedyTicketerPlugin implements Plugin {
     private UrgencyType getUrgency(Ticket ticket) {
     	//TODO set this according to some ticket value....in the future
     	// implementation (should be carried by the ticket
-    	return UrgencyType.fromValue(m_configDao.getUrgencyLow());
+    	return UrgencyType.fromValue(m_configDao.getUrgency());
     }
-        
+    
+    private String getAssignedGroup(Ticket ticket) {
+    	//TODO set this according to some ticket value....in the future
+    	// implementation (should be carried by the ticket)
+    	return m_configDao.getAssignedGroup();
+    }
+    
+    private String getSummary(Ticket ticket) {
+    	//TODO set this according to some ticket value....in the future
+    	// implementation (should be carried by the ticket)
+    	if (ticket.getSummary().length() > MAX_SUMMARY_CHARS)
+    		return ticket.getSummary().substring(MAX_SUMMARY_CHARS-1);
+    	return ticket.getSummary();
+    }
+    
+    private String getNotes(Ticket ticket) {
+    	//TODO Add more notes here
+    	return "Ticket opened by opennms user: " + ticket.getUser() + "\n Ticket Detail: " + ticket.getDetails();
+    }
+    
     private SetInputMap opennmsToRemedyState(SetInputMap inputmap, State state) {
 		log().debug("getting remedy state from OpenNMS State: " + state.toString());
 
         switch (state) {
             case OPEN:
             	inputmap.setStatus(StatusType.fromValue(m_configDao.getStatusPending()));
-            	inputmap.setStatus_Reason(Status_ReasonType.fromValue(m_configDao.getOpenStatusReason()));
+            	inputmap.setStatus_Reason(Status_ReasonType.fromValue(m_configDao.getReOpenStatusReason()));
             	break;
             case CANCELLED:
             	inputmap.setStatus(StatusType.fromValue(m_configDao.getStatusCancelled()));
@@ -314,24 +334,24 @@ public class RemedyTicketerPlugin implements Plugin {
 		CreateInputMap createInputMap = new CreateInputMap();
 		
 		// the only data setted by the opennms ticket alarm
-		createInputMap.setSummary(m_configDao.getSummary());
-		createInputMap.setNotes(newTicket.getSummary() + newTicket.getDetails());
+		createInputMap.setSummary(getSummary(newTicket));
+		createInputMap.setNotes(getNotes(newTicket));
 		
 		// all this is mandatory and set using the configuration file
 		createInputMap.setFirst_Name(m_configDao.getFirstName());
 		createInputMap.setLast_Name(m_configDao.getLastName());		
 		createInputMap.setServiceCI(m_configDao.getServiceCI());
 		createInputMap.setServiceCI_ReconID(m_configDao.getServiceCIReconID());
-		createInputMap.setImpact(ImpactType.value4);
-		createInputMap.setReported_Source(Reported_SourceType.value1);
-		createInputMap.setService_Type(Service_TypeType.value1);
+		createInputMap.setImpact(ImpactType.fromValue(m_configDao.getImpact()));
+		createInputMap.setReported_Source(Reported_SourceType.fromValue(m_configDao.getReportedSource()));
+		createInputMap.setService_Type(Service_TypeType.fromValue(m_configDao.getServiceType()));
 		createInputMap.setUrgency(getUrgency(newTicket));
 		createInputMap.setStatus(StatusType.value1);
 		createInputMap.setAction(ACTION_CREATE);
 		createInputMap.setCategorization_Tier_1(m_configDao.getCategorizationtier1());
 		createInputMap.setCategorization_Tier_2(m_configDao.getCategorizationtier2());
 		createInputMap.setCategorization_Tier_3(m_configDao.getCategorizationtier3());
-		createInputMap.setAssigned_Group(m_configDao.getAssignedGroup());
+		createInputMap.setAssigned_Group(getAssignedGroup(newTicket));
 		createInputMap.setAssigned_Support_Company(m_configDao.getAssignedSupportCompany());
 		createInputMap.setAssigned_Support_Organization(m_configDao.getAssignedSupportOrganization());
 		return createInputMap;

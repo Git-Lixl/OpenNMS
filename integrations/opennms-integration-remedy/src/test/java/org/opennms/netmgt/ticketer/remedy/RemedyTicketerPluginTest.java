@@ -1,5 +1,6 @@
 package org.opennms.netmgt.ticketer.remedy;
 
+import java.io.File;
 import java.util.Date;
 
 import junit.framework.TestCase;
@@ -31,9 +32,12 @@ public class RemedyTicketerPluginTest extends TestCase {
 	        m_ticket.setSummary("Test OpenNMS Integration");
 	        m_ticket.setDetails("Created by Axis java client. Date: "+ new Date());
 			m_ticket.setUser("antonio@opennms.it");
+	        System.setProperty("opennms.home", "src" + File.separatorChar + "test" + File.separatorChar + "opennms-home");
 			
 	}
 
+	
+	 
 	public void testSaveAndGet() {
 	    		
 		try {

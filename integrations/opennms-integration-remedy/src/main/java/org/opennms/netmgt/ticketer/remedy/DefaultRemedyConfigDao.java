@@ -1,5 +1,8 @@
 package org.opennms.netmgt.ticketer.remedy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -90,26 +93,42 @@ public class DefaultRemedyConfigDao {
 		return "HPD_IncidentInterface_Create_WSPortTypeSoap";
 	}
 
-	String getServiceCI() {
-		//return getProperties().getString("remedy.serviceCI");
-	 return "Trentino Network Connettivitˆ [C.TNNCN]";
+	List<String> getTargetGroups() {
+		//return getProperties().getString("remedy.targetgroups");
+		List<String> targetGroups=new ArrayList<String>();
+		targetGroups.add("TNnet");
+		targetGroups.add("Sensi");
+		targetGroups.add("Frizen");
+		return targetGroups;
 	}
 	
-	String getServiceCIReconID() {
-		//return getProperties().getString("remedy.serviceCIReconID");
-		return "RE00505688005e3s-nTg4KEI5gFSov";
-	}
-		
-	String getFirstName() {
-		//return getProperties().getString("remedy.firstname");
-		return "Opennms";
-	}
-
 	String getAssignedGroup() {
 		//return getProperties().getString("remedy.assignedgroup");
 		return "TNnet";
 	}
 
+	String getFirstName() {
+		//return getProperties().getString("remedy.firstname");
+		return "Opennms";
+	}
+
+	String getLastName() {
+		//return getProperties().getString("remedy.lastname");
+		return "Tnn";
+	}
+
+	String getServiceCI() {
+		//return getProperties().getString("remedy.serviceCI");
+	 //return "Trentino Network Event Management [I.TNEVT]";
+	 return "Trentino Network Connettivitï¿½ [C.TNNCN]";
+	}
+
+	String getServiceCIReconID() {
+		//return getProperties().getString("remedy.serviceCIReconID");
+		//return "RE00505688005eP8Z3UAsLJIHg6EoR";
+		return "RE00505688005e3s-nTg4KEI5gFSov";
+	}
+		
 	String getAssignedSupportCompany() {
 		//return getProperties().getString("remedy.assignedsupportcompany");
 		return "Trentino Network srl";
@@ -118,11 +137,6 @@ public class DefaultRemedyConfigDao {
 	String getAssignedSupportOrganization() {
 		//return getProperties().getString("remedy.assignedsupportorganization");
 		return "Centro Gestione Rete";
-	}
-
-	String getLastName() {
-		//return getProperties().getString("remedy.lastname");
-		return "Tnn";
 	}
 
 	String getCategorizationtier1() {
@@ -139,7 +153,47 @@ public class DefaultRemedyConfigDao {
 		//return getProperties().getString("remedy.categorizationtier3");
 		return "Non bloccante";
 	}
+	
+	String getServiceType() {
+		//return getProperties().getString("remedy.serviceType");
+	 return "Infrastructure Event";
+	}
+	
+	String getReportedSource() {
+		//return getProperties().getString("remedy.reportedSource");
+	 return "Systems Management";
+	}
 
+	String getImpact() {
+		//return getProperties().getString("remedy.impact");
+		return "4-Minor/Localized";
+	}
+
+	String getUrgency() {
+		//return getProperties().getString("remedy.urgency");
+		return "4-Low";
+	}
+	
+	String getResolution() {
+		//return getProperties().getString("remedy.resolution");
+		return "Chiusura da OpenNMS Web Service";
+	}
+
+	String getReOpenStatusReason() {
+		//return getProperties().getString("remedy.reason.open");
+		return "Pending Original Incident";
+	}
+	
+	String getResolvedStatusReason() {
+		//return getProperties().getString("remedy.reason.resolved");
+		return "Automated Resolution Reported";
+	}
+	
+	String getCancelledStatusReason() {
+		//return getProperties().getString("remedy.reason.cancelled");
+		return "No longer a Causal CI";
+	}
+	
 	String getStatusNew() {
 		//return getProperties().getString("remedy.status.new");
 		return "New";
@@ -174,49 +228,5 @@ public class DefaultRemedyConfigDao {
 		//return getProperties().getString("remedy.status.cancelled");
 		return "Cancelled";		
 	}
-	
-	String getSummary() {
-		//return getProperties().getString("remedy.summary");
-		return "Opennms Web Service Created Ticket";
-	}
-	
-	String getUrgencyCritical() {
-		//return getProperties().getString("remedy.urgencycritical");
-		return "1-Critical";
-	}
 
-	String getUrgencyHigh() {
-		//return getProperties().getString("remedy.urgencyhigh");
-		return "2-High";
-	}
-
-	String getUrgencyMedium() {
-		//return getProperties().getString("remedy.urgencymedium");
-		return "3-Medium";
-	}
-
-	String getUrgencyLow() {
-		//return getProperties().getString("remedy.urgencylow");
-		return "4-Low";
-	}
-	
-	String getResolution() {
-		//return getProperties().getString("remedy.resolution");
-		return "Chiusura da OpenNMS Web Service";
-	}
-
-	String getOpenStatusReason() {
-		//return getProperties().getString("remedy.openstatusreason");
-		return "Pending Original Incident";
-	}
-	
-	String getResolvedStatusReason() {
-		//return getProperties().getString("remedy.resolvedstatusreason");
-		return "Automated Resolution Reported";
-	}
-	
-	String getCancelledStatusReason() {
-		//return getProperties().getString("remedy.cancelledstatusreason");
-		return "No longer a Causal CI";
-	}
 }
