@@ -141,9 +141,9 @@ public class RemedyTicketerPlugin implements Plugin {
 
 	private State remedyToOpenNMSState(StatusType status) {
 		State state = State.OPEN;
-		if (status.toString().equals(m_configDao.getStatusClosed()) || status.toString().equals(m_configDao.getStatusResolved())) {
+		if (status.toString().equals(StatusType._value6) || status.toString().equals(StatusType._value5)) {
 			state = State.CLOSED;
-		} else if (status.toString().equals(m_configDao.getStatusCancelled()))
+		} else if (status.toString().equals(StatusType._value7))
 			state = State.CANCELLED;
 		return state;
 	}
@@ -168,11 +168,11 @@ public class RemedyTicketerPlugin implements Plugin {
 					log().info("update: Remedy: Cannot find incident with incindent_number: " + ticket.getId());
 					return;
     			}
-    			if (remedy.getStatus().getValue().equals(m_configDao.getStatusCancelled())) {
+    			if (remedy.getStatus().getValue().equals(StatusType._value7)) {
 					log().info("update: Remedy: Ticket Cancelled. Not updating ticket with incindent_number: " + ticket.getId());
     				return;
     			}
-    			if (remedy.getStatus().getValue().equals(m_configDao.getStatusClosed())) {
+    			if (remedy.getStatus().getValue().equals(StatusType._value6)) {
 					log().info("update: Remedy: Ticket Closed. Not updating ticket with incindent_number: " + ticket.getId());
     				return;
     			}
@@ -281,15 +281,15 @@ public class RemedyTicketerPlugin implements Plugin {
 
         switch (state) {
             case OPEN:
-            	inputmap.setStatus(StatusType.fromValue(m_configDao.getStatusPending()));
+            	inputmap.setStatus(StatusType.fromValue(StatusType._value4));
             	inputmap.setStatus_Reason(Status_ReasonType.fromValue(m_configDao.getReOpenStatusReason()));
             	break;
             case CANCELLED:
-            	inputmap.setStatus(StatusType.fromValue(m_configDao.getStatusCancelled()));
+            	inputmap.setStatus(StatusType.fromValue(StatusType._value7));
             	inputmap.setStatus_Reason(Status_ReasonType.fromValue(m_configDao.getCancelledStatusReason()));
             	break;
             case CLOSED:
-            	inputmap.setStatus(StatusType.fromValue(m_configDao.getStatusResolved()));
+            	inputmap.setStatus(StatusType.fromValue(StatusType._value5));
             	inputmap.setStatus_Reason(Status_ReasonType.fromValue(m_configDao.getResolvedStatusReason()));
                 inputmap.setResolution(m_configDao.getResolution());
                 break;

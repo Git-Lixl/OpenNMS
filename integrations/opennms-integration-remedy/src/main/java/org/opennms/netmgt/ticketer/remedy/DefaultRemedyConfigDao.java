@@ -16,6 +16,7 @@ import org.opennms.core.utils.LogUtils;
  */
 public class DefaultRemedyConfigDao {
 
+	Configuration m_config = null;
 	/**
 	 * Retrieves the properties defined in the remedy.properties file.
 	 * 
@@ -25,7 +26,7 @@ public class DefaultRemedyConfigDao {
 	 */
 	
 	private Configuration getProperties() {
-		
+		if (m_config != null) return m_config;
 		String propsFile = new String(System.getProperty("opennms.home") + "/etc/remedy.properties");
 		
 		LogUtils.debugf(this, "loading properties from: %s", propsFile);
@@ -37,7 +38,7 @@ public class DefaultRemedyConfigDao {
 		} catch (final ConfigurationException e) {
 		    LogUtils.debugf(this, e, "Unable to load properties from %s", propsFile);
 		}
-	
+		m_config = config;
 		return config;
 	
 	}
@@ -48,185 +49,148 @@ public class DefaultRemedyConfigDao {
 	 * @return a {@link java.lang.String} object.
 	 */
 	public String getUserName() {
-		//return getProperties().getString("remedy.username");
-		return "opennmstnn";
+		return getProperties().getString("remedy.username");
+		//return "opennmstnn";
 	}
 
 	
 	String getPassword() {
-		//return getProperties().getString("remedy.password");
-		return "TNNwsC4ll";
+		return getProperties().getString("remedy.password");
+		//return "TNNwsC4ll";
 	}
 
 	String getAuthentication() {
-		//return getProperties().getString("remedy.authentication");
-		return "ARSystem";
+		return getProperties().getString("remedy.authentication");
+		//return "ARSystem";
 	}
 
 	String getLocale() {
-		//return getProperties().getString("remedy.locale");		
-		 return "it_IT";
+		return getProperties().getString("remedy.locale");		
+		//return "it_IT";
 	}
 	
 	String getTimeZone() {
-		//return getProperties().getString("remedy.timezone");
-		return "CET";
+		return getProperties().getString("remedy.timezone");
+		//return "CET";
 	}
 	
 	String getEndPoint() {
-		//return getProperties().getString("remedy.endpoint");
-		return "http://172.20.0.76:8180/arsys/services/ARService?server=itts3h&webService=HPD_IncidentInterface_WS";
+		return getProperties().getString("remedy.endpoint");
+		//return "http://172.20.0.76:8180/arsys/services/ARService?server=itts3h&webService=HPD_IncidentInterface_WS";
 	}
 
 	String getPortName() {
-		//return getProperties().getString("remedy.portname");
-		return "HPD_IncidentInterface_WSPortTypeSoap";
+		return getProperties().getString("remedy.portname");
+		//return "HPD_IncidentInterface_WSPortTypeSoap";
 	}
 
 	String getCreateEndPoint() {
-		//return getProperties().getString("remedy.createendpoint");
-		return "http://172.20.0.76:8180/arsys/services/ARService?server=itts3h&webService=HPD_IncidentInterface_Create_WS";
+		return getProperties().getString("remedy.createendpoint");
+		//return "http://172.20.0.76:8180/arsys/services/ARService?server=itts3h&webService=HPD_IncidentInterface_Create_WS";
 	}
 
 	String getCreatePortName() {
-		//return getProperties().getString("remedy.createportname");
-		return "HPD_IncidentInterface_Create_WSPortTypeSoap";
+		return getProperties().getString("remedy.createportname");
+		//return "HPD_IncidentInterface_Create_WSPortTypeSoap";
 	}
 
 	List<String> getTargetGroups() {
-		//return getProperties().getString("remedy.targetgroups");
 		List<String> targetGroups=new ArrayList<String>();
-		targetGroups.add("TNnet");
-		targetGroups.add("Sensi");
-		targetGroups.add("Frizen");
+		for (String group: 	getProperties().getString("remedy.targetgroups").split(":")) {
+			targetGroups.add(group);
+		}
 		return targetGroups;
 	}
 	
 	String getAssignedGroup() {
-		//return getProperties().getString("remedy.assignedgroup");
-		return "TNnet";
+		return getProperties().getString("remedy.assignedgroup");
+		//return "TNnet";
 	}
 
 	String getFirstName() {
-		//return getProperties().getString("remedy.firstname");
-		return "Opennms";
+		return getProperties().getString("remedy.firstname");
+		//return "Opennms";
 	}
 
 	String getLastName() {
-		//return getProperties().getString("remedy.lastname");
-		return "Tnn";
+		return getProperties().getString("remedy.lastname");
+		//return "Tnn";
 	}
 
 	String getServiceCI() {
-		//return getProperties().getString("remedy.serviceCI");
-	 //return "Trentino Network Event Management [I.TNEVT]";
-	 return "Trentino Network Connettivit� [C.TNNCN]";
+		return getProperties().getString("remedy.serviceCI");
+		//return "Trentino Network Event Management [I.TNEVT]";
+		//return "Trentino Network Connettivit� [C.TNNCN]";
 	}
 
 	String getServiceCIReconID() {
-		//return getProperties().getString("remedy.serviceCIReconID");
+		return getProperties().getString("remedy.serviceCIReconID");
 		//return "RE00505688005eP8Z3UAsLJIHg6EoR";
-		return "RE00505688005e3s-nTg4KEI5gFSov";
+		//return "RE00505688005e3s-nTg4KEI5gFSov";
 	}
 		
 	String getAssignedSupportCompany() {
-		//return getProperties().getString("remedy.assignedsupportcompany");
-		return "Trentino Network srl";
+		return getProperties().getString("remedy.assignedsupportcompany");
+		//return "Trentino Network srl";
 	}
 
 	String getAssignedSupportOrganization() {
-		//return getProperties().getString("remedy.assignedsupportorganization");
-		return "Centro Gestione Rete";
+		return getProperties().getString("remedy.assignedsupportorganization");
+		//return "Centro Gestione Rete";
 	}
 
 	String getCategorizationtier1() {
-		//return getProperties().getString("remedy.categorizationtier1");
-		return "Incident";
+		return getProperties().getString("remedy.categorizationtier1");
+		//return "Incident";
 	}
 
 	String getCategorizationtier2() {
-		//return getProperties().getString("remedy.categorizationtier2");
-		return "Generic";
+		return getProperties().getString("remedy.categorizationtier2");
+		//return "Generic";
 	}
 
 	String getCategorizationtier3() {
-		//return getProperties().getString("remedy.categorizationtier3");
-		return "Non bloccante";
+		return getProperties().getString("remedy.categorizationtier3");
+		//return "Non bloccante";
 	}
 	
 	String getServiceType() {
-		//return getProperties().getString("remedy.serviceType");
-	 return "Infrastructure Event";
+		return getProperties().getString("remedy.serviceType");
+		//return "Infrastructure Event";
 	}
 	
 	String getReportedSource() {
-		//return getProperties().getString("remedy.reportedSource");
-	 return "Systems Management";
+		return getProperties().getString("remedy.reportedSource");
+		//return "Systems Management";
 	}
 
 	String getImpact() {
-		//return getProperties().getString("remedy.impact");
-		return "4-Minor/Localized";
+		return getProperties().getString("remedy.impact");
+		//return "4-Minor/Localized";
 	}
 
 	String getUrgency() {
-		//return getProperties().getString("remedy.urgency");
-		return "4-Low";
+		return getProperties().getString("remedy.urgency");
+		//return "4-Low";
 	}
 	
 	String getResolution() {
-		//return getProperties().getString("remedy.resolution");
-		return "Chiusura da OpenNMS Web Service";
+		return getProperties().getString("remedy.resolution");
+		//return "Chiusura da OpenNMS Web Service";
 	}
 
 	String getReOpenStatusReason() {
-		//return getProperties().getString("remedy.reason.open");
-		return "Pending Original Incident";
+		return getProperties().getString("remedy.reason.reopen");
+		//return "Pending Original Incident";
 	}
 	
 	String getResolvedStatusReason() {
-		//return getProperties().getString("remedy.reason.resolved");
-		return "Automated Resolution Reported";
+		return getProperties().getString("remedy.reason.resolved");
+		//return "Automated Resolution Reported";
 	}
 	
 	String getCancelledStatusReason() {
-		//return getProperties().getString("remedy.reason.cancelled");
-		return "No longer a Causal CI";
-	}
-	
-	String getStatusNew() {
-		//return getProperties().getString("remedy.status.new");
-		return "New";
-	}
-
-	String getStatusAssigned() {
-		//return getProperties().getString("remedy.status.assigned");
-		return "Assigned";
-	}
-
-	String getStatusInProgress() {
-		//return getProperties().getString("remedy.status.inprogress");
-		return "In Progress";
-	}
-
-	String getStatusPending() {
-		//return getProperties().getString("remedy.status.pending");
-		return "Pending";
-	}
-
-	String getStatusResolved() {
-		//return getProperties().getString("remedy.status.resolved");
-		return "Resolved";
-	}
-	
-	String getStatusClosed() {
-		//return getProperties().getString("remedy.status.closed");
-		return "Closed";		
-	}
-
-	String getStatusCancelled() {
-		//return getProperties().getString("remedy.status.cancelled");
-		return "Cancelled";		
-	}
-
+		return getProperties().getString("remedy.reason.cancelled");
+		//return "No longer a Causal CI";
+	}	
 }

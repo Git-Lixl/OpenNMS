@@ -11,10 +11,7 @@ import org.opennms.api.integration.ticketing.Ticket.State;
 
 public class RemedyTicketerPluginTest extends TestCase {
 
-	
-	// defaults for ticket	
-	DefaultRemedyConfigDao m_configDao;
-	
+		
 	RemedyTicketerPlugin m_ticketer;
 	
 	Ticket m_ticket;
@@ -22,17 +19,16 @@ public class RemedyTicketerPluginTest extends TestCase {
 	String m_ticketId;
 	 @Override
 	 protected void setUp() throws Exception {
-	        
+
+	        System.setProperty("opennms.home", "src" + File.separatorChar + "test" + File.separatorChar + "opennms-home");
+
 	        m_ticketer = new RemedyTicketerPlugin();
-	        
-	        m_configDao = new DefaultRemedyConfigDao();
-	        
+	        	        
 	        m_ticket = new Ticket();
 	        m_ticket.setState(Ticket.State.OPEN);
 	        m_ticket.setSummary("Test OpenNMS Integration");
 	        m_ticket.setDetails("Created by Axis java client. Date: "+ new Date());
 			m_ticket.setUser("antonio@opennms.it");
-	        System.setProperty("opennms.home", "src" + File.separatorChar + "test" + File.separatorChar + "opennms-home");
 			
 	}
 
