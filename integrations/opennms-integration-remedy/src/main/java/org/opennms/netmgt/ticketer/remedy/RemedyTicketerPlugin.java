@@ -82,6 +82,12 @@ public class RemedyTicketerPlugin implements Plugin {
 	private final static String ACTION_CREATE="CREATE";
 	private final static String ACTION_MODIFY="MODIFY";
 
+    private static final String ATTRIBUTE_ALARM_UEI_ID = "alarmUei";
+    public final static String ATTRIBUTE_NODE_LABEL_ID = "nodelabel";
+    private final static String ATTRIBUTE_USER_COMMENT_ID = "remedy.user.comment";
+	private final static String ATTRIBUTE_URGENCY_ID="remedy.urgency";
+	private final static String ATTRIBUTE_ASSIGNED_GROUP_ID="remedy.assignedgroup";
+    
 	private final static int MAX_SUMMARY_CHARS=255;
 	// Remember:
 	// Summary ---> alarm logmsg
@@ -92,7 +98,7 @@ public class RemedyTicketerPlugin implements Plugin {
     // the OnmsAlarm attributes.
 	
 	/**
-	 * <p>Constructor for OtrsTicketerPlugin.</p>
+	 * <p>Constructor for RemedyTicketerPlugin.</p>
 	 */
 	public RemedyTicketerPlugin() {
 		
@@ -252,28 +258,54 @@ public class RemedyTicketerPlugin implements Plugin {
     }
     
     private UrgencyType getUrgency(Ticket ticket) {
-    	//TODO set this according to some ticket value....in the future
-    	// implementation (should be carried by the ticket
-    	return UrgencyType.fromValue(m_configDao.getUrgency());
+
+    	UrgencyType urgency;
+    	try {
+    	if (ticket.getAttribute(ATTRIBUTE_URGENCY_ID) != null )
+    		urgency = UrgencyType.fromValue(ticket.getAttribute(ATTRIBUTE_URGENCY_ID));
+    	else 
+    		urgency = UrgencyType.fromValue(m_configDao.getUrgency());
+    	} catch (IllegalArgumentException e) {
+        	return  UrgencyType.value4;
+    	}
+    	return urgency;
     }
     
     private String getAssignedGroup(Ticket ticket) {
-    	//TODO set this according to some ticket value....in the future
-    	// implementation (should be carried by the ticket)
+    	if (ticket.getAttribute(ATTRIBUTE_ASSIGNED_GROUP_ID) != null) {
+    		for ( String group : m_configDao.getTargetGroups()) {
+    			if (group.equals(ticket.getAttribute(ATTRIBUTE_ASSIGNED_GROUP_ID)))
+    				return group;
+    		}
+    	}
     	return m_configDao.getAssignedGroup();
     }
     
     private String getSummary(Ticket ticket) {
-    	//TODO set this according to some ticket value....in the future
-    	// implementation (should be carried by the ticket)
-    	if (ticket.getSummary().length() > MAX_SUMMARY_CHARS)
-    		return ticket.getSummary().substring(MAX_SUMMARY_CHARS-1);
-    	return ticket.getSummary();
+    	StringBuffer summary = new StringBuffer();
+    	if (ticket.getAttribute(ATTRIBUTE_NODE_LABEL_ID) != null)
+    		summary.append(ticket.getAttribute(ATTRIBUTE_NODE_LABEL_ID));
+    	if (ticket.getAttribute(ATTRIBUTE_ALARM_UEI_ID) != null )
+    		summary.append(ticket.getAttribute(ATTRIBUTE_ALARM_UEI_ID));
+    	summary.append(ticket.getSummary());
+    	if (summary.length() > MAX_SUMMARY_CHARS)
+    		return summary.substring(0,MAX_SUMMARY_CHARS-1);
+    	return summary.toString();
     }
     
     private String getNotes(Ticket ticket) {
-    	//TODO Add more notes here
-    	return "Ticket opened by opennms user: " + ticket.getUser() + "\n Ticket Detail: " + ticket.getDetails();
+    	StringBuffer notes = new StringBuffer("OpenNMS automatic generated ticket for remedy");
+    	notes.append("Ticket opened by opennms user: ");
+    	notes.append(ticket.getUser());
+    	if (ticket.getAttribute(ATTRIBUTE_USER_COMMENT_ID) != null ) {
+    	 	notes.append("opennms user comment: ");
+     		notes.append(ticket.getAttribute(ATTRIBUTE_USER_COMMENT_ID));
+    	}
+    	notes.append("OpenNMS logmsg: ");
+    	notes.append(ticket.getSummary());
+    	notes.append("OpenNMS descr: ");
+    	notes.append(ticket.getDetails());
+    	return notes.toString();
     }
     
     private SetInputMap opennmsToRemedyState(SetInputMap inputmap, State state) {
