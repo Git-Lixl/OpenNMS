@@ -296,13 +296,16 @@ public class RemedyTicketerPlugin implements Plugin {
     	StringBuffer notes = new StringBuffer("OpenNMS generated ticket by user: ");
     	notes.append(ticket.getUser());
     	notes.append("\n");
+    	notes.append("\n");
     	if (ticket.getAttribute(ATTRIBUTE_USER_COMMENT_ID) != null ) {
     	 	notes.append("OpenNMS user comment: ");
      		notes.append(ticket.getAttribute(ATTRIBUTE_USER_COMMENT_ID));
         	notes.append("\n");
+        	notes.append("\n");
     	}
     	notes.append("OpenNMS logmsg: ");
     	notes.append(ticket.getSummary());
+    	notes.append("\n");
     	notes.append("\n");
     	notes.append("OpenNMS descr: ");
     	notes.append(ticket.getDetails());
