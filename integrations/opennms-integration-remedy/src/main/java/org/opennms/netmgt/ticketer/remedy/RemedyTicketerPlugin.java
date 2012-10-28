@@ -82,13 +82,12 @@ public class RemedyTicketerPlugin implements Plugin {
 	private final static String ACTION_CREATE="CREATE";
 	private final static String ACTION_MODIFY="MODIFY";
 
-    private static final String ATTRIBUTE_ALARM_UEI_ID = "alarmUei";
     public final static String ATTRIBUTE_NODE_LABEL_ID = "nodelabel";
     private final static String ATTRIBUTE_USER_COMMENT_ID = "remedy.user.comment";
 	private final static String ATTRIBUTE_URGENCY_ID="remedy.urgency";
 	private final static String ATTRIBUTE_ASSIGNED_GROUP_ID="remedy.assignedgroup";
     
-	private final static int MAX_SUMMARY_CHARS=255;
+	private final static int MAX_SUMMARY_CHARS=99;
 	// Remember:
 	// Summary ---> alarm logmsg
 	// Details ---> alarm descr
@@ -283,10 +282,10 @@ public class RemedyTicketerPlugin implements Plugin {
     
     private String getSummary(Ticket ticket) {
     	StringBuffer summary = new StringBuffer();
-    	if (ticket.getAttribute(ATTRIBUTE_NODE_LABEL_ID) != null)
+    	if (ticket.getAttribute(ATTRIBUTE_NODE_LABEL_ID) != null) {
     		summary.append(ticket.getAttribute(ATTRIBUTE_NODE_LABEL_ID));
-    	if (ticket.getAttribute(ATTRIBUTE_ALARM_UEI_ID) != null )
-    		summary.append(ticket.getAttribute(ATTRIBUTE_ALARM_UEI_ID));
+    		summary.append(": OpenNMS: ");
+    	}
     	summary.append(ticket.getSummary());
     	if (summary.length() > MAX_SUMMARY_CHARS)
     		return summary.substring(0,MAX_SUMMARY_CHARS-1);
@@ -294,15 +293,17 @@ public class RemedyTicketerPlugin implements Plugin {
     }
     
     private String getNotes(Ticket ticket) {
-    	StringBuffer notes = new StringBuffer("OpenNMS automatic generated ticket for remedy");
-    	notes.append("Ticket opened by opennms user: ");
+    	StringBuffer notes = new StringBuffer("OpenNMS generated ticket by user: ");
     	notes.append(ticket.getUser());
+    	notes.append("\n");
     	if (ticket.getAttribute(ATTRIBUTE_USER_COMMENT_ID) != null ) {
-    	 	notes.append("opennms user comment: ");
+    	 	notes.append("OpenNMS user comment: ");
      		notes.append(ticket.getAttribute(ATTRIBUTE_USER_COMMENT_ID));
+        	notes.append("\n");
     	}
     	notes.append("OpenNMS logmsg: ");
     	notes.append(ticket.getSummary());
+    	notes.append("\n");
     	notes.append("OpenNMS descr: ");
     	notes.append(ticket.getDetails());
     	return notes.toString();
