@@ -36,6 +36,7 @@ package org.opennms.netmgt.ticketd;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.opennms.api.integration.ticketing.Plugin;
@@ -100,7 +101,7 @@ public class DefaultTicketerServiceLayerIntegrationTest extends
         assertNull(alarm.getTTicketState());
         assertNull(alarm.getTTicketId());
         
-        m_ticketerServiceLayer.createTicketForAlarm(alarmId);
+        m_ticketerServiceLayer.createTicketForAlarm(alarmId, new HashMap<String, String>());
         
         getAlarmDao().flush();
         
