@@ -87,14 +87,22 @@ public class DefaultRemedyConfigDao {
 
 	List<String> getTargetGroups() {
 		List<String> targetGroups=new ArrayList<String>();
-		for (String group: 	getProperties().getString("remedy.targetgroups").split(":")) {
-			targetGroups.add(group);
+		if (getProperties().containsKey("remedy.targetgroups")) {
+			for (String group: 	getProperties().getString("remedy.targetgroups").split(":")) {
+				targetGroups.add(group);
+			}
 		}
 		return targetGroups;
 	}
 	
 	String getAssignedGroup() {
 		return getProperties().getString("remedy.assignedgroup");
+	}
+
+	String getAssignedGroup(String targetGroup) {
+		if (getProperties().containsKey("remedy.assignedgroup."+targetGroup))
+			return getProperties().getString("remedy.assignedgroup."+targetGroup);
+		return getAssignedGroup();
 	}
 
 	String getFirstName() {
@@ -117,8 +125,20 @@ public class DefaultRemedyConfigDao {
 		return getProperties().getString("remedy.assignedsupportcompany");
 	}
 
+	String getAssignedSupportCompany(String targetGroup) {
+		if (getProperties().containsKey("remedy.assignedsupportcompany."+targetGroup))
+			return getProperties().getString("remedy.assignedsupportcompany."+targetGroup);
+		return getAssignedSupportCompany();
+	}
+
 	String getAssignedSupportOrganization() {
 		return getProperties().getString("remedy.assignedsupportorganization");
+	}
+
+	String getAssignedSupportOrganization(String targetGroup) {
+		if (getProperties().containsKey("remedy.assignedsupportorganization."+targetGroup))
+			return getProperties().getString("remedy.assignedsupportorganization."+targetGroup);
+		return getAssignedSupportOrganization();
 	}
 
 	String getCategorizationtier1() {

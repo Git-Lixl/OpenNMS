@@ -274,11 +274,32 @@ public class RemedyTicketerPlugin implements Plugin {
     	if (ticket.getAttribute(ATTRIBUTE_ASSIGNED_GROUP_ID) != null) {
     		for ( String group : m_configDao.getTargetGroups()) {
     			if (group.equals(ticket.getAttribute(ATTRIBUTE_ASSIGNED_GROUP_ID)))
-    				return group;
+    				return m_configDao.getAssignedGroup(group);
     		}
     	}
     	return m_configDao.getAssignedGroup();
     }
+
+    private String getAssignedSupportCompany(Ticket ticket) {
+    	if (ticket.getAttribute(ATTRIBUTE_ASSIGNED_GROUP_ID) != null) {
+    		for ( String group : m_configDao.getTargetGroups()) {
+    			if (group.equals(ticket.getAttribute(ATTRIBUTE_ASSIGNED_GROUP_ID)))
+    				return m_configDao.getAssignedSupportCompany(group);
+    		}
+    	}
+    	return m_configDao.getAssignedSupportCompany();
+    }
+
+    private String getAssignedSupportOrganization(Ticket ticket) {
+    	if (ticket.getAttribute(ATTRIBUTE_ASSIGNED_GROUP_ID) != null) {
+    		for ( String group : m_configDao.getTargetGroups()) {
+    			if (group.equals(ticket.getAttribute(ATTRIBUTE_ASSIGNED_GROUP_ID)))
+    				return m_configDao.getAssignedSupportOrganization(group);
+    		}
+    	}
+    	return m_configDao.getAssignedSupportOrganization();
+    }
+
     
     private String getSummary(Ticket ticket) {
     	StringBuffer summary = new StringBuffer();
@@ -388,8 +409,8 @@ public class RemedyTicketerPlugin implements Plugin {
 		createInputMap.setCategorization_Tier_2(m_configDao.getCategorizationtier2());
 		createInputMap.setCategorization_Tier_3(m_configDao.getCategorizationtier3());
 		createInputMap.setAssigned_Group(getAssignedGroup(newTicket));
-		createInputMap.setAssigned_Support_Company(m_configDao.getAssignedSupportCompany());
-		createInputMap.setAssigned_Support_Organization(m_configDao.getAssignedSupportOrganization());
+		createInputMap.setAssigned_Support_Company(getAssignedSupportCompany(newTicket));
+		createInputMap.setAssigned_Support_Organization(getAssignedSupportOrganization(newTicket));
 		return createInputMap;
 
 		
