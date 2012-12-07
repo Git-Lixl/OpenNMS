@@ -7,12 +7,12 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd
 		http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-	<include file="1.7.1/ackd.xml" />
-	<include file="1.7.1/assets.xml" />
-	<include file="1.7.1/datalinkinterface.xml" />
-	<include file="1.7.1/elements.xml" />
-	<include file="1.7.1/maps.xml" />
-	<include file="1.7.1/snmpcollect.xml" />
+	<include relativeToChangelogFile="true" file="1.7.1/ackd.xml" />
+	<include relativeToChangelogFile="true" file="1.7.1/assets.xml" />
+	<include relativeToChangelogFile="true" file="1.7.1/datalinkinterface.xml" />
+	<include relativeToChangelogFile="true" file="1.7.1/elements.xml" />
+	<include relativeToChangelogFile="true" file="1.7.1/maps.xml" />
+	<include relativeToChangelogFile="true" file="1.7.1/snmpcollect.xml" />
 
 	<!-- miscellaneous stuff -->
 	<changeSet author="rangerrick" id="1.7.1-expand-snmpPhysAddr">

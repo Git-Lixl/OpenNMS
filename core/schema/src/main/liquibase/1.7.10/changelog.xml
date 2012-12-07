@@ -7,7 +7,7 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd
 		http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-	<include file="1.7.10/reportcatalog.xml" />
+	<include relativeToChangelogFile="true" file="1.7.10/reportcatalog.xml" />
 
 	<changeSet author="jsartin" id="1.7.10-quartz-priority">
 

@@ -7,46 +7,46 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd
 		http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-	<include file="1.6.0/tables/serverMap.xml" />
-	<include file="1.6.0/tables/serviceMap.xml" />
-	<include file="1.6.0/tables/distPoller.xml" />
-	<include file="1.6.0/tables/node.xml" />
-	<include file="1.6.0/tables/snmpInterface.xml" />
-	<include file="1.6.0/tables/ipInterface.xml" />
-	<include file="1.6.0/tables/service.xml" />
-	<include file="1.6.0/tables/ifservices.xml" />
-	<include file="1.6.0/tables/events.xml" />
-	<include file="1.6.0/tables/outages.xml" />
-	<include file="1.6.0/tables/vulnerabilities.xml" />
-	<include file="1.6.0/tables/vulnplugins.xml" />
-	<include file="1.6.0/tables/notifications.xml" />
-	<include file="1.6.0/tables/usersnotified.xml" />
-	<include file="1.6.0/tables/alarms.xml" />
-	<include file="1.6.0/tables/alarm_attributes.xml" />
-	<include file="1.6.0/tables/assets.xml" />
-	<include file="1.6.0/tables/categories.xml" />
-	<include file="1.6.0/tables/category_node.xml" />
-	<include file="1.6.0/tables/pathoutage.xml" />
-	<include file="1.6.0/tables/demandpolls.xml" />
-	<include file="1.6.0/tables/pollresults.xml" />
-	<include file="1.6.0/tables/location_monitors.xml" />
-	<include file="1.6.0/tables/location_monitor_details.xml" />
-	<include file="1.6.0/tables/location_specific_status_changes.xml" />
-	<include file="1.6.0/tables/applications.xml" />
-	<include file="1.6.0/tables/application_service_map.xml" />
-	<include file="1.6.0/tables/atinterface.xml" />
-	<include file="1.6.0/tables/vlan.xml" />
-	<include file="1.6.0/tables/stpnode.xml" />
-	<include file="1.6.0/tables/stpinterface.xml" />
-	<include file="1.6.0/tables/iprouteinterface.xml" />
-	<include file="1.6.0/tables/datalinkinterface.xml" />
-	<include file="1.6.0/tables/inventory.xml" />
-	<include file="1.6.0/tables/map.xml" />
-	<include file="1.6.0/tables/element.xml" />
-	<include file="1.6.0/tables/reportlocator.xml" />
-	<include file="1.6.0/tables/statisticsreport.xml" />
-	<include file="1.6.0/tables/resourcereference.xml" />
-	<include file="1.6.0/tables/statisticsreportdata.xml" />
-	<include file="1.6.0/tables/quartz.xml" />
+	<include relativeToChangelogFile="true" file="tables/serverMap.xml" />
+	<include relativeToChangelogFile="true" file="tables/serviceMap.xml" />
+	<include relativeToChangelogFile="true" file="tables/distPoller.xml" />
+	<include relativeToChangelogFile="true" file="tables/node.xml" />
+	<include relativeToChangelogFile="true" file="tables/snmpInterface.xml" />
+	<include relativeToChangelogFile="true" file="tables/ipInterface.xml" />
+	<include relativeToChangelogFile="true" file="tables/service.xml" />
+	<include relativeToChangelogFile="true" file="tables/ifservices.xml" />
+	<include relativeToChangelogFile="true" file="tables/events.xml" />
+	<include relativeToChangelogFile="true" file="tables/outages.xml" />
+	<include relativeToChangelogFile="true" file="tables/vulnerabilities.xml" />
+	<include relativeToChangelogFile="true" file="tables/vulnplugins.xml" />
+	<include relativeToChangelogFile="true" file="tables/notifications.xml" />
+	<include relativeToChangelogFile="true" file="tables/usersnotified.xml" />
+	<include relativeToChangelogFile="true" file="tables/alarms.xml" />
+	<include relativeToChangelogFile="true" file="tables/alarm_attributes.xml" />
+	<include relativeToChangelogFile="true" file="tables/assets.xml" />
+	<include relativeToChangelogFile="true" file="tables/categories.xml" />
+	<include relativeToChangelogFile="true" file="tables/category_node.xml" />
+	<include relativeToChangelogFile="true" file="tables/pathoutage.xml" />
+	<include relativeToChangelogFile="true" file="tables/demandpolls.xml" />
+	<include relativeToChangelogFile="true" file="tables/pollresults.xml" />
+	<include relativeToChangelogFile="true" file="tables/location_monitors.xml" />
+	<include relativeToChangelogFile="true" file="tables/location_monitor_details.xml" />
+	<include relativeToChangelogFile="true" file="tables/location_specific_status_changes.xml" />
+	<include relativeToChangelogFile="true" file="tables/applications.xml" />
+	<include relativeToChangelogFile="true" file="tables/application_service_map.xml" />
+	<include relativeToChangelogFile="true" file="tables/atinterface.xml" />
+	<include relativeToChangelogFile="true" file="tables/vlan.xml" />
+	<include relativeToChangelogFile="true" file="tables/stpnode.xml" />
+	<include relativeToChangelogFile="true" file="tables/stpinterface.xml" />
+	<include relativeToChangelogFile="true" file="tables/iprouteinterface.xml" />
+	<include relativeToChangelogFile="true" file="tables/datalinkinterface.xml" />
+	<include relativeToChangelogFile="true" file="tables/inventory.xml" />
+	<include relativeToChangelogFile="true" file="tables/map.xml" />
+	<include relativeToChangelogFile="true" file="tables/element.xml" />
+	<include relativeToChangelogFile="true" file="tables/reportlocator.xml" />
+	<include relativeToChangelogFile="true" file="tables/statisticsreport.xml" />
+	<include relativeToChangelogFile="true" file="tables/resourcereference.xml" />
+	<include relativeToChangelogFile="true" file="tables/statisticsreportdata.xml" />
+	<include relativeToChangelogFile="true" file="tables/quartz.xml" />
 
 </databaseChangeLog>
