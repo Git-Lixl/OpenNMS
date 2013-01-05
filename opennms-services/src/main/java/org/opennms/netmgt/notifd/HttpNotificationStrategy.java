@@ -54,6 +54,7 @@ import org.opennms.core.utils.MatchTable;
 import org.opennms.core.utils.PropertiesUtils;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.DataSourceFactory;
+import org.opennms.netmgt.config.NotificationManager;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -89,9 +90,8 @@ public class HttpNotificationStrategy implements NotificationStrategy {
             log().info("send: No \"post-\" arguments..., continuing with an HTTP GET using URL: "+url);
         } else {
             log().info("send: Found \"post-\" arguments..., continuing with an HTTP POST using URL: "+url);
-            for (Iterator<Argument> it = m_arguments.iterator(); it.hasNext();) {
-                Argument arg = it.next();
-                log().debug("send: post argument: "+arg.getSwitch() +" = "+arg.getValue());
+            for (int i=0; i<posts.length; i++) {
+                log().debug("send: post argument: "+posts[i].getName() +" = "+posts[i].getValue());
             }
             method = new PostMethod(url);
             ((PostMethod)method).addParameters(posts);
@@ -154,19 +154,63 @@ public class HttpNotificationStrategy implements NotificationStrategy {
             if (arg.getValue() == null) {
                 arg.setValue("");
             }
-            posts[cnt++] = new NameValuePair(argSwitch, arg.getValue().equals("-tm") ? getMessage() : arg.getValue());
+            posts[cnt++] = new NameValuePair(argSwitch, getValue(arg.getValue()));
         }
         return posts;
     }
 
-    private String getMessage() {
-        String message = "no notification text message defined for the \"-tm\" switch.";
+    private String getValue(String argValue) {
+    	if (argValue.equals(NotificationManager.PARAM_DESTINATION))
+    		return getNotificationValue(NotificationManager.PARAM_DESTINATION);
+    	if (argValue.equals(NotificationManager.PARAM_EMAIL))
+    		return getNotificationValue(NotificationManager.PARAM_EMAIL);
+    	if (argValue.equals(NotificationManager.PARAM_HOME_PHONE))
+    		return getNotificationValue(NotificationManager.PARAM_HOME_PHONE);
+    	if (argValue.equals(NotificationManager.PARAM_INTERFACE))
+    		return getNotificationValue(NotificationManager.PARAM_INTERFACE);
+    	if (argValue.equals(NotificationManager.PARAM_MICROBLOG_USERNAME))
+    		return getNotificationValue(NotificationManager.PARAM_MICROBLOG_USERNAME);
+    	if (argValue.equals(NotificationManager.PARAM_MOBILE_PHONE))
+    		return getNotificationValue(NotificationManager.PARAM_MOBILE_PHONE);
+    	if (argValue.equals(NotificationManager.PARAM_NODE))
+    		return getNotificationValue(NotificationManager.PARAM_NODE);
+    	if (argValue.equals(NotificationManager.PARAM_NUM_MSG))
+    		return getNotificationValue(NotificationManager.PARAM_NUM_MSG);
+    	if (argValue.equals(NotificationManager.PARAM_NUM_PAGER_PIN))
+    		return getNotificationValue(NotificationManager.PARAM_NUM_PAGER_PIN);
+    	if (argValue.equals(NotificationManager.PARAM_PAGER_EMAIL))
+    		return getNotificationValue(NotificationManager.PARAM_PAGER_EMAIL);
+    	if (argValue.equals(NotificationManager.PARAM_RESPONSE))
+    		return getNotificationValue(NotificationManager.PARAM_RESPONSE);
+    	if (argValue.equals(NotificationManager.PARAM_SERVICE))
+    		return getNotificationValue(NotificationManager.PARAM_SERVICE);
+    	if (argValue.equals(NotificationManager.PARAM_SUBJECT))
+    		return getNotificationValue(NotificationManager.PARAM_SUBJECT);
+    	if (argValue.equals(NotificationManager.PARAM_TEXT_MSG))
+    		return getNotificationValue(NotificationManager.PARAM_TEXT_MSG);
+    	if (argValue.equals(NotificationManager.PARAM_TEXT_PAGER_PIN))
+    		return getNotificationValue(NotificationManager.PARAM_TEXT_PAGER_PIN);
+    	if (argValue.equals(NotificationManager.PARAM_TUI_PIN))
+    		return getNotificationValue(NotificationManager.PARAM_TUI_PIN);
+    	if (argValue.equals(NotificationManager.PARAM_TYPE))
+    		return getNotificationValue(NotificationManager.PARAM_TYPE);
+    	if (argValue.equals(NotificationManager.PARAM_WORK_PHONE))
+    		return getNotificationValue(NotificationManager.PARAM_WORK_PHONE);
+    	if (argValue.equals(NotificationManager.PARAM_XMPP_ADDRESS))
+    		return getNotificationValue(NotificationManager.PARAM_XMPP_ADDRESS);
+
+
+
+    	return argValue;
+    }
+
+    private String getNotificationValue(String notificationManagerParamString) {
+        String message = "no notification text message defined for the \""+notificationManagerParamString+"\" switch.";
         for (Iterator<Argument> it = m_arguments.iterator(); it.hasNext();) {
             Argument arg = it.next();
-            if (arg.getSwitch().equals("-tm"))
+            if (arg.getSwitch().equals(notificationManagerParamString))
                 message = arg.getValue();
         }
-        log().debug("getMessage: "+message);
         return message;
     }
 
