@@ -77,8 +77,8 @@ public class HttpNotificationStrategy implements NotificationStrategy {
         
         String url = getUrl();
         if (url == null) {
-            log().warn("send: url argument is null, HttpNotification requires a URL");
-            return 1;
+        		log().warn("send: url argument is null, HttpNotification requires a URL");
+        		return 1;
         }
         
         HttpClient client = new HttpClient();
@@ -230,11 +230,22 @@ public class HttpNotificationStrategy implements NotificationStrategy {
     }
 
     private String getUrl() {
-        return getSwitchValue("url");
+    	String url = getSwitchValue("url");
+        if ( url == null )
+        	url = getUrlAsPrefix();
+        return url;
     }
 
+    private String getUrlAsPrefix() {
+       	String url = null; 
+    	for (Argument arg: getArgsByPrefix("url")) {
+    		log().debug("Found url switch: " + arg.getSwitch() + " with value: " + arg.getValue());
+    		url = arg.getValue();
+    	}
+    	return url;
+    }
     /**
-     * Helper method to look into the Argument list and return the associaated value.
+     * Helper method to look into the Argument list and return the associated value.
      * If the value is an empty String, this method returns null.
      * @param argSwitch
      * @return
