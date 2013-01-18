@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<!-- Syslog message match definitions for Cisco UCM -->
+
+<syslogd-configuration-group>
+    <ueiList>
+        <!--
+        Nov 09 2012 19:10:02.978 UTC :  %UC_DRF-3-DRFSftpFailure: %[Reason=DRF sftp operation has failed: ][AppID=Cisco DRF Master][ClusterID=][NodeID=CUCM-85PUB]: DRF sftp operation has failed.
+        -->
+        <ueiMatch>
+            <match type="regex" expression="^%UC_DRF-3-DRFSftpFailure: %\[Reason=(.*?)\]\[AppID=(.*?)\]\[ClusterID=(.*?)\]\[NodeID=(.*?)\].*$" />
+            <uei>uei.opennms.org/vendor/cisco/syslog/UCM/drfSftpFailure</uei>
+            <parameter-assignment matching-group="1" parameter-name="ucmReason" />
+            <parameter-assignment matching-group="2" parameter-name="ucmAppID" />
+            <parameter-assignment matching-group="3" parameter-name="ucmClusterID" />
+            <parameter-assignment matching-group="4" parameter-name="ucmNodeID" />
+        </ueiMatch>
+    </ueiList>
+</syslogd-configuration-group>

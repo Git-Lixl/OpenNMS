@@ -1,0 +1,20 @@
+<events>
+    <!-- Begin syslog event definitions for Cisco UCM  -->
+    <event>
+        <uei>uei.opennms.org/vendor/cisco/syslog/UCM/drfSftpFailure</uei>
+        <event-label>Cisco UCM-defined syslog event: DRF SFTP operation failed</event-label>
+        <descr>
+            &lt;p&gt;A DRF SFTP operation has failed.&lt;br&gt;
+            Reason: %parm[ucmReason]% &lt;br&gt;
+            AppID: %parm[ucmAppID]% &lt;br&gt;
+            ClusterId: %parm[ucmClusterID]% &lt;br&gt;
+            NodeID: %parm[ucmNodeID]% &lt;br&gt;
+            &lt;/p&gt;
+        </descr>
+        <logmsg dest='logndisplay'>
+            &lt;p&gt;A DRF STFP operation failed in UCM application %parm[ucmAppID]% on node %parm[ucmNodeID]% in cluster %parm[ucmClusterID]% (OpenNMS node %nodelabel%). The reason provided was: %parm[ucmReason]%.
+        </logmsg>
+        <severity>Warning</severity>
+        <alarm-data reduction-key="%uei%:%dpname%:%nodeid%:%interface%:%parm[ucmClusterID]%:%parm[ucmNodeID]%:%parm[ucmAppID]%" alarm-type="3" auto-clean="false" />
+    </event>
+</events>
