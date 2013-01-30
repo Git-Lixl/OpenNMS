@@ -233,7 +233,7 @@ public class Pinger {
         }
         
         for (int i = 0; i < count; i++) {
-            PingRequest request = new PingRequest(host, (short) i, timeout, DEFAULT_PACKETSIZE, 0, cb);
+            PingRequest request = new PingRequest(host, (short) i, timeout,0,DEFAULT_PACKETSIZE, cb);
             s_pingTracker.sendRequest(request);
             Thread.sleep(pingInterval);
         }
