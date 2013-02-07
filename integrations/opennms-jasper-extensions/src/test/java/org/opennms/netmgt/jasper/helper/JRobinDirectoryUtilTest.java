@@ -51,7 +51,6 @@ public class JRobinDirectoryUtilTest {
         assertEquals("src/test/resources/share/rrd/snmp/9/me1-0002baaacffe/ifOutOctets.jrb", lookup.getIfOutOctetsJrb(RRD_DIRECTORY, NODE_ID, INTERFACE));
     }
     
-    
     @Test
     public void testGetInterfaceDirectory() {
         JRobinDirectoryUtil lookup = new JRobinDirectoryUtil();

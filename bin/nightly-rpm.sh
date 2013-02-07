@@ -1,15 +1,12 @@
 #!/bin/bash -e
 
 MYDIR=`dirname $0`
-BINDIR=`cd "$MYDIR"; pwd`
-TOPDIR=`cd "$BINDIR"/..; pwd`
+TOPDIR=`cd $MYDIR; pwd`
 
-cd "$TOPDIR"
-
-export PATH="/usr/local/bin:$PATH"
+cd "$TOPDIR"/..
 
 if [ -z "$YUMDIR" ]; then
-	YUMDIR="/var/www/sites/opennms.org/site/yum"
+	YUMDIR="/opt/yum"
 fi
 
 if [ ! -d "$YUMDIR" ]; then
@@ -17,32 +14,8 @@ if [ ! -d "$YUMDIR" ]; then
 	exit 1
 fi
 
-BUILDTOOL=`which buildtool.pl 2>/dev/null`
-if [ $? != 0 ]; then
-	echo 'Unable to locate buildtool.pl!'
-	exit 1
-fi
-
-UPDATE_SF_REPO=`which update-sourceforge-repo.pl 2>/dev/null`
-if [ $? != 0 ]; then
-	echo 'Unable to locate update-sourceforge-repo.pl!'
-	exit 1
-fi
-
-UPDATE_REPO=`which update-yum-repo.pl 2>/dev/null`
-if [ $? != 0 ]; then
-	echo 'Unable to locate update-yum-repo.pl!'
-	exit 1
-fi
-
-GENERATE=`which generate-yum-repo-html.pl 2>/dev/null`
-if [ $? != 0 ]; then
-	echo 'Unable to locate generate-yum-repo-html.pl!'
-	exit 1
-fi
-
-TIMESTAMP=`$BUILDTOOL nightly-rpm get_stamp`
-REVISION=`$BUILDTOOL nightly-rpm get_revision`
+TIMESTAMP=`bin/buildtool.sh get_stamp`
+REVISION=`bin/buildtool.sh get_revision`
 
 PASSWORD=""
 if [ -e "${HOME}/.signingpass" ]; then
@@ -55,24 +28,15 @@ if [ ! -e "$TOPDIR/.nightly" ]; then
 	exit 1
 fi
 
-# make sure things are cleaned up
-git clean -fdx
-git reset --hard HEAD
-rm -rf "${HOME}"/.m2/repository/org/opennms
-
 RELEASE=`cat "$TOPDIR"/.nightly | grep -E '^repo:' | awk '{ print $2 }'`
 
 # create the RPM
 ./makerpm.sh -a -s "$PASSWORD" -m "$TIMESTAMP" -u "$REVISION"
 
-# copy the source to SourceForge
-echo $UPDATE_SF_REPO "$RELEASE" target/rpm/SOURCES/opennms-source*.tar.gz
-$UPDATE_SF_REPO "$RELEASE" target/rpm/SOURCES/opennms-source*.tar.gz
-
 # update the $RELEASE repo, and sync it to anything later in the hierarchy
-# ./bin/update-yum-repo.pl [-g gpg_id] -s "$PASSWORD" "$RELEASE" "common" "opennms" target/rpms/RPMS/noarch/*.rpm
-$UPDATE_REPO -s "$PASSWORD" "$YUMDIR" "$RELEASE" "common" "opennms" target/rpm/RPMS/noarch/*.rpm
+# ./bin/update-repo.pl [-g gpg_id] -s "$PASSWORD" "$RELEASE" "common" "opennms" target/rpms/RPMS/noarch/*.rpm
+./bin/update-repo.pl -s "$PASSWORD" "$YUMDIR" "$RELEASE" "common" "opennms" target/rpm/RPMS/noarch/*.rpm
 
-$GENERATE "$YUMDIR"
+./bin/generate-repo-html.pl "$YUMDIR"
 
-$BUILDTOOL nightly-rpm save
+bin/buildtool.sh save

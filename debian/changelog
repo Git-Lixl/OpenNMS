@@ -1,15 +1,3 @@
-opennms (1.8.17-2) unstable; urgency=low
-
-  * Fix makedeb.sh for source builds.
-
- -- OpenNMS Release Manager <opennms@opennms.org>  Fri, 03 Feb 2012 16:41:00 -0400
-
-opennms (1.8.17-1) unstable; urgency=low
-
-  * New upstream release.
-
- -- OpenNMS Release Manager <opennms@opennms.org>  Thu, 19 Jan 2012 11:33:00 -0400
-
 opennms (1.8.16-1) unstable; urgency=low
 
   * New upstream release.

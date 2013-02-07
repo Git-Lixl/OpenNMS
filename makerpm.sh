@@ -16,10 +16,6 @@ function exists() {
     which "$1" >/dev/null 2>&1
 }
 
-function use_git() {
-    exists git && test -d "${TOPDIR}/.git"
-}
-
 function run()
 {
     if exists $1; then
@@ -55,7 +51,7 @@ function usage()
 
 function calcMinor()
 {
-    if use_git; then
+    if exists git; then
 	git log --pretty='format:%cd' --date=short -1 | head -n 1 | sed -e 's,^Date: *,,' -e 's,-,,g'
     else
 	date '+%Y%m%d'
@@ -64,42 +60,26 @@ function calcMinor()
 
 function branch()
 {
-    if use_git; then
-	run git branch | grep -E '^\*' | awk '{ print $2 }'
-    else
-        echo "source"
-    fi
+    run git branch | grep -E '^\*' | awk '{ print $2 }'
 }
 
 function commit()
 {
-    if use_git; then
-        run git log -1 | grep -E '^commit' | cut -d' ' -f2
-    else
-        echo ""
-    fi
+    run git log -1 | grep -E '^commit' | cut -d' ' -f2
 }
 
 function extraInfo()
 {
-    if use_git; then
-        if [ "$RELEASE_MAJOR" = "0" ] ; then
-            echo "This is an OpenNMS build from the $(branch) branch.  For a complete log, see:"
-        else
-            echo "This is an OpenNMS build from Git.  For a complete log, see:"
-        fi
+    if [ "$RELEASE_MAJOR" = "0" ] ; then
+	echo "This is an OpenNMS build from the $(branch) branch.  For a complete log, see:"
     else
-        echo "This is an OpenNMS build from source."
+	echo "This is an OpenNMS build from Git.  For a complete log, see:"
     fi
 }
 
 function extraInfo2()
 {
-    if use_git; then
-        echo "  http://opennms.git.sourceforge.net/git/gitweb.cgi?p=opennms/opennms;a=shortlog;h=$(commit)"
-    else
-        echo ""
-    fi
+    echo "  http://opennms.git.sourceforge.net/git/gitweb.cgi?p=opennms/opennms;a=shortlog;h=$(commit)"
 }
 
 function version()
@@ -187,15 +167,15 @@ function main()
         echo
 
         echo "=== Creating Working Directories ==="
-        run install -d -m 755 "$WORKDIR/tmp/opennms-$VERSION-$RELEASE"
+        run install -d -m 755 "$WORKDIR/tmp/opennms-$VERSION-$RELEASE/source"
         run install -d -m 755 "$WORKDIR"/{BUILD,RPMS/{i386,i686,noarch},SOURCES,SPECS,SRPMS}
 
         echo "=== Copying Source to Source Directory ==="
-        run rsync -aqr --exclude=.git --exclude=.svn --exclude=target --delete --delete-excluded "$TOPDIR/" "$WORKDIR/tmp/opennms-$VERSION-$RELEASE/"
+        run rsync -aqr --exclude=.git --exclude=.svn --exclude=target --delete --delete-excluded "$TOPDIR/" "$WORKDIR/tmp/opennms-$VERSION-$RELEASE/source/"
 
         echo "=== Creating a tar.gz archive of the Source in /usr/src/redhat/SOURCES ==="
         run tar zcf "$WORKDIR/SOURCES/opennms-source-$VERSION-$RELEASE.tar.gz" -C "$WORKDIR/tmp" "opennms-$VERSION-$RELEASE"
-        run tar zcf "$WORKDIR/SOURCES/centric-troubleticketer.tar.gz" -C "$WORKDIR/tmp/opennms-$VERSION-$RELEASE/opennms-tools" "centric-troubleticketer"
+        run tar zcf "$WORKDIR/SOURCES/centric-troubleticketer.tar.gz" -C "$WORKDIR/tmp/opennms-$VERSION-$RELEASE/source/opennms-tools" "centric-troubleticketer"
 
         echo "=== Building RPMs ==="
         for spec in tools/packages/opennms/opennms.spec opennms-tools/centric-troubleticketer/src/main/rpm/opennms-plugin-ticketer-centric.spec

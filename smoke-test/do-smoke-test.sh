@@ -12,7 +12,7 @@ if [ -z "$MATCH_RPM" ]; then
 	MATCH_RPM=no
 fi
 OPENNMS_HOME=/opt/opennms
-SOURCEDIR=`cd "$ME"/..; pwd`
+SOURCEDIR="$ME/opennms-source"
 
 PACKAGES="$@"; shift
 if [ -z "$PACKAGES" ]; then
@@ -95,11 +95,23 @@ reset_opennms() {
 	yum -y install $PACKAGES || die "Unable to install the following packages: $PACKAGES"
 }
 
-prepare_source() {
+get_source() {
 	banner "Getting OpenNMS Source"
 
+	if [ ! -d "$SOURCEDIR" ]; then
+		git clone git://opennms.git.sourceforge.net/gitroot/opennms/opennms "$SOURCEDIR" || die "Unable to clone from git."
+	fi
 	pushd "$SOURCEDIR"
-		./clean.pl || die "Unable to clean source tree."
+		CURRENT_BRANCH=`get_branch_from_git`
+		RPM_BRANCH=`get_branch_from_rpm`
+
+		if [ "$RPM_BRANCH" != "$CURRENT_BRANCH" ]; then
+			git branch -t "$RPM_BRANCH" origin/"$RPM_BRANCH"
+			git checkout "$RPM_BRANCH" || die "Unable to check out $RPM_BRANCH branch."
+		fi
+		git clean -fdx || die "Unable to clean source tree."
+		git reset --hard HEAD
+		git pull || die "Unable to pull latest code."
 
 		# if $MATCH_RPM is set to "yes", then reset the code to the git hash the RPM was built from
 		case $MATCH_RPM in
@@ -149,7 +161,7 @@ run_tests() {
 		../compile.pl -Denable.snapshots=true -DupdatePolicy=always install
 	popd
 	pushd "$SOURCEDIR/smoke-test"
-		../bin/bamboo.pl -t -Denable.snapshots=true -DupdatePolicy=always test
+		../bamboo.pl -t -Denable.snapshots=true -DupdatePolicy=always test
 		RETVAL=$?
 	popd
 	return $RETVAL
@@ -167,7 +179,7 @@ stop_opennms() {
 clean_maven
 reset_opennms
 reset_database
-prepare_source
+get_source
 configure_opennms
 start_opennms
 

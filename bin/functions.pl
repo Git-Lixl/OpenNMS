@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 
 use Cwd;
-use File::Basename;
 use File::Spec;
 use Getopt::Long qw(:config permute bundling pass_through);
 
@@ -25,26 +24,11 @@ $VERBOSE       = undef;
 
 # If we were called from bin, remove the /bin so we're always
 # rooted in the top-of-tree
-if (basename($PREFIX) eq "bin") {
-	my @dirs = File::Spec->splitdir($PREFIX);
-	pop(@dirs);
-	$PREFIX = File::Spec->catdir(@dirs);
-}
+$PREFIX =~ s#/bin/?$##;
 
 # path to git executable
-$GIT = $ENV{'GIT'};
-if (not defined $GIT or not -x $GIT) {
-	for my $dir (File::Spec->path()) {
-		my $git = File::Spec->catfile($dir, 'git');
-		if ($^O =~ /mswin/i) {
-			$git .= '.exe';
-		}
-		if (-x $git) {
-			$GIT = $git;
-			break;
-		}
-	}
-}
+$GIT = `which git 2>/dev/null`;
+chomp($GIT);
 if ($GIT eq "" or ! -x "$GIT") {
 	warning("Unable to locate git.");
 	$GIT = undef;
@@ -53,10 +37,7 @@ if ($GIT eq "" or ! -x "$GIT") {
 # path to maven executable
 $MVN = $ENV{'MVN'};
 if (not defined $MVN or not -x $MVN) {
-	$MVN = File::Spec->catfile($PREFIX, 'maven', 'bin', 'mvn');
-	if ($^O =~ /mswin/i) {
-		$MVN .= '.bat';
-	}
+	$MVN = $PREFIX . '/maven/bin/mvn';
 }
 
 delete $ENV{'M2_HOME'};
@@ -139,8 +120,8 @@ if (grep { $_ =~ /^-Dbuild.profile=/ } @ARGS) {
 }
 
 
-if (-r File::Spec->catfile($ENV{'HOME'}, '.opennms-buildrc')) {
-	if (open(FILEIN, File::Spec->catfile($ENV{'HOME'}, '/.opennms-buildrc'))) {
+if (-r $ENV{'HOME'} . "/.opennms-buildrc") {
+	if (open(FILEIN, $ENV{'HOME'} . "/.opennms-buildrc")) {
 		while (my $line = <FILEIN>) {
 			chomp($line);
 			if ($line !~ /^\s*$/ && $line !~ /^\s*\#/) {
@@ -156,6 +137,7 @@ $ENV{'MAVEN_OPTS'} = $MAVEN_OPTS;
 info("JAVA_HOME = $JAVA_HOME") if (defined $JAVA_HOME and $JAVA_HOME ne "");
 info("MVN = $MVN");
 info("MAVEN_OPTS = $MAVEN_OPTS"); 
+info("MAVEN_VERSION = $MAVEN_VERSION");
 
 sub clean_git {
 	my @command = ($GIT, "clean", "-fdx", ".");

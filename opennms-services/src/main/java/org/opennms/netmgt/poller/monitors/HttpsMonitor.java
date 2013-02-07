@@ -99,6 +99,7 @@ final public class HttpsMonitor extends HttpMonitor {
 
     /** {@inheritDoc} */
     protected Socket wrapSocket(Socket socket) throws IOException {
+        SSLSocketFactory sslSF = null;
         TrustManager[] tm = { new RelaxedX509TrustManager() };
         SSLContext sslContext = null;
         try {
@@ -111,12 +112,12 @@ final public class HttpsMonitor extends HttpMonitor {
             log().error("wrapSocket: Error wrapping socket, throwing runtime exception..."+e);
             throw new IllegalStateException("Key management exception in SSLSocketFactory: "+e);
         }
-        SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+        sslSF = sslContext.getSocketFactory();
         Socket wrappedSocket;
         InetAddress inetAddress = socket.getInetAddress();
         String hostAddress = inetAddress.getHostAddress();
         int port = socket.getPort();
-        wrappedSocket = socketFactory.createSocket(socket, hostAddress, port, true);
+        wrappedSocket = sslSF.createSocket(socket, hostAddress, port, true);
         return wrappedSocket;
     }
 
