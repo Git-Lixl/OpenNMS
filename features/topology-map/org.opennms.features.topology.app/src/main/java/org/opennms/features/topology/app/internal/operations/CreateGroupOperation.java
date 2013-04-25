@@ -28,20 +28,23 @@
 
 package org.opennms.features.topology.app.internal.operations;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.opennms.features.topology.api.Constants;
 import org.opennms.features.topology.api.GraphContainer;
 import org.opennms.features.topology.api.Operation;
 import org.opennms.features.topology.api.OperationContext;
-import org.opennms.features.topology.api.TopologyProvider;
 import org.opennms.features.topology.api.topo.Vertex;
 import org.opennms.features.topology.api.topo.VertexRef;
+import org.slf4j.LoggerFactory;
 
-import com.vaadin.data.Item;
-import com.vaadin.data.Property;
+import com.vaadin.data.Validator.InvalidValueException;
 import com.vaadin.data.util.ObjectProperty;
 import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.data.validator.AbstractValidator;
+import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.Window;
@@ -64,14 +67,12 @@ public class CreateGroupOperation implements Constants, Operation {
 		final Window groupNamePrompt = new Window("Create Group");
 		groupNamePrompt.setModal(true);
 		groupNamePrompt.setResizable(false);
-		groupNamePrompt.setHeight("180px");
+		groupNamePrompt.setHeight("220px");
 		groupNamePrompt.setWidth("300px");
 
 		// Define the fields for the form
 		final PropertysetItem item = new PropertysetItem();
 		item.addItemProperty("Group Label", new ObjectProperty<String>("", String.class));
-
-		// TODO Add validator for groupname value
 
 		final Form promptForm = new Form() {
 
@@ -79,37 +80,83 @@ public class CreateGroupOperation implements Constants, Operation {
 
 			@Override
 			public void commit() {
+				// Trim the form value
+				String groupLabel = ((String)getField("Group Label").getValue());
+				if (groupLabel == null) {
+					throw new InvalidValueException("Group label cannot be null.");
+				}
+				getField("Group Label").setValue(groupLabel.trim());
 				super.commit();
-				String groupLabel = (String)getField("Group Label").getValue();
+				groupLabel = (String)getField("Group Label").getValue();
 
-				TopologyProvider topologyProvider = graphContainer.getDataSource();
 				// Add the new group
-				Object groupId = topologyProvider.addGroup(groupLabel, GROUP_ICON_KEY);
+				VertexRef groupId = operationContext.getGraphContainer().getBaseTopology().addGroup(groupLabel, GROUP_ICON_KEY);
 
-				Object parentGroup = null;
+				// Find a common parent group. If none can be found, then link the group to the
+				// top of the topology
+				Vertex parentGroup = null;
 				for(VertexRef vertexRef : targets) {
-					Object vertexId = getTopoItemId(graphContainer, vertexRef);
-					Object parent = topologyProvider.getVertexContainer().getParent(vertexId);
+					Vertex parent = operationContext.getGraphContainer().getBaseTopology().getParent(vertexRef);
 					if (parentGroup == null) {
 						parentGroup = parent;
 					} else if (!parentGroup.equals(parent)) {
-						parentGroup = ROOT_GROUP_ID;
+						// If there are multiple parents present then attach the new group 
+						// to the top level of the hierarchy
+						parentGroup = null;
+						break;
 					}
-					topologyProvider.setParent(vertexId, groupId);
+				}
+
+				// Link all targets to the newly-created group
+				for(VertexRef vertexRef : targets) {
+					operationContext.getGraphContainer().getBaseTopology().setParent(vertexRef, groupId);
 				}
 
 				// Set the parent of the new group to the selected top-level parent
-				topologyProvider.setParent(groupId, parentGroup == null ? ROOT_GROUP_ID : parentGroup);
+				operationContext.getGraphContainer().getBaseTopology().setParent(groupId, parentGroup);
 
 				// Save the topology
-				topologyProvider.save(null);
+				operationContext.getGraphContainer().getBaseTopology().save();
 
 				graphContainer.redoLayout();
 			}
 		};
 		// Buffer changes to the datasource
 		promptForm.setWriteThrough(false);
+		// Bind the item to create all of the fields
 		promptForm.setItemDataSource(item);
+		// Add validators to the fields
+		promptForm.getField("Group Label").setRequired(true);
+		promptForm.getField("Group Label").setRequiredError("Group label cannot be blank.");
+		promptForm.getField("Group Label").addValidator(new StringLengthValidator("Label must be at least one character long.", 1, -1, false));
+		promptForm.getField("Group Label").addValidator(new AbstractValidator("A group with label \"{0}\" already exists.") {
+
+			private static final long serialVersionUID = -6602249815731561328L;
+
+			@Override
+			public boolean isValid(Object value) {
+				try {
+					final Collection<? extends Vertex> vertexIds = graphContainer.getBaseTopology().getVertices();
+					final Collection<String> groupLabels = new ArrayList<String>();
+					for (Vertex vertexId : vertexIds) {
+						if (vertexId.isGroup()) {
+							groupLabels.add(vertexId.getLabel());
+						}
+					}
+
+					for (String label : groupLabels) {
+						LoggerFactory.getLogger(this.getClass()).debug("Comparing {} to {}", value, label);
+						if (label.equals(value)) {
+							return false;
+						}
+					}
+					return true;
+				} catch (Throwable e) {
+					LoggerFactory.getLogger(this.getClass()).error(e.getMessage(), e);
+					return false;
+				}
+			}
+		});
 
 		Button ok = new Button("OK");
 		ok.addListener(new ClickListener() {
@@ -159,16 +206,4 @@ public class CreateGroupOperation implements Constants, Operation {
 	public String getId() {
 		return null;
 	}
-	
-	private Object getTopoItemId(GraphContainer graphContainer, VertexRef vertexRef) {
-		if (vertexRef == null)  return null;
-		Vertex v = graphContainer.getVertex(vertexRef);
-		if (v == null) return null;
-		Item item = v.getItem();
-		if (item == null) return null;
-		Property property = item.getItemProperty("itemId");
-		return property == null ? null : property.getValue();
-	}
-
-
 }

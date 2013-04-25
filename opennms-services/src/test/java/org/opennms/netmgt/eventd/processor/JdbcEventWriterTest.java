@@ -43,6 +43,7 @@ import org.opennms.netmgt.xml.event.Event;
  * This class tests some of the quirky behaviors of presisting events.
  * @author <a href="mailto:brozow@opennms.org">Mathew Brozowski</a>
  */
+@SuppressWarnings("deprecation")
 public class JdbcEventWriterTest extends PopulatedTemporaryDatabaseTestCase {
     private JdbcEventWriter m_jdbcEventWriter;
 
@@ -138,12 +139,7 @@ public class JdbcEventWriterTest extends PopulatedTemporaryDatabaseTestCase {
         // don't convert to using event builder as this is testing eventd persist functionality and needs to try 'invalid' events
         Event event = new Event();
         
-        Connection connection = getDataSource().getConnection();
-        try {
-            assertEquals("getHostName should return the hostname for the IP address that was passed", null, m_jdbcEventWriter.getEventHost(event, connection));
-        } finally {
-            connection.close();
-        }
+        assertEquals("getHostName should return the hostname for the IP address that was passed", null, m_jdbcEventWriter.getEventHost(event));
     }
     
     public void testGetEventHostWithHostNoNodeId() throws Exception {
@@ -155,12 +151,7 @@ public class JdbcEventWriterTest extends PopulatedTemporaryDatabaseTestCase {
         Event event = new Event();
         event.setHost("192.168.1.1");
         
-        Connection connection = getDataSource().getConnection();
-        try {
-            assertEquals("getHostName should return the hostname for the IP address that was passed", event.getHost(), m_jdbcEventWriter.getEventHost(event, connection));
-        } finally {
-            connection.close();
-        }
+        assertEquals("getHostName should return the hostname for the IP address that was passed", event.getHost(), m_jdbcEventWriter.getEventHost(event));
     }
     
     public void testGetEventHostWithOneMatch() throws Exception {
@@ -173,12 +164,7 @@ public class JdbcEventWriterTest extends PopulatedTemporaryDatabaseTestCase {
         event.setNodeid(nodeId);
         event.setHost("192.168.1.1");
 
-        Connection connection = getDataSource().getConnection();
-        try {
-            assertEquals("getHostName should return the hostname for the IP address that was passed", "First Interface", m_jdbcEventWriter.getEventHost(event, connection));
-        } finally {
-            connection.close();
-        }
+        assertEquals("getHostName should return the hostname for the IP address that was passed", "First Interface", m_jdbcEventWriter.getEventHost(event));
     }
     
     public void testGetHostNameWithOneMatch() throws Exception {
@@ -186,25 +172,15 @@ public class JdbcEventWriterTest extends PopulatedTemporaryDatabaseTestCase {
         int nodeId = jdbcTemplate.queryForInt("SELECT nodeId FROM node LIMIT 1");
         jdbcTemplate.update("INSERT into ipInterface (nodeId, ipAddr, ipHostname) VALUES (?, ?, ?)", nodeId, "192.168.1.1", "First Interface");
         
-        Connection connection = getDataSource().getConnection();
-        try {
-            assertEquals("getHostName should return the hostname for the IP address that was passed", "First Interface", m_jdbcEventWriter.getHostName(1, "192.168.1.1", connection));
-        } finally {
-            connection.close();
-        }
+        assertEquals("getHostName should return the hostname for the IP address that was passed", "First Interface", m_jdbcEventWriter.getHostName(1, "192.168.1.1"));
     }
     
     public void testGetHostNameWithOneMatchNullHostname() throws Exception {
         jdbcTemplate.update("INSERT INTO node (nodeId, nodeCreateTime) VALUES (nextVal('nodeNxtId'), now())");
         int nodeId = jdbcTemplate.queryForInt("SELECT nodeId FROM node LIMIT 1");
         jdbcTemplate.update("INSERT into ipInterface (nodeId, ipAddr) VALUES (?, ?)", nodeId, "192.168.1.1");
-        
-        Connection connection = getDataSource().getConnection();
-        try {
-            assertEquals("getHostName should return the IP address it was passed", "192.168.1.1", m_jdbcEventWriter.getHostName(1, "192.168.1.1", connection));
-        } finally {
-            connection.close();
-        }
+    
+        assertEquals("getHostName should return the IP address it was passed", "192.168.1.1", m_jdbcEventWriter.getHostName(1, "192.168.1.1"));
     }
     
     public void testGetHostNameWithTwoMatch() throws Exception {
@@ -216,21 +192,11 @@ public class JdbcEventWriterTest extends PopulatedTemporaryDatabaseTestCase {
         jdbcTemplate.update("INSERT into ipInterface (nodeId, ipAddr, ipHostname) VALUES (?, ?, ?)", nodeId1, "192.168.1.1", "First Interface");
         jdbcTemplate.update("INSERT into ipInterface (nodeId, ipAddr, ipHostname) VALUES (?, ?, ?)", nodeId2, "192.168.1.1", "Second Interface");
         
-        Connection connection = getDataSource().getConnection();
-        try {
-            assertEquals("getHostName should return the IP address it was passed", "First Interface", m_jdbcEventWriter.getHostName(nodeId1, "192.168.1.1", connection));
-        } finally {
-            connection.close();
-        }
+        assertEquals("getHostName should return the IP address it was passed", "First Interface", m_jdbcEventWriter.getHostName(nodeId1, "192.168.1.1"));
     }
     
     public void testGetHostNameWithNoHostMatch() throws Exception {
-        Connection connection = getDataSource().getConnection();
-        try {
-            assertEquals("getHostName should return the IP address it was passed", "192.168.1.1", m_jdbcEventWriter.getHostName(1, "192.168.1.1", connection));
-        } finally {
-            connection.close();
-        }
+            assertEquals("getHostName should return the IP address it was passed", "192.168.1.1", m_jdbcEventWriter.getHostName(1, "192.168.1.1"));
     }
 
     public void testSendEventWithService() throws Exception {

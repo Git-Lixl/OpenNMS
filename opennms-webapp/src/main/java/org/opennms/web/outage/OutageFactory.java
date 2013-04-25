@@ -51,15 +51,6 @@ import org.opennms.web.outage.filter.ServiceFilter;
  *
  * @author <A HREF="mailto:larry@opennms.org">Lawrence Karnowski </A>
  * @author <A HREF="mailto:jason@opennms.org">Jason Johns </A>
- * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
- * @author <A HREF="mailto:larry@opennms.org">Lawrence Karnowski </A>
- * @author <A HREF="mailto:jason@opennms.org">Jason Johns </A>
- * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
- * @author <A HREF="mailto:larry@opennms.org">Lawrence Karnowski </A>
- * @author <A HREF="mailto:jason@opennms.org">Jason Johns </A>
- * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
- * @version $Id: $
- * @since 1.8.1
  */
 public class OutageFactory extends Object {
 
@@ -561,12 +552,8 @@ public class OutageFactory extends Object {
         Outage[] outages = null;
         List<Outage> list = new ArrayList<Outage>();
 
-        // FIXME: Don't reuse the "element" variable for multiple objects.
         while (rs.next()) {
             Outage outage = new Outage();
-
-            Object element = null;
-            int intElement = -1;
 
             // cannot be null
             outage.outageId = rs.getInt("outageid");
@@ -575,8 +562,8 @@ public class OutageFactory extends Object {
             outage.serviceId = rs.getInt("serviceid");
 
             // cannot be null
-            element = rs.getTimestamp("iflostservice");
-            outage.lostServiceTime = new java.util.Date(((Timestamp) element).getTime());
+            Timestamp timestamp = rs.getTimestamp("iflostservice");
+            outage.lostServiceTime = new java.util.Date(timestamp.getTime());
 
             // can be null
             outage.hostname = rs.getString("iphostname"); // from ipinterface
@@ -590,28 +577,20 @@ public class OutageFactory extends Object {
                                                                 // table
 
             // can be null
-            element = rs.getTimestamp("ifregainedservice");
-            if (element != null) {
-                outage.regainedServiceTime = new java.util.Date(((Timestamp) element).getTime());
-            }
+            timestamp = rs.getTimestamp("ifregainedservice");
+            outage.regainedServiceTime = (timestamp != null) ? new java.util.Date(timestamp.getTime()) : null;
 
             // can be null
-            intElement = rs.getInt("svcLostEventID");
-            if (!rs.wasNull()) {
-                outage.lostServiceEventId = new Integer(intElement);
-            }
+            int intElement = rs.getInt("svcLostEventID");
+            outage.lostServiceEventId = rs.wasNull() ? null : Integer.valueOf(intElement);
 
             // can be null
             intElement = rs.getInt("svcRegainedEventID");
-            if (!rs.wasNull()) {
-                outage.regainedServiceEventId = new Integer(intElement);
-            }
+            outage.regainedServiceEventId = rs.wasNull() ? null :Integer.valueOf(intElement);
 
             // can be null
             intElement = rs.getInt("notifyid");
-            if (!rs.wasNull()) {
-                outage.lostServiceNotificationId = new Integer(intElement);
-            }
+            outage.lostServiceNotificationId = rs.wasNull() ? null : Integer.valueOf(intElement);
 
             // can be null
             outage.lostServiceNotificationAcknowledgedBy = rs.getString("answeredby");

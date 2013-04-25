@@ -28,7 +28,25 @@
 
 package org.opennms.netmgt.config;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.xml.bind.JAXBException;
+
 import junit.framework.AssertionFailedError;
+
 import org.exolab.castor.util.LocalConfiguration;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
@@ -42,6 +60,8 @@ import org.opennms.core.xml.JaxbUtils;
 import org.opennms.features.reporting.model.basicreport.LegacyLocalReportsDefinition;
 import org.opennms.features.reporting.model.jasperreport.LocalJasperReports;
 import org.opennms.features.reporting.model.remoterepository.RemoteRepositoryConfig;
+import org.opennms.netmgt.alarmd.northbounder.syslog.SyslogNorthbounderConfig;
+import org.opennms.netmgt.config.accesspointmonitor.AccessPointMonitorConfig;
 import org.opennms.netmgt.config.ackd.AckdConfiguration;
 import org.opennms.netmgt.config.actiond.ActiondConfiguration;
 import org.opennms.netmgt.config.ami.AmiConfig;
@@ -51,6 +71,7 @@ import org.opennms.netmgt.config.categories.Catinfo;
 import org.opennms.netmgt.config.charts.ChartConfiguration;
 import org.opennms.netmgt.config.collectd.CollectdConfiguration;
 import org.opennms.netmgt.config.collectd.jmx.JmxDatacollectionConfig;
+import org.opennms.netmgt.config.collectd.jmx.Mbeans;
 import org.opennms.netmgt.config.datacollection.DatacollectionConfig;
 import org.opennms.netmgt.config.datacollection.DatacollectionGroup;
 import org.opennms.netmgt.config.destinationPaths.DestinationPaths;
@@ -97,7 +118,9 @@ import org.opennms.netmgt.config.trapd.TrapdConfiguration;
 import org.opennms.netmgt.config.users.Userinfo;
 import org.opennms.netmgt.config.vacuumd.VacuumdConfiguration;
 import org.opennms.netmgt.config.viewsdisplay.Viewinfo;
-import org.opennms.netmgt.config.vulnscand.VulnscandConfiguration;
+import org.opennms.netmgt.config.vmware.VmwareConfig;
+import org.opennms.netmgt.config.vmware.cim.VmwareCimDatacollectionConfig;
+import org.opennms.netmgt.config.vmware.vijava.VmwareDatacollectionConfig;
 import org.opennms.netmgt.config.wmi.WmiConfig;
 import org.opennms.netmgt.config.wmi.WmiDatacollectionConfig;
 import org.opennms.netmgt.config.xmlrpcd.XmlrpcdConfiguration;
@@ -107,15 +130,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 import org.xml.sax.InputSource;
-
-import javax.xml.bind.JAXBException;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 /**
  * The name of this class is a tribute to
@@ -170,6 +184,10 @@ public class WillItUnmarshalTest {
         unmarshalAndAnticipateException("eventconf-bad-element.xml", "Invalid content was found starting with element 'bad-element'.");
     }
 
+    @Test
+    public void testAccessPointMonitorConfiguration() throws Exception {
+        unmarshal("access-point-monitor-configuration.xml", AccessPointMonitorConfig.class);
+    }
     @Test
     public void testActiondConfiguration() throws Exception {
         unmarshal("actiond-configuration.xml", ActiondConfiguration.class);
@@ -359,6 +377,10 @@ public class WillItUnmarshalTest {
         unmarshal("scriptd-configuration.xml", ScriptdConfiguration.class);
     }
     @Test
+    public void testSyslogNorthbounderConfiguration() throws Exception {
+        unmarshalJaxb("syslog-northbounder-configuration.xml", SyslogNorthbounderConfig.class);
+    }
+    @Test
     public void testExampleScriptdConfiguration() throws Exception {
         unmarshalExample("scriptd-configuration.xml", ScriptdConfiguration.class);
     }
@@ -441,10 +463,6 @@ public class WillItUnmarshalTest {
     @Test
     public void testVacuumdConfiguration() throws Exception {
         unmarshal("vacuumd-configuration.xml", VacuumdConfiguration.class);
-    }
-    @Test
-    public void testVulnscandConfiguration() throws Exception {
-        unmarshal("vulnscand-configuration.xml", VulnscandConfiguration.class);
     }
     @Test
     public void testXmlrpcdConfiguration() throws Exception {
@@ -534,12 +552,59 @@ public class WillItUnmarshalTest {
     public void testJdbcDataCollectionConfiguration() throws Exception {
         unmarshalJaxb("jdbc-datacollection-config.xml", JdbcDataCollectionConfig.class);
     }
-
     @Test
     public void testRemoteRepositoryXmlConfiguration() throws Exception {
         unmarshalJaxb("remote-repository.xml", RemoteRepositoryConfig.class);
     }
-
+    @Test
+    public void testVmwareConfiguration() throws Exception {
+        unmarshalJaxb("vmware-config.xml", VmwareConfig.class);
+    }
+    @Test
+    public void testVmwareDatacollectionConfiguration() throws Exception {
+        unmarshalJaxb("vmware-datacollection-config.xml", VmwareDatacollectionConfig.class);
+    }
+    @Test
+    public void testVmwareCimDatacollectionConfiguration() throws Exception {
+        unmarshalJaxb("vmware-cim-datacollection-config.xml", VmwareCimDatacollectionConfig.class);
+    }
+    @Test
+    public void testExampleJvmDatacollectionCollectdConfiguration() throws Exception {
+        unmarshalExample("jvm-datacollection/collectd-configuration.xml", CollectdConfiguration.class);
+    }
+    @Test
+    public void testExampleJvmDatacollectionJmxDatacollectionConfig() throws Exception {
+        unmarshalJaxbExample("jvm-datacollection/jmx-datacollection-config.xml", JmxDatacollectionConfig.class);
+    }
+    @Test
+    public void testExampleJvmDatacollectionJmxDatacollectionConfigActiveMQ() throws Exception {
+        unmarshalJaxbExample("jvm-datacollection/jmx-datacollection/ActiveMQ/5.6/ActiveMQBasic0.xml", Mbeans.class);
+    }    
+    @Test
+    public void testExampleJvmDatacollectionJmxDatacollectionConfigCassandra() throws Exception {
+        unmarshalJaxbExample("jvm-datacollection/jmx-datacollection/Cassandra/1.1.2/CassandraBasic0.xml", Mbeans.class);
+    }
+    @Test
+    public void testExampleJvmDatacollectionJmxDatacollectionConfigJboss() throws Exception {
+        unmarshalJaxbExample("jvm-datacollection/jmx-datacollection/JBoss/4/JBossBasic0.xml", Mbeans.class);
+    }
+    @Test
+    public void testExampleJvmDatacollectionJmxDatacollectionConfigJvmBasic() throws Exception {
+        unmarshalJaxbExample("jvm-datacollection/jmx-datacollection/Jvm/1.6/JvmBasic0.xml", Mbeans.class);
+    }
+    @Test
+    public void testExampleJvmDatacollectionJmxDatacollectionConfigJvmLegacy() throws Exception {
+        unmarshalJaxbExample("jvm-datacollection/jmx-datacollection/Jvm/1.6/JvmLegacy.xml", Mbeans.class);
+    }
+    @Test
+    public void testExampleJvmDatacollectionJmxDatacollectionConfigOpenNMSBasic() throws Exception {
+        unmarshalJaxbExample("jvm-datacollection/jmx-datacollection/OpenNMS/1.10/OpenNMSBasic0.xml", Mbeans.class);
+    }
+    @Test
+    public void testExampleJvmDatacollectionJmxDatacollectionConfigOpenNMSLegacy() throws Exception {
+        unmarshalJaxbExample("jvm-datacollection/jmx-datacollection/OpenNMS/1.10/OpenNMSLegacy.xml", Mbeans.class);
+    }
+    
     @Test
     public void testCheckAllDaemonXmlConfigFilesTested() {
         File someConfigFile = ConfigurationTestUtils.getFileForConfigFile("discovery-configuration.xml");
@@ -548,6 +613,7 @@ public class WillItUnmarshalTest {
         assertTrue("daemon configuration directory is a directory at " + configDir.getAbsolutePath(), configDir.isDirectory());
 
         String[] configFiles = configDir.list(new FilenameFilter() {
+            @Override
             public boolean accept(File file, String name) {
                 return name.endsWith(".xml");
             } });
@@ -587,6 +653,7 @@ public class WillItUnmarshalTest {
         assertTrue("directory to search for configuration files in is not a directory at " + directory.getAbsolutePath(), directory.isDirectory());
 
         String[] configFiles = directory.list(new FilenameFilter() {
+            @Override
             public boolean accept(File file, String name) {
                 return name.endsWith(".xml");
             } });
@@ -595,6 +662,7 @@ public class WillItUnmarshalTest {
         }
         
         File[] subDirectories = directory.listFiles(new FileFilter() {
+            @Override
             public boolean accept(File file) {
                 return file.isDirectory() && !file.getName().startsWith(".");
             }
@@ -614,6 +682,7 @@ public class WillItUnmarshalTest {
         assertTrue("events directory is a directory at " + eventsDirFile.getAbsolutePath(), eventsDirFile.isDirectory());
         
         File[] includedEventFiles = eventsDirFile.listFiles(new FilenameFilter() {
+            @Override
             public boolean accept(File file, String name) {
                 return name.endsWith(".xml");
             } });
@@ -639,6 +708,7 @@ public class WillItUnmarshalTest {
         assertTrue("events directory is a directory at " + groupDirFile.getAbsolutePath(), groupDirFile.isDirectory());
 
         File[] includedGroupFiles = groupDirFile.listFiles(new FilenameFilter() {
+            @Override
             public boolean accept(File file, String name) {
                 return name.endsWith(".xml");
             } });

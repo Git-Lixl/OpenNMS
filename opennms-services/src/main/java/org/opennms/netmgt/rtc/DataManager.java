@@ -39,7 +39,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -90,7 +89,7 @@ public class DataManager extends Object {
     private class RTCNodeProcessor implements RowCallbackHandler {
 		RTCNodeKey m_currentKey = null;
 
-		Map<String,Set<InetAddress>> m_categoryIpLists = new HashMap<String,Set<InetAddress>>();
+		Map<String,Set<Integer>> m_categoryNodeIdLists = new HashMap<String,Set<Integer>>();
 
 		public void processRow(ResultSet rs) throws SQLException {
 			RTCNodeKey key = new RTCNodeKey(rs.getLong("nodeid"), InetAddressUtils.addr(rs.getString("ipaddr")), rs.getString("servicename"));
@@ -130,42 +129,42 @@ public class DataManager extends Object {
 		}
 
 		private boolean catContainsIfService(RTCCategory cat, RTCNodeKey key) {
-			return cat.containsService(key.getSvcName()) && catContainsIp(cat, key.getIP());
+			return cat.containsService(key.getSvcName()) && catContainsNode(cat, (int)key.getNodeID());
 		}
-
-		private boolean catContainsIp(RTCCategory cat, InetAddress inetAddress) {
-			Set<InetAddress> ips = catGetIpAddrs(cat);
-			return ips.contains(inetAddress);
+		
+		private boolean catContainsNode(RTCCategory cat, Integer nodeID) {			
+			Set<Integer> nodeIds = catGetNodeIds(cat);
+			return nodeIds.contains(nodeID);
 		}
-
-		private Set<InetAddress> catGetIpAddrs(RTCCategory cat) {
-			Set<InetAddress> ips = m_categoryIpLists.get(cat.getLabel());
-			if (ips == null) {
-				ips = catConstructIpAddrs(cat);
-				m_categoryIpLists.put(cat.getLabel(), ips);
+		
+		private Set<Integer> catGetNodeIds(RTCCategory cat) {
+			Set<Integer> nodeIds = m_categoryNodeIdLists.get(cat.getLabel());
+			if(nodeIds == null) {
+				nodeIds = catConstructNodeIds(cat);
+				m_categoryNodeIdLists.put(cat.getLabel(), nodeIds);
 			}
-			return ips;
+			return nodeIds;
 		}
-
-		private Set<InetAddress> catConstructIpAddrs(RTCCategory cat) {
+		
+		private Set<Integer> catConstructNodeIds (RTCCategory cat) {
 			String filterRule = cat.getEffectiveRule();
 			try {
 				if (log().isDebugEnabled())
 					log().debug("Category: " + cat.getLabel() + "\t" + filterRule);
 		
-				List<InetAddress> ips = FilterDaoFactory.getInstance().getActiveIPAddressList(filterRule);
+				Set<Integer> nodeIds = FilterDaoFactory.getInstance().getNodeMap(filterRule).keySet();
 				
 		        if (log().isDebugEnabled())
-		            log().debug("Number of IPs satisfying rule: " + ips.size());
+		            log().debug("Number of nodes satisfying rule: " + nodeIds.size());
 		
-		        return new HashSet<InetAddress>(ips);
+		        return nodeIds;
 		        
 			} catch (FilterParseException e) {
 				log().error("Unable to parse filter rule "+filterRule+" ignoring category "+cat.getLabel(), e);
 				return Collections.emptySet();
 			}
 		}
-
+		
 		// This is processed for each outage, passing two null means there is not outage
 		public void processOutage(RTCNodeKey key, Timestamp ifLostService, Timestamp ifRegainedService) {
 			RTCNode rtcN = m_map.getRTCNode(key);
@@ -202,7 +201,7 @@ public class DataManager extends Object {
     private char getServiceStatus(long nodeid, InetAddress ip, String svc) {
     	
     	JdbcTemplate template = new JdbcTemplate(getConnectionFactory());
-    	String status= (String)template.queryForObject(RTCConstants.DB_GET_SERVICE_STATUS, new Object[] { new Long(nodeid), InetAddressUtils.str(ip), svc }, String.class);
+    	String status= (String)template.queryForObject(RTCConstants.DB_GET_SERVICE_STATUS, new Object[] { Long.valueOf(nodeid), InetAddressUtils.str(ip), svc }, String.class);
 
     	if (status == null) return '\0';
     	return status.charAt(0);
@@ -628,7 +627,7 @@ public class DataManager extends Object {
             List<Long> catNodes = cat.getNodes();
 
             // check if the category contains this node
-            Long tmpNodeid = new Long(rtcN.getNodeID());
+            Long tmpNodeid = Long.valueOf(rtcN.getNodeID());
             int nIndex = catNodes.indexOf(tmpNodeid);
             if (nIndex != -1) {
                 // remove from the category if it is the only service left.
@@ -714,7 +713,7 @@ public class DataManager extends Object {
     	
     	m_map.deleteNode(nodeid);
     	
-    	populateNodesFromDB("ifsvc.nodeid = ?", new Object[] { new Long(nodeid) });
+    	populateNodesFromDB("ifsvc.nodeid = ?", new Object[] { Long.valueOf(nodeid) });
     	
     }
 

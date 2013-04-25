@@ -176,7 +176,7 @@ public final class JdbcEventWriter extends AbstractJdbcPersister implements Even
             insStmt.setTimestamp(4, getEventTime(event));
 
             // Resolve the event host to a hostname using the ipInterface table
-            String hostname = getEventHost(event, connection);
+            String hostname = getEventHost(event);
 
             // eventHost
             set(insStmt, 5, Constants.format(hostname, EVENT_HOST_FIELD_SIZE));
@@ -185,7 +185,13 @@ public final class JdbcEventWriter extends AbstractJdbcPersister implements Even
             set(insStmt, 6, Constants.format(event.getInterface(), EVENT_INTERFACE_FIELD_SIZE));
 
             // eventDpName
-            insStmt.setString(7, (eventHeader != null) ? Constants.format(eventHeader.getDpName(), EVENT_DPNAME_FIELD_SIZE) : "undefined");
+            String dpName = "localhost";
+            if (eventHeader != null && eventHeader.getDpName() != null) {
+                dpName = Constants.format(eventHeader.getDpName(), EVENT_DPNAME_FIELD_SIZE);
+            } else if (event.getDistPoller() != null) {
+                dpName = Constants.format(event.getDistPoller(), EVENT_DPNAME_FIELD_SIZE);
+            }
+            insStmt.setString(7, dpName);
 
             // eventSnmpHost
             set(insStmt, 8, Constants.format(event.getSnmphost(), EVENT_SNMPHOST_FIELD_SIZE));
@@ -354,9 +360,8 @@ public final class JdbcEventWriter extends AbstractJdbcPersister implements Even
      * @see EventdConstants#SQL_DB_HOSTIP_TO_HOSTNAME
      * 
      */
-    // FIXME: This uses JdbcTemplate and not the passed in connection
-    // FIXME: This uses JdbcTemplate and not the passed in connection
-    String getHostName(final int nodeId, final String hostip, final Connection connection) throws SQLException {
+    
+    String getHostName(final int nodeId, final String hostip) throws SQLException {
         try {
             final String hostname = new SimpleJdbcTemplate(getDataSource()).queryForObject(EventdConstants.SQL_DB_HOSTIP_TO_HOSTNAME, String.class, new Object[] { nodeId, hostip });
             return (hostname != null) ? hostname : hostip;
@@ -390,7 +395,7 @@ public final class JdbcEventWriter extends AbstractJdbcPersister implements Even
      * @param connection a {@link java.sql.Connection} object.
      * @return a {@link java.lang.String} object.
      */
-    protected String getEventHost(final Event event, final Connection connection) {
+    protected String getEventHost(final Event event) {
         if (event.getHost() == null) {
             return null;
         }
@@ -401,7 +406,7 @@ public final class JdbcEventWriter extends AbstractJdbcPersister implements Even
         }
         
         try {
-            return getHostName(event.getNodeid().intValue(), event.getHost(), connection);
+            return getHostName(event.getNodeid().intValue(), event.getHost());
         } catch (final Throwable t) {
             LogUtils.warnf(this, t, "Error converting host IP \"%s\" to a hostname, storing the IP.", event.getHost());
             return event.getHost();
