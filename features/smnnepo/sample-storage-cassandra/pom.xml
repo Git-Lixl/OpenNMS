@@ -9,7 +9,7 @@
   <parent>
     <groupId>org.opennms.netmgt.sample</groupId>
     <artifactId>sample-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.13.0-SNAPSHOT</version>
   </parent>
 
   <properties>

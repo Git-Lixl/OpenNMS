@@ -9,7 +9,7 @@
   <parent>
     <groupId>org.opennms.netmgt.sample</groupId>
     <artifactId>sample-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.13.0-SNAPSHOT</version>
   </parent>
 
   <properties>
@@ -26,8 +26,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.opennms.distributed</groupId>
-      <artifactId>distributed-api</artifactId>
+      <groupId>org.opennms.netmgt.sample</groupId>
+      <artifactId>sample-api</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
