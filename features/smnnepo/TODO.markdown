@@ -32,7 +32,11 @@ In order of importance:
  1. netmgt.api.sample: javadocs
  1. Good tests for api.sample implementations (then remove old from api.sample)
  1. sampler.snmp.Column: don't recreate Metric from accessor
- 
+ 1. Write tests for Cassandra sample repository
+ 1. Date/time-based sharding of rows in Cassandra sample repo
+ 1. How to apply Cassandra consistency levels in sample repo
+ 1. Resource attribute sampled storage / retrieval
+ 1. Merge base class with Cassandra sample repository
 
 Completed
 ---------
