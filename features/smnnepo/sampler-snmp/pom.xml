@@ -18,7 +18,7 @@
   </properties>
 
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>collector-snmp</artifactId>
+  <artifactId>sampler-snmp</artifactId>
 
   <name>Sample Collection and Storage :: SNMP collection</name>
 
