@@ -3,6 +3,7 @@ package org.opennms.netmgt.api.sample;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-public class Results {
+public class Results implements Iterable<Results.Row> {
 	
 	public static class Row {
 		Timestamp m_timestamp;
@@ -99,6 +100,9 @@ public class Results {
 		
 		return buf.toString();
 	}
-	
 
+	@Override
+	public Iterator<Row> iterator() {
+		return getRows().iterator();
+	}
 }
