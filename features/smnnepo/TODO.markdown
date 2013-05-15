@@ -25,8 +25,13 @@ In order of importance:
  1. Remote event collection.
  1. Jrrd repository hardcodes archive properties (step, CF, etc).
  1. Redo routes (somehow, magic consultant power-config)
-
-
+ 1. Turn api.sample.Results into an interface (iterable); Uses pluggable
+    aggregation to process underlying results
+ 1. Need API for getting sample resources by endpoint
+ 1. SampleSet is not great; Externalizable? Other, more compact serialization?
+ 1. netmgt.api.sample: javadocs
+ 1. Good tests for api.sample implementations (then remove old from api.sample)
+ 
 Completed
 ---------
  1. Create OSGi bundle of Cassandra driver.
