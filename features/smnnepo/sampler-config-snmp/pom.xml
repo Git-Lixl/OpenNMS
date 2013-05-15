@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>sampler-config-snmp</artifactId>
 
-  <name>Sample Collection and Storage :: SNMP Configuration</name>
+  <name>Sample Collection and Storage :: SNMP Config</name>
 
   <packaging>bundle</packaging>
 
