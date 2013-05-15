@@ -27,6 +27,7 @@
     <module>sampler-config-snmp</module>
     <module>sampler-snmp</module>
     <module>sampler-routes</module>
+    <module>sample-graphs</module>
   </modules>
 
   <properties>
