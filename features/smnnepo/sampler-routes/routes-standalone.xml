@@ -11,53 +11,11 @@
 		http://www.osgi.org/xmlns/blueprint-ext/v1.1.0
 		https://svn.apache.org/repos/asf/aries/tags/blueprint-0.3.1/blueprint-core/src/main/resources/org/apache/aries/blueprint/ext/blueprint-ext.xsd"     
 >
-
-  <!-- 
-  				// add agents to the package
-				from("seda:add")
-				.beanRef("package", "addAgent")
-				.log("Agent '${body}' added");
-				
-				// every collection interval (1s)
-				//from("timer://collectTimer?fixedRate=true&period=1s&delay=3000")
-				//.to("seda:doCollection");
-				
-				from("seda:doCollection")
-				// get the list of agents whose data needs to be collected
-				.beanRef("package", "getAgents")
-				// for each agent
-				.split(body())
-					// collect data for the agent
-					.to("seda:collectAgents")
-				.end()
-				.log("Finished requesting collection ${property.CamelTimerCounter}.");
-					
-				
-				from("seda:collectAgents")
-				// create a request for data collection for the agent
-				.beanRef("snmpMetricRepository", "createRequestForAgent")
-				// collect the data for the agent
-				.bean(DefaultSnmpCollector.class, "collect")
-				// forward the data to the listening queue
-				.log("${body}")
-				.to("seda:sampleSets");
-
-				
-				// for each SampleSet
-				from("seda:sampleSets")
-				// send it the persister
-				.beanRef("sampleRepository", "save")
-				.to("log:samples?groupSize=" + AGENT_COUNT)
-				.to("mock:sampleSaved")
-				;
-  
-  
-   -->
    
-  <bp:reference id="snmpAgentRepository" interface="org.opennms.distributed.api.AgentRepository" filter="(protocol=SNMP)" />
-  <bp:reference id="snmpCollectionConfiguration" interface="org.opennms.distributed.api.CollectionConfiguration" filter="(protocol=SNMP)" />
-  <bp:reference id="sampleRepository" interface="org.opennms.distributed.api.SampleRepository" />
-  <bp:reference id="snmpCollector" interface="org.opennms.distributed.collector.snmp.SnmpCollector" />
+  <bp:reference id="snmpAgentRepository" interface="org.opennms.netmgt.api.sample.AgentRepository" filter="(protocol=SNMP)" />
+  <bp:reference id="snmpCollectionConfiguration" interface="org.opennms.netmgt.api.sample.CollectionConfiguration" filter="(protocol=SNMP)" />
+  <bp:reference id="sampleRepository" interface="org.opennms.netmgt.api.sample.SampleRepository" />
+  <bp:reference id="snmpCollector" interface="org.opennms.netmgt.sampler.snmp.SnmpCollector" />
 
   <camelContext>
     
