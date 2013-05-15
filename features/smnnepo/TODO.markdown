@@ -31,7 +31,9 @@ In order of importance:
  1. SampleSet is not great; Externalizable? Other, more compact serialization?
  1. netmgt.api.sample: javadocs
  1. Good tests for api.sample implementations (then remove old from api.sample)
+ 1. sampler.snmp.Column: don't recreate Metric from accessor
  
+
 Completed
 ---------
  1. Create OSGi bundle of Cassandra driver.
