@@ -4,10 +4,11 @@ TODO
 In order of importance:
 
  1. Integrate Sampler with OpenNMS
-    - Query nodes from 'package' associate with sampler
-    - Setup schedule for nodes in package
+    - Query nodes from 'package' associate with sampler (NOC side)
+    - Add look up of agent credentials for snmp querying (NOC side - part of config)
+    - Setup schedule for nodes in package (Store side using config from NOC)
     - Update agent to use 'nodeid' as agent identifier
-    - Add look up of agent credentials for snmp querying
+    - implement 'updateConfig' on snmpAgentRepository (save config Store side)
  1. Create 'MATH' api for applying math to Cassandra repository results
     - 'bucketize' raw data (including missed data collection)
     - calculate rate for COUNTER data
