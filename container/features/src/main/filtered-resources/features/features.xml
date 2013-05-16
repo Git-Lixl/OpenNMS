@@ -19,6 +19,9 @@
     </repository>
     <repository>mvn:org.opennms.osgi.features.topology/opennms-topology-dev/${project.version}/xml/features</repository>
 
+    <!-- sampler fetures -->
+    <repository>mvn:org.opennms.netmgt.sample/sample-parent/${project.version}/xml/features</repository>
+
     <!-- nrtg features -->
     <repository>mvn:org.opennms.osgi.features.nrtg/nrtg/${project.version}/xml/features</repository>
 
@@ -43,6 +46,8 @@
        <feature>vaadin-snmp-events-and-metrics</feature>
        <feature>vaadin-node-maps</feature>
        <feature>jmxconfiggenerator.webui</feature>
+       <feature>sample-graphs</feature>
+       <feature>samples-standalone</feature>
    </feature>
 
 </features>

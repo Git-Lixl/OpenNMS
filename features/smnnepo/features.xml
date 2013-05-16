@@ -47,7 +47,7 @@
     </feature>
 
 
-    <feature name="samples-standalone" description="Sample Collection and Storage :: Standalone routing">
+    <feature name="samples-standalone" description="Sample Collection and Storage :: Standalone routing" version="1.13.0-SNAPSHOT">
       <configfile finalname="/etc/routes-standalone.xml">mvn:org.opennms.netmgt.sample/sampler-routes/1.13.0-SNAPSHOT/xml/standalone</configfile>
       <feature>sampler-snmp</feature>
       <feature>sample-storage-cassandra</feature>
