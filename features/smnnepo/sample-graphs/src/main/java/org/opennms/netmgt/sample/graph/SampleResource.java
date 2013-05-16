@@ -21,7 +21,7 @@ import org.opennms.netmgt.api.sample.SampleRepository;
 import org.opennms.netmgt.api.sample.Timestamp;
 
 @Path("/samples") @Produces(MediaType.APPLICATION_JSON) public class SampleResource {
-	@SuppressWarnings("unused") private SampleRepository m_sampleRepository;
+	private SampleRepository m_sampleRepository;
 
 	@GET
 	@Path("{agentId}/{resourceType}/{resourceName}/{metric}")
@@ -37,7 +37,7 @@ import org.opennms.netmgt.api.sample.Timestamp;
 		Timestamp endTs = Timestamp.now();
 		Timestamp startTs = new Timestamp((endTs.asSeconds() - 360), TimeUnit.SECONDS);
 		Metric m1 = new Metric("ifHCInOctets", MetricType.COUNTER, "mib2-interfaces");
-		Metric m2 = new Metric("ifHCOutOctets", MetricType.COUNTER, "mib2-interfaces");
+		//Metric m2 = new Metric("ifHCOutOctets", MetricType.COUNTER, "mib2-interfaces");
 		
 		Results results = m_sampleRepository.find(startTs, endTs, r, m1);
 		StringBuilder sb = new StringBuilder();
