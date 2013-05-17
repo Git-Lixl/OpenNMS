@@ -112,4 +112,8 @@ public class SnmpMetricRepository implements CollectionConfiguration<SnmpAgent, 
 	public Set<Metric> getMetrics(String groupName) {
 		return m_dataCollectionConfig.getMetricsForGroup(groupName);
 	}
+	
+	public Metric getMetric(String metricName) {
+		return m_dataCollectionConfig.getMetric(metricName);
+	}
 }

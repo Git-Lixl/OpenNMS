@@ -140,4 +140,13 @@ public class Table {
 		return metrics;
 	}
 
+	public Metric getMetric(String metricName) {
+		for(Column column : m_columns) {
+			if (column.getAlias().equals(metricName)) {
+				return column.createMetric(getName());
+			}
+		}
+		return null;
+	}
+
 }

@@ -63,4 +63,13 @@ public class Group {
 		}
 		return metrics;
 	}
+
+	public Metric getMetric(String metricName) {
+		for(MibObject mibObj : m_mibObjects) {
+			if (mibObj.getAlias().equals(metricName)) {
+				return mibObj.createMetric(getName());
+			}
+		}
+		return null;
+	}
 }

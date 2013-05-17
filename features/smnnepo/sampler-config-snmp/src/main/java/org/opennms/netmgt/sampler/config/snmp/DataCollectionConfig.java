@@ -41,4 +41,12 @@ public class DataCollectionConfig {
 		}
 		return null;
 	}
+
+	public Metric getMetric(String metricName) {
+		for (SnmpCollection snmpCollection : m_snmpCollections) {
+			Metric metric = snmpCollection.getMetric(metricName);
+			if (metric != null) return metric;
+		}
+		return null;
+	}
 }

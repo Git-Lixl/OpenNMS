@@ -100,5 +100,19 @@ public class DataCollectionGroup {
 		return null;
 	}
 
+	public Metric getMetric(String metricName) {
+		for(Table table : m_tables) {
+			Metric metric = table.getMetric(metricName);
+			if (metric != null) { return metric; }
+		}
+		
+		for(Group group : m_groups) {
+			Metric metric = group.getMetric(metricName);
+			if (metric != null) { return metric; }
+		}
+		
+		return null;
+	}
+
 
 }

@@ -76,6 +76,14 @@ public class SnmpCollection {
 		}
 		return null;
 	}
+
+	public Metric getMetric(String metricName) {
+		for(DataCollectionGroup group : m_dataCollectionGroups) {
+			Metric metric = group.getMetric(metricName);
+			if (metric != null) { return metric; }
+		}
+		return null;
+	}
 	
 	
 
