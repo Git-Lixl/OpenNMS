@@ -18,11 +18,12 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.opennms.netmgt.api.sample.CollectionConfiguration;
 import org.opennms.netmgt.api.sample.Metric;
+import org.opennms.netmgt.api.sample.MetricRepository;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SnmpMetricRepository implements CollectionConfiguration<SnmpAgent, SnmpCollectionRequest> {
+public class SnmpMetricRepository implements MetricRepository, CollectionConfiguration<SnmpAgent, SnmpCollectionRequest> {
 	
 	private static class Parser {
 		Unmarshaller m_unmarshaller;

@@ -27,6 +27,7 @@
   <service ref="snmpMetricRepository">
     <interfaces>
      <value>org.opennms.netmgt.api.sample.CollectionConfiguration</value>
+     <value>org.opennms.netmgt.api.sample.MetricRepository</value>
     </interfaces>
     <service-properties>
       <entry key="protocol" value="SNMP"/>

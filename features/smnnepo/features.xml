@@ -17,14 +17,20 @@
     <feature name="sample-api" description="Sample Collection and Storage :: API" version="1.13.0-SNAPSHOT">
       <bundle>mvn:org.opennms.netmgt.sample/sample-api/1.13.0-SNAPSHOT</bundle>
     </feature>
-    
-    <feature name="sampler-snmp" description="Sample Collection and Storage :: SNMP Collector" version="1.13.0-SNAPSHOT">
+
+    <feature name="sample-snmp-config" description="Sample Collection and Storage :: SNMP Configuration" version="1.13.0-SNAPSHOT">
       <feature>sample-api</feature>
       <feature>snmp</feature>
       <bundle>mvn:org.opennms.netmgt.sample/sampler-config-snmp/1.13.0-SNAPSHOT</bundle>
+    </feature>
+
+    <feature name="sampler-snmp" description="Sample Collection and Storage :: SNMP Collector" version="1.13.0-SNAPSHOT">
+      <feature>sample-api</feature>
+      <feature>snmp</feature>
+      <feature>sample-snmp-config</feature>
       <bundle>mvn:org.opennms.netmgt.sample/sampler-snmp/1.13.0-SNAPSHOT</bundle>
     </feature>
-    
+
     <feature name="cassandra-driver" description="Sample Collection and Storage :: Cassandra Driver" version="1.13.0-SNAPSHOT">
       <bundle>mvn:commons-cli/commons-cli/1.2</bundle>
       <bundle>mvn:commons-lang/commons-lang/2.6</bundle>
@@ -41,6 +47,7 @@
 
     <feature name="sample-graphs" description="Sample Collection and Storage :: Graphing" version="1.13.0-SNAPSHOT">
       <feature>sample-api</feature>
+      <feature>sample-snmp-config</feature>
       <feature>http-whiteboard</feature>
       <feature>cxf-jaxrs</feature>
       <bundle>mvn:org.opennms.netmgt.sample/sample-graphs/1.13.0-SNAPSHOT</bundle>

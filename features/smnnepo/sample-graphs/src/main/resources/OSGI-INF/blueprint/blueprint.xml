@@ -22,10 +22,12 @@
   
   <reference id="sampleRepository" interface="org.opennms.netmgt.api.sample.SampleRepository" />
   <reference id="agentRepository" interface="org.opennms.netmgt.api.sample.AgentRepository" />
+  <reference id="metricRepository" interface="org.opennms.netmgt.api.sample.MetricRepository" />
   
   <bean id="sampleResource" class="org.opennms.netmgt.sample.graph.SampleResource">
   	<property name="sampleRepository" ref="sampleRepository" />
   	<property name="agentRepository" ref="agentRepository" />
+  	<property name="metricRepository" ref="metricRepository" />
   </bean>
 
   <cxf:bus id="restBus">
