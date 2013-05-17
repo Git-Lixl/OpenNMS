@@ -21,11 +21,13 @@
   <service id="resources" ref="graphResources" interface="org.ops4j.pax.web.extender.whiteboard.ResourceMapping" />
   
   <reference id="sampleRepository" interface="org.opennms.netmgt.api.sample.SampleRepository" />
+  <reference id="agentRepository" interface="org.opennms.netmgt.api.sample.AgentRepository" />
   
   <bean id="sampleResource" class="org.opennms.netmgt.sample.graph.SampleResource">
   	<property name="sampleRepository" ref="sampleRepository" />
+  	<property name="agentRepository" ref="agentRepository" />
   </bean>
-  
+
   <cxf:bus id="restBus">
     <cxf:features>
       <cxf:logging/>

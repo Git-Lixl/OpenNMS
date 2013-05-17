@@ -106,7 +106,7 @@ public class CassandraSampleRepository extends CassandraStorage implements Sampl
 			// One-to-many: endpoint -> resources
 			batchInsert.add(
 					insertInto(T_RESOURCES_IDX)
-							.value(F_ENDPOINT, measurement.getResource().getAgent().getName())
+							.value(F_ENDPOINT, measurement.getResource().getAgent().getId())
 							.value(F_RESOURCE, measurement.getResource().getIdentifier())
 			);
 

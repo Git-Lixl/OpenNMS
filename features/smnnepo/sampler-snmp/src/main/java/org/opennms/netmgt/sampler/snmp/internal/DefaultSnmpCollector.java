@@ -19,7 +19,7 @@ public class DefaultSnmpCollector implements SnmpCollector {
 		SampleSet sampleSet = new SampleSet(Timestamp.now());
 		SnmpWalker walker = SnmpUtils.createWalker(
 				request.getAgentConfig(),
-				request.getAgent().getName(),
+				request.getAgent().getId(),
 				request.getCollectionTracker(sampleSet)
 		);
 		

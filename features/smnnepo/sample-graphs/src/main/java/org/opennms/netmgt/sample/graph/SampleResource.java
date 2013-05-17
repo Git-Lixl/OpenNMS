@@ -1,6 +1,5 @@
 package org.opennms.netmgt.sample.graph;
 
-import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
@@ -11,6 +10,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.opennms.netmgt.api.sample.Agent;
+import org.opennms.netmgt.api.sample.AgentRepository;
 import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.MetricType;
 import org.opennms.netmgt.api.sample.Resource;
@@ -22,6 +22,7 @@ import org.opennms.netmgt.api.sample.Timestamp;
 
 @Path("/samples") @Produces(MediaType.APPLICATION_JSON) public class SampleResource {
 	private SampleRepository m_sampleRepository;
+	private AgentRepository<?> m_agentRepository;
 
 	@GET
 	@Path("{agentId}/{resourceType}/{resourceName}/{metric}")
@@ -29,11 +30,10 @@ import org.opennms.netmgt.api.sample.Timestamp;
 			@PathParam("resourceName") String resourceName, @PathParam("metric") String metric,
 			@QueryParam("start") String start, @QueryParam("end") String end) {
 
+		Agent agent = m_agentRepository.getAgentById(agentId);
+
 		// SNMP:127.0.0.1:161|ifIndex|wlan0-84:3a:4b:0e:89:94
-		Resource r = new Resource(
-				new Agent(new InetSocketAddress("127.0.0.1", 161), "SNMP"),
-				"ifIndex",
-				"wlan0-84:3a:4b:0e:89:94");
+		Resource r = new Resource(agent, resourceType, resourceName);
 		Timestamp endTs = Timestamp.now();
 		Timestamp startTs = new Timestamp((endTs.asSeconds() - 360), TimeUnit.SECONDS);
 		Metric m1 = new Metric("ifHCInOctets", MetricType.COUNTER, "mib2-interfaces");
@@ -77,5 +77,9 @@ import org.opennms.netmgt.api.sample.Timestamp;
 
 	public void setSampleRepository(SampleRepository sampleRepo) {
 		m_sampleRepository = sampleRepo;
+	}
+
+	public void setAgentRepository(AgentRepository<?> agentRepository) {
+		m_agentRepository = agentRepository;
 	}
 }

@@ -14,11 +14,17 @@ public class SnmpAgent extends Agent {
 	private int m_timeout = 800;
 	private int m_retries = 2;
 
-	public SnmpAgent(InetSocketAddress agentAddress, String systemObjId) {
-		super(agentAddress, "SNMP");
+	public SnmpAgent(InetSocketAddress agentAddress, String systemObjId, String agentId) {
+		super(agentAddress, "SNMP", agentId);
 		m_systemObjId = systemObjId;
 	}
 	
+	@Deprecated
+	public SnmpAgent(InetSocketAddress agentAddress, String systemObjId) {
+		this(agentAddress, systemObjId, null);
+	}
+	
+	@Deprecated
 	public SnmpAgent(InetAddress agentAddr, String systemObjId) {
 		this(new InetSocketAddress(agentAddr, 161), systemObjId);
 	}
@@ -65,7 +71,7 @@ public class SnmpAgent extends Agent {
 
 	@Override
 	public String toString() {
-		return "SnmpAgent[name="+getName()
+		return "SnmpAgent[name="+getId()
 				+ ", community=" + m_community
 				+ ", version=" + m_version
 				+ ", timeout=" + m_timeout

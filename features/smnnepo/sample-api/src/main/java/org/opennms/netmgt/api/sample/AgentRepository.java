@@ -1,11 +1,12 @@
 package org.opennms.netmgt.api.sample;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface AgentRepository<T extends Agent> {
 	
 	void addAgent(T agent);
 	
-	List<T> getAgentsByProtocol(String protocol);
+	Collection<T> getAgentsByProtocol(String protocol);
 
+	T getAgentById(String agentId);
 }

@@ -23,7 +23,7 @@ public class Resource implements Comparable<Resource>, Serializable {
 	}
 
 	public String getIdentifier() {
-		return String.format("%s|%s|%s", m_agent.getName(), m_type, m_name);
+		return String.format("%s|%s|%s", m_agent.getId(), m_type, m_name);
 	}
 
 	public String getType() {
