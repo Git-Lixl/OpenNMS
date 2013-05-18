@@ -157,7 +157,7 @@ public class SnmpCollectorTest extends CamelTestSupport {
 		assertEquals(4, metrics.length);
 		
 		
-		Results results = repository.find(start, end, resource, metrics);
+		Results results = repository.find(null, start, end, resource, metrics);
 		assertNotNull(results);
 		System.err.println("RESULTS: " + results);
 		Collection<Row> rows = results.getRows();

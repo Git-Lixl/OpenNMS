@@ -18,6 +18,11 @@ public class Timestamp implements Comparable<Timestamp>, Serializable {
 		m_time = time;
 		m_unit = unit;
 	}
+	
+	public Timestamp(Date date) {
+		m_time = date.getTime();
+		m_unit = TimeUnit.MILLISECONDS;
+	}
 
 	/**
 	 * @param newUnit
@@ -112,5 +117,15 @@ public class Timestamp implements Comparable<Timestamp>, Serializable {
 	public Timestamp atStepBoundaryEnd(long stepSize, TimeUnit stepUnits) {
 		long ts = convert(stepUnits);
 		return new Timestamp(((ts/stepSize)+1)*stepSize, stepUnits);
+	}
+
+	public Timestamp plus(long time, TimeUnit unit) {
+		long duration = m_unit.convert(time, unit);
+		return new Timestamp(m_time+duration, m_unit);
+	}
+
+	public Timestamp minus(int time, TimeUnit unit) {
+		long duration = m_unit.convert(time, unit);
+		return new Timestamp(m_time-duration, m_unit);
 	}
 }

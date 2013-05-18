@@ -15,7 +15,10 @@ import java.util.concurrent.TimeUnit;
 import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.Resource;
 import org.opennms.netmgt.api.sample.Results;
+import org.opennms.netmgt.api.sample.Results.Row;
 import org.opennms.netmgt.api.sample.Sample;
+import org.opennms.netmgt.api.sample.SampleProcessor;
+import org.opennms.netmgt.api.sample.SampleProcessorBuilder;
 import org.opennms.netmgt.api.sample.SampleRepository;
 import org.opennms.netmgt.api.sample.SampleSet;
 import org.opennms.netmgt.api.sample.Timestamp;
@@ -37,8 +40,8 @@ public class CassandraSampleRepository extends CassandraStorage implements Sampl
 	}
 
 	/** {@inheritDoc} */
-	@Override
-	public Results find(Timestamp start, Timestamp end, Resource resource, Metric... metrics) {
+	//@Override
+	public Results find(SampleProcessorBuilder builder, Timestamp start, Timestamp end, Resource resource, Metric... metrics) {
 		LOG.debug(
 				"Finding samples of {} metrics between {} and {} for resource {}",
 				metrics.length,
@@ -57,22 +60,24 @@ public class CassandraSampleRepository extends CassandraStorage implements Sampl
 
 		if (start != null) cqlQuery.where(gte(F_COLLECTED_AT, start.asDate()));
 		if (end != null)   cqlQuery.where(lte(F_COLLECTED_AT, end.asDate()));
-
-		for (com.datastax.driver.core.Row row : executeQuery(cqlQuery)) {
-			Date collectedAt = row.getDate(F_COLLECTED_AT);
-			String metricName = row.getString(F_METRIC);
-			double metricValue = row.getDouble(F_VALUE);    // value can be null, but this driver will return 0.0d
-
-			for (Metric metric : metrics) {
-				if (metricName.equals(metric.getName())) {
-					Timestamp t = new Timestamp(collectedAt.getTime(), TimeUnit.MILLISECONDS);
-					Sample m = new Sample(resource, metric, t, metricValue);
-					results.addSample(m);
-				}
+		
+		
+		
+		CassandraAdapter adapter = new CassandraAdapter(resource, metrics, executeQuery(cqlQuery));
+		
+		builder.prepend(adapter);
+		
+		SampleProcessor processor = builder.getProcessor();
+		
+		while(processor.hasNext()) {
+			Row row = processor.next();
+			for(Sample sample : row) {
+				results.addSample(sample);
 			}
 		}
-
+		
 		return results;
+
 	}
 
 	/** {@inheritDoc} */

@@ -18,6 +18,7 @@ import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.Resource;
 import org.opennms.netmgt.api.sample.Results;
 import org.opennms.netmgt.api.sample.Sample;
+import org.opennms.netmgt.api.sample.SampleProcessorBuilder;
 import org.opennms.netmgt.api.sample.SampleRepository;
 import org.opennms.netmgt.api.sample.SampleSet;
 import org.opennms.netmgt.api.sample.Timestamp;
@@ -98,8 +99,10 @@ public class SimpleFileRepository implements SampleRepository {
     }
     
 	@Override
-	public Results find(Timestamp start, Timestamp end, Resource resource, Metric... metrics) {
+	public Results find(SampleProcessorBuilder builder, Timestamp start, Timestamp end, Resource resource, Metric... metrics) {
 		if (resource == null) throw new IllegalArgumentException("null resource argument");
+		// TODO make this work
+		if (builder != null) throw new IllegalArgumentException("builder functionality still needs to be implemented here!");
 		
 		loadAttributesForResource(resource);
 

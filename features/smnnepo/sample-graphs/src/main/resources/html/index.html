@@ -59,14 +59,16 @@ var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
+    .attr("class", "graph")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 function promptBox() {
      var path = prompt("What would you like to graph today?");
-     paint("/cxf/samples/" + path);
+     paint("../../cxf/samples/" + path);
 };
 
 var paint = function(path) {
+	d3.select(".graph").selectAll("g").remove();
     createGraph(path);
 };
 
@@ -105,6 +107,8 @@ d3.json(path, function(error, data) {
       .attr("x", 3)
       .attr("dy", ".35em")
       .text(function(d) { return d.key; });
+  
+
 });
 };
 

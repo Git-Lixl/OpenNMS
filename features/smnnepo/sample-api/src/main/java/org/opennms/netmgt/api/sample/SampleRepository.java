@@ -15,6 +15,9 @@ public interface SampleRepository {
 	 * for the matching {@code metrics} (so <i>be careful</i>).
 	 * </p>
 	 * 
+	 * @param processor
+	 * 	a processor that processes the data as it is read
+	 * 
 	 * @param start
 	 *            the start time of this search.
 	 * @param end
@@ -25,7 +28,7 @@ public interface SampleRepository {
 	 *            a sequence of metrics to filter the results against.
 	 * @return a {@link Results} instance containing the results of the search.
 	 */
-	public Results find(Timestamp start, Timestamp end, Resource resource, Metric... metrics);
+	public Results find(SampleProcessorBuilder builder, Timestamp start, Timestamp end, Resource resource, Metric... metrics);
 	
 	public void save(SampleSet samples);
 }

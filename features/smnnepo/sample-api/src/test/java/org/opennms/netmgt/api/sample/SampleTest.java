@@ -310,7 +310,8 @@ public class SampleTest
 		assertNull(resource.getAttribute("version"));
 		assertNull(resource.getAttribute("vendor"));
 
-		Results results = repository.find(start, end, resource, searchMetrics);
+		// TODO this needs to return something
+		Results results = repository.find(null, start, end, resource, searchMetrics);
 
 		// Ensure find() populated resource with attributes
 		assertEquals("6", results.getResource().getAttribute("version"));

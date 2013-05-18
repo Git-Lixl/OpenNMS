@@ -13,7 +13,7 @@ import java.util.TreeSet;
 
 public class Results implements Iterable<Results.Row> {
 	
-	public static class Row {
+	public static class Row implements Iterable<Sample> {
 		Timestamp m_timestamp;
 		Map<Metric, Sample> m_cells = new HashMap<Metric, Sample>();
 		
@@ -28,9 +28,17 @@ public class Results implements Iterable<Results.Row> {
 		public Sample getSample(Metric metric) {
 			return m_cells.get(metric);
 		}
+		
+		public Collection<Sample> getSamples() {
+			return m_cells.values();
+		}
 
 		public Timestamp getTimestamp() {
 			return m_timestamp;
+		}
+		
+		public Iterator<Sample> iterator() {
+			return m_cells.values().iterator();
 		}
 
 		@Override
@@ -71,7 +79,8 @@ public class Results implements Iterable<Results.Row> {
 	}
 	
 	public void addSample(Sample m) {
-		m_columns.get(m.getMetric()).add(m);
+		SortedSet<Sample> column = m_columns.get(m.getMetric());
+		column.add(m);
 		
 		Row r = m_rows.get(m.getTimestamp());
 		if (r == null) {
@@ -82,7 +91,7 @@ public class Results implements Iterable<Results.Row> {
 		r.addSample(m);
 	}
 	
-	public SortedSet<Sample>getColumn(Metric m) {
+	public SortedSet<Sample> getColumn(Metric m) {
 		return m_columns.get(m);
 	}
 

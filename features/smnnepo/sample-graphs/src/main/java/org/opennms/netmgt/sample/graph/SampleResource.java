@@ -19,10 +19,14 @@ import org.opennms.netmgt.api.sample.Resource;
 import org.opennms.netmgt.api.sample.Results;
 import org.opennms.netmgt.api.sample.Results.Row;
 import org.opennms.netmgt.api.sample.Sample;
+import org.opennms.netmgt.api.sample.SampleProcessorBuilder;
 import org.opennms.netmgt.api.sample.SampleRepository;
 import org.opennms.netmgt.api.sample.Timestamp;
+import org.opennms.netmgt.api.sample.math.Rate;
 
-@Path("/samples") @Produces(MediaType.APPLICATION_JSON) public class SampleResource {
+@Path("/samples") 
+@Produces(MediaType.APPLICATION_JSON) 
+public class SampleResource {
 	private SampleRepository m_sampleRepository;
 	private AgentRepository<?> m_agentRepository;
 	private MetricRepository m_metricRepository;
@@ -38,7 +42,7 @@ import org.opennms.netmgt.api.sample.Timestamp;
 		// SNMP:127.0.0.1:161|ifIndex|wlan0-84:3a:4b:0e:89:94
 		Resource r = new Resource(agent, resourceType, resourceName);
 		Timestamp endTs = Timestamp.now();
-		Timestamp startTs = new Timestamp((endTs.asSeconds() - 360), TimeUnit.SECONDS);
+		Timestamp startTs = endTs.minus(6, TimeUnit.MINUTES); 
 		
 		// Matt made me do this!
 		List<Metric> metrics = new ArrayList<Metric>();
@@ -47,7 +51,10 @@ import org.opennms.netmgt.api.sample.Timestamp;
 			metrics.add(m_metricRepository.getMetric(metricName));
 		}
 		
-		Results results = m_sampleRepository.find(startTs, endTs, r, metrics.toArray(new Metric[0]));
+		SampleProcessorBuilder bldr = new SampleProcessorBuilder();
+		bldr.append(new Rate());
+		
+		Results results = m_sampleRepository.find(bldr, startTs, endTs, r, metrics.toArray(new Metric[0]));
 		StringBuilder sb = new StringBuilder();
 		boolean first = false;
 		int i = 0;
@@ -72,7 +79,13 @@ import org.opennms.netmgt.api.sample.Timestamp;
 				Sample sample = row.getSample(met);
 				sb.append('"').append(met.getName()).append('"').append(',');
 				sb.append(sample.getTimestamp().asMillis()).append(',');
-				sb.append(sample.getValue());
+				double value = sample.getValue();
+				if (Double.isNaN(value) || Double.isInfinite(value)) {
+					sb.append("null");
+				} else {
+					sb.append(value);
+				}
+
 
 				sb.append("]");
 			}
