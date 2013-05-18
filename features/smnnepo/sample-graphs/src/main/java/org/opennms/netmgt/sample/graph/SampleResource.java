@@ -63,9 +63,9 @@ public class SampleResource {
 		
 		for (Row row : results) {
 			i++;
-			if ((i % 10) != 0) {
-				continue;
-			}
+//			if ((i % 10) != 0) {
+//				continue;
+//			}
 			
 			for (Metric met : results.getMetrics()) {
 				if (!first) {
