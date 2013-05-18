@@ -9,7 +9,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.opennms.netmgt.api.sample.Agent;
 import org.opennms.netmgt.api.sample.AgentRepository;
@@ -41,9 +43,32 @@ public class SampleResource {
 
 		// SNMP:127.0.0.1:161|ifIndex|wlan0-84:3a:4b:0e:89:94
 		Resource r = new Resource(agent, resourceType, resourceName);
-		Timestamp endTs = Timestamp.now();
-		Timestamp startTs = endTs.minus(6, TimeUnit.MINUTES); 
 		
+		/*
+		 * FIXME: Start and end as integer seconds. This works, but "Java(tm)
+		 * Sucks At Time Parsing" seems to be bad reason for not being more
+		 * flexible here.
+		 */
+		Integer iStart = null, iEnd = null;
+		try {
+			if (start != null) {
+				iStart = Integer.parseInt(start);
+			}
+			if (end != null) {
+				iEnd = Integer.parseInt(end);
+			}
+		}
+		catch (NumberFormatException e) {
+			throw new WebApplicationException(Response.serverError().build());
+		}
+		
+		Timestamp endTs = (iEnd != null) ? new Timestamp(iEnd, TimeUnit.SECONDS) : Timestamp.now();
+		Timestamp startTs = (iStart != null) ? new Timestamp(iStart, TimeUnit.SECONDS) : endTs.minus(6, TimeUnit.MINUTES);
+
+		/*
+		 * FIXME: CSV metrics done here to get something working; Not an
+		 * explicit design decision.
+		 */
 		// Matt made me do this!
 		List<Metric> metrics = new ArrayList<Metric>();
 		
