@@ -13,7 +13,7 @@ import org.opennms.netmgt.api.sample.Timestamp;
 import org.opennms.netmgt.api.sample.Results.Row;
 
 
-public class Util {
+public abstract class Util {
 
 	private static class TestAdapter extends SampleProcessor {
 		Iterator<Row> m_iterator;
@@ -33,8 +33,8 @@ public class Util {
 		}
 	}
 
-	static Results find(Resource resource, Timestamp start, Timestamp end, SampleProcessorBuilder bldr, Metric metric) {
-		TestAdapter adapter = new TestAdapter(testData(resource, metric));
+	Results find(Resource resource, Timestamp start, Timestamp end, SampleProcessorBuilder bldr, Metric metric) {
+		TestAdapter adapter = new TestAdapter(testData(300, TimeUnit.SECONDS, start, end, resource, metric));
 
 		bldr.prepend(adapter);
 
@@ -51,21 +51,7 @@ public class Util {
 		return results;
 	}
 
-	static Results testData(Resource resource, Metric... metrics) {
-		return testData(5, 300, TimeUnit.SECONDS, resource, metrics);
-	}
-
-	static Results testData(int sampleCount, int step, TimeUnit unit, Resource resource, Metric... metrics) {
-		Results testData = new Results(resource, metrics);
-		Timestamp now = Timestamp.now().minus(sampleCount*step, unit);
-		for(int i = 0; i < sampleCount; i++) {
-			Timestamp ts = now.plus(i*step, unit);
-			for(int j = 0; j < metrics.length; j++) {
-				testData.addSample(new Sample(resource, metrics[j], ts, i*(j+1)*300.0));
-			}
-		}
-		return testData;
-	}
+	abstract Results testData(int step, TimeUnit unit, Timestamp start, Timestamp end, Resource resource, Metric... metrics);
 
 	static void printResults(Results r) {
 		for (Results.Row row : r.getRows()) {
