@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
 public class SampleSetTest {
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testSerialization() throws IOException, ClassNotFoundException {
 		Timestamp time = new Timestamp(System.currentTimeMillis(), TimeUnit.MILLISECONDS);

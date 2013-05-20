@@ -21,6 +21,7 @@ class JvmCollector {
 
 	JvmCollector.JvmMetric[] m_metrics;
 
+	@SuppressWarnings("deprecation")
 	public JvmCollector() throws UnknownHostException {
 		m_resource = new Resource(new Agent(InetAddress.getLocalHost(), 80, "http"), "jvm", "resources");
 		m_resource.setAttribute("version", "6");
