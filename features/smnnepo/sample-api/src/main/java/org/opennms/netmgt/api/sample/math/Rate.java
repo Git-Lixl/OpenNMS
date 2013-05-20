@@ -6,7 +6,8 @@ import org.opennms.netmgt.api.sample.Timestamp;
 import org.opennms.netmgt.api.sample.Results.Row;
 
 public class Rate extends SampleProcessor {
-	Row prev;
+	Row m_prev;
+
 	@Override
 	public boolean hasNext() {
 		return getProcessor().hasNext();
@@ -18,15 +19,14 @@ public class Rate extends SampleProcessor {
 		
 		Row newRow = new Row(r.getTimestamp());
 		for(Sample s : r) {
-			Timestamp prevTime = prev == null ? null : prev.getTimestamp();
-			double prevVal = prev == null ? Double.NaN : prev.getSample(s.getMetric()).getValue();
-			long elapsed = prev == null ? 0 : s.getTimestamp().asMillis() - prevTime.asMillis(); 
-			double rate = prev == null ? Double.NaN : 1000.0*(s.getValue() - prevVal) / elapsed;
+			Timestamp prevTime = m_prev == null ? null : m_prev.getTimestamp();
+			double prevVal = m_prev == null ? Double.NaN : m_prev.getSample(s.getMetric()).getValue();
+			long elapsed = m_prev == null ? 0 : s.getTimestamp().asMillis() - prevTime.asMillis(); 
+			double rate = m_prev == null ? Double.NaN : 1000.0*(s.getValue() - prevVal) / elapsed;
 			Sample newSample = new Sample(s.getResource(), s.getMetric(), s.getTimestamp(), rate);
 			newRow.addSample(newSample);
 		}
-		prev = r;
+		m_prev = r;
 		return newRow;
 	}
-	
 }
