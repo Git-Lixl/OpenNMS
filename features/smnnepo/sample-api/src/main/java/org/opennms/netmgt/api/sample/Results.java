@@ -14,10 +14,11 @@ import java.util.TreeSet;
 public class Results implements Iterable<Results.Row> {
 	
 	public static class Row implements Iterable<Sample> {
+		Resource m_resource;
 		Timestamp m_timestamp;
 		Map<Metric, Sample> m_cells = new HashMap<Metric, Sample>();
-		
-		public Row(Timestamp timestamp) {
+
+		public Row(Resource resource, Timestamp timestamp) {
 			m_timestamp = timestamp;
 		}
 
@@ -43,6 +44,10 @@ public class Results implements Iterable<Results.Row> {
 		
 		public Iterator<Sample> iterator() {
 			return m_cells.values().iterator();
+		}
+
+		public Resource getResource() {
+			return m_resource;
 		}
 
 		@Override
@@ -88,7 +93,7 @@ public class Results implements Iterable<Results.Row> {
 		
 		Row r = m_rows.get(m.getTimestamp());
 		if (r == null) {
-			r = new Row(m.getTimestamp());
+			r = new Row(m_resource, m.getTimestamp());
 			m_rows.put(m.getTimestamp(), r);
 		}
 		

@@ -10,14 +10,14 @@ public class Rate extends SampleProcessor {
 
 	@Override
 	public boolean hasNext() {
-		return getProcessor().hasNext();
+		return getProducer().hasNext();
 	}
 
 	@Override
 	public Row next() {
-		Row r = getProcessor().next();
+		Row r = getProducer().next();
 		
-		Row newRow = new Row(r.getTimestamp());
+		Row newRow = new Row(r.getResource(), r.getTimestamp());
 		for(Sample s : r) {
 			Timestamp prevTime = m_prev == null ? null : m_prev.getTimestamp();
 			double prevVal = m_prev == null ? Double.NaN : m_prev.getSample(s.getMetric()).getValue();
@@ -26,8 +26,10 @@ public class Rate extends SampleProcessor {
 			Sample newSample = new Sample(s.getResource(), s.getMetric(), s.getTimestamp(), rate);
 			newRow.addSample(newSample);
 		}
+
 		m_prev = r;
-		return newRow;
+
+		return fillMissingSamples(newRow);
 	}
 
 	@Override

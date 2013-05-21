@@ -63,7 +63,7 @@ public class CassandraAdapter extends SampleProcessor {
 		}
 
 		Timestamp timestamp = collectedAt(m_peeked);
-		Row resultRow = new Results.Row(timestamp);
+		Row resultRow = new Results.Row(m_resource, timestamp);
 
 		do {
 			String metricName = metricName(m_peeked);

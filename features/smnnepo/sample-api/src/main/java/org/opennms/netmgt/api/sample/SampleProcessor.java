@@ -8,15 +8,10 @@ import org.opennms.netmgt.api.sample.Results.Row;
 public abstract class SampleProcessor implements Iterator<Row> {
 	private SampleProcessor m_producer;
 
-	@Deprecated
-	protected SampleProcessor getProcessor() {
-		return getProducer();
-	}
-
 	public void setProducer(SampleProcessor producer) {
 		m_producer = producer;
 	}
-	
+
 	public SampleProcessor getProducer() {
 			return m_producer;
 	}
@@ -40,5 +35,24 @@ public abstract class SampleProcessor implements Iterator<Row> {
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("Iterator<Row>.remove is not yet implemented.");
+	}
+
+	/**
+	 * Add in NaN samples for any Metrics missing from this {@link Row}
+	 * 
+	 * @param row
+	 *            the row to transform.
+	 * @return the (same) row, with any missing samples added.
+	 */
+	protected Row fillMissingSamples(Row row) {
+		if (getProducer().getMetrics() != null) {
+			for (Metric metric : getProducer().getMetrics()) {
+				if (!row.containsSample(metric)) {
+					row.addSample(new Sample(row.getResource(), metric, row.getTimestamp(), Double.NaN));
+				}
+			}
+		}
+
+		return row;
 	}
 }
