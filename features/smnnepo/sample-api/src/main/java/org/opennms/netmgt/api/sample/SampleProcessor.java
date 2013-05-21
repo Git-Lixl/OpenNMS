@@ -45,7 +45,7 @@ public abstract class SampleProcessor implements Iterator<Row> {
 	 * @return the (same) row, with any missing samples added.
 	 */
 	protected Row fillMissingSamples(Row row) {
-		if (getProducer().getMetrics() != null) {
+		if (getMetrics() != null) {
 			for (Metric metric : getProducer().getMetrics()) {
 				if (!row.containsSample(metric)) {
 					row.addSample(new Sample(row.getResource(), metric, row.getTimestamp(), Double.NaN));

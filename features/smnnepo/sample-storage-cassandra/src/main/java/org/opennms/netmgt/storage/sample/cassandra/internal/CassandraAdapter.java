@@ -80,13 +80,6 @@ public class CassandraAdapter extends SampleProcessor {
 
 		} while(m_peeked != null && timestamp.equals(collectedAt(m_peeked)));
 
-		// Fill in any samples we didn't find in the DB w/ NaN
-		for (Metric metric : m_metrics) {
-			if (!resultRow.containsSample(metric)) {
-				resultRow.addSample(new Sample(m_resource, metric, timestamp, Double.NaN));
-			}
-		}
-
-		return resultRow;
+		return fillMissingSamples(resultRow);
 	}
 }
