@@ -1,5 +1,7 @@
 package org.opennms.netmgt.storage.sample.cassandra.internal;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -46,6 +48,11 @@ public class CassandraAdapter extends SampleProcessor {
 	
 	private double metricValue(com.datastax.driver.core.Row row) {
 		return m_peeked.isNull(CassandraStorage.F_VALUE) ? Double.NaN : m_peeked.getDouble(CassandraStorage.F_VALUE);
+	}
+
+	@Override
+	public Collection<Metric> getMetrics() {
+		return Arrays.asList(m_metrics);
 	}
 
 	@Override
