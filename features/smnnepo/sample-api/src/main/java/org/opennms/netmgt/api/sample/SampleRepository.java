@@ -2,10 +2,10 @@ package org.opennms.netmgt.api.sample;
 
 
 public interface SampleRepository {
-	
+
 	/**
-	 * Returns measurements matching a set of metrics, for a given resource, and
-	 * time range.
+	 * Returns measurements for a set of metrics, a given resource, and a time
+	 * range.
 	 * 
 	 * <p>
 	 * Passing a null value for {@code start} or {@code end} serves to make that
@@ -15,9 +15,14 @@ public interface SampleRepository {
 	 * for the matching {@code metrics} (so <i>be careful</i>).
 	 * </p>
 	 * 
-	 * @param processor
-	 * 	a processor that processes the data as it is read
+	 * <p>
+	 * <i>Note: There is no guarantee that a sample period will include results
+	 * for every requested metric (or any of them, in fact); Missing samples are
+	 * recorded with a value of Double.NaN.</i>
+	 * </p>
 	 * 
+	 * @param processor
+	 *            a processor that processes the data as it is read.
 	 * @param start
 	 *            the start time of this search.
 	 * @param end
@@ -25,7 +30,7 @@ public interface SampleRepository {
 	 * @param resource
 	 *            the resource to query.
 	 * @param metrics
-	 *            a sequence of metrics to filter the results against.
+	 *            a sequence of metrics to include in the results.
 	 * @return a {@link Results} instance containing the results of the search.
 	 */
 	public Results find(SampleProcessorBuilder builder, Timestamp start, Timestamp end, Resource resource, Metric... metrics);

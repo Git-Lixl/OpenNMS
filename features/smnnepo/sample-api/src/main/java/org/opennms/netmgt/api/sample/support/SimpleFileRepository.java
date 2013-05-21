@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.Resource;
 import org.opennms.netmgt.api.sample.Results;
+import org.opennms.netmgt.api.sample.Results.Row;
 import org.opennms.netmgt.api.sample.Sample;
 import org.opennms.netmgt.api.sample.SampleProcessorBuilder;
 import org.opennms.netmgt.api.sample.SampleRepository;
@@ -136,7 +137,24 @@ public class SimpleFileRepository implements SampleRepository {
 					}
 				}
 			}
-			
+
+			/*
+			 * XXX: This back-fills any missing metrics with Double.NaN.
+			 * Obviously it would be better not to do this in a second pass, but
+			 * that calls for writing/parsing the files differently (samples
+			 * from the same interval stored in one line), or for more
+			 * cleverness than I can muster this very second.
+			 * 
+			 * This is currently only used for tests; Maybe it is Good Enough.
+			 */
+			for (Row row : results.getRows()) {
+				for (Metric metric : metrics) {
+					if (!row.containsSample(metric)) {
+						row.addSample(new Sample(resource, metric, row.getTimestamp(), Double.NaN));
+					}
+				}
+			}
+
 			return results;
 			
 		} catch (FileNotFoundException e) {

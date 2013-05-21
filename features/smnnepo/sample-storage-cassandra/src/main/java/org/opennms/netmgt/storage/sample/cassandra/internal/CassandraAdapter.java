@@ -50,13 +50,14 @@ public class CassandraAdapter extends SampleProcessor {
 
 	@Override
 	public Row next() {
-		
+
 		if (m_peeked == null) {
 			throw new NoSuchElementException("Attempt to get a element when no further element exists");
 		}
-		
+
 		Timestamp timestamp = collectedAt(m_peeked);
 		Row resultRow = new Results.Row(timestamp);
+
 		do {
 			String metricName = metricName(m_peeked);
 			double metricValue = metricValue(m_peeked); // return NaN for null values
@@ -67,13 +68,18 @@ public class CassandraAdapter extends SampleProcessor {
 					resultRow.addSample(m);
 				}
 			}
-			
+
 			m_peeked = m_resultIterator.hasNext() ? m_resultIterator.next() : null;
-				
+
 		} while(m_peeked != null && timestamp.equals(collectedAt(m_peeked)));
-		
+
+		// Fill in any samples we didn't find in the DB w/ NaN
+		for (Metric metric : m_metrics) {
+			if (!resultRow.containsSample(metric)) {
+				resultRow.addSample(new Sample(m_resource, metric, timestamp, Double.NaN));
+			}
+		}
+
 		return resultRow;
-
 	}
-
 }

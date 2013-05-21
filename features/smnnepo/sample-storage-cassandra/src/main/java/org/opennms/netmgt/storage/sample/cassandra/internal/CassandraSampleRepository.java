@@ -7,10 +7,8 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.lte;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.Resource;
@@ -60,9 +58,8 @@ public class CassandraSampleRepository extends CassandraStorage implements Sampl
 
 		if (start != null) cqlQuery.where(gte(F_COLLECTED_AT, start.asDate()));
 		if (end != null)   cqlQuery.where(lte(F_COLLECTED_AT, end.asDate()));
-		
-		
-		
+
+
 		CassandraAdapter adapter = new CassandraAdapter(resource, metrics, executeQuery(cqlQuery));
 		
 		builder.prepend(adapter);
@@ -77,7 +74,6 @@ public class CassandraSampleRepository extends CassandraStorage implements Sampl
 		}
 		
 		return results;
-
 	}
 
 	/** {@inheritDoc} */

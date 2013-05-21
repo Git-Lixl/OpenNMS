@@ -28,7 +28,11 @@ public class Results implements Iterable<Results.Row> {
 		public Sample getSample(Metric metric) {
 			return m_cells.get(metric);
 		}
-		
+
+		public boolean containsSample(Metric metric) {
+			return m_cells.containsKey(metric);
+		}
+
 		public Collection<Sample> getSamples() {
 			return m_cells.values();
 		}
