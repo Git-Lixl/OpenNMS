@@ -29,4 +29,9 @@ public class Rate extends SampleProcessor {
 		m_prev = r;
 		return newRow;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%s()", getClass().getSimpleName());
+	}
 }

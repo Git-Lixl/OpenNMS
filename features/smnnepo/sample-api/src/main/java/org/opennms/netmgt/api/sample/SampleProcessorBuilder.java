@@ -30,5 +30,7 @@ public class SampleProcessorBuilder {
 		return m_exit;
 	}
 
-
+	public String toString() {
+		return String.format("%s(entrance=%s, exit=%s)", getClass().getSimpleName(), m_entrance, m_exit);
+	}
 }
