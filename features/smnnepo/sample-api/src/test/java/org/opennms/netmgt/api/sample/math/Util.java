@@ -1,5 +1,6 @@
 package org.opennms.netmgt.api.sample.math;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
@@ -15,10 +16,12 @@ import org.opennms.netmgt.api.sample.Results.Row;
 
 public abstract class Util {
 
-	private static class TestAdapter extends SampleProcessor {
+	static class TestAdapter extends SampleProcessor {
+		Collection<Metric> m_metrics;
 		Iterator<Row> m_iterator;
 
 		public TestAdapter(Results results) {
+			m_metrics = results.getMetrics();
 			m_iterator = results.iterator();
 		}
 
@@ -30,6 +33,11 @@ public abstract class Util {
 		@Override
 		public Row next() {
 			return m_iterator.next();
+		}
+
+		@Override
+		public Collection<Metric> getMetrics() {
+			return m_metrics;
 		}
 	}
 
@@ -53,8 +61,8 @@ public abstract class Util {
 
 	abstract Results testData(int step, TimeUnit unit, Timestamp start, Timestamp end, Resource resource, Metric... metrics);
 
-	static void printResults(Results r) {
-		for (Results.Row row : r.getRows()) {
+	static void printResults(Iterable<Row> r) {
+		for (Results.Row row : r) {
 			System.out.printf("%s (%d): ", row.getTimestamp(), row.getTimestamp().asMillis());
 			for(Sample s : row) {
 				System.out.printf("%s:%f", s.getMetric().getName(), s.getValue());
