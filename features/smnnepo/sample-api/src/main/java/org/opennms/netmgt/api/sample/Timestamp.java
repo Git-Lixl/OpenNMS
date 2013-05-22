@@ -113,10 +113,18 @@ public class Timestamp implements Comparable<Timestamp>, Serializable {
 		long ts = convert(stepUnits);
 		return new Timestamp((ts/stepSize)*stepSize, stepUnits);
 	}
-	
+
 	public Timestamp atStepBoundaryEnd(long stepSize, TimeUnit stepUnits) {
 		long ts = convert(stepUnits);
 		return new Timestamp(((ts/stepSize)+1)*stepSize, stepUnits);
+	}
+
+	public Timestamp plus(Timestamp time) {
+		return plus(time.asMillis(), TimeUnit.MILLISECONDS);
+	}
+
+	public Timestamp minus(Timestamp time) {
+		return minus((int)time.asMillis(), TimeUnit.MILLISECONDS);
 	}
 
 	public Timestamp plus(long time, TimeUnit unit) {

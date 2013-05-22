@@ -24,7 +24,7 @@ import org.opennms.netmgt.api.sample.Timestamp;
 
 public class LerpTest extends Util {
 
-	private void assertLerp(LinkedHashMap<Long, Double> samples, LinkedHashMap<Long, Double> expected, long step, TimeUnit stepUnits) {
+	private void assertLerp(LinkedHashMap<Long, Double> samples, LinkedHashMap<Long, Double> expected, long heartBeat, long step, TimeUnit stepUnits) {
 		
 		Agent agent = new Agent(new InetSocketAddress("127.0.0.1", 161), "SNMP", "localhost");
 		Resource resource = new Resource(agent, "type", "name");
@@ -45,7 +45,7 @@ public class LerpTest extends Util {
 		}
 
 		SampleProcessorBuilder chain = new SampleProcessorBuilder().append(new TestAdapter(in));
-		chain.append(new Lerp(start, finish, step, stepUnits));
+		chain.append(new Lerp(start, finish, heartBeat, step, stepUnits));
 
 		SampleProcessor processor = chain.getProcessor();
 
@@ -96,7 +96,7 @@ public class LerpTest extends Util {
 			put(new Long(1800), new Double(87.8));
 		}};
 
-		assertLerp(input, expected, 300, TimeUnit.SECONDS);
+		assertLerp(input, expected, 600, 300, TimeUnit.SECONDS);
 	}
 
 	@Test
@@ -110,7 +110,7 @@ public class LerpTest extends Util {
 			put(new Long(1522), new Double(88.7));
 			put(new Long(1810), new Double(87.8));
 		}};
-		
+
 		@SuppressWarnings("serial") LinkedHashMap<Long, Double> expected = new LinkedHashMap<Long, Double>(7) {{
 			put(new Long(0), new Double(88.0418367346939));
 			put(new Long(300), new Double(97.4461300309598));
@@ -121,9 +121,9 @@ public class LerpTest extends Util {
 			put(new Long(1800), new Double(87.83125));
 		}};
 
-		assertLerp(input, expected, 300, TimeUnit.SECONDS);
+		assertLerp(input, expected, 600, 300, TimeUnit.SECONDS);
 	}
-	
+
 	@Test
 	public void testToStandardMissing() {
 		@SuppressWarnings("serial") LinkedHashMap<Long, Double> input = new LinkedHashMap<Long, Double>(7) {{
@@ -146,7 +146,7 @@ public class LerpTest extends Util {
 			put(new Long(1800), new Double(87.83125));
 		}};
 
-		assertLerp(input, expected, 300, TimeUnit.SECONDS);
+		assertLerp(input, expected, 600, 300, TimeUnit.SECONDS);
 	}
 
 	@Override

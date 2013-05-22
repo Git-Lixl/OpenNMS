@@ -16,6 +16,7 @@ public class Lerp extends SampleProcessor {
 	private final Iterator<Timestamp> m_stepsIter;
 	private final Timestamp m_start;
 	private final Timestamp m_finish;
+	private final long m_heartBeat;
 	private final long m_step;
 	private final TimeUnit m_stepUnits;
 
@@ -25,13 +26,14 @@ public class Lerp extends SampleProcessor {
 	private Timestamp m_currentStep = null;
 	private boolean initComplete = false;
 
-	public Lerp(final Timestamp start, final Timestamp finish, final long step) {
-		this(start, finish, step, STD_UNITS);
+	public Lerp(final Timestamp start, final Timestamp finish, final long heartBeat, final long step) {
+		this(start, finish, heartBeat, step, STD_UNITS);
 	}
 
-	public Lerp(final Timestamp start, final Timestamp finish, final long step, TimeUnit stepUnits) {
+	public Lerp(final Timestamp start, final Timestamp finish, final long heartBeat, final long step, TimeUnit stepUnits) {
 		m_start = start;
 		m_finish = finish;
+		m_heartBeat = heartBeat;
 		m_step = step;
 		m_stepUnits = stepUnits;
 		m_stepsIter = new Steps(m_start, m_finish, m_step, m_stepUnits).iterator();
@@ -104,7 +106,7 @@ public class Lerp extends SampleProcessor {
 		}
 	}
 
-	private static void storeInterpolatedSamples(Row out, Row rowL, Row rowR, Timestamp step, Collection<Metric> metrics) {
+	private void storeInterpolatedSamples(Row out, Row rowL, Row rowR, Timestamp step, Collection<Metric> metrics) {
 		for (Metric m : metrics) {
 			Sample yL = rowL.getSample(m);
 			Sample yR = rowR.getSample(m);
@@ -122,7 +124,11 @@ public class Lerp extends SampleProcessor {
 		}
 	}
 
-	private static double interpolate(Timestamp x, Timestamp x0, Timestamp x1, Sample y0, Sample y1) {
+	private double interpolate(Timestamp x, Timestamp x0, Timestamp x1, Sample y0, Sample y1) {
+		// Refuse to interpolate when points exceed threshold
+		if (x1.minus(x0).greaterThan(new Timestamp(m_heartBeat, m_stepUnits))) {
+			return Double.NaN;
+		}
 		return interpolate(x.asMillis(), x0.asMillis(), x1.asMillis(), y0.getValue(), y1.getValue());
 	}
 
