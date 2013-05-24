@@ -32,6 +32,10 @@ public abstract class SampleProcessor implements Iterator<Row> {
 		return (m_producer != null) ? getProducer().getMetrics() : null;
 	}
 
+	public Resource getResource() {
+		return (m_producer != null) ? getProducer().getResource() : null;
+	}
+
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("Iterator<Row>.remove is not yet implemented.");

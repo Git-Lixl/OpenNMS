@@ -17,10 +17,12 @@ import org.opennms.netmgt.api.sample.Results.Row;
 public abstract class Util {
 
 	static class TestAdapter extends SampleProcessor {
+		Resource m_resource;
 		Collection<Metric> m_metrics;
 		Iterator<Row> m_iterator;
 
 		public TestAdapter(Results results) {
+			m_resource = results.getResource();
 			m_metrics = results.getMetrics();
 			m_iterator = results.iterator();
 		}
@@ -38,6 +40,11 @@ public abstract class Util {
 		@Override
 		public Collection<Metric> getMetrics() {
 			return m_metrics;
+		}
+
+		@Override
+		public Resource getResource() {
+			return m_resource;
 		}
 	}
 

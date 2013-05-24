@@ -51,6 +51,11 @@ public class CassandraAdapter extends SampleProcessor {
 	}
 
 	@Override
+	public Resource getResource() {
+		return m_resource;
+	}
+
+	@Override
 	public Collection<Metric> getMetrics() {
 		return Arrays.asList(m_metrics);
 	}
