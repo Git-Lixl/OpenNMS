@@ -23,7 +23,9 @@
   <modules>
     <module>cassandra-driver</module>
     <module>sample-api</module>
+    <module>sample-test</module>
     <module>sample-storage-cassandra</module>
+    <module>sampler-config</module>
     <module>sampler-config-snmp</module>
     <module>sampler-snmp</module>
     <module>sampler-routes</module>
