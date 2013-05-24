@@ -111,11 +111,15 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+   <!-- remove this from here and use the implementation installed by whoever
+        is using this.  This allows for a simpler slf4j backend to be installed
+        for testing purposes in a module with a conflict here.
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <scope>runtime</scope>
     </dependency>
+    -->
     <dependency>
       <groupId>xml-apis</groupId>
       <artifactId>xml-apis</artifactId>
