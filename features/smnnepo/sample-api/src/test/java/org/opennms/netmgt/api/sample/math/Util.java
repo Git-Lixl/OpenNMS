@@ -55,9 +55,16 @@ public abstract class Util {
 
 		SampleProcessor processor = bldr.getProcessor();
 
-		Results results = new Results(resource, metric);
-		while(processor.hasNext()) {
-			Row row = processor.next();
+		return toResults(processor);
+	}
+
+	abstract Results testData(int step, TimeUnit unit, Timestamp start, Timestamp end, Resource resource, Metric... metrics);
+
+	static Results toResults(SampleProcessor proc) {
+		Results results = new Results(proc.getResource(), proc.getMetrics().toArray(new Metric[0]));
+
+		while(proc.hasNext()) {
+			Row row = proc.next();
 			for(Sample sample : row) {
 				results.addSample(sample);
 			}
@@ -65,8 +72,6 @@ public abstract class Util {
 
 		return results;
 	}
-
-	abstract Results testData(int step, TimeUnit unit, Timestamp start, Timestamp end, Resource resource, Metric... metrics);
 
 	static void printResults(Iterable<Row> r) {
 		for (Results.Row row : r) {
