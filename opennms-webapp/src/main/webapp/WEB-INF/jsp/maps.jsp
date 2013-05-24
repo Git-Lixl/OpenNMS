@@ -1,8 +1,9 @@
+<%--
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2013 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2013 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -26,33 +27,33 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.ncs.northbounder;
+--%>
 
-import org.opennms.core.soa.ServiceRegistry;
-import org.opennms.netmgt.alarmd.api.Northbounder;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
+<%@ page contentType="text/html;charset=UTF-8" language="java"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 
-public class NCSNorthbounderManager implements InitializingBean, DisposableBean {
-	
-	@Autowired
-	private ServiceRegistry m_serviceRegistry;
+<jsp:include page="/includes/header.jsp" flush="false">
+	<jsp:param name="title" value="OpenNMS Maps" />
+	<jsp:param name="breadcrumb" value="Maps" />
+</jsp:include>
 
-	@Autowired
-	private NCSNorthbounderConfigDao m_configDao;
-	
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		NCSNorthbounderConfig config = m_configDao.getConfig();
+<h3 class="o-box">OpenNMS Maps</h3>
+<div class="boxWrapper">
+<ul class="plain o-box">
+<c:forEach var="entry" items="${entries.entries}">
+	<c:choose>
+		<c:when test="${empty entry.url}">
+			<li>${entry.name}</li>
+		</c:when>
+		<c:otherwise>
+			<li><a href="${entry.url}">${entry.name}</a></li>
+		</c:otherwise>
+	</c:choose>
+</c:forEach>
+</ul>
+</div>
 
-		NCSNorthbounder northbounder = new NCSNorthbounder(config);
-		
-		m_serviceRegistry.register(northbounder, Northbounder.class);
-
-	}
-
-	@Override
-	public void destroy() throws Exception {
-	}
-}
+<jsp:include page="/includes/footer.jsp" flush="false" >
+	<jsp:param name="location" value="map" />
+</jsp:include>
+    
