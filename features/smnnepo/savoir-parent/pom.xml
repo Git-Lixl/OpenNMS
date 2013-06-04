@@ -1,0 +1,557 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>sample-parent</artifactId>
+        <groupId>org.opennms.netmgt.sample</groupId>
+        <version>1.13.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>savoir-parent</artifactId>
+    <name>OPENNMS :: Savoir build</name>
+    <description>OPENNMS Savoir Build</description>
+
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>shaded-bundles</module>
+        <module>jaxb-pool</module>
+        <module>jms-pooling</module>
+    </modules>
+
+    <!-- Build setup -->
+
+    <properties>
+
+        <!-- Versions -->
+        <!-- Note - Use the versions that are in the container that you are deploying to -->
+        <fuse.version.suffix>fuse-70-097</fuse.version.suffix>
+
+        <ant.version>1.7.0_6</ant.version>
+
+        <aries.blueprint.version>0.3.1</aries.blueprint.version>
+        <aries.blueprint.jpa.version>0.3</aries.blueprint.jpa.version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- maven surefire version added here so it could be overridden -->
+        <maven.compiler.plugin.version>3.0</maven.compiler.plugin.version>
+        <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
+        <maven.resources.plugin.version>2.6</maven.resources.plugin.version>
+        <maven.surefire.plugin.version>2.13</maven.surefire.plugin.version>
+        <maven.surefire.report.plugin.version>2.13</maven.surefire.report.plugin.version>
+        <maven.eclipse.plugin.version>2.9</maven.eclipse.plugin.version>
+        <maven.pax.plugin.version>1.5</maven.pax.plugin.version>
+        <!-- turn down the default DEBUG logLevel. Override on the command line if you want -->
+        <dist.name>opennms-${project.version}</dist.name>
+        <!-- dependency versions -->
+        <activemq.version>5.8.0</activemq.version>
+        <aries-blueprint-version>0.3.1</aries-blueprint-version>
+        <camel.version>2.10.4</camel.version>
+        <cxf.version>2.5.0</cxf.version>
+        <cxf.xjc.version>2.6.0</cxf.xjc.version>
+        <log4jVersion>1.2.17</log4jVersion>
+        <pax-tiny-bundle-version>1.3.1</pax-tiny-bundle-version>
+        <slf4j-version>1.6.6</slf4j-version>
+        <pojosr-version>0.1.8</pojosr-version>
+        <jdk.version>1.7</jdk.version>
+        <compiler.fork>1.6</compiler.fork>
+        <!-- eclipse plugin need the jaxb in this pom.xml file -->
+        <jaxb-version>2.1.13</jaxb-version>
+        <jaxb-api-version>2.1</jaxb-api-version>
+        <maven-bundle-version>2.3.4</maven-bundle-version>
+        <guava-version>14.0.1</guava-version>
+
+
+        <postgres.version>9.1-901.jdbc4</postgres.version>
+
+        <!-- OSGi dependencies -->
+        <felix-version>2.1.0</felix-version>
+
+        <!-- OSGi bundles properties -->
+        <opennms.osgi.import.blazent.version>
+            version="[$(version;==;${opennms.osgi.version.clean}),$(version;=+;${opennms.osgi.version.clean}))"
+        </opennms.osgi.import.blazent.version>
+        <opennms.osgi.import.strict.version>
+            version="[$(version;===;${opennms.osgi.version.clean}),$(version;==+;${opennms.osgi.version.clean}))"
+        </opennms.osgi.import.strict.version>
+        <opennms.osgi.import.default.version>[$(version;==;$(@)),$(version;+;$(@)))
+        </opennms.osgi.import.default.version>
+        <opennms.osgi.import.defaults>
+            org.springframework.*;version="[2.5,4)",
+            javax.persistence.*;version="[1.1,2)"
+        </opennms.osgi.import.defaults>
+        <opennms.osgi.import.before.defaults/>
+        <opennms.osgi.import.additional/>
+        <opennms.osgi.import.pkg>
+            !${opennms.osgi.export.pkg},
+            org.opennms.*;${opennms.osgi.import.opennms.version},
+            ${opennms.osgi.import.before.defaults},
+            ${opennms.osgi.import.defaults},
+            ${opennms.osgi.import.additional},
+            *,
+        </opennms.osgi.import.pkg>
+        <opennms.osgi.activator/>
+        <opennms.osgi.failok>false</opennms.osgi.failok>
+        <opennms.osgi.private.pkg>!*</opennms.osgi.private.pkg>
+        <opennms.osgi.export>${opennms.osgi.export.pkg};${opennms.osgi.version}</opennms.osgi.export>
+        <opennms.osgi.version>version=${project.version}</opennms.osgi.version>
+        <opennms.osgi.split.pkg>-split-package:=first</opennms.osgi.split.pkg>
+        <opennms.osgi.import>${opennms.osgi.import.pkg}</opennms.osgi.import>
+        <opennms.osgi.dynamic/>
+        <opennms.osgi.symbolic.name>${project.groupId}.${project.artifactId}</opennms.osgi.symbolic.name>
+        <opennms.osgi.exclude.dependencies>false</opennms.osgi.exclude.dependencies>
+        <opennms.osgi.export.pkg>
+            org.opennms.*
+        </opennms.osgi.export.pkg>
+        <opennms.osgi.import>
+            !org.opennms.*,
+            org.apache.xalan.xsltc.trax;resolution:=optional,
+            javax.activation;resolution:=optional,
+            javax.xml.bind;resolution:=optional,
+            javax.xml.bind.annotation;resolution:=optional,
+            javax.xml.bind.annotation.adapters;resolution:=optional,
+            javax.xml.stream;resolution:=optional,
+            org.springframework.jmx.export.annotation;resolution:=optional;version="[2.5,4)",
+            org.springframework.jmx.export.assembler;resolution:=optional;version="[2.5,4)",
+            org.springframework.jmx.export.metadata;resolution:=optional;version="[2.5,4)",
+            *
+        </opennms.osgi.import>
+        <opennms.osgi.dynamic>
+            <!--
+            org.apache.camel.spring.util;${opennms.osgi.import.strict.version},org.apache.camel.processor.interceptor.jpa;${opennms.osgi.import.strict.version}
+            -->
+        </opennms.osgi.dynamic>
+        <!--
+        <opennms.osgi.activator>
+
+        </opennms.osgi.activator>
+        -->
+
+        <!--<osgi-version>4.3.0</osgi-version>-->
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.7</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-eclipse-plugin</artifactId>
+                    <version>${maven.eclipse.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.ops4j</groupId>
+                    <artifactId>maven-pax-plugin</artifactId>
+                    <version>${maven.pax.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <configuration>
+                        <archiveClasses>true</archiveClasses>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>${maven-bundle-version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                    <configuration>
+                        <archive>
+                            <manifestEntries>
+                                <Bundle-SymbolicName>${project.groupId}.${project.artifactId}.source
+                                </Bundle-SymbolicName>
+                                <Bundle-Version>${opennms.osgi.version.clean}</Bundle-Version>
+                                <Eclipse-SourceBundle>
+                                    ${project.groupId}.${project.artifactId};version="${opennms.osgi.version.clean}"
+                                </Eclipse-SourceBundle>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.7</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>properties-maven-plugin</artifactId>
+                    <version>1.0-alpha-2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <!-- Base osgi bundle plugin configuration for Opennms -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <id>create-prop</id>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <target>
+                                <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath"/>
+                                <property name="ant.regexp.regexpimpl" value="org.apache.tools.ant.util.regexp.Jdk14RegexpRegexp"/>
+                                <property name="mv" value="${project.version}"/>
+                                <echo message="Maven version: ${mv}"/>
+                                <propertyregex property="ov.p1" input="${mv}" regexp="(\d+)(?:\.(\d+)(?:\.(\d+))?)?(?:[^a-zA-Z0-9](.*))?" replace="\1"
+                                               defaultValue="0"/>
+                                <propertyregex property="ov.p2" input="${mv}" regexp="(\d+)(?:\.(\d+)(?:\.(\d+))?)?(?:[^a-zA-Z0-9](.*))?"
+                                               replace=".\2" defaultValue=".0"/>
+                                <propertyregex property="ov.p3" input="${mv}" regexp="(\d+)(?:\.(\d+)(?:\.(\d+))?)?(?:[^a-zA-Z0-9](.*))?"
+                                               replace=".\3" defaultValue=".0"/>
+                                <propertyregex property="ov.p4" input="${mv}" regexp="(\d+)(?:\.(\d+)(?:\.(\d+))?)?(?:[^a-zA-Z0-9](.*))?"
+                                               replace=".\4" defaultValue=""/>
+                                <propertyregex property="ov.p1a" input="${ov.p1}" regexp="(.+)" replace="\1" defaultValue="0"/>
+                                <propertyregex property="ov.p2a" input="${ov.p2}" regexp="(\..+)" replace="\1" defaultValue=".0"/>
+                                <propertyregex property="ov.p3a" input="${ov.p3}" regexp="(\..+)" replace="\1" defaultValue=".0"/>
+                                <propertyregex property="ov.p4a" input="${ov.p4}" regexp="(\..+)" replace="\1" defaultValue=""/>
+                                <property name="ov" value="${ov.p1a}${ov.p2a}${ov.p3a}${ov.p4a}"/>
+                                <property name="os" value="${ov.p1a}${ov.p2a}"/>
+                                <echo message="OSGi version: ${ov}"/>
+                                <mkdir dir="target"/>
+                                <echo file="target/opennms.osgi.version.txt">
+                                    opennms.osgi.version.clean = ${ov}
+                                    opennms.schema.version = ${os}
+                                </echo>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                 <!--
+                    <dependency>
+                        <groupId>javax.xml.bind</groupId>
+                        <artifactId>jaxb-api</artifactId>
+                        <version>${jaxb-api-version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.sun.xml.bind</groupId>
+                        <artifactId>jaxb-impl</artifactId>
+                        <version>${jaxb-version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.sun.xml.bind</groupId>
+                        <artifactId>jaxb-xjc</artifactId>
+                        <version>${jaxb-version}</version>
+                    </dependency>
+                    -->
+                    <dependency>
+                        <groupId>ant-contrib</groupId>
+                        <artifactId>ant-contrib</artifactId>
+                        <version>1.0b3</version>
+                        <exclusions>
+                            <exclusion>
+                                <artifactId>ant</artifactId>
+                                <groupId>ant</groupId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+                    <dependency>
+                        <groupId>ant</groupId>
+                        <artifactId>ant-optional</artifactId>
+                        <version>1.5.3-1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <files>
+                                <file>target/opennms.osgi.version.txt</file>
+                            </files>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <inherited>true</inherited>
+                <configuration>
+                    <excludeDependencies>${opennms.osgi.exclude.dependencies}</excludeDependencies>
+                    <instructions>
+                        <Bundle-Name>${project.artifactId}</Bundle-Name>
+                        <Bundle-SymbolicName>${opennms.osgi.symbolic.name}</Bundle-SymbolicName>
+                        <Bundle-Activator>${opennms.osgi.activator}</Bundle-Activator>
+                        <Export-Package>${opennms.osgi.export}</Export-Package>
+                        <Import-Package>${opennms.osgi.import}</Import-Package>
+                        <DynamicImport-Package>${opennms.osgi.dynamic}</DynamicImport-Package>
+                        <Private-Package>${opennms.osgi.private.pkg}</Private-Package>
+                        <Implementation-Title>OpenNMS POC</Implementation-Title>
+                        <Implementation-Version>${project.version}</Implementation-Version>
+                        <_versionpolicy>${opennms.osgi.import.default.version}</_versionpolicy>
+                        <_failok>${opennms.osgi.failok}</_failok>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven.resources.plugin.version}</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                    <escapeString>\</escapeString>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <inherited>false</inherited>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/assembly/dist.xml</descriptor>
+                    </descriptors>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <tarLongFileMode>gnu</tarLongFileMode>
+                    <outputDirectory>${dist.dir}</outputDirectory>
+                    <finalName>${dist.name}</finalName>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencyManagement>
+        <dependencies>
+
+            <dependency>
+                <groupId>org.apache.aries.blueprint</groupId>
+                <artifactId>org.apache.aries.blueprint</artifactId>
+                <version>${aries.blueprint.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-bundle</artifactId>
+                <version>${cxf.version}</version>
+            </dependency>
+
+            <!-- Tycho -->
+
+            <dependency>
+                <groupId>com.blazent.tycho</groupId>
+                <artifactId>cassandra-testing</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.blazent.tycho</groupId>
+                <artifactId>cassandra-utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.camel</groupId>
+                <artifactId>camel-core</artifactId>
+                <version>${camel.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.camel</groupId>
+                <artifactId>camel-csv</artifactId>
+                <version>${camel.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.camel</groupId>
+                <artifactId>camel-jms</artifactId>
+                <version>${camel.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.camel</groupId>
+                <artifactId>camel-test</artifactId>
+                <version>${camel.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.activemq</groupId>
+                <artifactId>activemq-core</artifactId>
+                <version>${activemq.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.activemq</groupId>
+                <artifactId>activemq-pool</artifactId>
+                <version>${activemq.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava-version}</version>
+            </dependency>
+
+            <!-- logging -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>${slf4j-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>${log4jVersion}</version>
+            </dependency>
+
+            <!-- Cassandra integration libraries -->
+
+            <!-- Cassandra -->
+
+            <dependency>
+                <groupId>commons-pool</groupId>
+                <artifactId>commons-pool</artifactId>
+                <version>1.6</version>
+
+            </dependency>
+
+            <dependency>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>2.6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ecyrd.speed4j</groupId>
+                <artifactId>speed4j</artifactId>
+                <version>0.9</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.stephenc</groupId>
+                <artifactId>jamm</artifactId>
+                <version>0.2.5</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.stephenc.eaio-uuid</groupId>
+                <artifactId>uuid</artifactId>
+                <version>3.2.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>11.0.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
+                <artifactId>concurrentlinkedhashmap-lru</artifactId>
+                <version>1.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.cassandra</groupId>
+                <artifactId>cassandra-thrift</artifactId>
+                <version>1.1.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.2.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.2.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libthrift</artifactId>
+                <version>0.8.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.hectorclient</groupId>
+                <artifactId>hector-core</artifactId>
+                <version>1.1-0</version>
+            </dependency>
+
+            <!-- Logging -->
+
+            <dependency>
+                <groupId>org.cassandraunit</groupId>
+                <artifactId>cassandra-unit</artifactId>
+                <scope>test</scope>
+                <version>1.1.0.1</version>
+            </dependency>
+
+            <!-- Snappy is added  due to a MacOSX bug that prevents Cassandra from running
+                 due to  native library naming conventions.  This is fixed in Snappy 1.0.5
+                 and this should be able to be removed in later versions of Cassandra that
+                 ship with 1.0.5+.  This may be removed once Snappy of the right version
+                 is included with Cassandra and Cassandra Unit-->
+
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <scope>test</scope>
+                <version>1.0.5-M3</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>
