@@ -1,0 +1,77 @@
+<!--
+  ~ Copyright (c) 2012. Latinus S.A.
+  -->
+
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
+    <!-- Allows us to use system properties as variables in this configuration file -->
+
+    <cm:property-placeholder persistent-id="org.opennms.jms.pool" update-strategy="reload">
+        <cm:default-properties>
+            <cm:property name="amq.connection.url"
+                         value="tcp://localhost:61616?wireFormat.cacheEnabled=false&amp;wireFormat.tightEncodingEnabled=false&amp;wireFormat.maxInactivityDurationInitalDelay=30000"/>
+            <cm:property name="amq.connection.maxConnections" value="8"/>
+            <cm:property name="amq.connection.maximumActive" value="10"/>
+            <cm:property name="amq.client.connection.url"
+                         value="tcp://localhost:61616?wireFormat.cacheEnabled=false&amp;wireFormat.tightEncodingEnabled=false&amp;wireFormat.maxInactivityDurationInitalDelay=30000&amp;jms.prefetchPolicy.all=1"/>
+            <cm:property name="amq.client.session.cache.size" value="10"/>
+        </cm:default-properties>
+    </cm:property-placeholder>
+
+    <bean id="amqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="${amq.connection.url}"/>
+    </bean>
+
+    <bean id="amqPooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
+        <property name="maxConnections" value="${amq.connection.maxConnections}"/>
+        <property name="maximumActive" value="${amq.connection.maximumActive}"/>
+        <property name="connectionFactory" ref="amqConnectionFactory"/>
+    </bean>
+
+    <bean id="resourceManager" class="org.apache.activemq.pool.ActiveMQResourceManager" init-method="recoverResource">
+        <!--
+        <property name="transactionManager" ref="transactionManager"/>
+        -->
+        <property name="connectionFactory" ref="amqConnectionFactory"/>
+        <property name="resourceName" value="activemq.default"/>
+    </bean>
+
+    <!-- Client pool config -->
+
+    <bean id="amqClientConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="${amq.client.connection.url}"/>
+    </bean>
+
+    <!-- This may be the one to use - commenting this in case it may be needed... unfortunately it uses Spring
+    <bean id="sinardapClientPooledConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
+        <property name="targetConnectionFactory" ref="amqClientConnectionFactory"/>
+        <property name="sessionCacheSize" value="${amq.client.session.cache.size}"/>
+        <property name="cacheConsumers" value="false"/>
+    </bean>
+    -->
+
+    <!--bean id="resourceClientManager" class="org.apache.activemq.pool.ActiveMQResourceManager" init-method="recoverResource">
+        <property name="transactionManager" ref="transactionManager"/>
+        <property name="connectionFactory" ref="amqClientConnectionFactory"/>
+        <property name="resourceName" value="activemq.client.default"/>
+    </bean-->
+
+    <!-- Transactions -->
+
+    <!--reference id="transactionManager" interface="javax.transaction.TransactionManager"/-->
+
+    <!-- Service exposure -->
+
+    <service ref="amqPooledConnectionFactory" interface="javax.jms.ConnectionFactory">
+        <service-properties>
+            <entry key="producer" value="true"/>
+        </service-properties>
+    </service>
+
+    <service ref="amqClientConnectionFactory" interface="javax.jms.ConnectionFactory">
+        <service-properties>
+            <entry key="consumer" value="true"/>
+        </service-properties>
+    </service>
+
+</blueprint>

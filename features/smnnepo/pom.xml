@@ -30,6 +30,7 @@
     <module>sampler-snmp</module>
     <module>sampler-routes</module>
     <module>sample-graphs</module>
+      <module>savoir-parent</module>
   </modules>
 
   <properties>
