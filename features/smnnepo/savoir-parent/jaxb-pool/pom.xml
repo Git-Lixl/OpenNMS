@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>savoir-parent</artifactId>
+        <groupId>org.opennms.netmgt.sample</groupId>
+        <version>1.13.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>jaxb-pool</artifactId>
+
+    <packaging>bundle</packaging>
+
+    <name>OPENNMS :: JAXB POOL</name>
+    <description>OPENNMS JAXB Pool Module</description>
+
+    <properties>
+        <opennms.osgi.export.pkg>
+            org.opennms.jaxb.pool
+        </opennms.osgi.export.pkg>
+        <opennms.osgi.import.pkg>
+            org.apache.cxf,
+            *
+        </opennms.osgi.import.pkg>
+        <opennms.osgi.dynamic>org.osgi.service.blueprint,*</opennms.osgi.dynamic>
+    </properties>
+
+    <dependencies>
+
+        <!-- Commons Pool -->
+
+        <dependency>
+            <groupId>commons-pool</groupId>
+            <artifactId>commons-pool</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.opennms.tip</groupId>
+            <artifactId>cxf-dependencies</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+        </dependency>
+        <!--
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-bundle</artifactId>
+        </dependency>
+            -->
+        <dependency>
+            <groupId>org.apache.aries.blueprint</groupId>
+            <artifactId>org.apache.aries.blueprint</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </dependency>
+
+        <!-- Test -->
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+
+    </dependencies>
+
+</project>
