@@ -23,6 +23,9 @@ import org.opennms.netmgt.api.sample.Results.Row;
 
 
 public class RateTest extends Util {
+	private int m_step = 300;
+	private TimeUnit m_timeUnits = TimeUnit.SECONDS;
+
 
 	@Test
 	public void testNanSamples() {
@@ -103,7 +106,7 @@ public class RateTest extends Util {
 
 		System.out.println("IN ------------");
 
-		printResults(testData(stepSeconds, TimeUnit.SECONDS, start, end, resource, metric));
+		printResults(testData(start, end, resource, metric));
 
 		System.out.println();
 		System.out.println("OUT -----------");
@@ -136,15 +139,15 @@ public class RateTest extends Util {
 	}
 
 	/** Results where rate works out to exactly one for all samples */
-	Results testData(int step, TimeUnit unit, Timestamp start, Timestamp end, Resource resource, Metric... metrics) {
+	Results testData(Timestamp start, Timestamp end, Resource resource, Metric... metrics) {
 		Results testData = new Results(resource, metrics);
 		Timestamp current = start;
 
 		for (int i=0; current.lessThan(end); i++) {
 			for(int j = 0; j < metrics.length; j++) {
-				testData.addSample(new Sample(resource, metrics[j], current, i*(j+1)*(new Double(step))));
+				testData.addSample(new Sample(resource, metrics[j], current, i*(j+1)*(new Double(m_step))));
 			}
-			current = current.plus(step, unit);
+			current = current.plus(m_step, m_timeUnits);
 		}
 
 		return testData;

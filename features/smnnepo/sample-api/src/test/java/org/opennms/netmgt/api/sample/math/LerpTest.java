@@ -150,7 +150,7 @@ public class LerpTest extends Util {
 	}
 
 	@Override
-	Results testData(int step, TimeUnit unit, Timestamp start, Timestamp end, Resource resource, Metric... metrics) {
+	Results testData(Timestamp start, Timestamp end, Resource resource, Metric... metrics) {
 		return null;
 	}
 }
