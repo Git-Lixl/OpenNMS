@@ -18,10 +18,12 @@ import com.datastax.driver.core.ResultSet;
 
 
 public class CassandraAdapter extends SampleProcessor {
+
 	private Resource m_resource;
 	private Metric[] m_metrics;
 	private Iterator<com.datastax.driver.core.Row> m_resultIterator;
 	private com.datastax.driver.core.Row m_peeked;
+
 
 	public CassandraAdapter(Resource resource, Metric[] metrics, ResultSet resultSet) {
 		m_resource = resource;
@@ -86,5 +88,10 @@ public class CassandraAdapter extends SampleProcessor {
 		} while(m_peeked != null && timestamp.equals(collectedAt(m_peeked)));
 
 		return fillMissingSamples(resultRow);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s()", getClass().getSimpleName());
 	}
 }

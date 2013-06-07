@@ -168,6 +168,17 @@ public class RollUp extends SampleProcessor {
 		return time.plus(m_step, m_timeUnits);
 	}
 
+	@Override
+	public String toString() {
+		return String.format(
+				"%s | %s(%d, %d, %s)",
+				getProducer().toString(),
+				getClass().getSimpleName(),
+				m_heartBeat,
+				m_step,
+				m_timeUnits);
+	}
+
 	/**
 	 * A class to calculate a "Primary Data Point", or PDP (borrowed rrdtool
 	 * terminology), from an arbitrary number of sample rows.

@@ -34,6 +34,6 @@ public class Rate extends SampleProcessor {
 
 	@Override
 	public String toString() {
-		return String.format("%s()", getClass().getSimpleName());
+		return String.format("%s | %s()", getProducer().toString(), getClass().getSimpleName());
 	}
 }
