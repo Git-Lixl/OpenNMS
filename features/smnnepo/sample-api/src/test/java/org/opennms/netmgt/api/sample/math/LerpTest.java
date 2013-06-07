@@ -2,6 +2,8 @@ package org.opennms.netmgt.api.sample.math;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.opennms.netmgt.api.sample.math.Util.printResults;
+import static org.opennms.netmgt.api.sample.math.Util.toResults;
 
 import java.net.InetSocketAddress;
 import java.util.Iterator;
@@ -22,7 +24,7 @@ import org.opennms.netmgt.api.sample.SampleProcessorBuilder;
 import org.opennms.netmgt.api.sample.Timestamp;
 
 
-public class LerpTest extends Util {
+public class LerpTest {
 
 	private void assertLerp(LinkedHashMap<Long, Double> samples, LinkedHashMap<Long, Double> expected, long heartBeat, long step, TimeUnit stepUnits) {
 
@@ -44,7 +46,7 @@ public class LerpTest extends Util {
 			in.addSample(new Sample(resource, metric, new Timestamp(ts, stepUnits), samples.get(ts)));
 		}
 
-		SampleProcessorBuilder chain = new SampleProcessorBuilder().append(new TestAdapter(in));
+		SampleProcessorBuilder chain = new SampleProcessorBuilder().append(new Util.TestAdapter(in));
 		chain.append(new Lerp(start, finish, heartBeat, step, stepUnits));
 
 		SampleProcessor processor = chain.getProcessor();
@@ -141,10 +143,5 @@ public class LerpTest extends Util {
 		}};
 
 		assertLerp(input, expected, 600, 300, TimeUnit.SECONDS);
-	}
-
-	@Override
-	Results testData(Timestamp start, Timestamp end, Resource resource, Metric... metrics) {
-		return null;
 	}
 }
