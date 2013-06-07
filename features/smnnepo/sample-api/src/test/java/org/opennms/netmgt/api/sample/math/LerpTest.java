@@ -25,7 +25,7 @@ import org.opennms.netmgt.api.sample.Timestamp;
 public class LerpTest extends Util {
 
 	private void assertLerp(LinkedHashMap<Long, Double> samples, LinkedHashMap<Long, Double> expected, long heartBeat, long step, TimeUnit stepUnits) {
-		
+
 		Agent agent = new Agent(new InetSocketAddress("127.0.0.1", 161), "SNMP", "localhost");
 		Resource resource = new Resource(agent, "type", "name");
 		Metric metric = new Metric("metric", MetricType.GAUGE, "group");
@@ -49,13 +49,7 @@ public class LerpTest extends Util {
 
 		SampleProcessor processor = chain.getProcessor();
 
-		Results out = new Results(resource, metric);
-		while(processor.hasNext()) {
-			Row row = processor.next();
-			for(Sample sample : row) {
-				out.addSample(sample);
-			}
-		}
+		Results out = toResults(processor);
 
 		printResults(out);
 

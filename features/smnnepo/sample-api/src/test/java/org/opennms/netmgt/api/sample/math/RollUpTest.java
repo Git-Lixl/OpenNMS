@@ -34,7 +34,7 @@ public class RollUpTest extends Util {
 				in.addSample(new Sample(m_resource, m_metric, new Timestamp((300*i)+(i*60), TimeUnit.SECONDS), (i+1)*0.5d));
 			}
 		}
-
+	
 //		printResults(in);
 
 		SampleProcessor processor = new SampleProcessorBuilder()
