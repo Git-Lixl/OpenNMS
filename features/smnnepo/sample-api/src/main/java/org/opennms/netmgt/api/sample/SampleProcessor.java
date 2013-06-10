@@ -50,7 +50,7 @@ public abstract class SampleProcessor implements Iterator<Row> {
 	 */
 	protected Row fillMissingSamples(Row row) {
 		if (getMetrics() != null) {
-			for (Metric metric : getProducer().getMetrics()) {
+			for (Metric metric : getMetrics()) {
 				if (!row.containsSample(metric)) {
 					row.addSample(new Sample(row.getResource(), metric, row.getTimestamp(), Double.NaN));
 				}

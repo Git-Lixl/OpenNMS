@@ -25,6 +25,7 @@ import org.opennms.netmgt.api.sample.SampleProcessorBuilder;
 import org.opennms.netmgt.api.sample.SampleRepository;
 import org.opennms.netmgt.api.sample.Timestamp;
 import org.opennms.netmgt.api.sample.math.Rate;
+import org.opennms.netmgt.api.sample.math.RollUp;
 
 @Path("/samples") 
 @Produces(MediaType.APPLICATION_JSON) 
@@ -61,7 +62,7 @@ public class SampleResource {
 		catch (NumberFormatException e) {
 			throw new WebApplicationException(Response.serverError().build());
 		}
-		
+
 		Timestamp endTs = (iEnd != null) ? new Timestamp(iEnd, TimeUnit.SECONDS) : Timestamp.now();
 		Timestamp startTs = (iStart != null) ? new Timestamp(iStart, TimeUnit.SECONDS) : endTs.minus(6, TimeUnit.MINUTES);
 
@@ -71,27 +72,22 @@ public class SampleResource {
 		 */
 		// Matt made me do this!
 		List<Metric> metrics = new ArrayList<Metric>();
-		
+
 		for (String metricName : metricNames.split(",")) {
 			metrics.add(m_metricRepository.getMetric(metricName));
 		}
-		
+
 		SampleProcessorBuilder bldr = new SampleProcessorBuilder();
-		bldr.append(new Rate());
-		
+		bldr.append(new Rate()).append(new RollUp(200, 300, TimeUnit.SECONDS));
+
 		Results results = m_sampleRepository.find(bldr, startTs, endTs, r, metrics.toArray(new Metric[0]));
+
 		StringBuilder sb = new StringBuilder();
 		boolean first = false;
-		int i = 0;
 
 		sb.append('[').append("\n");
-		
+
 		for (Row row : results) {
-			i++;
-//			if ((i % 10) != 0) {
-//				continue;
-//			}
-			
 			for (Metric met : results.getMetrics()) {
 				if (!first) {
 					sb.append("  [");

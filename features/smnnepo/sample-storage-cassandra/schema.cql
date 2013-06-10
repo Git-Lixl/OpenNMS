@@ -32,7 +32,7 @@ CREATE TABLE samples (
     metric        text,
     value         double,
     PRIMARY KEY(resource, collected_at, metric)
-) WITH CLUSTERING ORDER BY (collected_at DESC);
+);
 
 CREATE TABLE samples_step3600 (
     resource      text,

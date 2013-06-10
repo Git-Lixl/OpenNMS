@@ -66,13 +66,15 @@ public class CassandraSampleRepository extends CassandraStorage implements Sampl
 		
 		SampleProcessor processor = builder.getProcessor();
 		
+		LOG.debug("Processing samples with: {}", processor);
+
 		while(processor.hasNext()) {
 			Row row = processor.next();
 			for(Sample sample : row) {
 				results.addSample(sample);
 			}
 		}
-		
+
 		return results;
 	}
 

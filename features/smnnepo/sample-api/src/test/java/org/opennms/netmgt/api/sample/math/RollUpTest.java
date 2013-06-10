@@ -1,6 +1,7 @@
 package org.opennms.netmgt.api.sample.math;
 
 import static org.junit.Assert.assertEquals;
+import static org.opennms.netmgt.api.sample.math.Util.toResults;
 
 import java.net.InetSocketAddress;
 import java.util.Iterator;
@@ -19,7 +20,7 @@ import org.opennms.netmgt.api.sample.SampleProcessorBuilder;
 import org.opennms.netmgt.api.sample.Timestamp;
 
 /* https://docs.google.com/spreadsheet/ccc?key=0AomEAKhQ7epPdFFPeHRBN0YzYXFFY3pBdzhBREhrREE&usp=sharing */
-public class RollUpTest extends Util {
+public class RollUpTest {
 	private final Agent m_agent = new Agent(new InetSocketAddress("127.0.0.1", 161), "SNMP", "localhost");
 	private final Resource m_resource = new Resource(m_agent, "type", "name");
 	private final Metric m_metric = new Metric("metric", MetricType.GAUGE, "group");	
@@ -34,11 +35,11 @@ public class RollUpTest extends Util {
 				in.addSample(new Sample(m_resource, m_metric, new Timestamp((300*i)+(i*60), TimeUnit.SECONDS), (i+1)*0.5d));
 			}
 		}
-
+	
 //		printResults(in);
 
 		SampleProcessor processor = new SampleProcessorBuilder()
-				.append(new TestAdapter(in))
+				.append(new Util.TestAdapter(in))
 				.append(new RollUp(400, 300, TimeUnit.SECONDS)).getProcessor();
 
 		Results out = toResults(processor);
@@ -81,7 +82,7 @@ public class RollUpTest extends Util {
 //		printResults(in);
 
 		SampleProcessor processor = new SampleProcessorBuilder()
-				.append(new TestAdapter(in))
+				.append(new Util.TestAdapter(in))
 				.append(new RollUp(400, 300, TimeUnit.SECONDS)).getProcessor();
 
 		Results out = toResults(processor);
@@ -123,7 +124,7 @@ public class RollUpTest extends Util {
 //		printResults(in);
 
 		SampleProcessor processor = new SampleProcessorBuilder()
-				.append(new TestAdapter(in))
+				.append(new Util.TestAdapter(in))
 				.append(new RollUp(200, 300, TimeUnit.SECONDS)).getProcessor();
 
 		Results out = toResults(processor);
@@ -152,10 +153,5 @@ public class RollUpTest extends Util {
 		r = rowsIter.next();
 		assertEquals(1500, r.getTimestamp().asSeconds());
 		assertEquals(Double.NaN, r.getSample(m_metric).getValue(), 0.0d);
-	}
-
-	@Override
-	Results testData(int step, TimeUnit unit, Timestamp start, Timestamp end, Resource resource, Metric... metrics) {
-		return null;
 	}
 }
