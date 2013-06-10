@@ -1,0 +1,72 @@
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
+
+    <cm:property-placeholder persistent-id="org.opennms.jpa.datasource" id="datsource" update-strategy="reload">
+        <cm:default-properties>
+
+            <!-- jdbc Drivers -->
+            <cm:property name="incop.jdbc.driverClassName" value="org.postgresql.Driver"/>
+            <cm:property name="incop.jdbc.url" value="jdbc:postgresql://localhost:5432/opennms"/>
+            <cm:property name="incop.jdbc.username" value="opennms"/>
+            <cm:property name="incop.jdbc.password" value="opennms"/>
+
+            <!-- Connection Pooling DBCP -->
+            <cm:property name="incop.jdbc.initialSize" value="5"/>
+            <cm:property name="incop.jdbc.maxActive" value="10"/>
+            <cm:property name="incop.jdbc.maxIdle" value="10"/>
+            <cm:property name="incop.jdbc.defaultAutoCommit" value="false"/>
+            <cm:property name="incop.jdbc.removeAbandoned" value="false"/>
+            <cm:property name="incop.jdbc.removeAbandonedTimeout" value="300"/>
+            <cm:property name="incop.jdbc.logAbandoned" value="false"/>
+
+        </cm:default-properties>
+    </cm:property-placeholder>
+
+    <service interface="javax.sql.DataSource" ref="jta">
+        <service-properties>
+            <entry key="opennmsTX" value="true"/>
+        </service-properties>
+    </service>
+
+    <service interface="javax.sql.DataSource" ref="nonJTA">
+        <service-properties>
+            <entry key="opennmsTX" value="false"/>
+        </service-properties>
+    </service>
+
+    <!-- Aries TX Manager -->
+    <reference id="txManager" interface="javax.transaction.TransactionManager" availability="mandatory"/>
+
+    <bean id="dataSource" class="org.enhydra.jdbc.standard.StandardXADataSource">
+        <property name="driverName" value="${incop.jdbc.driverClassName}"/>
+        <property name="url" value="${incop.jdbc.url}"/>
+        <property name="user" value="${incop.jdbc.username}"/>
+        <property name="password" value="${incop.jdbc.password}"/>
+        <property name="minCon" value="${incop.jdbc.initialSize}"/>
+        <property name="maxCon" value="${incop.jdbc.maxActive}"/>
+    </bean>
+
+    <bean id="jta" class="org.enhydra.jdbc.pool.StandardXAPoolDataSource">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="transactionManager" ref="txManager"/>
+        <property name="user" value="${incop.jdbc.username}"/>
+        <property name="password" value="${incop.jdbc.password}"/>
+        <property name="minSize" value="${incop.jdbc.initialSize}"/>
+        <property name="maxSize" value="${incop.jdbc.maxActive}"/>
+    </bean>
+
+    <bean class="org.apache.commons.dbcp.BasicDataSource" id="nonJTA">
+        <property name="driverClassName" value="${incop.jdbc.driverClassName}"/>
+        <property name="url" value="${incop.jdbc.url}"/>
+        <property name="username" value="${incop.jdbc.username}"/>
+        <property name="password" value="${incop.jdbc.password}"/>
+        <property name="initialSize" value="${incop.jdbc.initialSize}"/>
+        <property name="maxActive" value="${incop.jdbc.maxActive}"/>
+        <property name="maxIdle" value="${incop.jdbc.maxIdle}"/>
+        <property name="defaultAutoCommit" value="false"/>
+        <property name="removeAbandoned" value="${incop.jdbc.removeAbandoned}"/>
+        <property name="removeAbandonedTimeout" value="${incop.jdbc.removeAbandonedTimeout}"/>
+        <property name="logAbandoned" value="${incop.jdbc.logAbandoned}"/>
+    </bean>
+
+</blueprint>
