@@ -15,20 +15,20 @@
     </feature>
     
     <feature name="sample-api" description="Sample Collection and Storage :: API" version="1.13.0-SNAPSHOT">
-      <bundle>mvn:org.opennms.netmgt.sample/sample-api/1.13.0-SNAPSHOT</bundle>
+      <bundle>mvn:org.opennms.org.opennms.netmgt.sample/sample-api/1.13.0-SNAPSHOT</bundle>
     </feature>
 
     <feature name="sample-snmp-config" description="Sample Collection and Storage :: SNMP Configuration" version="1.13.0-SNAPSHOT">
       <feature>sample-api</feature>
       <feature>snmp</feature>
-      <bundle>mvn:org.opennms.netmgt.sample/sampler-config-snmp/1.13.0-SNAPSHOT</bundle>
+      <bundle>mvn:org.opennms.org.opennms.netmgt.sample/sampler-config-snmp/1.13.0-SNAPSHOT</bundle>
     </feature>
 
     <feature name="sampler-snmp" description="Sample Collection and Storage :: SNMP Collector" version="1.13.0-SNAPSHOT">
       <feature>sample-api</feature>
       <feature>snmp</feature>
       <feature>sample-snmp-config</feature>
-      <bundle>mvn:org.opennms.netmgt.sample/sampler-snmp/1.13.0-SNAPSHOT</bundle>
+      <bundle>mvn:org.opennms.org.opennms.netmgt.sample/sampler-snmp/1.13.0-SNAPSHOT</bundle>
     </feature>
 
     <feature name="cassandra-driver" description="Sample Collection and Storage :: Cassandra Driver" version="1.13.0-SNAPSHOT">
@@ -36,13 +36,13 @@
       <bundle>mvn:commons-lang/commons-lang/2.6</bundle>
       <bundle>mvn:joda-time/joda-time/2.2</bundle>
       <bundle>mvn:org.xerial.snappy/snappy-java/1.0.4.1</bundle>
-      <bundle>mvn:org.opennms.netmgt.sample/cassandra-driver/1.0.0-beta1</bundle>
+      <bundle>mvn:org.opennms.org.opennms.netmgt.sample/cassandra-driver/1.0.0-beta1</bundle>
     </feature>
 
     <feature name="sample-storage-cassandra" description="Sample Collection and Storage :: Cassandra" version="1.13.0-SNAPSHOT">
       <feature>sample-api</feature>
       <feature>cassandra-driver</feature>
-      <bundle>mvn:org.opennms.netmgt.sample/sample-storage-cassandra/1.13.0-SNAPSHOT</bundle>
+      <bundle>mvn:org.opennms.org.opennms.netmgt.sample/sample-storage-cassandra/1.13.0-SNAPSHOT</bundle>
     </feature>
 
     <feature name="sample-graphs" description="Sample Collection and Storage :: Graphing" version="1.13.0-SNAPSHOT">
@@ -50,12 +50,12 @@
       <feature>sample-snmp-config</feature>
       <feature>http-whiteboard</feature>
       <feature>cxf-jaxrs</feature>
-      <bundle>mvn:org.opennms.netmgt.sample/sample-graphs/1.13.0-SNAPSHOT</bundle>
+      <bundle>mvn:org.opennms.org.opennms.netmgt.sample/sample-graphs/1.13.0-SNAPSHOT</bundle>
     </feature>
 
 
     <feature name="samples-standalone" description="Sample Collection and Storage :: Standalone routing" version="1.13.0-SNAPSHOT">
-      <configfile finalname="/etc/routes-standalone.xml">mvn:org.opennms.netmgt.sample/sampler-routes/1.13.0-SNAPSHOT/xml/standalone</configfile>
+      <configfile finalname="/etc/routes-standalone.xml">mvn:org.opennms.org.opennms.netmgt.sample/sampler-routes/1.13.0-SNAPSHOT/xml/standalone</configfile>
       <feature>sampler-snmp</feature>
       <feature>sample-storage-cassandra</feature>
       <feature>camel-blueprint</feature>

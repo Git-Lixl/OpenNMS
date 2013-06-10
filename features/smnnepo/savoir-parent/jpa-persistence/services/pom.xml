@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>jpa-persistence</artifactId>
+        <groupId>org.opennms.netmgt.sample</groupId>
+        <version>1.13.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>servicess</artifactId>
+
+    <packaging>bundle</packaging>
+
+    <properties>
+        <opennms.osgi.export.pkg>
+            org.opennms.org.opennms.netmgt.actiond*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.archive*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.capsd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.charts*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.collectd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.discovery*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.eventd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.linkd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.notifd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.passive*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.poller*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.protocols*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.queued*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.rtc*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.scheduler*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.scriptd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.snmpinterfacepoller*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.spring*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.statsd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.syslogd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.threshd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.ticketd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.tl1d*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.translator*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.trapd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.utils*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.vacuumd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+            org.opennms.org.opennms.netmgt.xmlrpcd*;${opennms.osgi.split.pkg};${opennms.osgi.version},
+        </opennms.osgi.export.pkg>
+
+        <opennms.osgi.import>
+            org.apache.openjpa.enhance;version="[2.1.0,3)",
+            org.apache.openjpa.util;version="[2.1.0,3)",
+            javax.persistence,
+            javax.transaction,
+            org.hsqldb;resolution:=optional,
+            org.apache.regexp,
+            antlr;resolution:=optional,
+            com.novell.ldap;resolution:=optional,
+
+            jcifs.netbios;resolution:=optional,
+            jcifs.smb;resolution:=optional,
+            org.apache.bsf;resolution:=optional,
+            org.apache.bsf.util;resolution:=optional,
+            org.apache.commons.io;resolution:=optional;version="[2.0,3)",
+            org.apache.commons.jexl2;resolution:=optional;version="[2.0,3)",
+
+            org.apache.xmlrpc;resolution:=optional,
+            org.apache.xmlrpc.secure;resolution:=optional,
+            org.aspectj.lang;resolution:=optional,
+            org.aspectj.lang.annotation;resolution:=optional,
+            org.exolab.castor.xml;resolution:=optional,
+            org.hibernate.criterion;resolution:=optional,
+            org.jfree.chart;resolution:=optional,
+            org.jfree.chart.axis;resolution:=optional,
+            org.jfree.chart.labels;resolution:=optional,
+            org.jfree.chart.plot;resolution:=optional,
+            org.jfree.chart.renderer.category;resolution:=optional,
+            org.jfree.chart.title;resolution:=optional,
+            org.jfree.data.category;resolution:=optional,
+            org.jfree.data.jdbc;resolution:=optional,
+            org.jfree.util;resolution:=optional,
+            org.jivesoftware.smack;resolution:=optional,
+            org.jivesoftware.smack.packet;resolution:=optional,
+            org.jivesoftware.smackx.muc;resolution:=optional,
+            org.quartz,
+            *
+        </opennms.osgi.import>
+        <opennms.osgi.jpa.context>/META-INF/persistence.xml</opennms.osgi.jpa.context>
+
+    </properties>
+
+    <dependencies>
+
+        <!-- OPENNMS Ready Bundle deps -->
+
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-util</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-config</artifactId>
+            <scope>compile</scope>
+
+        </dependency>
+
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-config-model</artifactId>
+            <scope>test</scope>
+            <classifier>xsds</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-services</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- AsprectJ -->
+
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>${aspectjVersion}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${aspectjVersion}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.aries.jpa</groupId>
+            <artifactId>org.apache.aries.jpa.container</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.openjpa</groupId>
+            <artifactId>openjpa</artifactId>
+            <version>${openjpa.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.commons-dbcp</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dbunit</groupId>
+            <artifactId>dbunit</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>com.springsource.slf4j.jcl</artifactId>
+            <version>1.5.10</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjtools</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>com.springsource.org.hsqldb</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <version>3.0.7.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>1.5.3</version>
+        </dependency>
+
+    </dependencies>
+
+</project>

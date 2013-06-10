@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<dataset>
+
+    <pais id="1"/>
+
+    <seq_table id_name="some" id_value="100"/>
+
+</dataset>

@@ -12,10 +12,10 @@
 		https://svn.apache.org/repos/asf/aries/tags/blueprint-0.3.1/blueprint-core/src/main/resources/org/apache/aries/blueprint/ext/blueprint-ext.xsd"     
 >
    
-  <bp:reference id="snmpAgentRepository" interface="org.opennms.netmgt.api.sample.AgentRepository" filter="(protocol=SNMP)" />
-  <bp:reference id="snmpCollectionConfiguration" interface="org.opennms.netmgt.api.sample.CollectionConfiguration" filter="(protocol=SNMP)" />
-  <bp:reference id="sampleRepository" interface="org.opennms.netmgt.api.sample.SampleRepository" />
-  <bp:reference id="snmpCollector" interface="org.opennms.netmgt.sampler.snmp.SnmpCollector" />
+  <bp:reference id="snmpAgentRepository" interface="org.opennms.org.opennms.netmgt.api.sample.AgentRepository" filter="(protocol=SNMP)" />
+  <bp:reference id="snmpCollectionConfiguration" interface="org.opennms.org.opennms.netmgt.api.sample.CollectionConfiguration" filter="(protocol=SNMP)" />
+  <bp:reference id="sampleRepository" interface="org.opennms.org.opennms.netmgt.api.sample.SampleRepository" />
+  <bp:reference id="snmpCollector" interface="org.opennms.org.opennms.netmgt.sampler.snmp.SnmpCollector" />
 
   <camelContext>
     
