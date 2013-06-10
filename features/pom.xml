@@ -49,6 +49,9 @@
     <!-- webapps -->
     <module>root-webapp</module>
 
+    <!-- smnnepo -->
+    <module>smnnepo</module>
+
     <!-- GWT UI plugins -->
     <module>node-page-list</module>
     <module>opennms-gwt-theme</module>
