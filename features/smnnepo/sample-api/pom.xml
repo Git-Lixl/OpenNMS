@@ -13,8 +13,8 @@
   </parent>
 
   <properties>
-    <bundle.symbolicName>org.opennms.org.opennms.netmgt.api.sample</bundle.symbolicName>
-    <bundle.namespace>org.opennms.org.opennms.netmgt.api.sample</bundle.namespace>
+    <bundle.symbolicName>org.opennms.netmgt.api.sample</bundle.symbolicName>
+    <bundle.namespace>org.opennms.netmgt.api.sample</bundle.namespace>
   </properties>
 
   <modelVersion>4.0.0</modelVersion>

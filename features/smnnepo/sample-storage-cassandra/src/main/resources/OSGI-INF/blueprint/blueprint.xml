@@ -11,7 +11,7 @@
 >
 
   <!-- Override with an etc/org.opennms.netmgt.storage.sample.cassandra.cfg -->
-  <cm:property-placeholder id="appConfig" persistent-id="org.opennms.org.opennms.netmgt.storage.sample.cassandra" update-strategy="reload">
+  <cm:property-placeholder id="appConfig" persistent-id="org.opennms.netmgt.storage.sample.cassandra" update-strategy="reload">
     <cm:default-properties>
       <cm:property name="cassandraHost" value="localhost" />
       <cm:property name="cassandraPort" value="9042" />
@@ -19,13 +19,13 @@
     </cm:default-properties>
   </cm:property-placeholder>
 
-  <bean id="sampleRepository" class="org.opennms.org.opennms.netmgt.storage.sample.cassandra.internal.CassandraSampleRepository">
+  <bean id="sampleRepository" class="org.opennms.netmgt.storage.sample.cassandra.internal.CassandraSampleRepository">
     <argument value="${cassandraHost}" />
     <argument value="${cassandraPort}" />
     <argument value="${cassandraKeyspace}" />
   </bean>
   
-  <service id="sampleRepoRegistration" ref="sampleRepository" interface="org.opennms.org.opennms.netmgt.api.sample.SampleRepository">
+  <service id="sampleRepoRegistration" ref="sampleRepository" interface="org.opennms.netmgt.api.sample.SampleRepository">
     <service-properties>
       <entry key="impl" value="cassandra"/>
     </service-properties>

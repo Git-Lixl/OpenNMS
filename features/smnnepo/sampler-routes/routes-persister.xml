@@ -12,7 +12,7 @@
 		https://svn.apache.org/repos/asf/aries/tags/blueprint-0.3.1/blueprint-core/src/main/resources/org/apache/aries/blueprint/ext/blueprint-ext.xsd"     
 >
 
-  <bp:reference id="sampleRepository" interface="org.opennms.org.opennms.netmgt.api.sample.SampleRepository" />
+  <bp:reference id="sampleRepository" interface="org.opennms.netmgt.api.sample.SampleRepository" />
 
   <camelContext>
     

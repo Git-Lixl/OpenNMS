@@ -10,9 +10,9 @@
 		https://svn.apache.org/repos/asf/aries/tags/blueprint-0.3.1/blueprint-core/src/main/resources/org/apache/aries/blueprint/ext/blueprint-ext.xsd"
 >
 
-  <bean id="snmpCollector" class="org.opennms.org.opennms.netmgt.sampler.snmp.internal.DefaultSnmpCollector" />
+  <bean id="snmpCollector" class="org.opennms.netmgt.sampler.snmp.internal.DefaultSnmpCollector" />
   
-  <service ref="snmpCollector" interface="org.opennms.org.opennms.netmgt.sampler.snmp.SnmpCollector">
+  <service ref="snmpCollector" interface="org.opennms.netmgt.sampler.snmp.SnmpCollector">
     <service-properties>
       <entry key="protocol" value="SNMP"/>
     </service-properties>
