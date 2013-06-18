@@ -26,10 +26,14 @@ import org.opennms.netmgt.api.sample.SampleRepository;
 import org.opennms.netmgt.api.sample.Timestamp;
 import org.opennms.netmgt.api.sample.math.Rate;
 import org.opennms.netmgt.api.sample.math.RollUp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Path("/samples") 
 @Produces(MediaType.APPLICATION_JSON) 
 public class SampleResource {
+	private static final Logger	LOG	= LoggerFactory.getLogger(SampleResource.class);
+
 	private SampleRepository m_sampleRepository;
 	private AgentRepository<?> m_agentRepository;
 	private MetricRepository m_metricRepository;
@@ -60,6 +64,7 @@ public class SampleResource {
 			}
 		}
 		catch (NumberFormatException e) {
+			LOG.error("Unable to parse start and/or end timestamp as seconds");
 			throw new WebApplicationException(Response.serverError().build());
 		}
 
@@ -77,10 +82,39 @@ public class SampleResource {
 			metrics.add(m_metricRepository.getMetric(metricName));
 		}
 
+		LOG.debug("Parsed {} metrics from request", metrics.size());
+		LOG.debug("Processing metrics as {}", metrics.get(0).getType());
+
+		/*
+		 * FIXME: Validate the list of metrics. Make sure there is at least one
+		 * not-null (they can be null), and that they are all of the same type.
+		 * Consider changing the JSON output so that errors can be passed back
+		 * to the client instead of excepting here.
+		 */
+
 		SampleProcessorBuilder bldr = new SampleProcessorBuilder();
-		bldr.append(new Rate()).append(new RollUp(200, 300, TimeUnit.SECONDS));
+
+		switch (metrics.get(0).getType()) {
+			case COUNTER:
+				bldr.append(new Rate());
+				break;
+			case ABSOLUTE:
+				// TODO: do
+				break;
+			case DERIVE:
+				// TODO: do
+				break;
+			case GAUGE:
+				break;
+		}
+
+		bldr.append(new RollUp(200, 300, TimeUnit.SECONDS));
+
+		long tstamp = System.currentTimeMillis();
 
 		Results results = m_sampleRepository.find(bldr, startTs, endTs, r, metrics.toArray(new Metric[0]));
+
+		LOG.debug("Retrieved results from SampleRepository in {} msecs", (System.currentTimeMillis()-tstamp));
 
 		StringBuilder sb = new StringBuilder();
 		boolean first = false;
@@ -111,9 +145,11 @@ public class SampleResource {
 				sb.append("]");
 			}
 		}
-		
+
 		sb.append(']');
-		
+
+		LOG.debug("Returning JSON results for {} sample rows", results.getRows().size());
+
 		return sb.toString();
 	}
 

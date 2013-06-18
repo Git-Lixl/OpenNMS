@@ -68,12 +68,16 @@ public class CassandraSampleRepository extends CassandraStorage implements Sampl
 		
 		LOG.debug("Processing samples with: {}", processor);
 
+		long tstamp = System.currentTimeMillis();
+
 		while(processor.hasNext()) {
 			Row row = processor.next();
 			for(Sample sample : row) {
 				results.addSample(sample);
 			}
 		}
+
+		LOG.debug("Completed results processing in {} msecs", (System.currentTimeMillis() - tstamp));
 
 		return results;
 	}
