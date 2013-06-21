@@ -18,7 +18,7 @@ public class CounterValue extends SampleValue<BigInteger> {
 
 	@Override
 	public CounterValue delta(Number other) {
-		final BigInteger diff = m_value.subtract(getBigInt(other));
+		final BigInteger diff = getValue().subtract(getBigInt(other));
 
 		if (diff.compareTo(BigInteger.ZERO) < 0) {
 			final BigInteger diff32 = diff.add(MAX32).add(BigInteger.ONE);
@@ -37,42 +37,42 @@ public class CounterValue extends SampleValue<BigInteger> {
 
 	@Override
 	public CounterValue add(Number other) {
-		return new CounterValue(m_value.add(getBigInt(other)));
+		return new CounterValue(getValue().add(getBigInt(other)));
 	}
 
 	@Override
-	public SampleValue<?> subtract(Number other) {
-		return new CounterValue(m_value.subtract(getBigInt(other)));
+	public CounterValue subtract(Number other) {
+		return new CounterValue(getValue().subtract(getBigInt(other)));
 	}
 
 	@Override
-	public SampleValue<?> multiply(Number other) {
-		return new CounterValue(m_value.multiply(getBigInt(other)));
+	public CounterValue multiply(Number other) {
+		return new CounterValue(getValue().multiply(getBigInt(other)));
 	}
 
 	@Override
-	public SampleValue<?> divide(Number object) {
-		return new CounterValue(m_value.divide(getBigInt(object)));
+	public CounterValue divide(Number object) {
+		return new CounterValue(getValue().divide(getBigInt(object)));
 	}
 
 	@Override
 	public int intValue() {
-		return m_value.intValue();
+		return getValue().intValue();
 	}
 
 	@Override
 	public long longValue() {
-		return m_value.longValue();
+		return getValue().longValue();
 	}
 
 	@Override
 	public float floatValue() {
-		return m_value.floatValue();
+		return getValue().floatValue();
 	}
 
 	@Override
 	public double doubleValue() {
-		return m_value.doubleValue();
+		return getValue().doubleValue();
 	}
 
 	@Override
@@ -82,16 +82,16 @@ public class CounterValue extends SampleValue<BigInteger> {
 
 	@Override
 	public int compareTo(Number o) {
-		return m_value.compareTo(getBigInt(o));
+		return getValue().compareTo(getBigInt(o));
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof CounterValue) {
-			return m_value.equals(((CounterValue)o).getValue());
+			return getValue().equals(((CounterValue)o).getValue());
 		}
 		else if (o instanceof BigInteger) {
-			return m_value.equals(o);
+			return getValue().equals(o);
 		}
 
 		return false;
@@ -99,12 +99,7 @@ public class CounterValue extends SampleValue<BigInteger> {
 
 	@Override
 	public int hashCode() {
-		return m_value.hashCode();
-	}
-
-	@Override
-	public String toString() {
-		return m_value.toString();
+		return getValue().hashCode();
 	}
 
 	/*

@@ -45,16 +45,20 @@ public abstract class SampleValue<T extends Number> extends Number implements Co
 	}
 
 	public static ByteBuffer decompose(SampleValue<?> value) {
+		ByteBuffer res;
+
 		switch (value.getType()) {
 			case COUNTER:
 				byte[] bytes = ((BigInteger)value.getValue()).toByteArray();
-				ByteBuffer bb = ByteBuffer.allocate(bytes.length + 1).put(COUNTER).put(bytes);
-				bb.rewind();
-				return bb;
+				res = ByteBuffer.allocate(bytes.length + 1).put(COUNTER).put(bytes);
+				res.rewind();
+				return res;
 
 			// TODO: GAUGE/ DERIVE / ABSOLUTE are stubbed
 			case GAUGE:
-				return ByteBuffer.allocate(9).put(GAUGE).putDouble((Double)value.getValue());
+				res = ByteBuffer.allocate(9).put(GAUGE).putDouble((Double)value.getValue());
+				res.rewind();
+				return res;
 			case DERIVE:
 				return ByteBuffer.allocate(9).put(DERIVE).putLong((Long)value.getValue());
 			case ABSOLUTE:
@@ -62,6 +66,11 @@ public abstract class SampleValue<T extends Number> extends Number implements Co
 			default:
 				throw new IllegalArgumentException(String.format("value does not correspond to a known type"));
 		}
+	}
+
+	@Override
+	public String toString() {
+		return m_value.toString();
 	}
 
 	public abstract SampleValue<?> delta(Number other);
