@@ -9,59 +9,49 @@ public class GaugeValue extends SampleValue<Double> {
 		super(value);
 	}
 
-
 	@Override
-	public SampleValue<?> delta(Number other) {
-		// TODO Auto-generated method stub
-		return new GaugeValue(0.0d);
+	public GaugeValue delta(Number other) {
+		return new GaugeValue(Math.abs(getValue() - getDouble(other)));
 	}
 
 	@Override
-	public SampleValue<?> add(Number other) {
-		// TODO Auto-generated method stub
-		return null;
+	public GaugeValue add(Number other) {
+		return new GaugeValue(getValue() + getDouble(other));
 	}
 
 	@Override
-	public SampleValue<?> subtract(Number other) {
-		// TODO Auto-generated method stub
-		return null;
+	public GaugeValue subtract(Number other) {
+		return new GaugeValue(getValue() - getDouble(other));
 	}
 
 	@Override
-	public SampleValue<?> multiply(Number other) {
-		// TODO Auto-generated method stub
-		return null;
+	public GaugeValue multiply(Number other) {
+		return new GaugeValue(getValue() * getDouble(other));
 	}
 
 	@Override
-	public SampleValue<?> divide(Number object) {
-		// TODO Auto-generated method stub
-		return null;
+	public GaugeValue divide(Number object) {
+		return new GaugeValue(getValue() / getDouble(object));
 	}
 
 	@Override
 	public int intValue() {
-		// TODO Auto-generated method stub
-		return 0;
+		return getValue().intValue();
 	}
 
 	@Override
 	public long longValue() {
-		// TODO Auto-generated method stub
-		return 0;
+		return getValue().longValue();
 	}
 
 	@Override
 	public float floatValue() {
-		// TODO Auto-generated method stub
-		return 0;
+		return getValue().floatValue();
 	}
 
 	@Override
 	public double doubleValue() {
-		// TODO Auto-generated method stub
-		return m_value;
+		return getValue();
 	}
 
 	@Override
@@ -69,10 +59,34 @@ public class GaugeValue extends SampleValue<Double> {
 		return MetricType.GAUGE;
 	}
 
-
 	@Override
 	public int compareTo(Number o) {
-		// TODO Auto-generated method stub
-		return 0;
+		return getValue().compareTo(getDouble(o));
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof GaugeValue) {
+			return getValue().equals(((GaugeValue) o).getValue());
+		}
+		else if (o instanceof Double) {
+			return getValue().equals(o);
+		}
+
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return getValue().hashCode();
+	}
+
+	private Double getDouble(Number num) {
+		if (num instanceof GaugeValue) {
+			return ((GaugeValue)num).getValue();
+		}
+		else {
+			return num.doubleValue();
+		}
 	}
 }
