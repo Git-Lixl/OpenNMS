@@ -1,7 +1,7 @@
 package org.opennms.netmgt.api.sample.math;
 
 import static junit.framework.Assert.assertEquals;
-import static org.opennms.netmgt.api.sample.math.Util.toResults;
+import static junit.framework.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.util.Iterator;
@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.opennms.netmgt.api.sample.Agent;
+import org.opennms.netmgt.api.sample.CounterValue;
 import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.MetricType;
 import org.opennms.netmgt.api.sample.Resource;
@@ -23,7 +24,7 @@ public class RollUpRatesTest {
 
 	private final Agent m_agent = new Agent(new InetSocketAddress("127.0.0.1", 161), "SNMP", "localhost");
 	private final Resource m_resource = new Resource(m_agent, "type", "name");
-	private final Metric m_metric = new Metric("metric", MetricType.GAUGE, "group");
+	private final Metric m_metric = new Metric("metric", MetricType.COUNTER, "group");
 
 
 	@Test
@@ -32,7 +33,7 @@ public class RollUpRatesTest {
 		Timestamp start = new Timestamp(0, TimeUnit.SECONDS);
 
 		for (int i=0; i < 30000; i++) {
-			input.addSample(new Sample(m_resource, m_metric, start.plus(i, TimeUnit.SECONDS), i*1000));
+			input.addSample(new Sample(m_resource, m_metric, start.plus(i, TimeUnit.SECONDS), new CounterValue(i*1000)));
 		}
 
 		//printResults(input);
@@ -42,7 +43,7 @@ public class RollUpRatesTest {
 		        .append(new Rate())
 		        .append(new RollUp(200, 300, TimeUnit.SECONDS)).getProcessor();
 
-		Results output = toResults(processor);
+		Results output = Util.toResults(processor);
 
 		//printResults(output);
 
@@ -52,17 +53,14 @@ public class RollUpRatesTest {
 
 		for (int i = 0; rowIter.hasNext(); i++) {
 			Row r = rowIter.next();
-			double expect;
 
 			// First and last are NaN, all others 1,000
 			if (i == 0 || (!rowIter.hasNext())) {
-				expect = Double.NaN; 
+				assertTrue(r.getSample(m_metric).getValue().isNaN());
 			}
 			else {
-				expect = 1000.0d;
+				assertEquals(1000, r.getSample(m_metric).getValue().longValue());
 			}
-
-			assertEquals(expect, r.getSample(m_metric).getValue(), 0.0d);
 		}
 	}
 }

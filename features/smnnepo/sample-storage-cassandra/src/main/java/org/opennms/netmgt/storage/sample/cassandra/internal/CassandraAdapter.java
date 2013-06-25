@@ -9,6 +9,7 @@ import java.util.NoSuchElementException;
 import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.Resource;
 import org.opennms.netmgt.api.sample.Results;
+import org.opennms.netmgt.api.sample.SampleValue;
 import org.opennms.netmgt.api.sample.Results.Row;
 import org.opennms.netmgt.api.sample.Sample;
 import org.opennms.netmgt.api.sample.SampleProcessor;
@@ -47,10 +48,6 @@ public class CassandraAdapter extends SampleProcessor {
 	private String metricName(com.datastax.driver.core.Row row) {
 		return m_peeked.getString(CassandraStorage.F_METRIC);
 	}
-	
-	private double metricValue(com.datastax.driver.core.Row row) {
-		return m_peeked.isNull(CassandraStorage.F_VALUE) ? Double.NaN : m_peeked.getDouble(CassandraStorage.F_VALUE);
-	}
 
 	@Override
 	public Resource getResource() {
@@ -74,7 +71,7 @@ public class CassandraAdapter extends SampleProcessor {
 
 		do {
 			String metricName = metricName(m_peeked);
-			double metricValue = metricValue(m_peeked); // return NaN for null values
+			SampleValue<?> metricValue = SampleValue.compose(m_peeked.getBytes(CassandraStorage.F_VALUE));
 
 			for (Metric metric : m_metrics) {
 				if (metricName.equals(metric.getName())) {

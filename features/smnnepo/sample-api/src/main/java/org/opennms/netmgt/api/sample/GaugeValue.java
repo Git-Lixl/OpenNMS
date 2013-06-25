@@ -5,13 +5,21 @@ public class GaugeValue extends SampleValue<Double> {
 	private static final long	serialVersionUID	= 1L;
 
 
+	public GaugeValue(Integer value) {
+		this((double)value);
+	}
+
+	public GaugeValue(Long value) {
+		this((double)value);
+	}
+
 	public GaugeValue(Double value) {
 		super(value);
 	}
 
 	@Override
 	public GaugeValue delta(Number other) {
-		return new GaugeValue(Math.abs(getValue() - getDouble(other)));
+		return subtract(other);
 	}
 
 	@Override

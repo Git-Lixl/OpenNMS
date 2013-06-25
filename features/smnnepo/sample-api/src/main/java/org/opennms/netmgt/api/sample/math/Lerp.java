@@ -4,10 +4,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
+import org.opennms.netmgt.api.sample.NanValue;
 import org.opennms.netmgt.api.sample.Results.Row;
 import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.Sample;
 import org.opennms.netmgt.api.sample.SampleProcessor;
+import org.opennms.netmgt.api.sample.SampleValue;
 import org.opennms.netmgt.api.sample.Timestamp;
 
 public class Lerp extends SampleProcessor {
@@ -111,29 +113,30 @@ public class Lerp extends SampleProcessor {
 			Sample yL = rowL.getSample(m);
 			Sample yR = rowR.getSample(m);
 
-			double value;
+			SampleValue<?> value = null;
 
 			if (yL != null && yR != null) {
 				value = interpolate(step, rowL.getTimestamp(), rowR.getTimestamp(), yL, yR);
 			}
 			else {
-				value = Double.NaN;
+				value = new NanValue();
 			}
 
 			out.addSample(new Sample(out.getResource(), m, step, value));
 		}
 	}
 
-	private double interpolate(Timestamp x, Timestamp x0, Timestamp x1, Sample y0, Sample y1) {
+	private SampleValue<?> interpolate(Timestamp ts, Timestamp ts0, Timestamp ts1, Sample s0, Sample s1) {
 		// Refuse to interpolate when points exceed threshold
-		if (x1.minus(x0).greaterThan(new Timestamp(m_heartBeat, m_stepUnits))) {
-			return Double.NaN;
+		if (ts1.minus(ts0).greaterThan(new Timestamp(m_heartBeat, m_stepUnits))) {
+			return null;
 		}
-		return interpolate(x.asMillis(), x0.asMillis(), x1.asMillis(), y0.getValue(), y1.getValue());
-	}
 
-	private static double interpolate(double x, double x0, double x1, double y0, double y1) {
-		return ((x - x0) * (y1 - y0) / (x1 - x0)) + y0;
+		SampleValue<?> y0 = s0.getValue(), y1 = s1.getValue();
+		long x = ts.asMillis(), x0 = ts0.asMillis(), x1 = ts1.asMillis();
+
+		// ((x - x0) * (y1 - y0) / (x1 - x0)) + y0
+		return y1.subtract(y0).multiply(x - x0).divide(x1 - x0).add(y0);
 	}
 
 	private void advance(boolean withStep) {

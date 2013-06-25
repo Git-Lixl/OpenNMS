@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.opennms.netmgt.api.sample.Agent;
+import org.opennms.netmgt.api.sample.GaugeValue;
 import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.MetricType;
 import org.opennms.netmgt.api.sample.Resource;
@@ -43,7 +44,7 @@ public class LerpTest {
 			if (ts > finish.asSeconds()) {
 				finish = new Timestamp(ts, stepUnits);
 			}
-			in.addSample(new Sample(resource, metric, new Timestamp(ts, stepUnits), samples.get(ts)));
+			in.addSample(new Sample(resource, metric, new Timestamp(ts, stepUnits), new GaugeValue(samples.get(ts))));
 		}
 
 		SampleProcessorBuilder chain = new SampleProcessorBuilder().append(new Util.TestAdapter(in));
@@ -66,7 +67,7 @@ public class LerpTest {
 			Entry<Long, Double> e = expectIter.next();
 			Timestamp expectedTs = new Timestamp(e.getKey(), stepUnits);
 			assertTrue(expectedTs.equals(r.getTimestamp()));
-			assertEquals(e.getValue().doubleValue(), r.getSample(metric).getValue(), 0.0000000000001d);
+			assertEquals(e.getValue().doubleValue(), r.getSample(metric).getValue().doubleValue(), 0.0000000000001d);
 		}
 	}
 

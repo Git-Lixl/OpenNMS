@@ -192,9 +192,9 @@ public class SampleTest
 			
 			for(Sample measurement : column) {
 				Timestamp ts = measurement.getTimestamp();
-				double value = measurement.getValue();
+				SampleValue<?> val = measurement.getValue();
 				int xPixel = (int) ((ts.asSeconds() - xMin.asSeconds()) / xPixelRange);
-				int yPixel = (int) ((value - yMin) / yPixelRange);
+				int yPixel = val.subtract(yMin).divide(yPixelRange).intValue();
 				
 				m_canvas.plot(xPixel, yPixel);
 			}
@@ -208,7 +208,7 @@ public class SampleTest
 		private double getMaxValue(SortedSet<Sample> column) {
 			double max = Double.MIN_VALUE;
 			for(Sample m : column) {
-				max = Math.max(m.getValue(), max);
+				max = Math.max(m.getValue().doubleValue(), max);
 			}
 			return max;
 		}
@@ -216,7 +216,7 @@ public class SampleTest
 		private double getMinValue(SortedSet<Sample> column) {
 			double min = Double.MAX_VALUE;
 			for(Sample m : column) {
-				min = Math.min(m.getValue(), min);
+				min = Math.min(m.getValue().doubleValue(), min);
 			}
 			return min;
 		}
@@ -328,7 +328,7 @@ public class SampleTest
 		for(Row r : results.getRows()) {
 			System.err.printf("%-30s ", r.getTimestamp());
 			for(Metric metric : results.getMetrics()) {
-				System.err.printf("%20.2f ", r.getSample(metric).getValue());
+				System.err.printf("%20.2f ", r.getSample(metric).getValue().doubleValue());
 			}
 			System.err.println();
 		}

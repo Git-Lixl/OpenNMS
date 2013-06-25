@@ -1,7 +1,9 @@
 package org.opennms.netmgt.api.sample.math;
 
+import org.opennms.netmgt.api.sample.NanValue;
 import org.opennms.netmgt.api.sample.Sample;
 import org.opennms.netmgt.api.sample.SampleProcessor;
+import org.opennms.netmgt.api.sample.SampleValue;
 import org.opennms.netmgt.api.sample.Timestamp;
 import org.opennms.netmgt.api.sample.Results.Row;
 
@@ -20,9 +22,10 @@ public class Rate extends SampleProcessor {
 		Row newRow = new Row(r.getResource(), r.getTimestamp());
 		for(Sample s : r) {
 			Timestamp prevTime = m_prev == null ? null : m_prev.getTimestamp();
-			double prevVal = m_prev == null ? Double.NaN : m_prev.getSample(s.getMetric()).getValue();
+			SampleValue<?> prevVal = m_prev == null ? null : m_prev.getSample(s.getMetric()).getValue();
 			long elapsed = m_prev == null ? 0 : s.getTimestamp().asMillis() - prevTime.asMillis(); 
-			double rate = m_prev == null ? Double.NaN : 1000.0*(s.getValue() - prevVal) / elapsed;
+
+			SampleValue<?> rate = m_prev == null ? new NanValue() : s.getValue().delta(prevVal).multiply(1000.0d).divide(elapsed);
 			Sample newSample = new Sample(s.getResource(), s.getMetric(), s.getTimestamp(), rate);
 			newRow.addSample(newSample);
 		}

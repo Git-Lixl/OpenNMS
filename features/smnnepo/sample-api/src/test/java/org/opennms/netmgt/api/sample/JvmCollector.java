@@ -13,7 +13,7 @@ class JvmCollector {
 
 		}
 		
-		abstract public double collect();
+		abstract public SampleValue<?> collect();
 		
 	}
 
@@ -30,32 +30,32 @@ class JvmCollector {
 		m_metrics = new JvmCollector.JvmMetric[] {
 				new JvmMetric("freeMemory", MetricType.GAUGE) {
 					@Override
-					public double collect() {
-						return Runtime.getRuntime().freeMemory();
+					public GaugeValue collect() {
+						return new GaugeValue(Runtime.getRuntime().freeMemory());
 					}
 				},
 				new JvmMetric("totalMemory", MetricType.GAUGE) {
 					@Override
-					public double collect() {
-						return Runtime.getRuntime().totalMemory();
+					public GaugeValue collect() {
+						return new GaugeValue(Runtime.getRuntime().totalMemory());
 					}
 				},
 				new JvmMetric("maxMemory", MetricType.GAUGE) {
 					@Override
-					public double collect() {
-						return Runtime.getRuntime().maxMemory();
+					public GaugeValue collect() {
+						return new GaugeValue(Runtime.getRuntime().maxMemory());
 					}
 				},
 				new JvmMetric("availableProcessors", MetricType.GAUGE) {
 					@Override
-					public double collect() {
-						return Runtime.getRuntime().availableProcessors();
+					public GaugeValue collect() {
+						return new GaugeValue(Runtime.getRuntime().availableProcessors());
 					}
 				},
 				new JvmMetric("currentTimeMillis", MetricType.GAUGE) {
 					@Override
-					public double collect() {
-						return System.currentTimeMillis();
+					public GaugeValue collect() {
+						return new GaugeValue(System.currentTimeMillis());
 					}
 				},
 		};

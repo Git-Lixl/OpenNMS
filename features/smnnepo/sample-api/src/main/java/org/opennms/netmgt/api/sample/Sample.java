@@ -8,10 +8,10 @@ public class Sample implements Comparable<Sample>, Serializable {
 	private final Resource  m_resource;
 	private final Metric    m_metric;
 	private final Timestamp m_timestamp;
-	private final double    m_value;
+	private final SampleValue<?>    m_value;
 	
 	
-	public Sample(Resource resource, Metric metric, Timestamp timestamp, double value) {
+	public Sample(Resource resource, Metric metric, Timestamp timestamp, SampleValue<?> value) {
 		m_resource = resource;
 		m_metric = metric;
 		m_timestamp = timestamp;
@@ -34,7 +34,7 @@ public class Sample implements Comparable<Sample>, Serializable {
 	}
 
 
-	public double getValue() {
+	public SampleValue<?> getValue() {
 		return m_value;
 	}
 
@@ -47,7 +47,7 @@ public class Sample implements Comparable<Sample>, Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("%s %s:%s=%f", m_timestamp, m_resource.getIdentifier(), m_metric.getName(), m_value);
+		return String.format("%s %s:%s=%s", m_timestamp, m_resource.getIdentifier(), m_metric.getName(), m_value);
 	}
 
 

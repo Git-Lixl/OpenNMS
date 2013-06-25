@@ -4,9 +4,11 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
 import org.opennms.netmgt.api.sample.Metric;
+import org.opennms.netmgt.api.sample.NanValue;
 import org.opennms.netmgt.api.sample.Results.Row;
 import org.opennms.netmgt.api.sample.Sample;
 import org.opennms.netmgt.api.sample.SampleProcessor;
+import org.opennms.netmgt.api.sample.SampleValue;
 import org.opennms.netmgt.api.sample.Timestamp;
 
 /**
@@ -154,7 +156,7 @@ public class RollUp extends SampleProcessor {
 	/* Return a row with samples for all required metrics, values are Double.NaN. */
 	private Row getNanSamples(Timestamp time) {
 		Row row = new Row(getResource(), time);
-		for (Metric m : getMetrics()) row.addSample(new Sample(row.getResource(), m, row.getTimestamp(), Double.NaN));
+		for (Metric m : getMetrics()) row.addSample(new Sample(row.getResource(), m, row.getTimestamp(), new NanValue()));
 		return row;
 	}
 
@@ -260,7 +262,7 @@ public class RollUp extends SampleProcessor {
 		}
 
 		private Sample getCumulativeAverageSample(Sample previous, Sample current) {
-			double newAvg = ((previous.getValue() * (m_rowCount - 1)) + current.getValue()) / m_rowCount;
+			SampleValue<?> newAvg = previous.getValue().multiply(m_rowCount - 1).add(current.getValue()).divide(m_rowCount);
 			return new Sample(current.getResource(), current.getMetric(), current.getTimestamp(), newAvg);
 		}
 
@@ -269,25 +271,26 @@ public class RollUp extends SampleProcessor {
 				Sample y0 = row0.getSample(m);
 				Sample y1 = row1.getSample(m);
 
-				double value;
+				SampleValue<?> value = null;
 
 				if (y0 != null && y1 != null) {
 					value = interpolate(row.getTimestamp(), row0.getTimestamp(), row1.getTimestamp(), y0, y1);
 				}
 				else {
-					value = Double.NaN;
+					value = new NanValue();
 				}
 
 				row.addSample(new Sample(getResource(), m, row.getTimestamp(), value));
 			}
 		}
 
-		private double interpolate(Timestamp x, Timestamp x0, Timestamp x1, Sample y0, Sample y1) {
+		private SampleValue<?> interpolate(Timestamp x, Timestamp x0, Timestamp x1, Sample y0, Sample y1) {
 			return interpolate(x.asMillis(), x0.asMillis(), x1.asMillis(), y0.getValue(), y1.getValue());
 		}
 
-		private double interpolate(double x, double x0, double x1, double y0, double y1) {
-			return ((x - x0) * (y1 - y0) / (x1 - x0)) + y0;
+		private SampleValue<?> interpolate(long x, long x0, long x1, SampleValue<?> y0, SampleValue<?> y1) {
+			// ((x - x0) * (y1 - y0) / (x1 - x0)) + y0
+			return y1.subtract(y0).multiply(x - x0).divide(x1 - x0).add(y0);
 		}
 	}
 }

@@ -76,7 +76,7 @@ public abstract class Util {
 		for (Results.Row row : r) {
 			System.out.printf("%s (%d): ", row.getTimestamp(), row.getTimestamp().asMillis());
 			for(Sample s : row) {
-				System.out.printf("%s:%f", s.getMetric().getName(), s.getValue());
+				System.out.printf("%s:%s", s.getMetric().getName(), s.getValue());
 			}
 			System.out.printf("%n");
 		}

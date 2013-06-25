@@ -15,7 +15,7 @@ public class SampleMath {
 			Sample m_smallest;
 
 			public Sample process(Sample s) {
-				if (s.getValue() < m_smallest.getValue()) {
+				if (s.getValue().lessThan(m_smallest.getValue())) {
 					m_smallest = s;
 				}
 				return m_smallest;

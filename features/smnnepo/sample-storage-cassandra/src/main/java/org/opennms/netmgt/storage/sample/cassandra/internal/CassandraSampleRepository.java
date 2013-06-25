@@ -19,6 +19,7 @@ import org.opennms.netmgt.api.sample.SampleProcessor;
 import org.opennms.netmgt.api.sample.SampleProcessorBuilder;
 import org.opennms.netmgt.api.sample.SampleRepository;
 import org.opennms.netmgt.api.sample.SampleSet;
+import org.opennms.netmgt.api.sample.SampleValue;
 import org.opennms.netmgt.api.sample.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +100,7 @@ public class CassandraSampleRepository extends CassandraStorage implements Sampl
 							.value(F_RESOURCE, measurement.getResource().getIdentifier())
 							.value(F_COLLECTED_AT, measurement.getTimestamp().asMillis())
 							.value(F_METRIC, measurement.getMetric().getName())
-							.value(F_VALUE, measurement.getValue())
+							.value(F_VALUE, SampleValue.toHex((measurement.getValue())))
 			);
 
 			// One-to-many: resource -> metrics

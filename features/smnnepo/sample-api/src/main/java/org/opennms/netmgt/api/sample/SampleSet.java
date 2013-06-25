@@ -34,7 +34,7 @@ public class SampleSet implements Serializable {
 		m_measurements = new LinkedList<Sample>();
 	}
 
-	public void addMeasurement(Resource r, Metric m, double value) {
+	public void addMeasurement(Resource r, Metric m, SampleValue<?> value) {
 		Sample sample = new Sample(r, m, m_timestamp, value);
 
 		setDirty();

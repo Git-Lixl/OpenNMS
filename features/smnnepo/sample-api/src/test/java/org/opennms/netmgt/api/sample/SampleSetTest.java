@@ -23,7 +23,7 @@ public class SampleSetTest {
 		SampleSet samplesIn = new SampleSet(time);
 
 		for (int i=0; i < 5000; i++) {
-			samplesIn.addMeasurement(resource, metric, (double) i);
+			samplesIn.addMeasurement(resource, metric, new GaugeValue(i));
 		}
 
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
@@ -58,7 +58,7 @@ public class SampleSetTest {
 		samples.toArray(ss);
 
 		assertEquals(5000, ss.length);
-		assertEquals(0.0d, ss[0].getValue(), 0);
-		assertEquals(4999.0d, ss[ss.length-1].getValue(), 0);
+		assertEquals(0.0d, ss[0].getValue().doubleValue(), 0);
+		assertEquals(4999.0d, ss[ss.length-1].getValue().doubleValue(), 0);
 	}
 }

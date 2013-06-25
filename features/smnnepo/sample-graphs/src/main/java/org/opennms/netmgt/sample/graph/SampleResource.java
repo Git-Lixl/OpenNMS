@@ -134,7 +134,7 @@ public class SampleResource {
 				Sample sample = row.getSample(met);
 				sb.append('"').append(met.getName()).append('"').append(',');
 				sb.append(sample.getTimestamp().asMillis()).append(',');
-				double value = sample.getValue();
+				double value = sample.getValue().doubleValue();
 				if (Double.isNaN(value) || Double.isInfinite(value)) {
 					sb.append("null");
 				} else {

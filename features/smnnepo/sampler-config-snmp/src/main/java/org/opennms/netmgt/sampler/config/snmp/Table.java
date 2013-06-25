@@ -12,9 +12,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.opennms.netmgt.api.sample.CounterValue;
+import org.opennms.netmgt.api.sample.GaugeValue;
 import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.Resource;
 import org.opennms.netmgt.api.sample.SampleSet;
+import org.opennms.netmgt.api.sample.SampleValue;
 import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpRowResult;
@@ -116,11 +119,25 @@ public class Table {
 				for(Column column : m_columns) {
 					Metric metric = column.createMetric(getName());
 					if (metric != null) { 
-						SnmpValue value = row.getValue(column.getOid());
-						if (value != null) {
-							double val = value.toBigInteger().doubleValue();
-							//System.err.printf("Adding sample %s:%s = %s\n", resource, metric, val);
-							sampleSet.addMeasurement(resource, metric, val);
+						SnmpValue snmpValue = row.getValue(column.getOid());
+
+						if (snmpValue != null) {
+							SampleValue<?> sampleValue = null;
+
+							switch (metric.getType()) {
+								case COUNTER:
+									sampleValue = new CounterValue(snmpValue.toBigInteger());
+									break;
+								case GAUGE:
+									sampleValue = new GaugeValue(snmpValue.toLong());
+									break;
+								case ABSOLUTE:
+								case DERIVE:
+								default:
+									throw new RuntimeException("NOT IMPLEMENTED: FIXME!");	// FIXME:
+							}
+
+							sampleSet.addMeasurement(resource, metric, sampleValue);
 						}
 					}
 				}

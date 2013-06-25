@@ -44,7 +44,7 @@ public class GaugeValueTest {
 
 	@Test
 	public void testDeltas() {
-		assertEquals(2.5d, new GaugeValue(2.5d).delta(5.0d).doubleValue(), 0.0d);
+		assertEquals(-2.5d, new GaugeValue(2.5d).delta(5.0d).doubleValue(), 0.0d);
 		assertEquals(2.5d, new GaugeValue(5.0d).delta(2.5d).doubleValue(), 0.0d);
 	}
 

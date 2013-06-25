@@ -14,7 +14,9 @@ import java.util.Properties;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
+import org.opennms.netmgt.api.sample.GaugeValue;
 import org.opennms.netmgt.api.sample.Metric;
+import org.opennms.netmgt.api.sample.NanValue;
 import org.opennms.netmgt.api.sample.Resource;
 import org.opennms.netmgt.api.sample.Results;
 import org.opennms.netmgt.api.sample.Results.Row;
@@ -43,8 +45,13 @@ public class SimpleFileRepository implements SampleRepository {
     		out = new PrintWriter(new BufferedWriter(new FileWriter(m_sampleFile, true)));
     		
             for(Sample m : samples.getSamples()) {
-                System.err.println(String.format("Saving Measurement: %s for %s at %s = %.1f", m.getMetric().getName(), m.getResource().getIdentifier(), m.getTimestamp().asDate(), m.getValue()));
-                out.printf("%s %s %d %f\n", m.getResource().getIdentifier(), m.getMetric().getName(), m.getTimestamp().convert(TimeUnit.SECONDS), m.getValue());
+                System.err.println(String.format(
+                		"Saving Measurement: %s for %s at %s = %.1f",
+                		m.getMetric().getName(),
+                		m.getResource().getIdentifier(),
+                		m.getTimestamp().asDate(),
+                		m.getValue().doubleValue()));
+                out.printf("%s %s %d %s\n", m.getResource().getIdentifier(), m.getMetric().getName(), m.getTimestamp().convert(TimeUnit.SECONDS), m.getValue());
             }
 
     		
@@ -120,7 +127,7 @@ public class SimpleFileRepository implements SampleRepository {
 				String resourceName = scanner.next();
 				String metricName = scanner.next();
 				long timeInSeconds = scanner.nextLong();
-				double value = scanner.nextDouble();
+				GaugeValue value = new GaugeValue(scanner.nextDouble());
 
 				if (resourceName.equals(resource.getIdentifier())
 					&& startSeconds <= timeInSeconds
@@ -150,7 +157,7 @@ public class SimpleFileRepository implements SampleRepository {
 			for (Row row : results.getRows()) {
 				for (Metric metric : metrics) {
 					if (!row.containsSample(metric)) {
-						row.addSample(new Sample(resource, metric, row.getTimestamp(), Double.NaN));
+						row.addSample(new Sample(resource, metric, row.getTimestamp(), new NanValue()));
 					}
 				}
 			}

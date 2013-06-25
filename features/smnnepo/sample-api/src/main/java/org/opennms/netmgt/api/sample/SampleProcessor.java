@@ -29,11 +29,11 @@ public abstract class SampleProcessor implements Iterator<Row> {
 	 * @return the metrics associated with this sample stream.
 	 */
 	public Collection<Metric> getMetrics() {
-		return (m_producer != null) ? getProducer().getMetrics() : null;
+		return (getProducer() != null) ? getProducer().getMetrics() : null;
 	}
 
 	public Resource getResource() {
-		return (m_producer != null) ? getProducer().getResource() : null;
+		return (getProducer() != null) ? getProducer().getResource() : getResource();
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public abstract class SampleProcessor implements Iterator<Row> {
 		if (getMetrics() != null) {
 			for (Metric metric : getMetrics()) {
 				if (!row.containsSample(metric)) {
-					row.addSample(new Sample(row.getResource(), metric, row.getTimestamp(), Double.NaN));
+					row.addSample(new Sample(row.getResource(), metric, row.getTimestamp(), new NanValue()));
 				}
 			}
 		}

@@ -3,6 +3,8 @@ package org.opennms.netmgt.api.sample;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
+import org.apache.commons.codec.binary.Hex;
+
 public abstract class SampleValue<T extends Number> extends Number implements Comparable<Number> {
 
 	private static final long	serialVersionUID	= 1L;
@@ -36,9 +38,8 @@ public abstract class SampleValue<T extends Number> extends Number implements Co
 
 			// TODO: DERIVE / ABSOLUTE are stubbed
 			case DERIVE:
-				return new DeriveValue(data.getLong());
 			case ABSOLUTE:
-				return new AbsoluteValue(data.getLong());
+				throw new RuntimeException("NOT IMPLEMENTED: FIXME!");	// FIXME:
 			default:
 				throw new IllegalArgumentException(String.format("parsed unknown type descriptor from buffer (0x%x)", dataType));
 		}
@@ -68,9 +69,25 @@ public abstract class SampleValue<T extends Number> extends Number implements Co
 		}
 	}
 
+	public static String toHex(SampleValue<?> value) {
+		return Hex.encodeHexString(decompose(value).array());
+	}
+
 	@Override
 	public String toString() {
-		return m_value.toString();
+		return getValue().toString();
+	}
+
+	public boolean isNaN() {
+		return (getValue() == null) || (getValue().equals(Double.NaN));
+	}
+
+	public boolean lessThan(Number other) {
+		return compareTo(other) < 0;
+	}
+
+	public boolean greaterThan(Number other) {
+		return compareTo(other) > 0;
 	}
 
 	public abstract SampleValue<?> delta(Number other);

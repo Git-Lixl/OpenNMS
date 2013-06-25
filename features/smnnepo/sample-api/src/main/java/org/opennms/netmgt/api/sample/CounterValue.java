@@ -8,14 +8,14 @@ public class CounterValue extends SampleValue<BigInteger> {
 	private static final BigInteger	MAX64			= BigInteger.valueOf(2L).pow(64).subtract(BigInteger.ONE);
 
 
-	CounterValue(long value) {
+	public CounterValue(long value) {
 		this(BigInteger.valueOf(value));
 	}
 
 	public CounterValue(BigInteger value) {
 		super(value);
 	}
-
+	
 	@Override
 	public CounterValue delta(Number other) {
 		final BigInteger diff = getValue().subtract(getBigInt(other));
