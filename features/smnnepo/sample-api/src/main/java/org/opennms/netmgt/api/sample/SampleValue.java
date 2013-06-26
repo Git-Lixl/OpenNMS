@@ -54,12 +54,12 @@ public abstract class SampleValue<T extends Number> extends Number implements Co
 				res = ByteBuffer.allocate(bytes.length + 1).put(COUNTER).put(bytes);
 				res.rewind();
 				return res;
-
-			// TODO: GAUGE/ DERIVE / ABSOLUTE are stubbed
 			case GAUGE:
 				res = ByteBuffer.allocate(9).put(GAUGE).putDouble((Double)value.getValue());
 				res.rewind();
 				return res;
+
+			// TODO: DERIVE / ABSOLUTE are stubbed
 			case DERIVE:
 				return ByteBuffer.allocate(9).put(DERIVE).putLong((Long)value.getValue());
 			case ABSOLUTE:
