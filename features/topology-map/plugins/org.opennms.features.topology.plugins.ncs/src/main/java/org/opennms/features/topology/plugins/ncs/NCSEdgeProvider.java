@@ -39,7 +39,7 @@ import org.opennms.features.topology.api.topo.Edge;
 import org.opennms.features.topology.api.topo.EdgeListener;
 import org.opennms.features.topology.api.topo.EdgeProvider;
 import org.opennms.features.topology.api.topo.EdgeRef;
-import org.opennms.netmgt.dao.NodeDao;
+import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.ncs.NCSComponent;
 import org.opennms.netmgt.model.ncs.NCSComponent.NodeIdentification;
@@ -56,7 +56,7 @@ public class NCSEdgeProvider implements EdgeProvider {
 
 	public static class NCSEdge extends AbstractEdge {
 		private final String m_serviceName;
-
+		
 		public NCSEdge (String serviceName, NCSVertex source, NCSVertex target) {
 			super("ncs", source.getId() + ":::" + target.getId(), source, target);
 			m_serviceName = serviceName;

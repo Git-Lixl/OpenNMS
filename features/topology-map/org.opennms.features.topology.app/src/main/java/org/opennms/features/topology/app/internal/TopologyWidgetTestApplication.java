@@ -34,7 +34,8 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
-import org.opennms.core.utils.LogUtils;
+import javax.servlet.http.HttpSession;
+
 import org.opennms.features.topology.api.GraphContainer;
 import org.opennms.features.topology.api.HasExtraComponents;
 import org.opennms.features.topology.api.HistoryManager;
@@ -51,6 +52,7 @@ import org.opennms.features.topology.app.internal.TopoContextMenu.TopoContextMen
 import org.opennms.features.topology.app.internal.TopologyComponent.VertexUpdateListener;
 import org.opennms.features.topology.app.internal.jung.FRLayoutAlgorithm;
 import org.opennms.features.topology.app.internal.support.IconRepositoryManager;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.wolfie.refresher.Refresher;
@@ -58,6 +60,7 @@ import com.vaadin.Application;
 import com.vaadin.data.Property;
 import com.vaadin.terminal.Sizeable;
 import com.vaadin.terminal.ThemeResource;
+import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Alignment;
@@ -87,7 +90,7 @@ import com.vaadin.ui.Window;
 
 
 public class TopologyWidgetTestApplication extends Application implements CommandUpdateListener, MenuItemUpdateListener, ContextMenuHandler, WidgetUpdateListener, WidgetContext, FragmentChangedListener, GraphContainer.ChangeListener, MapViewManagerListener, VertexUpdateListener, SelectionListener {
-
+    private static final Logger LOG = LoggerFactory.getLogger(TopologyWidgetTestApplication.class);
 	private static final long serialVersionUID = 6837501987137310938L;
 	private static int HEADER_HEIGHT = 100;
 	private static final int MENU_BAR_HEIGHT = 23;
@@ -113,29 +116,29 @@ public class TopologyWidgetTestApplication extends Application implements Comman
     private String m_headerHtml;
     private boolean m_showHeader = true;
 
-	public TopologyWidgetTestApplication(CommandManager commandManager, HistoryManager historyManager, GraphProvider topologyProvider, ProviderManager providerManager, IconRepositoryManager iconRepoManager, SelectionManager selectionManager) {
+    public TopologyWidgetTestApplication(CommandManager commandManager, HistoryManager historyManager, GraphContainer graphContainer, IconRepositoryManager iconRepoManager, SelectionManager selectionManager) {
+        // Ensure that selection changes trigger a history save operation
+        selectionManager.addSelectionListener(this);
 
-		// Ensure that selection changes trigger a history save operation
-		selectionManager.addSelectionListener(this);
+        m_commandManager = commandManager;
+        m_commandManager.addMenuItemUpdateListener(this);
+        m_historyManager = historyManager;
+        m_iconRepositoryManager = iconRepoManager;
 
-		m_commandManager = commandManager;
-		m_commandManager.addMenuItemUpdateListener(this);
-		m_historyManager = historyManager;
-		m_iconRepositoryManager = iconRepoManager;
-
-		// Create a per-session GraphContainer instance
-		m_graphContainer = new VEProviderGraphContainer(topologyProvider, providerManager);
-		m_graphContainer.setSelectionManager(selectionManager);
-		m_graphContainer.addChangeListener(this);
-		m_graphContainer.getMapViewManager().addListener(this);
-		m_graphContainer.setUserName((String)this.getUser());
-	}
-
+        // Create a per-session GraphContainer instance
+        m_graphContainer = graphContainer;
+        m_graphContainer.setSelectionManager(selectionManager);
+        m_graphContainer.addChangeListener(this);
+        m_graphContainer.getMapViewManager().addListener(this);
+        m_graphContainer.setUserName((String)this.getUser());
+    }
 
 	@SuppressWarnings("serial")
 	@Override
 	public void init() {
 	    setTheme("topo_default");
+	    HttpSession session = ((WebApplicationContext) this.getContext()).getHttpSession();
+        m_graphContainer.setSessionId(session.getId());
 	    
 		// See if the history manager has an existing fragment stored for
 		// this user. Do this before laying out the UI because the history
@@ -148,6 +151,8 @@ public class TopologyWidgetTestApplication extends Application implements Comman
 	    m_window = new Window("OpenNMS Topology");
         m_window.setContent(m_rootLayout);
         setMainWindow(m_window);
+
+
         
         m_uriFragUtil = new UriFragmentUtility();
         m_window.addComponent(m_uriFragUtil);
@@ -288,7 +293,7 @@ public class TopologyWidgetTestApplication extends Application implements Comman
 
 		// If there was existing history, then restore that history snapshot.
 		if (fragment != null) {
-			LoggerFactory.getLogger(this.getClass()).info("Restoring history for user {}: {}", (String)this.getUser(), fragment);
+			LOG.info("Restoring history for user {}: {}", (String)this.getUser(), fragment);
 			m_uriFragUtil.setFragment(fragment);
 		}
 	}
@@ -302,7 +307,7 @@ public class TopologyWidgetTestApplication extends Application implements Comman
             CustomLayout customLayout = new CustomLayout(getHeaderLayout());
             header.setContent(customLayout);
         } catch (IOException e) {
-            LogUtils.errorf(this, e, "Could not load header file");
+            LOG.error("Could not load header file", e);
         }
         return header;
     }
@@ -689,4 +694,5 @@ public class TopologyWidgetTestApplication extends Application implements Comman
     public void selectionChanged(SelectionContext selectionManager) {
         saveHistory();
     }
+    
 }

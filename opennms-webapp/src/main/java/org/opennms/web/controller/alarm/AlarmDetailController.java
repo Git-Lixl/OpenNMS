@@ -34,7 +34,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.opennms.netmgt.dao.AlarmRepository;
+import org.opennms.netmgt.dao.api.AlarmRepository;
 import org.opennms.netmgt.model.OnmsAcknowledgment;
 import org.opennms.netmgt.model.OnmsAlarm;
 import org.slf4j.Logger;
@@ -50,6 +50,8 @@ import org.springframework.web.servlet.view.RedirectView;
  * @author Ronny Trommer <ronny@opennms.org>
  */
 public class AlarmDetailController extends MultiActionController {
+	
+
 
     /**
      * OpenNMS alarm repository
@@ -69,7 +71,7 @@ public class AlarmDetailController extends MultiActionController {
     /**
      * <p>setWebAlarmRepository</p>
      *
-     * @param webAlarmRepository a {@link org.opennms.netmgt.dao.AlarmRepository}
+     * @param webAlarmRepository a {@link org.opennms.netmgt.dao.api.AlarmRepository}
      * object.
      */
     public void setAlarmRepository(AlarmRepository webAlarmRepository) {
@@ -122,6 +124,7 @@ public class AlarmDetailController extends MultiActionController {
         // return to view WEB-INF/jsp/alarm/detail.jsp
         ModelAndView mv = new ModelAndView("alarm/detail");
         mv.addObject("alarm", m_alarm);
+        mv.addObject("alarmId", alarmIdString);
         mv.addObject("acknowledgments", acknowledgments);
         return mv;
     }

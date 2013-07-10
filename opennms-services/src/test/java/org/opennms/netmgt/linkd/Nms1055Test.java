@@ -31,8 +31,6 @@ package org.opennms.netmgt.linkd;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Properties;
 
@@ -46,35 +44,41 @@ import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
 import org.opennms.core.utils.BeanUtils;
+import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.config.LinkdConfig;
+import org.opennms.netmgt.config.LinkdConfigFactory;
 import org.opennms.netmgt.config.linkd.Package;
-import org.opennms.netmgt.dao.DataLinkInterfaceDao;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.dao.SnmpInterfaceDao;
+import org.opennms.netmgt.dao.api.DataLinkInterfaceDao;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.api.SnmpInterfaceDao;
 import org.opennms.netmgt.linkd.nb.Nms1055NetworkBuilder;
 import org.opennms.netmgt.model.DataLinkInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.test.context.ContextConfiguration;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
 @ContextConfiguration(locations= {
         "classpath:/META-INF/opennms/applicationContext-soa.xml",
+        "classpath:/META-INF/opennms/applicationContext-dao.xml",
         "classpath:/META-INF/opennms/applicationContext-daemon.xml",
         "classpath:/META-INF/opennms/applicationContext-proxy-snmp.xml",
         "classpath:/META-INF/opennms/mockEventIpcManager.xml",
-        "classpath:/META-INF/opennms/applicationContext-linkdTest.xml"
+        "classpath:/META-INF/opennms/applicationContext-linkd.xml",
+        "classpath:/META-INF/opennms/applicationContext-linkdTest.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
-@JUnitConfigurationEnvironment
+@JUnitConfigurationEnvironment(systemProperties="org.opennms.provisiond.enableDiscovery=false")
 @JUnitTemporaryDatabase
 public class Nms1055Test extends Nms1055NetworkBuilder implements InitializingBean {
 
     @Autowired
     private Linkd m_linkd;
 
-    @Autowired
     private LinkdConfig m_linkdConfig;
 
     @Autowired
@@ -106,6 +110,15 @@ public class Nms1055Test extends Nms1055NetworkBuilder implements InitializingBe
 
     }
 
+    @Before
+    public void setUpLinkdConfiguration() throws Exception {
+        LinkdConfigFactory.init();
+        final Resource config = new ClassPathResource("etc/linkd-configuration.xml");
+        final LinkdConfigFactory factory = new LinkdConfigFactory(-1L, config.getInputStream());
+        LinkdConfigFactory.setInstance(factory);
+        m_linkdConfig = LinkdConfigFactory.getInstance();
+    }
+
     @After
     public void tearDown() throws Exception {
         for (final OnmsNode node : m_nodeDao.findAll()) {
@@ -132,13 +145,9 @@ public class Nms1055Test extends Nms1055NetworkBuilder implements InitializingBe
          */
         assertEquals(585, queryManager.getFromSysnameMacAddress(DELAWARE_NAME, "0022830951f5").intValue());
         /*
-         * DELAWARE_IP_IF_MAP.put(InetAddress.getByName("10.155.69.17"), 13);
+         * DELAWARE_IP_IF_MAP.put(InetAddressUtils.addr("10.155.69.17"), 13);
          */
-        try {
-            assertEquals(13, queryManager.getFromSysnameIpAddress(DELAWARE_NAME, InetAddress.getByName("10.155.69.17")).intValue());
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+        assertEquals(13, queryManager.getFromSysnameIpAddress(DELAWARE_NAME, InetAddressUtils.addr("10.155.69.17")).intValue());
    
         /*
          * DELAWARE_IF_IFALIAS_MAP.put(574, "<To_Penrose>");

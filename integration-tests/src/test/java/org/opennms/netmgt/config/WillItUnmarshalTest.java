@@ -478,7 +478,7 @@ public class WillItUnmarshalTest {
     }
     @Test
     public void testServiceConfiguration() throws Exception {
-        unmarshal("service-configuration.xml", ServiceConfiguration.class);
+        unmarshalJaxb("service-configuration.xml", ServiceConfiguration.class);
     }
     @Test
     public void testViewsDisplay() throws Exception {
@@ -621,7 +621,10 @@ public class WillItUnmarshalTest {
         Set<String> allXml = new HashSet<String>(Arrays.asList(configFiles));
         
         allXml.removeAll(m_filesTested);
-        
+        allXml.remove("log4j2.xml");
+        allXml.remove("log4j2-tools.xml");
+        allXml.remove("log4j2-archive-events.xml");
+
         if (allXml.size() > 0) {
             List<String> files = new ArrayList<String>(allXml);
             Collections.sort(files);
@@ -642,6 +645,9 @@ public class WillItUnmarshalTest {
         allXml.remove("drools-engine.xml");
         allXml.remove("nodeParentRules-context.xml");
         allXml.remove("nsclient-config.xml");
+        allXml.remove("Juniper/mcg/3gpp.kpis.xml");
+        allXml.remove("Juniper/mcg/MCG-collectd-configuration.xml");
+        allXml.remove("Juniper/mcg/MCG-xml-datacollection-config.xml");
         if (allXml.size() > 0) {
             List<String> files = new ArrayList<String>(allXml);
             Collections.sort(files);
