@@ -42,6 +42,7 @@ public class StatusFilter implements LocationFilter {
         return m_selectedStatuses;
     }
 
+    @Override
     public boolean matches(final LocationInfo location) {
         return getSelectedStatuses().contains(location.getStatus());
     }
@@ -55,6 +56,7 @@ public class StatusFilter implements LocationFilter {
     }
 
     public void setStatuses(Set<Status> statuses) {
+        if (m_selectedStatuses == statuses) return;
         m_selectedStatuses.clear();
         m_selectedStatuses.addAll(statuses);
         

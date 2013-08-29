@@ -58,7 +58,7 @@ public class BaseLogMessage implements LogMessage {
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,S");
         }
     };
-    private static final String s_regexp = "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) DEBUG \\[([^\\]]+)] Collectd: collector.collect: (begin|end|error|persistDataQueueing: begin|persistDataQueueing: end): ?(\\d+/\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/[\\w-]+).*";
+    private static final String s_regexp = "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) DEBUG \\[([^\\]]+)\\] (?:[\\p{Alnum}\\.]+): collector.collect: (begin|end|error|persistDataQueueing: begin|persistDataQueueing: end): ?(\\d+/\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/[\\w-]+).*";
     private static final Pattern s_pattern = Pattern.compile(s_regexp);
 
     private static MsgType toMsgType(String msgIndicator) {
@@ -111,10 +111,12 @@ public class BaseLogMessage implements LogMessage {
         m_serviceId = serviceId;
     }
 
+    @Override
     public Date getDate() {
         return m_timestamp;
     }
 
+    @Override
     public String getThread() {
         return m_threadName;
     }
@@ -123,6 +125,7 @@ public class BaseLogMessage implements LogMessage {
         return m_msgType;
     }
 
+    @Override
     public String getServiceID() {
         return m_serviceId;
     }
@@ -131,39 +134,47 @@ public class BaseLogMessage implements LogMessage {
         return m_msgType.equals(msgType);
     }
 
+    @Override
 	public boolean isBeginMessage() {
 		return is(MsgType.BEGIN_COLLECTION) || is(MsgType.BEGIN_PERSIST);
 	}
 
 
+    @Override
 	public boolean isCollectorBeginMessage() {
 		return is(MsgType.BEGIN_COLLECTION);
 	}
 
 
+    @Override
 	public boolean isCollectorEndMessage() {
 		return is(MsgType.END_COLLECTION);
 	}
 
 
+    @Override
 	public boolean isEndMessage() {
 		return is(MsgType.END_COLLECTION) || is (MsgType.END_PERSIST);
 	}
 
 
+    @Override
 	public boolean isErrorMessage() {
 		return is(MsgType.ERROR);
 	}
 
 
+    @Override
 	public boolean isPersistMessage() {
 		return is(MsgType.BEGIN_PERSIST)  || is (MsgType.END_PERSIST);
 	}
 	
+    @Override
 	public boolean isPersistBeginMessage(){
 	    return is(MsgType.BEGIN_PERSIST);
 	}
 	
+    @Override
 	public boolean isPersistEndMessage() {
 	    return is(MsgType.END_PERSIST);
 	}

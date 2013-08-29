@@ -50,9 +50,9 @@ import org.opennms.netmgt.config.siteStatusViews.Category;
 import org.opennms.netmgt.config.siteStatusViews.RowDef;
 import org.opennms.netmgt.config.siteStatusViews.Rows;
 import org.opennms.netmgt.config.siteStatusViews.View;
-import org.opennms.netmgt.dao.CategoryDao;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.dao.SiteStatusViewConfigDao;
+import org.opennms.netmgt.dao.api.CategoryDao;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.api.SiteStatusViewConfigDao;
 import org.opennms.netmgt.model.OnmsArpInterface;
 import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsIpInterface;
@@ -83,6 +83,7 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
     private SiteStatusViewConfigDao m_siteStatusViewConfigDao;
 
     /** {@inheritDoc} */
+    @Override
     public NodeListModel createNodeList(NodeListCommand command) {
         Collection<OnmsNode> onmsNodes = null;
         
@@ -212,8 +213,8 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
     private void addCriteriaForMaclike(OnmsCriteria criteria, String macLike) {
         String macLikeStripped = macLike.replaceAll("[:-]", "");
         
-        criteria.createAlias("node.snmpInterfaces", "snmpInterface", CriteriaSpecification.LEFT_JOIN);
-        criteria.createAlias("node.arpInterfaces", "arpInterface", CriteriaSpecification.LEFT_JOIN);
+        criteria.createAlias("node.snmpInterfaces", "snmpInterface", OnmsCriteria.LEFT_JOIN);
+        criteria.createAlias("node.arpInterfaces", "arpInterface", OnmsCriteria.LEFT_JOIN);
         Disjunction physAddrDisjunction = Restrictions.disjunction();
         physAddrDisjunction.add(Restrictions.ilike("snmpInterface.physAddr", macLikeStripped, MatchMode.ANYWHERE));
         physAddrDisjunction.add(Restrictions.ilike("arpInterface.physAddr", macLikeStripped, MatchMode.ANYWHERE));
@@ -348,17 +349,9 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
                     }
                 } else if (command.hasMaclike()) {
                 	String macLikeStripped = command.getMaclike().toLowerCase().replaceAll("[:-]", "");
-                	for (OnmsIpInterface intf : node.getIpInterfaces()) {
-                		if (intf.getSnmpInterface() != null &&intf.getSnmpInterface().getPhysAddr() != null && intf.getSnmpInterface().getPhysAddr().toLowerCase().contains(macLikeStripped)) {
-                			displayInterfaces.add(intf);
-                		}
-                	}
                 	for (OnmsSnmpInterface snmpIntf : node.getSnmpInterfaces()) {
                 	    if (snmpIntf.getPhysAddr() != null && !"D".equals(snmpIntf.getCollect()) && snmpIntf.getPhysAddr().toLowerCase().contains(macLikeStripped)) {
-                	        OnmsIpInterface intf = snmpIntf.getPrimaryIpInterface();
-                	        if (intf == null) {
-                	            displaySnmpInterfaces.add(snmpIntf);
-                	        }
+                	        displaySnmpInterfaces.add(snmpIntf);
                 	    }
                 	}
                 	for (OnmsArpInterface aint : node.getArpInterfaces()) {
@@ -396,7 +389,7 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
     /**
      * <p>getCategoryDao</p>
      *
-     * @return a {@link org.opennms.netmgt.dao.CategoryDao} object.
+     * @return a {@link org.opennms.netmgt.dao.api.CategoryDao} object.
      */
     public CategoryDao getCategoryDao() {
         return m_categoryDao;
@@ -405,7 +398,7 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
     /**
      * <p>setCategoryDao</p>
      *
-     * @param categoryDao a {@link org.opennms.netmgt.dao.CategoryDao} object.
+     * @param categoryDao a {@link org.opennms.netmgt.dao.api.CategoryDao} object.
      */
     public void setCategoryDao(CategoryDao categoryDao) {
         m_categoryDao = categoryDao;
@@ -414,7 +407,7 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
     /**
      * <p>getNodeDao</p>
      *
-     * @return a {@link org.opennms.netmgt.dao.NodeDao} object.
+     * @return a {@link org.opennms.netmgt.dao.api.NodeDao} object.
      */
     public NodeDao getNodeDao() {
         return m_nodeDao;
@@ -423,7 +416,7 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
     /**
      * <p>setNodeDao</p>
      *
-     * @param nodeDao a {@link org.opennms.netmgt.dao.NodeDao} object.
+     * @param nodeDao a {@link org.opennms.netmgt.dao.api.NodeDao} object.
      */
     public void setNodeDao(NodeDao nodeDao) {
         m_nodeDao = nodeDao;
@@ -432,7 +425,7 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
     /**
      * <p>getSiteStatusViewConfigDao</p>
      *
-     * @return a {@link org.opennms.netmgt.dao.SiteStatusViewConfigDao} object.
+     * @return a {@link org.opennms.netmgt.dao.api.SiteStatusViewConfigDao} object.
      */
     public SiteStatusViewConfigDao getSiteStatusViewConfigDao() {
         return m_siteStatusViewConfigDao;
@@ -441,7 +434,7 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
     /**
      * <p>setSiteStatusViewConfigDao</p>
      *
-     * @param siteStatusViewConfigDao a {@link org.opennms.netmgt.dao.SiteStatusViewConfigDao} object.
+     * @param siteStatusViewConfigDao a {@link org.opennms.netmgt.dao.api.SiteStatusViewConfigDao} object.
      */
     public void setSiteStatusViewConfigDao(SiteStatusViewConfigDao siteStatusViewConfigDao) {
         m_siteStatusViewConfigDao = siteStatusViewConfigDao;
@@ -466,6 +459,7 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
          */
         private static final long serialVersionUID = 1538654897829381114L;
 
+        @Override
         public int compare(final OnmsIpInterface o1, final OnmsIpInterface o2) {
             int diff;
 
@@ -534,6 +528,7 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
          */
         private static final long serialVersionUID = 3751865611949289845L;
 
+        @Override
         public int compare(OnmsSnmpInterface o1, OnmsSnmpInterface o2) {
             int diff;
             
@@ -573,6 +568,7 @@ public class DefaultNodeListService implements NodeListService, InitializingBean
 
         private static final long serialVersionUID = 2955682030166384496L;
 
+        @Override
         public int compare(OnmsArpInterface o1, OnmsArpInterface o2) {
             int diff;
 

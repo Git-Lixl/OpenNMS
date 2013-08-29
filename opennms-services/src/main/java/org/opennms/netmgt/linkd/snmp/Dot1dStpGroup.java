@@ -30,7 +30,8 @@ package org.opennms.netmgt.linkd.snmp;
 
 import java.net.InetAddress;
 
-import org.opennms.core.utils.LogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.opennms.netmgt.model.OnmsStpNode;
 import org.opennms.netmgt.model.OnmsStpNode.StpProtocolSpecification;
@@ -49,6 +50,7 @@ import org.opennms.netmgt.snmp.SnmpResult;
  * @version $Id: $
  */
 public final class Dot1dStpGroup extends AggregateTracker {
+    private static final Logger LOG = LoggerFactory.getLogger(Dot1dStpGroup.class);
     
     //
 	// Lookup strings for specific table entries
@@ -280,18 +282,21 @@ public final class Dot1dStpGroup extends AggregateTracker {
     }
     
     /** {@inheritDoc} */
+        @Override
     protected void storeResult(SnmpResult res) {
         m_store.storeResult(res);
     }
 
     /** {@inheritDoc} */
+        @Override
     protected void reportGenErr(String msg) {
-        LogUtils.warnf(this, "Error retrieving systemGroup from %s: %s", m_address, msg);
+        LOG.warn("Error retrieving systemGroup from {}: {}", m_address, msg);
     }
 
     /** {@inheritDoc} */
+        @Override
     protected void reportNoSuchNameErr(String msg) {
-        LogUtils.infof(this, "Error retrieving systemGroup from %s: %s", m_address, msg);
+        LOG.info("Error retrieving systemGroup from {}: {}", m_address, msg);
     }
 
     /**

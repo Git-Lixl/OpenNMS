@@ -38,6 +38,7 @@ package org.opennms.netmgt.provision.persist.requisition;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Transient;
 import javax.xml.bind.ValidationException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -59,7 +61,8 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
-import org.opennms.core.utils.LogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.opennms.core.xml.ValidateUsing;
 import org.opennms.netmgt.provision.persist.OnmsNodeRequisition;
 import org.opennms.netmgt.provision.persist.RequisitionVisitor;
@@ -75,9 +78,10 @@ import org.springframework.core.io.Resource;
 @XmlRootElement(name="model-import")
 @ValidateUsing("model-import.xsd")
 public class Requisition implements Serializable, Comparable<Requisition> {
-	private static final long serialVersionUID = 1629774241824443273L;
+    private static final Logger LOG = LoggerFactory.getLogger(Requisition.class);
+    private static final long serialVersionUID = 1629774241824443273L;
 
-	@XmlTransient
+    @XmlTransient
     private Map<String, OnmsNodeRequisition> m_nodeReqs = new LinkedHashMap<String, OnmsNodeRequisition>();
     
     @XmlElement(name="node")
@@ -106,7 +110,7 @@ public class Requisition implements Serializable, Comparable<Requisition> {
         if (m_nodes != null) {
             for (RequisitionNode n : m_nodes) {
                 if (n.getForeignId().equals(foreignId)) {
-                	LogUtils.debugf(this, "returning node '%s' for foreign id '%s'", n, foreignId);
+                	LOG.debug("returning node '{}' for foreign id '{}'", n, foreignId);
                     return n;
                 }
             }
@@ -235,7 +239,7 @@ public class Requisition implements Serializable, Comparable<Requisition> {
         try {
             m_dateStamp = DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar());
         } catch (final DatatypeConfigurationException e) {
-            LogUtils.warnf(this, e, "unable to update datestamp");
+            LOG.warn("unable to update datestamp", e);
         }
     }
 
@@ -286,7 +290,7 @@ public class Requisition implements Serializable, Comparable<Requisition> {
         try {
             m_lastImport = DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar());
         } catch (final DatatypeConfigurationException e) {
-            LogUtils.warnf(this, e, "unable to update last import datestamp");
+            LOG.warn("unable to update last import datestamp", e);
         }
     }
 
@@ -346,7 +350,7 @@ public class Requisition implements Serializable, Comparable<Requisition> {
         updateNodeCacheIfNecessary();
 
         if (visitor == null) {
-            LogUtils.warnf(this, "no visitor specified!");
+            LOG.warn("no visitor specified!");
             return;
         }
 
@@ -478,5 +482,21 @@ public class Requisition implements Serializable, Comparable<Requisition> {
     		}
     		throw new ValidationException(sb.toString());
     	}
+    }
+
+    @XmlTransient
+    @Transient
+    public Date getDate() {
+        return getDateStamp() == null? null : getDateStamp().toGregorianCalendar().getTime();
+    }
+
+    public void setDate(final Date date) {
+        final GregorianCalendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+        try {
+            setDateStamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar));
+        } catch (final DatatypeConfigurationException e) {
+            LOG.warn("Failed to turn {} into an XML date.", date);
+        }
     }
 }

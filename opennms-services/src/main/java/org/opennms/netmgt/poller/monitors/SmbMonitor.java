@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2006-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2006-2013 The OpenNMS Group, Inc.
  * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
@@ -34,14 +34,16 @@ import java.util.Map;
 
 import jcifs.netbios.NbtAddress;
 
-import org.apache.log4j.Level;
 import org.opennms.core.utils.InetAddressUtils;
+import org.opennms.core.utils.ParameterMap;
 import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.Distributable;
 import org.opennms.netmgt.poller.DistributionContext;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
 import org.opennms.netmgt.poller.NetworkInterfaceNotSupportedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <P>
@@ -58,6 +60,9 @@ import org.opennms.netmgt.poller.NetworkInterfaceNotSupportedException;
 // I this thise needs a jcifs.properties file so we can't distribute it now
 @Distributable(DistributionContext.DAEMON)
 final public class SmbMonitor extends AbstractServiceMonitor {
+    
+    public static final Logger LOG = LoggerFactory.getLogger(SmbMonitor.class);
+    
     /**
      * Default retries.
      */
@@ -88,6 +93,15 @@ final public class SmbMonitor extends AbstractServiceMonitor {
      * During the poll ...
      * </P>
      */
+    
+    /**
+     * Do a node-status request before checking name?
+     * First appears in OpenNMS 1.10.10. Default is true.
+     */
+    private static final String DO_NODE_STATUS = "do-node-status";
+    private static final boolean DO_NODE_STATUS_DEFAULT = true;
+    
+    @Override
     public PollStatus poll(MonitoredService svc, Map<String, Object> parameters) {
         NetworkInterface<InetAddress> iface = svc.getNetInterface();
 
@@ -121,18 +135,29 @@ final public class SmbMonitor extends AbstractServiceMonitor {
          * This try block was updated to reflect the behavior of the plugin.
          */
         final String hostAddress = InetAddressUtils.str(ipv4Addr);
+        
+        final boolean doNodeStatus = ParameterMap.getKeyedBoolean(parameters, DO_NODE_STATUS, DO_NODE_STATUS_DEFAULT);
+        
         try {
-			nbtAddr = NbtAddress.getByName(hostAddress);
+            nbtAddr = NbtAddress.getByName(hostAddress);
+            
+            if (doNodeStatus) {
+                nbtAddr.getNodeType();
+            }
             
             if (!nbtAddr.getHostName().equals(hostAddress))
                 serviceStatus = PollStatus.available();
 
         } catch (UnknownHostException uhE) {
-        	serviceStatus = logDown(Level.DEBUG, "Unknown host exception generated for " + hostAddress + ", reason: " + uhE.getLocalizedMessage());
+        	String reason = "Unknown host exception generated for " + hostAddress + ", reason: " + uhE.getLocalizedMessage();
+            LOG.debug(reason);
+            serviceStatus = PollStatus.unavailable(reason);
         } catch (RuntimeException rE) {
-        	serviceStatus = logDown(Level.ERROR, "Unexpected runtime exception", rE);
+        	LOG.debug("Unexpected runtime exception", rE);
+            serviceStatus = PollStatus.unavailable("Unexpected runtime exception");
         } catch (Throwable e) {
-        	serviceStatus = logDown(Level.DEBUG, "Unexpected exception", e);
+        	LOG.debug("Unexpected exception", e);
+            serviceStatus = PollStatus.unavailable("Unexpected exception");
         }
 
         //

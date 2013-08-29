@@ -31,7 +31,6 @@ package org.opennms.netmgt.linkd;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.net.InetAddress;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -47,33 +46,42 @@ import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
 import org.opennms.core.utils.BeanUtils;
-import org.opennms.core.utils.LogUtils;
+import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.config.LinkdConfig;
+import org.opennms.netmgt.config.LinkdConfigFactory;
 import org.opennms.netmgt.config.linkd.Package;
-import org.opennms.netmgt.dao.DataLinkInterfaceDao;
-import org.opennms.netmgt.dao.IpInterfaceDao;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.dao.SnmpInterfaceDao;
+import org.opennms.netmgt.dao.api.DataLinkInterfaceDao;
+import org.opennms.netmgt.dao.api.IpInterfaceDao;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.api.SnmpInterfaceDao;
 import org.opennms.netmgt.linkd.nb.Nms101NetworkBuilder;
 import org.opennms.netmgt.model.DataLinkInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.test.JUnitConfigurationEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
 @ContextConfiguration(locations= {
         "classpath:/META-INF/opennms/applicationContext-soa.xml",
+        "classpath:/META-INF/opennms/applicationContext-dao.xml",
         "classpath:/META-INF/opennms/applicationContext-daemon.xml",
         "classpath:/META-INF/opennms/applicationContext-proxy-snmp.xml",
         "classpath:/META-INF/opennms/mockEventIpcManager.xml",
-        "classpath:/META-INF/opennms/applicationContext-linkdTest.xml"
+        "classpath:/META-INF/opennms/applicationContext-linkd.xml",
+        "classpath:/META-INF/opennms/applicationContext-linkdTest.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
-@JUnitConfigurationEnvironment
+@JUnitConfigurationEnvironment(systemProperties="org.opennms.provisiond.enableDiscovery=false")
 @JUnitTemporaryDatabase
 public class Nms101Test extends Nms101NetworkBuilder implements InitializingBean {
+    private static final Logger LOG = LoggerFactory.getLogger(Nms101Test.class);
 
     @Autowired
     private Linkd m_linkd;
@@ -90,7 +98,6 @@ public class Nms101Test extends Nms101NetworkBuilder implements InitializingBean
     @Autowired
     private DataLinkInterfaceDao m_dataLinkInterfaceDao;
 
-    @Autowired
     private LinkdConfig m_linkdConfig;
 
     @Override
@@ -115,6 +122,15 @@ public class Nms101Test extends Nms101NetworkBuilder implements InitializingBean
             pkg.setForceIpRouteDiscoveryOnEthernet(true);
         }
     }
+
+	@Before
+	public void setUpLinkdConfiguration() throws Exception {
+	    LinkdConfigFactory.init();
+	    final Resource config = new ClassPathResource("etc/linkd-configuration.xml");
+	    final LinkdConfigFactory factory = new LinkdConfigFactory(-1L, config.getInputStream());
+	    LinkdConfigFactory.setInstance(factory);
+	    m_linkdConfig = LinkdConfigFactory.getInstance();
+	}
 
     @After
     public void tearDown() throws Exception {
@@ -266,8 +282,8 @@ public class Nms101Test extends Nms101NetworkBuilder implements InitializingBean
         final OnmsNode cisco1700 = m_nodeDao.findByForeignId("linkd", CISCO1700_NAME);
         final OnmsNode cisco1700b = m_nodeDao.findByForeignId("linkd", CISCO1700B_NAME);
 
-        LogUtils.debugf(this, "cisco1700  = %s", cisco1700);
-        LogUtils.debugf(this, "cisco1700b = %s", cisco1700b);
+        LOG.debug("cisco1700  = {}", cisco1700);
+        LOG.debug("cisco1700b = {}", cisco1700b);
 
         assertTrue(m_linkd.scheduleNodeCollection(cisco1700.getId()));
         assertTrue(m_linkd.scheduleNodeCollection(cisco1700b.getId()));
@@ -495,20 +511,20 @@ public class Nms101Test extends Nms101NetworkBuilder implements InitializingBean
     @Test
     public void testDiscoveryOspfGetSubNetAddress() throws Exception {
         DiscoveryLink discovery = m_linkd.getDiscoveryLink("example1");
-        OspfNbrInterface ospfinterface = new OspfNbrInterface(InetAddress.getByName("192.168.9.1"));
-        ospfinterface.setOspfNbrIpAddr(InetAddress.getByName("192.168.15.45"));
+        OspfNbrInterface ospfinterface = new OspfNbrInterface(InetAddressUtils.addr("192.168.9.1"));
+        ospfinterface.setOspfNbrIpAddr(InetAddressUtils.addr("192.168.15.45"));
 
-        ospfinterface.setOspfNbrNetMask(InetAddress.getByName("255.255.255.0"));        
-        assertEquals(InetAddress.getByName("192.168.15.0"), discovery.getSubnetAddress(ospfinterface));
+        ospfinterface.setOspfNbrNetMask(InetAddressUtils.addr("255.255.255.0"));        
+        assertEquals(InetAddressUtils.addr("192.168.15.0"), discovery.getSubnetAddress(ospfinterface));
         
-        ospfinterface.setOspfNbrNetMask(InetAddress.getByName("255.255.0.0"));
-        assertEquals(InetAddress.getByName("192.168.0.0"), discovery.getSubnetAddress(ospfinterface));
+        ospfinterface.setOspfNbrNetMask(InetAddressUtils.addr("255.255.0.0"));
+        assertEquals(InetAddressUtils.addr("192.168.0.0"), discovery.getSubnetAddress(ospfinterface));
 
-        ospfinterface.setOspfNbrNetMask(InetAddress.getByName("255.255.255.252"));
-        assertEquals(InetAddress.getByName("192.168.15.44"), discovery.getSubnetAddress(ospfinterface));
+        ospfinterface.setOspfNbrNetMask(InetAddressUtils.addr("255.255.255.252"));
+        assertEquals(InetAddressUtils.addr("192.168.15.44"), discovery.getSubnetAddress(ospfinterface));
 
-        ospfinterface.setOspfNbrNetMask(InetAddress.getByName("255.255.255.240"));
-        assertEquals(InetAddress.getByName("192.168.15.32"), discovery.getSubnetAddress(ospfinterface));
+        ospfinterface.setOspfNbrNetMask(InetAddressUtils.addr("255.255.255.240"));
+        assertEquals(InetAddressUtils.addr("192.168.15.32"), discovery.getSubnetAddress(ospfinterface));
 
     }
     

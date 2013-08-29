@@ -9,7 +9,7 @@
   <groupId>org.opennms.dependencies</groupId>
   <artifactId>drools-dependencies</artifactId>
   <packaging>pom</packaging>
-  <name>OpenNMS Drools Dependencies</name>
+  <name>OpenNMS Dependencies Drools</name>
   <description>
     This module is used to provide a single artifact that the opennms project
     can depend on to use the drools library.
@@ -27,6 +27,13 @@
       <groupId>org.drools</groupId>
       <artifactId>drools-compiler</artifactId>
       <version>${droolsVersion}</version>
+    </dependency>
+    <!-- *shudder* -->
+    <!-- unfortunately, this is needed for JDK 1.7 compatibility until we can update Drools to something newer than 5.1.1 -->
+    <dependency>
+       <groupId>org.eclipse.jdt.core.compiler</groupId>
+       <artifactId>ecj</artifactId>
+       <version>4.2.2</version>
     </dependency>
   </dependencies>
   <repositories>

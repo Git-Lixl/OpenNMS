@@ -220,6 +220,7 @@ public class DatacollectionConfig implements Serializable {
      * 
      * @return a hash code value for the object.
      */
+    @Override
     public int hashCode() {
         int result = 17;
 
@@ -358,6 +359,7 @@ public class DatacollectionConfig implements Serializable {
      * @param snmpCollections the Vector to copy.
      */
     public void setSnmpCollection(final List<SnmpCollection> snmpCollections) {
+        if (m_snmpCollections == snmpCollections) return;
         m_snmpCollections.clear();
         m_snmpCollections.addAll(snmpCollections);
     }

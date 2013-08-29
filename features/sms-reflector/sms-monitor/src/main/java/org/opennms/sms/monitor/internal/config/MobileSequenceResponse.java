@@ -94,6 +94,7 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 	 * @param matchers a {@link java.util.List} object.
 	 */
 	public void setMatchers(List<SequenceResponseMatcher> matchers) {
+		if (m_matchers == matchers) return;
 		m_matchers.clear();
 		m_matchers.addAll(matchers);
 	}
@@ -141,6 +142,7 @@ public abstract class MobileSequenceResponse extends MobileSequenceOperation {
 	 *
 	 * @return a {@link java.lang.String} object.
 	 */
+    @Override
 	public String toString() {
         return new ToStringBuilder(this)
             .append("gatewayId", getGatewayId())

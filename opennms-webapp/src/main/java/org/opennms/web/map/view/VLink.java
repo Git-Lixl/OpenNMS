@@ -103,7 +103,8 @@ final public class VLink {
      *
      * @param vlinkStatusMap a java$util$Map object.
      */
-    public void setVlinkStatusMap(Map<String, Integer> vlinkStatusMap) {
+    public void setVlinkStatusMap(final Map<String, Integer> vlinkStatusMap) {
+        if (this.vlinkStatusMap == vlinkStatusMap) return;
         this.vlinkStatusMap.clear();
         this.vlinkStatusMap.putAll(vlinkStatusMap);
     }
@@ -149,6 +150,7 @@ final public class VLink {
 	 *
 	 * Asserts if the links are linking the same elements without considering their statuses
 	 */
+        @Override
 	public boolean equals(Object otherLink) {
 		if (!(otherLink instanceof VLink)) return false;
 		VLink link = (VLink) otherLink;
@@ -206,6 +208,7 @@ final public class VLink {
 	 *
 	 * @return a {@link java.lang.String} object.
 	 */
+        @Override
 	public String toString() {
 			return ""+getFirst()+"-"+getSecond()+"-"+linkTypeId+"-"+linkStatusString+" nodeids:"+this.nodeids.toString();
 	}
@@ -265,7 +268,8 @@ final public class VLink {
      *
      * @param nodeids a {@link java.util.Set} object.
      */
-    public void setNodeids(Set<Integer> nodeids) {
+    public void setNodeids(final Set<Integer> nodeids) {
+        if (this.nodeids == nodeids) return;
         this.nodeids.clear();
         nodeids.addAll(nodeids);
     }

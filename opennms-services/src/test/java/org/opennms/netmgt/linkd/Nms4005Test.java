@@ -47,34 +47,39 @@ import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
 import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.config.LinkdConfig;
+import org.opennms.netmgt.config.LinkdConfigFactory;
 import org.opennms.netmgt.config.linkd.Package;
-import org.opennms.netmgt.dao.DataLinkInterfaceDao;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.dao.SnmpInterfaceDao;
+import org.opennms.netmgt.dao.api.DataLinkInterfaceDao;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.api.SnmpInterfaceDao;
 import org.opennms.netmgt.linkd.nb.Nms4005NetworkBuilder;
 import org.opennms.netmgt.model.DataLinkInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.test.context.ContextConfiguration;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
 @ContextConfiguration(locations= {
         "classpath:/META-INF/opennms/applicationContext-soa.xml",
+        "classpath:/META-INF/opennms/applicationContext-dao.xml",
         "classpath:/META-INF/opennms/applicationContext-daemon.xml",
         "classpath:/META-INF/opennms/applicationContext-proxy-snmp.xml",
         "classpath:/META-INF/opennms/mockEventIpcManager.xml",
-        "classpath:/META-INF/opennms/applicationContext-linkdTest.xml"
+        "classpath:/META-INF/opennms/applicationContext-linkd.xml",
+        "classpath:/META-INF/opennms/applicationContext-linkdTest.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
-@JUnitConfigurationEnvironment
+@JUnitConfigurationEnvironment(systemProperties="org.opennms.provisiond.enableDiscovery=false")
 @JUnitTemporaryDatabase
 public class Nms4005Test extends Nms4005NetworkBuilder implements InitializingBean {
 
     @Autowired
     private Linkd m_linkd;
 
-    @Autowired
     private LinkdConfig m_linkdConfig;
 
     @Autowired
@@ -108,6 +113,15 @@ public class Nms4005Test extends Nms4005NetworkBuilder implements InitializingBe
         }        
     }
 
+	@Before
+	public void setUpLinkdConfiguration() throws Exception {
+	    LinkdConfigFactory.init();
+	    final Resource config = new ClassPathResource("etc/linkd-configuration.xml");
+	    final LinkdConfigFactory factory = new LinkdConfigFactory(-1L, config.getInputStream());
+	    LinkdConfigFactory.setInstance(factory);
+	    m_linkdConfig = LinkdConfigFactory.getInstance();
+	}
+	    
     @After
     public void tearDown() throws Exception {
         for (final OnmsNode node : m_nodeDao.findAll()) {
@@ -204,6 +218,7 @@ public class Nms4005Test extends Nms4005NetworkBuilder implements InitializingBe
         List<Thread> waitForMe = new ArrayList<Thread>();
         for (int i = 0; i < NUMBER_OF_THREADS; i++) {
             Thread thread = new Thread("NMS-4005-Test-Thread-" + i) {
+                @Override
                 public void run() {
                     assertTrue(m_linkd.runSingleSnmpCollection(cisco1.getId()));
                 }
@@ -217,6 +232,7 @@ public class Nms4005Test extends Nms4005NetworkBuilder implements InitializingBe
         waitForMe.clear();
         for (int i = 0; i < NUMBER_OF_THREADS; i++) {
             Thread thread = new Thread("NMS-4005-Test-Thread-" + i) {
+                @Override
                 public void run() {
                     assertTrue(m_linkd.runSingleSnmpCollection(cisco2.getId()));
                 }
@@ -230,6 +246,7 @@ public class Nms4005Test extends Nms4005NetworkBuilder implements InitializingBe
         waitForMe.clear();
         for (int i = 0; i < NUMBER_OF_THREADS; i++) {
             Thread thread = new Thread("NMS-4005-Test-Thread-" + i) {
+                @Override
                 public void run() {
                     assertTrue(m_linkd.runSingleSnmpCollection(cisco3.getId()));
                 }
@@ -243,6 +260,7 @@ public class Nms4005Test extends Nms4005NetworkBuilder implements InitializingBe
         waitForMe.clear();
         for (int i = 0; i < NUMBER_OF_THREADS; i++) {
             Thread thread = new Thread("NMS-4005-Test-Thread-" + i) {
+                @Override
                 public void run() {
                     assertTrue(m_linkd.runSingleSnmpCollection(cisco4.getId()));
                 }

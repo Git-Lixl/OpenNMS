@@ -29,6 +29,7 @@
 package org.opennms.netmgt.provision.persist;
 
 import java.net.URL;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +48,7 @@ public class MockForeignSourceRepository extends AbstractForeignSourceRepository
     private final Map<String,Requisition> m_requisitions = new HashMap<String,Requisition>();
     private final Map<String,ForeignSource> m_foreignSources = new HashMap<String,ForeignSource>();
 
+    @Override
     public Set<String> getActiveForeignSourceNames() {
     	final Set<String> fsNames = new TreeSet<String>();
         fsNames.addAll(m_requisitions.keySet());
@@ -54,14 +56,17 @@ public class MockForeignSourceRepository extends AbstractForeignSourceRepository
         return fsNames;
     }
 
+    @Override
     public int getForeignSourceCount() {
         return m_foreignSources.size();
     }
     
+    @Override
     public Set<ForeignSource> getForeignSources() {
         return new TreeSet<ForeignSource>(m_foreignSources.values());
     }
 
+    @Override
     public ForeignSource getForeignSource(final String foreignSourceName) {
         Assert.notNull(foreignSourceName);
         final ForeignSource foreignSource = m_foreignSources.get(foreignSourceName);
@@ -75,53 +80,66 @@ public class MockForeignSourceRepository extends AbstractForeignSourceRepository
         return foreignSource;
     }
 
+    @Override
     public void save(final ForeignSource foreignSource) {
         Assert.notNull(foreignSource);
         Assert.notNull(foreignSource.getName());
 
         validate(foreignSource);
 
-        foreignSource.updateDateStamp();
         m_foreignSources.put(foreignSource.getName(), foreignSource);
     }
 
+    @Override
     public void delete(final ForeignSource foreignSource) throws ForeignSourceRepositoryException {
         m_foreignSources.remove(foreignSource.getName());
     }
 
+    @Override
     public Set<Requisition> getRequisitions() throws ForeignSourceRepositoryException {
         return new TreeSet<Requisition>(m_requisitions.values());
     }
 
+    @Override
     public Requisition getRequisition(final String foreignSourceName) {
         Assert.notNull(foreignSourceName);
         return m_requisitions.get(foreignSourceName);
     }
 
+    @Override
     public Requisition getRequisition(final ForeignSource foreignSource) {
         Assert.notNull(foreignSource);
         Assert.notNull(foreignSource.getName());
         return getRequisition(foreignSource.getName());
     }
 
+    @Override
     public void save(final Requisition requisition) {
         Assert.notNull(requisition);
         Assert.notNull(requisition.getForeignSource());
         
         validate(requisition);
 
-        requisition.updateDateStamp();
         m_requisitions.put(requisition.getForeignSource(), requisition);
     }
 
+    @Override
     public void delete(final Requisition requisition) throws ForeignSourceRepositoryException {
         m_requisitions.remove(requisition.getForeignSource());
     }
 
+    @Override
+    public Date getRequisitionDate(final String foreignSource) {
+        final Requisition requisition = m_requisitions.get(foreignSource);
+        return requisition == null? null : requisition.getDate();
+    }
+
+    @Override
     public URL getRequisitionURL(final String foreignSource) {
         throw new UnsupportedOperationException("no URL in the mock repository");
     }
 
+    @Override
     public ForeignSource getDefaultForeignSource() throws ForeignSourceRepositoryException {
     	final ForeignSource fs = getForeignSource("default");
     	if (fs == null) {
@@ -130,13 +148,13 @@ public class MockForeignSourceRepository extends AbstractForeignSourceRepository
     	return fs;
     }
 
+    @Override
     public void putDefaultForeignSource(final ForeignSource foreignSource) throws ForeignSourceRepositoryException {
         if (foreignSource == null) {
             throw new ForeignSourceRepositoryException("foreign source was null");
         }
         foreignSource.setDefault(true);
         foreignSource.setName("default");
-        foreignSource.updateDateStamp();
         
         save(foreignSource);
     }

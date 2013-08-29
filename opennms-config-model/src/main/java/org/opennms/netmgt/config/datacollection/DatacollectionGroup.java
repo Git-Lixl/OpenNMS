@@ -413,6 +413,7 @@ public class DatacollectionGroup implements Serializable {
      * 
      * @return a hash code value for the object.
      */
+    @Override
     public int hashCode() {
         int result = 17;
         
@@ -619,6 +620,7 @@ public class DatacollectionGroup implements Serializable {
      * @param groups the Vector to copy.
      */
     public void setGroup(final List<Group> groups) {
+        if (m_groups == groups) return;
         m_groups.clear();
         m_groups.addAll(groups);
     }
@@ -678,6 +680,7 @@ public class DatacollectionGroup implements Serializable {
      * @param resourceTypes the Vector to copy.
      */
     public void setResourceType(final List<ResourceType> resourceTypes) {
+        if (m_resourceTypes == resourceTypes);
         m_resourceTypes.clear();
         m_resourceTypes.addAll(resourceTypes);
     }
@@ -727,6 +730,7 @@ public class DatacollectionGroup implements Serializable {
      * @param systemDefs the Vector to copy.
      */
     public void setSystemDef(final List<SystemDef> systemDefs) {
+        if (m_systemDefs == systemDefs) return;
         m_systemDefs.clear();
         m_systemDefs.addAll(systemDefs);
     }

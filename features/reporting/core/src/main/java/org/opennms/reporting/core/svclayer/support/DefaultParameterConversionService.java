@@ -48,10 +48,14 @@ public class DefaultParameterConversionService implements
         ParameterConversionService {
 
     /** {@inheritDoc} */
+    @Override
     public ReportParameters convert(Parameters configParameters) {
 
         ReportParameters reportParameters = new ReportParameters();
         
+        if (configParameters == null) {
+            return reportParameters;
+        }
         
         // add date parms to criteria
         

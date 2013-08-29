@@ -65,9 +65,17 @@ public interface GraphContainer extends DisplayState {
     
 	MapViewManager getMapViewManager();
 
-	Property getScaleProperty();
+	Property<Double> getScaleProperty();
 
     StatusProvider getStatusProvider();
 
     void setStatusProvider(StatusProvider statusProvider);
+
+    String getUserName();
+
+    void setUserName(String userName);
+    
+    String getSessionId();
+    
+    void setSessionId(String sessionId);
 }

@@ -403,6 +403,7 @@ public class SnmpCollection implements Serializable {
      * 
      * @return a hash code value for the object.
      */
+    @Override
     public int hashCode() {
         int result = 17;
         
@@ -587,6 +588,7 @@ public class SnmpCollection implements Serializable {
      * @param includeCollections the Vector to copy.
      */
     public void setIncludeCollection(final List<IncludeCollection> includeCollections) {
+        if (m_includeCollections == includeCollections) return;
         m_includeCollections.clear();
         m_includeCollections.addAll(includeCollections);
     }
@@ -652,6 +654,7 @@ public class SnmpCollection implements Serializable {
      * @param resourceTypes the Vector to copy.
      */
     public void setResourceType(final List<ResourceType> resourceTypes) {
+        if (m_resourceTypes == resourceTypes) return;
         m_resourceTypes.clear();
         m_resourceTypes.addAll(resourceTypes);
     }

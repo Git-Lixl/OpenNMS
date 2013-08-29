@@ -51,7 +51,7 @@ public class RouterInterface {
 	RouterInterface(final int nextHopNodeId, final int nextHopIfIndex) {
 		m_nextHopNodeId = nextHopNodeId;
 		m_nextHopIfIndex = nextHopIfIndex;
-		m_nextHopNetmask = InetAddressUtils.getInetAddress("255.255.255.255");
+		m_nextHopNetmask = InetAddressUtils.TWO_FIFTY_FIVES;
 	}
 
 	/**
@@ -105,6 +105,7 @@ public class RouterInterface {
 	 *
 	 * @return a {@link java.lang.String} object.
 	 */
+    @Override
 	public String toString() {
 	    return new ToStringBuilder(this)
 	    .append("ifIndex", m_ifIndex)

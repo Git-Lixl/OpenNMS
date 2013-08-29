@@ -215,6 +215,7 @@ public class VmwareViJavaAccess {
     protected void relax() {
 
         TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+            @Override
             public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                 return null;
             }
@@ -229,12 +230,14 @@ public class VmwareViJavaAccess {
                 return true;
             }
 
+            @Override
             public void checkServerTrusted(
                     java.security.cert.X509Certificate[] certs, String authType)
                     throws java.security.cert.CertificateException {
                 return;
             }
 
+            @Override
             public void checkClientTrusted(
                     java.security.cert.X509Certificate[] certs, String authType)
                     throws java.security.cert.CertificateException {
@@ -251,6 +254,7 @@ public class VmwareViJavaAccess {
         }
 
         HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+            @Override
             public boolean verify(String s, SSLSession sslSession) {
                 return true;
             }
@@ -402,13 +406,14 @@ public class VmwareViJavaAccess {
     /**
      * Queries a host system for Cim data.
      *
-     * @param hostSystem the host system to query
-     * @param cimClass   the class of Cim objects to retrieve
+     * @param hostSystem       the host system to query
+     * @param cimClass         the class of Cim objects to retrieve
+     * @param primaryIpAddress the Ip address to use
      * @return the list of Cim objects
      * @throws RemoteException
      * @throws CIMException
      */
-    public List<CIMObject> queryCimObjects(HostSystem hostSystem, String cimClass) throws RemoteException, CIMException {
+    public List<CIMObject> queryCimObjects(HostSystem hostSystem, String cimClass, String primaryIpAddress) throws RemoteException, CIMException {
         List<CIMObject> cimObjects = new ArrayList<CIMObject>();
 
         if (!m_hostServiceTickets.containsKey(hostSystem)) {
@@ -418,7 +423,12 @@ public class VmwareViJavaAccess {
         HostServiceTicket hostServiceTicket = m_hostServiceTickets.get(hostSystem);
 
         if (!m_hostSystemCimUrls.containsKey(hostSystem)) {
-            String ipAddress = getPrimaryHostSystemIpAddress(hostSystem);
+            String ipAddress = primaryIpAddress;
+
+            if (ipAddress == null) {
+                ipAddress = getPrimaryHostSystemIpAddress(hostSystem);
+            }
+
 
             if (ipAddress == null) {
                 logger.warn("Cannot determine ip address for host system '{}'", hostSystem.getMOR().getVal());
@@ -452,6 +462,19 @@ public class VmwareViJavaAccess {
         }
 
         return cimObjects;
+    }
+
+    /**
+     * Queries a host system for Cim data.
+     *
+     * @param hostSystem the host system to query
+     * @param cimClass   the class of Cim objects to retrieve
+     * @return the list of Cim objects
+     * @throws RemoteException
+     * @throws CIMException
+     */
+    public List<CIMObject> queryCimObjects(HostSystem hostSystem, String cimClass) throws RemoteException, CIMException {
+        return queryCimObjects(hostSystem, cimClass, null);
     }
 
     /**

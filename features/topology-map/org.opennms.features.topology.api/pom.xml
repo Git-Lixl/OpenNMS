@@ -32,6 +32,13 @@
     </dependency>
     -->
     <dependency>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>jaxb-dependencies</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.opennms.osgi.features.topology</groupId>
       <artifactId>vaadin</artifactId>
       <version>${project.version}</version>
@@ -42,6 +49,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+    	<groupId>com.google.guava</groupId>
+    	<artifactId>guava</artifactId>
+<!--     	<scope>provided</scope> -->
     </dependency>
 
     <dependency>

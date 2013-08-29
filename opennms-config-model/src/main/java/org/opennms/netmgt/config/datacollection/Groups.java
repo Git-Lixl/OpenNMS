@@ -191,6 +191,7 @@ public class Groups implements Serializable {
      * 
      * @return a hash code value for the object.
      */
+    @Override
     public int hashCode() {
         int result = 17;
         
@@ -314,6 +315,7 @@ public class Groups implements Serializable {
      * @param groups the Vector to copy.
      */
     public void setGroup(final List<Group> groups) {
+        if (m_groups == groups) return;
         m_groups.clear();
         m_groups.addAll(groups);
     }

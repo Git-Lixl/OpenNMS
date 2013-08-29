@@ -48,7 +48,6 @@ import java.util.StringTokenizer;
  * Bootstrap application for starting OpenNMS.
  */
 public class Bootstrap {
-	
     protected static final String BOOT_PROPERTIES_NAME = "bootstrap.properties";
     protected static final String RRD_PROPERTIES_NAME = "rrd-configuration.properties";
     protected static final String LIBRARY_PROPERTIES_NAME = "libraries.properties";
@@ -58,6 +57,7 @@ public class Bootstrap {
      * Matches any file that is a directory.
      */
     private static FileFilter m_dirFilter = new FileFilter() {
+        @Override
         public boolean accept(File pathname) {
             return pathname.isDirectory();
         }
@@ -67,6 +67,7 @@ public class Bootstrap {
      * Matches any file that has a name ending in ".jar".
      */
     private static FilenameFilter m_jarFilter = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             return name.endsWith(".jar");
         }
@@ -101,6 +102,13 @@ public class Bootstrap {
             loadClasses(new File(token), recursive, urls);
         }
 
+        final boolean debug = Boolean.getBoolean("opennms.bootstrap.debug");
+        if (debug) {
+            System.err.println("urls:");
+            for (final URL u : urls) {
+                System.err.println("  " + u);
+            }
+        }
         return newClassLoader(urls);
     }
 
@@ -313,6 +321,10 @@ public class Bootstrap {
     }
 
     protected static void executeClass(final String classToExec, final String classToExecMethod, final String[] classToExecArgs, boolean appendClasspath) throws MalformedURLException, ClassNotFoundException, NoSuchMethodException {
+        executeClass(classToExec, classToExecMethod, classToExecArgs, appendClasspath, false);
+    }
+
+    protected static void executeClass(final String classToExec, final String classToExecMethod, final String[] classToExecArgs, boolean appendClasspath, final boolean recurse) throws MalformedURLException, ClassNotFoundException, NoSuchMethodException {
         String dir = System.getProperty("opennms.classpath");
         if (dir == null) {
             dir = System.getProperty(OPENNMS_HOME_PROPERTY) + File.separator
@@ -330,8 +342,14 @@ public class Bootstrap {
         if (System.getProperty("org.opennms.rrd.interfaceJar") != null) {
         	dir += File.pathSeparator + System.getProperty("org.opennms.rrd.interfaceJar");
         }
+
+        final boolean debug = Boolean.getBoolean("opennms.bootstrap.debug");
         
-        final ClassLoader cl = Bootstrap.loadClasses(dir, false, false);
+        if (debug) {
+            System.err.println("dir = " + dir);
+        }
+
+        final ClassLoader cl = Bootstrap.loadClasses(dir, recurse, false);
 
         if (classToExec != null) {
             final String className = classToExec;
@@ -341,6 +359,7 @@ public class Bootstrap {
             final Method method = c.getMethod(classToExecMethod, classes);
 
             Runnable execer = new Runnable() {
+                @Override
                 public void run() {
                     try {
                         method.invoke(null, methodArgs);

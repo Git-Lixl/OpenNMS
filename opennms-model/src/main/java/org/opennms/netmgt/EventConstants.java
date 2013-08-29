@@ -885,6 +885,11 @@ public class EventConstants {
     public final static String PARM_SNMP_MAX_VARS_PER_PDU = "maxVarsPerPdu";
     
     /**
+     * The parameter name for the "SNMP proxy host string" when sent as an event parameter.
+     */
+    public final static String PARM_SNMP_PROXY_HOST= "proxyHost";
+    
+    /**
      * The first IP address in a range of IP addresses when sent as an event
      * parm.
      */
@@ -1159,6 +1164,7 @@ public class EventConstants {
     public final static SnmpObjId OID_SNMP_IFINDEX = SnmpObjId.get(".1.3.6.1.2.1.2.2.1.1");
 
     public static final ThreadLocal<DateFormat> FORMATTER_FULL = new ThreadLocal<DateFormat>() {
+        @Override
         protected synchronized DateFormat initialValue() {
             int timeFormat = DateFormat.FULL;
             // The DateFormat.FULL format for France/Germany do not include the seconds digit
@@ -1179,6 +1185,7 @@ public class EventConstants {
     };
 
     public static final ThreadLocal<DateFormat> FORMATTER_LONG = new ThreadLocal<DateFormat>() {
+        @Override
         protected synchronized DateFormat initialValue() {
             final DateFormat formatter = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.LONG);
             formatter.setLenient(true);
@@ -1187,6 +1194,7 @@ public class EventConstants {
     };
     
     public static final ThreadLocal<DateFormat> FORMATTER_FULL_GMT = new ThreadLocal<DateFormat>() {
+        @Override
         protected synchronized DateFormat initialValue() {
             int timeFormat = DateFormat.FULL;
             // The DateFormat.FULL format for France/Germany do not include the seconds digit
@@ -1208,6 +1216,7 @@ public class EventConstants {
     };
 
     public static final ThreadLocal<DateFormat> FORMATTER_LONG_GMT = new ThreadLocal<DateFormat>() {
+        @Override
         protected synchronized DateFormat initialValue() {
             final DateFormat formatter = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.LONG);
             formatter.setLenient(true);
@@ -1217,6 +1226,7 @@ public class EventConstants {
     };
 
     public static final ThreadLocal<DateFormat> FORMATTER_CUSTOM = new ThreadLocal<DateFormat>() {
+        @Override
         protected synchronized DateFormat initialValue() {
             final DateFormat formatter = new SimpleDateFormat("EEEEE, d MMMMM yyyy k:mm:ss 'o''clock' z");
             formatter.setLenient(true);
@@ -1225,6 +1235,7 @@ public class EventConstants {
     };
 
     public static final ThreadLocal<DateFormat> FORMATTER_DEFAULT = new ThreadLocal<DateFormat>() {
+        @Override
         protected synchronized DateFormat initialValue() {
             final DateFormat formatter = DateFormat.getDateTimeInstance();
             formatter.setLenient(true);

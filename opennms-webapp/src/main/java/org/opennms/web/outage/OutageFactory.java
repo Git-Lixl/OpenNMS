@@ -40,11 +40,12 @@ import java.util.List;
 import javax.servlet.ServletContext;
 
 import org.opennms.core.resource.Vault;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.web.filter.Filter;
 import org.opennms.web.outage.filter.InterfaceFilter;
 import org.opennms.web.outage.filter.NodeFilter;
 import org.opennms.web.outage.filter.ServiceFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Encapsulates all querying functionality for outages.
@@ -53,9 +54,11 @@ import org.opennms.web.outage.filter.ServiceFilter;
  * @author <A HREF="mailto:jason@opennms.org">Jason Johns </A>
  */
 public class OutageFactory extends Object {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(OutageFactory.class);
+
 
     /** Constant <code>log</code> */
-    protected static final ThreadCategory log = ThreadCategory.getInstance("OutageFactory");
 
     /** Private constructor so this class cannot be instantiated. */
     private OutageFactory() {
@@ -271,7 +274,7 @@ public class OutageFactory extends Object {
                 select.append(offset);
             }
 
-            log.debug(select.toString());
+            LOG.debug(select.toString());
 
             PreparedStatement stmt = conn.prepareStatement(select.toString());
             
@@ -552,8 +555,12 @@ public class OutageFactory extends Object {
         Outage[] outages = null;
         List<Outage> list = new ArrayList<Outage>();
 
+        // FIXME: Don't reuse the "element" variable for multiple objects.
         while (rs.next()) {
             Outage outage = new Outage();
+
+            Object element = null;
+            int intElement = -1;
 
             // cannot be null
             outage.outageId = rs.getInt("outageid");
@@ -562,8 +569,8 @@ public class OutageFactory extends Object {
             outage.serviceId = rs.getInt("serviceid");
 
             // cannot be null
-            Timestamp timestamp = rs.getTimestamp("iflostservice");
-            outage.lostServiceTime = new java.util.Date(timestamp.getTime());
+            element = rs.getTimestamp("iflostservice");
+            outage.lostServiceTime = new java.util.Date(((Timestamp) element).getTime());
 
             // can be null
             outage.hostname = rs.getString("iphostname"); // from ipinterface
@@ -577,20 +584,28 @@ public class OutageFactory extends Object {
                                                                 // table
 
             // can be null
-            timestamp = rs.getTimestamp("ifregainedservice");
-            outage.regainedServiceTime = (timestamp != null) ? new java.util.Date(timestamp.getTime()) : null;
+            element = rs.getTimestamp("ifregainedservice");
+            if (element != null) {
+                outage.regainedServiceTime = new java.util.Date(((Timestamp) element).getTime());
+            }
 
             // can be null
-            int intElement = rs.getInt("svcLostEventID");
-            outage.lostServiceEventId = rs.wasNull() ? null : Integer.valueOf(intElement);
+            intElement = rs.getInt("svcLostEventID");
+            if (!rs.wasNull()) {
+                outage.lostServiceEventId = Integer.valueOf(intElement);
+            }
 
             // can be null
             intElement = rs.getInt("svcRegainedEventID");
-            outage.regainedServiceEventId = rs.wasNull() ? null :Integer.valueOf(intElement);
+            if (!rs.wasNull()) {
+                outage.regainedServiceEventId = Integer.valueOf(intElement);
+            }
 
             // can be null
             intElement = rs.getInt("notifyid");
-            outage.lostServiceNotificationId = rs.wasNull() ? null : Integer.valueOf(intElement);
+            if (!rs.wasNull()) {
+                outage.lostServiceNotificationId = Integer.valueOf(intElement);
+            }
 
             // can be null
             outage.lostServiceNotificationAcknowledgedBy = rs.getString("answeredby");

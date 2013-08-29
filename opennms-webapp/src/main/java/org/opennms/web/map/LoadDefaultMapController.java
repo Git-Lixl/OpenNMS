@@ -39,14 +39,11 @@ import java.io.OutputStreamWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
-import org.opennms.core.utils.ThreadCategory;
-
-import org.opennms.web.map.MapsConstants;
-import org.opennms.web.map.view.*;
-
+import org.opennms.web.map.view.Manager;
+import org.opennms.web.map.view.VMapInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
 
 
 /**
@@ -59,8 +56,10 @@ import org.springframework.web.servlet.mvc.Controller;
  * @version $Id: $
  * @since 1.8.1
  */
-public class LoadDefaultMapController implements Controller {
-	ThreadCategory log;
+public class LoadDefaultMapController extends MapsLoggingController {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(LoadDefaultMapController.class);
+
 
 	private Manager manager;
 	
@@ -84,21 +83,20 @@ public class LoadDefaultMapController implements Controller {
 	}
 
 	/** {@inheritDoc} */
-	public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        @Override
+	protected ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		
-		ThreadCategory.setPrefix(MapsConstants.LOG4J_CATEGORY);
-		log = ThreadCategory.getInstance(this.getClass());
 		
 		String user = request.getRemoteUser();
 
-	    log.debug("Loading Default Map for user: " + user);
+	    LOG.debug("Loading Default Map for user: {}", user);
 
 		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(response.getOutputStream(), "UTF-8"));
 		try {
 		    VMapInfo mapInfo  = manager.getDefaultMapsMenu(user);
 			bw.write(ResponseAssembler.getLoadDefaultMapResponse(mapInfo));
 		} catch (Throwable e) {
-			log.error("Error while loading default map for user:"+user,e);
+			LOG.error("Error while loading default map for user:{}", user,e);
 			bw.write(ResponseAssembler.getMapErrorResponse(MapsConstants.LOADDEFAULTMAP_ACTION));
 		} finally {
 			bw.close();

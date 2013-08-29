@@ -30,6 +30,7 @@ package org.opennms.web.rest;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.opennms.core.test.xml.XmlTest.assertXpathMatches;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -40,18 +41,20 @@ import java.util.regex.Pattern;
 import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.core.utils.LogUtils;
-import org.opennms.netmgt.dao.AlarmDao;
 import org.opennms.netmgt.dao.DatabasePopulator;
-import org.opennms.netmgt.dao.DistPollerDao;
-import org.opennms.netmgt.dao.EventDao;
+import org.opennms.netmgt.dao.api.AlarmDao;
+import org.opennms.netmgt.dao.api.DistPollerDao;
+import org.opennms.netmgt.dao.api.EventDao;
 import org.opennms.netmgt.model.OnmsAlarm;
 import org.opennms.netmgt.model.OnmsEvent;
 import org.opennms.netmgt.model.OnmsSeverity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class AlarmStatsRestServiceTest extends AbstractSpringJerseyRestTestCase {
+    private static final Logger LOG = LoggerFactory.getLogger(AlarmStatsRestServiceTest.class);
     private DatabasePopulator m_databasePopulator;
     private WebApplicationContext m_context;
     private int count = 0;
@@ -121,16 +124,16 @@ public class AlarmStatsRestServiceTest extends AbstractSpringJerseyRestTestCase 
         final String oldestUnackedXml = getXml("oldestUnacked", xml);
         final String newestUnackedXml = getXml("newestUnacked", xml);
 
-        assertTrue("should contain WARNING with ID#" + oldestAckedAlarm.getId(), oldestAckedXml.contains("<alarm severity=\"WARNING\" id=\"" + oldestAckedAlarm.getId() + "\""));
+        assertXpathMatches("should contain WARNING with ID#" + oldestAckedAlarm.getId(), oldestAckedXml, "//alarm[@severity='WARNING' and @id='" + oldestAckedAlarm.getId() + "']");
         assertTrue(oldestAckedXml.contains("<firstEventTime>2010-01-01T00:00:00"));
 
-        assertTrue("should contain WARNING with ID#" + newestAckedAlarm.getId(), newestAckedXml.contains("<alarm severity=\"WARNING\" id=\"" + newestAckedAlarm.getId() + "\""));
+        assertXpathMatches("should contain WARNING with ID#" + newestAckedAlarm.getId(), newestAckedXml, "//alarm[@severity='WARNING' and @id='" + newestAckedAlarm.getId() + "']");
         assertTrue(newestAckedXml.contains("<firstEventTime>2010-01-01T01:00:00"));
 
-        assertTrue("should contain WARNING with ID#" + oldestUnackedAlarm.getId(), oldestUnackedXml.contains("<alarm severity=\"WARNING\" id=\"" + oldestUnackedAlarm.getId() + "\""));
+        assertXpathMatches("should contain WARNING with ID#" + oldestUnackedAlarm.getId(), oldestUnackedXml, "//alarm[@severity='WARNING' and @id='" + oldestUnackedAlarm.getId() + "']");
         assertTrue(oldestUnackedXml.contains("<firstEventTime>2010-01-01T02:00:00"));
 
-        assertTrue("should contain WARNING with ID#" + newestUnackedAlarm.getId(), newestUnackedXml.contains("<alarm severity=\"WARNING\" id=\"" + newestUnackedAlarm.getId() + "\""));
+        assertXpathMatches("should contain WARNING with ID#" + newestUnackedAlarm.getId(), newestUnackedXml, "//alarm[@severity='WARNING' and @id='" + newestUnackedAlarm.getId() + "']");
         assertTrue(newestUnackedXml.contains("<firstEventTime>2010-01-01T03:00:00"));
     }
 
@@ -190,7 +193,7 @@ public class AlarmStatsRestServiceTest extends AbstractSpringJerseyRestTestCase 
         getAlarmDao().save(alarm);
         getAlarmDao().flush();
         
-        LogUtils.debugf(this, "CreateAlarm: %s", alarm);
+        LOG.debug("CreateAlarm: {}", alarm);
 
         return alarm;
     }

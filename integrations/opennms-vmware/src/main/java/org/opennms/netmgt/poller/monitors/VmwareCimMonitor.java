@@ -45,7 +45,7 @@ import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.TimeoutTracker;
-import org.opennms.netmgt.dao.NodeDao;
+import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.MonitoredService;
@@ -117,6 +117,7 @@ public class VmwareCimMonitor extends AbstractServiceMonitor {
      *
      * @param parameters the parameter map to use
      */
+    @Override
     public void initialize(Map<String, Object> parameters) {
         m_nodeDao = BeanUtils.getBean("daoContext", "nodeDao", NodeDao.class);
         if (m_nodeDao == null) {
@@ -131,6 +132,7 @@ public class VmwareCimMonitor extends AbstractServiceMonitor {
      * @param parameters the parameter map
      * @return the poll status for this system
      */
+    @Override
     public PollStatus poll(MonitoredService svc, Map<String, Object> parameters) {
         OnmsNode onmsNode = m_nodeDao.get(svc.getNodeId());
 
@@ -197,7 +199,7 @@ public class VmwareCimMonitor extends AbstractServiceMonitor {
             if ("poweredOn".equals(powerState)) {
                 List<CIMObject> cimObjects = null;
                 try {
-                    cimObjects = vmwareViJavaAccess.queryCimObjects(hostSystem, "CIM_NumericSensor");
+                    cimObjects = vmwareViJavaAccess.queryCimObjects(hostSystem, "CIM_NumericSensor", svc.getIpAddr());
                 } catch (RemoteException e) {
                     logger.warn("Error retrieving CIM values from host system '{}'", vmwareManagedObjectId, e.getMessage());
 
