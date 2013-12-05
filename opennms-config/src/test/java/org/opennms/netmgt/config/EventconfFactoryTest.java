@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2012-2013 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2013 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -97,6 +97,7 @@ public class EventconfFactoryTest {
     public void setUp() throws Exception {
         m_eventConfDao = new DefaultEventConfDao();
         m_eventConfDao.setConfigResource(new FileSystemResource(ConfigurationTestUtils.getFileForConfigFile("eventconf.xml")));
+        m_eventConfDao.setConfigCollapseWhitespace(true);
         m_eventConfDao.afterPropertiesSet();
     }
 
@@ -601,6 +602,26 @@ public class EventconfFactoryTest {
         DefaultEventConfDao dao = new DefaultEventConfDao();
         dao.setConfigResource(new FileSystemResource(ConfigurationTestUtils.getFileForConfigFile("eventconf.xml")));
         dao.afterPropertiesSet();
+    }
+    
+    @Test
+    public void testWhitespaceCollapsing() {
+        String nrsLogmsg = "<p>The %service% service on interface %interface% was " +
+                            "previously down and has been restored.</p> " +
+                            "<p>This event is generated when a service which had " +
+                            "previously failed polling attempts is again responding to " +
+                            "polls by OpenNMS. </p> <p>This event will cause " +
+                            "any active outages associated with this service/interface " +
+                            "combination to be cleared.</p>";
+        List<Event> events = m_eventConfDao.getEvents("uei.opennms.org/nodes/nodeRegainedService");
+        assertNotNull("Got a non-null list of events for uei.opennms.org/nodes/nodeRegainedService", events);
+        assertEquals("One event for uei.opennms.org/nodes/nodeRegainedService", 1, events.size());
+        assertEquals("Extra whitespace collapsed in event logmsg.content",
+                     "The %service% outage on interface %interface% has been cleared. Service is restored.",
+                     events.get(0).getLogmsg().getContent());
+        assertEquals("Extra whitespace collapsed in event descr",
+                     nrsLogmsg,
+                     events.get(0).getDescr());
     }
 
     private DefaultEventConfDao loadConfiguration(String relativeResourcePath) throws DataAccessException, IOException {

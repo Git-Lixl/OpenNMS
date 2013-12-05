@@ -60,6 +60,7 @@
 	
 	<bean id="eventConfDao" class="org.opennms.netmgt.config.DefaultEventConfDao">
 		<property name="configResource" ref="eventConfResourceLocation"/>
+		<property name="configCollapseWhitespace" value="true" />
 	</bean>
 
     <onmsgi:service interface="org.opennms.netmgt.config.EventConfDao" ref="eventConfDao" />

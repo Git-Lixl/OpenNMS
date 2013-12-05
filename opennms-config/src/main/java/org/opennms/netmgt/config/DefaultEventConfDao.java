@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2012-2013 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2013 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.xml.eventconf.Event;
@@ -53,6 +55,8 @@ import org.springframework.dao.DataRetrievalFailureException;
 
 public class DefaultEventConfDao implements EventConfDao, InitializingBean {
 	private static final String DEFAULT_PROGRAMMATIC_STORE_RELATIVE_PATH = "events/programmatic.events.xml";
+	
+	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s*\\r\\s*|\\s*\\n\\s*|^\\s+|\\s+$", Pattern.MULTILINE);
 
     /**
      * Relative URL for the programmatic store configuration, relative to the
@@ -65,6 +69,8 @@ public class DefaultEventConfDao implements EventConfDao, InitializingBean {
 	private Resource m_configResource;
 
 	private Partition m_partition;
+	
+	private boolean m_configCollapseWhitespace;
 
     private static class EventLabelComparator implements Comparator<Event>, Serializable {
 
@@ -82,6 +88,14 @@ public class DefaultEventConfDao implements EventConfDao, InitializingBean {
 
 	public void setProgrammaticStoreRelativeUrl(String programmaticStoreRelativeUrl) {
 		m_programmaticStoreRelativePath = programmaticStoreRelativeUrl;
+	}
+	
+	public Boolean getConfigCollapseWhitespace() {
+	    return m_configCollapseWhitespace;
+	}
+	
+	public void setConfigCollapseWhitespace(Boolean collapse) {
+	    m_configCollapseWhitespace = collapse;
 	}
 
 	@Override
@@ -266,6 +280,9 @@ public class DefaultEventConfDao implements EventConfDao, InitializingBean {
 			m_partition = new EnterpriseIdPartition();
 			events.initialize(m_partition);
 
+			if (m_configCollapseWhitespace) {
+			    collapseWhitespace(events);
+			}
 			m_events = events;
 
 		} catch (Exception e) {
@@ -273,6 +290,19 @@ public class DefaultEventConfDao implements EventConfDao, InitializingBean {
 		}
 
 	}
+	
+	private void collapseWhitespace(Events events) {
+	    for (Event event : events.getEventCollection()) {
+	        if (event.getDescr() != null) event.setDescr(collapseWhitespace(event.getDescr()));
+	        if (event.getLogmsg() != null) event.getLogmsg().setContent(collapseWhitespace(event.getLogmsg().getContent()));
+	        if (event.getOperinstruct() != null) event.setOperinstruct(collapseWhitespace(event.getOperinstruct()));
+	    }
+	}
 
+	private String collapseWhitespace(String input) {
+	    if (input == null || "".equals(input)) return input;
+	    Matcher m = WHITESPACE_PATTERN.matcher(input);
+	    return m.replaceAll(" ");
+	}
 }
 
