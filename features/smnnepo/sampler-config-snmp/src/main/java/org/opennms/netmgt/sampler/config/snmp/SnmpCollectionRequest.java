@@ -94,6 +94,10 @@ public class SnmpCollectionRequest implements CollectionRequest<SnmpAgent> {
 			trackers.add(table.createCollectionTracker(m_agent, sampleSet));
 		}
 		
+		for (Group group : m_groups) {
+		    trackers.add(group.createCollectionTracker(m_agent, sampleSet));
+		}
+
 		return new AggregateTracker(trackers);
 
 	}

@@ -54,4 +54,5 @@ public class Metric implements Serializable {
 				getType(),
 				getGroup());
 	}
+
 }

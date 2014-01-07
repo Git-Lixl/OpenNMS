@@ -6,6 +6,7 @@ public class AbsoluteValue extends SampleValue<Long> {
 
 	public AbsoluteValue(Long value) {
 		super(value);
+		throw new UnsupportedOperationException("Not yet implemented!!");
 	}
 
 	@Override

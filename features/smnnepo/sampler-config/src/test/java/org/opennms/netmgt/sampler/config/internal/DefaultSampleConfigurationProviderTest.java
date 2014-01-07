@@ -1,26 +1,16 @@
 package org.opennms.netmgt.sampler.config.internal;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
-import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.opennms.core.criteria.Criteria;
 import org.opennms.netmgt.api.sample.Agent;
-import org.opennms.netmgt.dao.DistPollerDao;
-import org.opennms.netmgt.dao.LocationMonitorDao;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.model.LocationMonitorIpInterface;
-import org.opennms.netmgt.model.OnmsApplication;
-import org.opennms.netmgt.model.OnmsCriteria;
-import org.opennms.netmgt.model.OnmsLocationMonitor;
-import org.opennms.netmgt.model.OnmsLocationSpecificStatus;
-import org.opennms.netmgt.model.OnmsMonitoredService;
-import org.opennms.netmgt.model.OnmsMonitoringLocationDefinition;
+import org.opennms.netmgt.dao.api.DistPollerDao;
+import org.opennms.netmgt.dao.api.LocationMonitorDao;
+import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.sampler.config.SamplerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;

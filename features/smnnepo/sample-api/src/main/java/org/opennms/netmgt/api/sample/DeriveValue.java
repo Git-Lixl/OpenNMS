@@ -6,6 +6,7 @@ public class DeriveValue extends SampleValue<Long> {
 
 	public DeriveValue(Long value) {
 		super(value);
+                throw new UnsupportedOperationException("Not yet implemented!!");
 	}
 
 	@Override

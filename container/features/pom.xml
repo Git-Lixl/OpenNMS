@@ -195,6 +195,13 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.opennms.netmgt.sample</groupId>
+      <artifactId>sample-parent</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.opennms.osgi.features.nrtg</groupId>
       <artifactId>nrtg</artifactId>
       <version>${project.version}</version>

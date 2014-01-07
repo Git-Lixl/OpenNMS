@@ -12,8 +12,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.opennms.netmgt.api.sample.CounterValue;
-import org.opennms.netmgt.api.sample.GaugeValue;
 import org.opennms.netmgt.api.sample.Metric;
 import org.opennms.netmgt.api.sample.Resource;
 import org.opennms.netmgt.api.sample.SampleSet;
@@ -122,21 +120,7 @@ public class Table {
 						SnmpValue snmpValue = row.getValue(column.getOid());
 
 						if (snmpValue != null) {
-							SampleValue<?> sampleValue = null;
-
-							switch (metric.getType()) {
-								case COUNTER:
-									sampleValue = new CounterValue(snmpValue.toBigInteger());
-									break;
-								case GAUGE:
-									sampleValue = new GaugeValue(snmpValue.toLong());
-									break;
-								case ABSOLUTE:
-								case DERIVE:
-								default:
-									throw new RuntimeException("NOT IMPLEMENTED: FIXME!");	// FIXME:
-							}
-
+							SampleValue<?> sampleValue = metric.getType().getValue(snmpValue.toBigInteger());
 							sampleSet.addMeasurement(resource, metric, sampleValue);
 						}
 					}

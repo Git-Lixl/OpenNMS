@@ -61,6 +61,10 @@ public class DataCollectionGroup {
 			table.initialize(type);
 		}
 		
+		for (Group group : m_groups) {
+		    group.initialize();
+		}
+
 		for(SystemDef systemDef : m_systemDefs) {
 			systemDef.initialize(tableMap, groupMap);
 		}

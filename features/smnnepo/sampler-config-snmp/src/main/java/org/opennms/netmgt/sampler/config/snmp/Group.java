@@ -1,5 +1,7 @@
 package org.opennms.netmgt.sampler.config.snmp;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,6 +12,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.opennms.netmgt.api.sample.Metric;
+import org.opennms.netmgt.api.sample.Resource;
+import org.opennms.netmgt.api.sample.SampleSet;
+import org.opennms.netmgt.snmp.AggregateTracker;
+import org.opennms.netmgt.snmp.Collectable;
+import org.opennms.netmgt.snmp.CollectionTracker;
 
 /**
  * 	<group name="mib2-coffee-rfc2325">
@@ -47,6 +54,12 @@ public class Group {
 		m_mibObjects = mibObjects;
 	}
 
+	public void initialize() {
+	    for (final MibObject mibObj : m_mibObjects) {
+	        mibObj.initialize(this);
+	    }
+	}
+
 	public void fillRequest(SnmpCollectionRequest request) {
 		request.addGroup(this);
 	}
@@ -58,7 +71,7 @@ public class Group {
 	public Set<Metric> getMetrics() {
 		Set<Metric> metrics = new HashSet<Metric>();
 		for(MibObject mibObj : m_mibObjects) {
-			Metric metric = mibObj.createMetric(getName());
+			Metric metric = mibObj.createMetric();
 			if (metric != null) { metrics.add(metric); }
 		}
 		return metrics;
@@ -67,9 +80,20 @@ public class Group {
 	public Metric getMetric(String metricName) {
 		for(MibObject mibObj : m_mibObjects) {
 			if (mibObj.getAlias().equals(metricName)) {
-				return mibObj.createMetric(getName());
+				return mibObj.createMetric();
 			}
 		}
 		return null;
 	}
+
+    public CollectionTracker createCollectionTracker(final SnmpAgent agent, final SampleSet sampleSet) {
+        final Resource groupResource = new Resource(agent, "node", m_name);
+
+        final Collection<Collectable> trackers = new ArrayList<Collectable>();
+        for (final MibObject mibObj : m_mibObjects) {
+            trackers.add(mibObj.createCollectionTracker(groupResource, sampleSet));
+        }
+
+        return new AggregateTracker(trackers);
+    }
 }
