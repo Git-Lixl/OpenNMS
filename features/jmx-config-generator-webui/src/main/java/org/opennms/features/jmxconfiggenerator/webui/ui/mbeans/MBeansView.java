@@ -71,8 +71,6 @@ public class MBeansView extends VerticalLayout implements ClickListener, ModelCh
 	 * config model when clicking on 'next' button.
 	 */
 	private UiModel model;
-	private final AbstractSplitPanel mainPanel;
-	private final Layout mbeansContent;
 	private final JmxConfigGeneratorApplication app;
 	private final MBeansTree mbeansTree;
 	private final MBeansContentTabSheet mbeansTabSheet;
@@ -122,8 +120,8 @@ public class MBeansView extends VerticalLayout implements ClickListener, ModelCh
 		setSizeFull();
 		mbeansTabSheet = new MBeansContentTabSheet(controller);
 		mbeansTree = new MBeansTree(controller);
-		mbeansContent = initContentPanel(mbeansForm, mbeansTabSheet);
-		mainPanel = initMainPanel(mbeansTree, mbeansContent);
+		Layout mbeansContent = initContentPanel(mbeansForm, mbeansTabSheet);
+		AbstractSplitPanel mainPanel = initMainPanel(mbeansTree, mbeansContent);
 
 		registerListener(controller);
 
@@ -139,7 +137,7 @@ public class MBeansView extends VerticalLayout implements ClickListener, ModelCh
 		}
 		if (event.getButton().equals(buttonPanel.getNext())) {
 			if (!isValid()) {
-				UIHelper.showValidationError(getWindow(), "There are errors on this view. Please fix them first");
+				UIHelper.showValidationError("There are errors on this view. Please fix them first");
 				return;
 			}
 			model.setJmxDataCollectionAccordingToSelection(controller
@@ -190,7 +188,6 @@ public class MBeansView extends VerticalLayout implements ClickListener, ModelCh
 
 		panel.setContent(layout);
 		component.setCaption(null);
-		panel.setScrollable(true);
 		return panel;
 	}
 
@@ -213,7 +210,7 @@ public class MBeansView extends VerticalLayout implements ClickListener, ModelCh
 		
 		Validator attributeNameValidator = new AttributeNameValidator();
 		Validator attributeLengthValidator = new StringLengthValidator(String.format("Maximal length is %d", Config.ATTRIBUTES_ALIAS_MAX_LENGTH), 0, Config.ATTRIBUTES_ALIAS_MAX_LENGTH, false);  // TODO do it more dynamically
-		UniqueAttributeNameValidator attributeUniqueNameValidator = new UniqueAttributeNameValidator(controller, new HashMap<Object, Field>());
+		UniqueAttributeNameValidator attributeUniqueNameValidator = new UniqueAttributeNameValidator(controller, new HashMap<Object, Field<String>>());
 		
 		
 		// 1. validate each MBean (Mbean name without required check!)

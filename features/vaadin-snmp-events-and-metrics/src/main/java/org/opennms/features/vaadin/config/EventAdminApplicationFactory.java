@@ -27,14 +27,11 @@
  *******************************************************************************/
 package org.opennms.features.vaadin.config;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-
 import org.opennms.netmgt.config.EventConfDao;
 import org.opennms.netmgt.model.events.EventProxy;
 import org.ops4j.pax.vaadin.AbstractApplicationFactory;
 
-import com.vaadin.Application;
+import com.vaadin.ui.UI;
 
 /**
  * The Class Event Administration Application Factory.
@@ -68,22 +65,21 @@ public class EventAdminApplicationFactory extends AbstractApplicationFactory {
     }
 
     /* (non-Javadoc)
-     * @see org.ops4j.pax.vaadin.ApplicationFactory#createApplication(javax.servlet.http.HttpServletRequest)
+     * @see org.ops4j.pax.vaadin.AbstractApplicationFactory#getUIClass()
      */
     @Override
-    public Application createApplication(HttpServletRequest request) throws ServletException {
+    public Class<? extends UI> getUIClass() {
+        return EventAdminApplication.class;
+    }
+
+    /* (non-Javadoc)
+     * @see org.ops4j.pax.vaadin.AbstractApplicationFactory#getUI()
+     */
+    @Override
+    public UI createUI() {
         EventAdminApplication app = new EventAdminApplication();
         app.setEventProxy(eventProxy);
         app.setEventConfDao(eventConfDao);
         return app;
     }
-
-    /* (non-Javadoc)
-     * @see org.ops4j.pax.vaadin.ApplicationFactory#getApplicationClass()
-     */
-    @Override
-    public Class<? extends Application> getApplicationClass() throws ClassNotFoundException {
-        return EventAdminApplication.class;
-    }
-
 }

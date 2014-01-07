@@ -214,7 +214,8 @@ public class Nms17216Test extends Nms17216NetworkBuilder implements Initializing
         example1.setUseIpRouteDiscovery(false);
         example1.setEnableVlanDiscovery(false);
         example1.setUseOspfDiscovery(false);
-        
+        example1.setUseIsisDiscovery(false);
+
         final OnmsNode switch1 = m_nodeDao.findByForeignId("linkd", SWITCH1_NAME);
         final OnmsNode switch2 = m_nodeDao.findByForeignId("linkd", SWITCH2_NAME);
         final OnmsNode switch3 = m_nodeDao.findByForeignId("linkd", SWITCH3_NAME);
@@ -313,23 +314,23 @@ public class Nms17216Test extends Nms17216NetworkBuilder implements Initializing
                 // switch2 gi0/20 -> switch3 Fa0/20 --lldp --cdp
                 checkLink(switch3, switch2, 10020, 10120, datalinkinterface);
             } else if (linkid == start+6) {
-                // switch1 gi0/1 -> router1 Fa0/20 --cdp
-                checkLink(router1, switch1, 7, 10101, datalinkinterface);
+                checkLink(router4, router3, 3, 8, datalinkinterface);
             } else if (linkid == start+7) {
-                // switch3 Fa0/1 -> switch5 Fa0/23 --cdp
-                checkLink(switch5, switch3, 10001, 10023, datalinkinterface);
+                checkLink(router2, router1, 12, 13, datalinkinterface);
             } else if (linkid == start+8) {
-                // switch3 gi0/1 -> switch5 Fa0/20 --cdp
-                checkLink(switch5, switch3, 10013, 10024, datalinkinterface);
+                checkLink(router3, router2, 13, 13, datalinkinterface);
             } else if (linkid == start+9) {
                 //switch4 FastEthernet0/1    ----> router3   GigabitEthernet0/1
                 checkLink(router3, switch4, 9, 10001, datalinkinterface);
             } else if (linkid == start+10) {
-                checkLink(router2, router1, 12, 13, datalinkinterface);
+                // switch1 gi0/1 -> router1 Fa0/20 --cdp
+                checkLink(router1, switch1, 7, 10101, datalinkinterface);
             } else if (linkid == start+11) {
-                checkLink(router3, router2, 13, 13, datalinkinterface);
+                // switch3 Fa0/1 -> switch5 Fa0/23 --cdp
+                checkLink(switch5, switch3, 10001, 10023, datalinkinterface);
             } else if (linkid == start+12) {
-                checkLink(router4, router3, 3, 8, datalinkinterface);
+                // switch3 gi0/1 -> switch5 Fa0/20 --cdp
+                checkLink(switch5, switch3, 10013, 10024, datalinkinterface);
             } else {
                 // error
                 checkLink(switch1,switch1,-1,-1,datalinkinterface);
@@ -379,7 +380,8 @@ public class Nms17216Test extends Nms17216NetworkBuilder implements Initializing
         example1.setUseIpRouteDiscovery(false);
         example1.setEnableVlanDiscovery(false);
         example1.setUseOspfDiscovery(false);
-        
+        example1.setUseIsisDiscovery(false);
+
         final OnmsNode switch1 = m_nodeDao.findByForeignId("linkd", SWITCH1_NAME);
         final OnmsNode switch2 = m_nodeDao.findByForeignId("linkd", SWITCH2_NAME);
         final OnmsNode switch3 = m_nodeDao.findByForeignId("linkd", SWITCH3_NAME);
@@ -452,6 +454,7 @@ public class Nms17216Test extends Nms17216NetworkBuilder implements Initializing
         example1.setSaveRouteTable(false);
         example1.setSaveStpInterfaceTable(false);
         example1.setSaveStpNodeTable(false);
+        example1.setUseIsisDiscovery(false);
 
         
         final OnmsNode switch4 = m_nodeDao.findByForeignId("linkd", SWITCH4_NAME);
@@ -483,7 +486,6 @@ public class Nms17216Test extends Nms17216NetworkBuilder implements Initializing
         for (final DataLinkInterface datalinkinterface: datalinkinterfaces) {
 
                 checkLink(router3, switch4, 9, 10001, datalinkinterface);
-               
         }
     }
 

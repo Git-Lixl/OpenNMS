@@ -42,6 +42,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.opennms.core.db.DataSourceFactory;
@@ -62,6 +63,8 @@ import org.opennms.netmgt.config.CollectdConfigFactory;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.PollerConfigFactory;
 import org.opennms.netmgt.eventd.EventIpcManagerFactory;
+import org.opennms.netmgt.model.OnmsNode.NodeLabelSource;
+import org.opennms.netmgt.model.OnmsNode.NodeType;
 import org.opennms.netmgt.model.capsd.DbIfServiceEntry;
 import org.opennms.netmgt.model.capsd.DbIpInterfaceEntry;
 import org.opennms.netmgt.model.capsd.DbNodeEntry;
@@ -357,12 +360,12 @@ final class SuspectEventProcessor implements Runnable {
         Date now = new Date();
         entryNode.setCreationTime(now);
         entryNode.setLastPoll(now);
-        entryNode.setNodeType(DbNodeEntry.NODE_TYPE_ACTIVE);
+        entryNode.setNodeType(NodeType.ACTIVE);
         entryNode.setLabel(primaryIf.getHostName());
         if (entryNode.getLabel().equals(str(primaryIf)))
-            entryNode.setLabelSource(DbNodeEntry.LABEL_SOURCE_ADDRESS);
+            entryNode.setLabelSource(NodeLabelSource.ADDRESS);
         else
-            entryNode.setLabelSource(DbNodeEntry.LABEL_SOURCE_HOSTNAME);
+            entryNode.setLabelSource(NodeLabelSource.HOSTNAME);
 
         if (snmpc != null) {
             if (snmpc.hasSystemGroup()) {
@@ -385,9 +388,9 @@ final class SuspectEventProcessor implements Runnable {
                     // Hostname takes precedence over sysName so only replace
                     // label if
                     // hostname was not available.
-                    if (entryNode.getLabelSource() == DbNodeEntry.LABEL_SOURCE_ADDRESS) {
+                    if (entryNode.getLabelSource() == NodeLabelSource.ADDRESS) {
                         entryNode.setLabel(str);
-                        entryNode.setLabelSource(DbNodeEntry.LABEL_SOURCE_SYSNAME);
+                        entryNode.setLabelSource(NodeLabelSource.SYSNAME);
                     }
                 }
 
@@ -417,9 +420,9 @@ final class SuspectEventProcessor implements Runnable {
             // Netbios Name and Domain
             // Note: only override if the label source is not HOSTNAME
             if (smbc.getNbtName() != null
-                    && entryNode.getLabelSource() != DbNodeEntry.LABEL_SOURCE_HOSTNAME) {
+                    && entryNode.getLabelSource() != NodeLabelSource.HOSTNAME) {
                 entryNode.setLabel(smbc.getNbtName());
-                entryNode.setLabelSource(DbNodeEntry.LABEL_SOURCE_NETBIOS);
+                entryNode.setLabelSource(NodeLabelSource.NETBIOS);
                 entryNode.setNetBIOSName(entryNode.getLabel());
                 if (smbc.getDomainName() != null) {
                     entryNode.setDomainName(smbc.getDomainName());
@@ -642,14 +645,14 @@ final class SuspectEventProcessor implements Runnable {
         }
         
         Map<InetAddress, List<SupportedProtocol>> extraTargets = collector.getAdditionalTargets();
-        for(InetAddress xifaddr : extraTargets.keySet()) {
+        for(Entry<InetAddress, List<SupportedProtocol>> xifaddrEntry : extraTargets.entrySet()) {
 
-            LOG.debug("addInterfaces: adding interface {}", str(xifaddr));
+            LOG.debug("addInterfaces: adding interface {}", str(xifaddrEntry.getKey()));
 
             DbIpInterfaceEntry xipIfEntry = DbIpInterfaceEntry.create(nodeId,
-                                                                      xifaddr);
+                                                                      xifaddrEntry.getKey());
             xipIfEntry.setLastPoll(now);
-            xipIfEntry.setHostname(xifaddr.getHostName());
+            xipIfEntry.setHostname(xifaddrEntry.getKey().getHostName());
 
             /*
              * NOTE: (reference internal bug# 201) If the ip is 'managed', it
@@ -660,7 +663,7 @@ final class SuspectEventProcessor implements Runnable {
              * against filters for each service, try to get the first package
              * here and use that for service evaluation.
              */
-            boolean xaddrUnmanaged = cFactory.isAddressUnmanaged(xifaddr);
+            boolean xaddrUnmanaged = cFactory.isAddressUnmanaged(xifaddrEntry.getKey());
             if (xaddrUnmanaged) {
                 xipIfEntry.setManagedState(DbIpInterfaceEntry.STATE_UNMANAGED);
             } else {
@@ -676,7 +679,7 @@ final class SuspectEventProcessor implements Runnable {
              */
             xipIfEntry.setPrimaryState(DbIpInterfaceEntry.SNMP_NOT_ELIGIBLE);
             int xifIndex = -1;
-            if ((xifIndex = snmpc.getIfIndex(xifaddr)) != -1) {
+            if ((xifIndex = snmpc.getIfIndex(xifaddrEntry.getKey())) != -1) {
                 /*
                  * XXX I'm not sure if it is always safe to call setIfIndex
                  * here.  We should only do it if an snmpInterface entry
@@ -690,14 +693,14 @@ final class SuspectEventProcessor implements Runnable {
                     xipIfEntry.setStatus(status);
                 }
 
-                if (!supportsSnmp(extraTargets.get(xifaddr))) {
-                    LOG.debug("addInterfaces: Interface doesn't support SNMP. {} set to not eligible", str(xifaddr));
+                if (!supportsSnmp(xifaddrEntry.getValue())) {
+                    LOG.debug("addInterfaces: Interface doesn't support SNMP. {} set to not eligible", str(xifaddrEntry.getKey()));
                 }
             } else {
                 /*
                  * No ifIndex found so set primary state to NOT_ELIGIBLE
                  */
-                LOG.debug("addInterfaces: No ifIndex found. {} set to not eligible", str(xifaddr));
+                LOG.debug("addInterfaces: No ifIndex found. {} set to not eligible", str(xifaddrEntry.getKey()));
             }
 
             xipIfEntry.store(dbc);
@@ -712,7 +715,7 @@ final class SuspectEventProcessor implements Runnable {
                 PollerConfigFactory.getInstance().rebuildPackageIpListMap();
 
                 boolean xipToBePolled = false;
-                xipPkg = pollerCfgFactory.getFirstPackageMatch(str(xifaddr));
+                xipPkg = pollerCfgFactory.getFirstPackageMatch(str(xifaddrEntry.getKey()));
                 if (xipPkg != null) {
                     xipToBePolled = true;
                 }
@@ -725,8 +728,8 @@ final class SuspectEventProcessor implements Runnable {
             }
 
             // add the supported protocols
-            addSupportedProtocols(node, xifaddr,
-                                  extraTargets.get(xifaddr),
+            addSupportedProtocols(node, xifaddrEntry.getKey(),
+                                  extraTargets.get(xifaddrEntry.getKey()),
                                   xaddrUnmanaged, xifIndex, xipPkg);
         }
     }
@@ -1136,13 +1139,13 @@ final class SuspectEventProcessor implements Runnable {
         //
         if (collector.hasAdditionalTargets()) {
             Map<InetAddress, List<SupportedProtocol>> extraTargets = collector.getAdditionalTargets();
-            for(InetAddress currIf : extraTargets.keySet()) {
+            for(Entry<InetAddress, List<SupportedProtocol>> currIfEntry : extraTargets.entrySet()) {
                 // Test current subtarget.
                 // 
-                if (supportsSnmp(extraTargets.get(currIf))
-                        && getIfType(currIf, snmpc) == 24) {
-                    LOG.debug("buildLBSnmpAddressList: adding subtarget interface {} temporarily marked as primary!", str(currIf));
-                    addresses.add(currIf);
+                if (supportsSnmp(currIfEntry.getValue())
+                        && getIfType(currIfEntry.getKey(), snmpc) == 24) {
+                    LOG.debug("buildLBSnmpAddressList: adding subtarget interface {} temporarily marked as primary!", str(currIfEntry.getKey()));
+                    addresses.add(currIfEntry.getKey());
                 }
             } // end while()
         } // end if()
@@ -1195,14 +1198,14 @@ final class SuspectEventProcessor implements Runnable {
         //
         if (collector.hasAdditionalTargets()) {
             Map<InetAddress, List<SupportedProtocol>> extraTargets = collector.getAdditionalTargets();
-            for(InetAddress currIf : extraTargets.keySet()) {
+            for(Entry<InetAddress, List<SupportedProtocol>> currIfEntry : extraTargets.entrySet()) {
 
                 // Test current subtarget.
                 // 
-                if (supportsSnmp(extraTargets.get(currIf))
-                        && hasIfIndex(currIf, snmpc)) {
-                    LOG.debug("buildSnmpAddressList: adding subtarget interface {} temporarily marked as primary!", str(currIf));
-                    addresses.add(currIf);
+                if (supportsSnmp(currIfEntry.getValue())
+                        && hasIfIndex(currIfEntry.getKey(), snmpc)) {
+                    LOG.debug("buildSnmpAddressList: adding subtarget interface {} temporarily marked as primary!", str(currIfEntry.getKey()));
+                    addresses.add(currIfEntry.getKey());
                 }
             } // end while()
         } // end if()
@@ -1743,22 +1746,22 @@ final class SuspectEventProcessor implements Runnable {
         if (collector.hasSnmpCollection()
                 && !collector.getSnmpCollector().failed()) {
             Map<InetAddress, List<SupportedProtocol>> extraTargets = collector.getAdditionalTargets();
-            for(InetAddress xifaddr : extraTargets.keySet()) {
+            for(Entry<InetAddress, List<SupportedProtocol>> xifaddrEntry : extraTargets.entrySet()) {
 
                 // nodeGainedInterface
                 //
                 createAndSendNodeGainedInterfaceEvent(node.getNodeId(),
-                                                      xifaddr);
+                                                      xifaddrEntry.getKey());
 
                 // nodeGainedService
                 //
-                List<SupportedProtocol> supportedProtocols = extraTargets.get(xifaddr);
-                LOG.debug("interface {} supports {} protocols.", xifaddr, supportedProtocols.size());
+                List<SupportedProtocol> supportedProtocols = xifaddrEntry.getValue();
+                LOG.debug("interface {} supports {} protocols.", xifaddrEntry.getKey(), supportedProtocols.size());
                 if (supportedProtocols != null) {
                     for(SupportedProtocol p : supportedProtocols) {
                         createAndSendNodeGainedServiceEvent(
                                                             node,
-                                                            xifaddr,
+                                                            xifaddrEntry.getKey(),
                                                             p.getProtocolName(),
                                                             null);
                     }
@@ -1779,7 +1782,9 @@ final class SuspectEventProcessor implements Runnable {
         EventBuilder bldr = createEventBuilder(EventConstants.NODE_ADDED_EVENT_UEI);
         bldr.setNodeid(nodeEntry.getNodeId());
         bldr.addParam(EventConstants.PARM_NODE_LABEL, nodeEntry.getLabel());
-        bldr.addParam(EventConstants.PARM_NODE_LABEL_SOURCE, nodeEntry.getLabelSource());
+        if (nodeEntry.getLabelSource() != null) {
+            bldr.addParam(EventConstants.PARM_NODE_LABEL_SOURCE, nodeEntry.getLabelSource().toString());
+        }
         bldr.addParam(EventConstants.PARM_METHOD, "icmp");
         
         sendEvent(bldr.getEvent());
@@ -1880,7 +1885,9 @@ final class SuspectEventProcessor implements Runnable {
         bldr.setService(svcName);
         bldr.addParam(EventConstants.PARM_IP_HOSTNAME, ipAddr.getHostName());
         bldr.addParam(EventConstants.PARM_NODE_LABEL, nodeEntry.getLabel());
-        bldr.addParam(EventConstants.PARM_NODE_LABEL_SOURCE, nodeEntry.getLabelSource());
+        if (nodeEntry.getLabelSource() != null) {
+            bldr.addParam(EventConstants.PARM_NODE_LABEL_SOURCE, nodeEntry.getLabelSource().toString());
+        }
 
         // Add qualifier (if available)
         if (qualifier != null && qualifier.length() > 0) {

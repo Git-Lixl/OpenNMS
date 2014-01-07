@@ -27,12 +27,14 @@
  *******************************************************************************/
 package org.opennms.features.vaadin.events;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.vaadin.data.util.converter.Converter;
 
 import org.apache.commons.lang.StringUtils;
 import org.opennms.netmgt.xml.eventconf.Decode;
-import org.vaadin.addon.customfield.PropertyConverter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * The Varbind's Decode List Converter.
@@ -40,25 +42,37 @@ import org.vaadin.addon.customfield.PropertyConverter;
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a> 
  */
 @SuppressWarnings("serial")
-public class DecodeListConverter extends PropertyConverter<ArrayList<Decode>, String> {
+public class DecodeListConverter implements Converter<String, ArrayList<Decode>> {
 
-    /**
-     * The Class DecodeList.
+    /* (non-Javadoc)
+     * @see com.vaadin.data.util.converter.Converter#convertToModel(java.lang.Object, java.lang.Class, java.util.Locale)
      */
-    public class DecodeList extends ArrayList<Decode> {}
-
-    /**
-     * Instantiates a new decode list converter.
-     */
-    public DecodeListConverter() {
-        super(DecodeList.class);
+    @Override
+    public ArrayList<Decode> convertToModel(String fieldValue, Class<? extends ArrayList<Decode>> targetType, Locale locale) throws ConversionException {
+        if (fieldValue == null) {
+            return null;
+        }
+        ArrayList<Decode> list = new ArrayList<Decode>();
+        for (String s : fieldValue.split(",")) {
+            String[] parts = s.split("=");
+            if (parts.length == 2) {
+                Decode d = new Decode();
+                d.setVarbindvalue(parts[0].trim());
+                d.setVarbinddecodedstring(parts[1].trim());
+                list.add(d);
+            }
+        }
+        return list;
     }
 
     /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.PropertyConverter#format(java.lang.Object)
+     * @see com.vaadin.data.util.converter.Converter#convertToPresentation(java.lang.Object, java.lang.Class, java.util.Locale)
      */
     @Override
-    public String format(ArrayList<Decode> propertyValue) {
+    public String convertToPresentation(ArrayList<Decode> propertyValue, Class<? extends String> targetType, Locale locale) throws ConversionException {
+        if (propertyValue == null) {
+            return null;
+        }
         final List<String> values = new ArrayList<String>();
         for (Decode d : propertyValue) {
             values.add(d.getVarbindvalue() + '=' + d.getVarbinddecodedstring());
@@ -67,19 +81,21 @@ public class DecodeListConverter extends PropertyConverter<ArrayList<Decode>, St
     }
 
     /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.PropertyConverter#parse(java.lang.Object)
+     * @see com.vaadin.data.util.converter.Converter#getModelType()
      */
     @Override
-    public ArrayList<Decode> parse(String fieldValue) {
-        ArrayList<Decode> list = new ArrayList<Decode>();
-        for (String s : fieldValue.split(",")) {
-            String[] parts = s.split("=");
-            Decode d = new Decode();
-            d.setVarbindvalue(parts[0].trim());
-            d.setVarbinddecodedstring(parts[1].trim());
-            list.add(d);
-        }
-        return list;
+    @SuppressWarnings("unchecked")
+    public Class<ArrayList<Decode>> getModelType() {
+        return (Class<ArrayList<Decode>>) new ArrayList<Decode>().getClass();
+
+    }
+
+    /* (non-Javadoc)
+     * @see com.vaadin.data.util.converter.Converter#getPresentationType()
+     */
+    @Override
+    public Class<String> getPresentationType() {
+        return String.class;
     }
 
 }

@@ -34,13 +34,16 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.opennms.web.api.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import com.vaadin.data.Property;
 import com.vaadin.data.Container.ItemSetChangeEvent;
 import com.vaadin.data.Container.ItemSetChangeListener;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Table;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Table.ColumnGenerator;
 
 public class CheckboxGenerator implements ColumnGenerator, ItemSetChangeListener {
@@ -59,30 +62,35 @@ public class CheckboxGenerator implements ColumnGenerator, ItemSetChangeListener
 
 	@Override
 	public Object generateCell(Table source, Object itemId, Object columnId) {
-		final Property property = source.getContainerProperty(itemId, m_valueProperty);
+		final Property<Integer> property = source.getContainerProperty(itemId, m_valueProperty);
 		if (property.getValue() == null) {
 			return null;
 		} else {
-			CheckBox button = new CheckBox();
-			button.setData(property.getValue());
-			button.setValue(isSelected((Integer) property.getValue()));
-			button.addListener(new ClickListener() {
-
-				private static final long serialVersionUID = 2991986878904005830L;
-
-				@Override
-				public void buttonClick(ClickEvent event) {
-					if (event.getButton().booleanValue()) {
-						m_selectedCheckboxes .add((Integer)event.getButton().getData());
-						m_notSelectedCheckboxes.remove(event.getButton().getData());
-					} else {
-						m_selectedCheckboxes.remove(event.getButton().getData());
-						m_notSelectedCheckboxes.add((Integer)event.getButton().getData());
+			if (SecurityContextHolder.getContext().toString().contains(Authentication.ROLE_READONLY)) {
+				// Do not render the checkboxes for read-only users
+				return null;
+			} else {
+				final CheckBox button = new CheckBox();
+				button.setData(property.getValue());
+				button.setValue(isSelected((Integer) property.getValue()));
+				button.addValueChangeListener(new ValueChangeListener() {
+	
+					private static final long serialVersionUID = 2991986878904005830L;
+	
+					@Override
+					public void valueChange(ValueChangeEvent event) {
+						if (Boolean.TRUE.equals(event.getProperty().getValue())) {
+							m_selectedCheckboxes.add(property.getValue());
+							m_notSelectedCheckboxes.remove(property.getValue());
+						} else {
+							m_selectedCheckboxes.remove(property.getValue());
+							m_notSelectedCheckboxes.add(property.getValue());
+						}
 					}
-				}
-			});
-			m_checkboxes.add(button);
-			return button;
+				});
+				m_checkboxes.add(button);
+				return button;
+			}
 		}
 	}
 
@@ -94,9 +102,9 @@ public class CheckboxGenerator implements ColumnGenerator, ItemSetChangeListener
 	    if (m_selectAll) {
 	        Set<Integer> selected = new TreeSet<Integer>(); 
 	        for (Object eachItemId : source.getItemIds()) {
-	           Property property = source.getContainerProperty(eachItemId,  m_valueProperty);
+	           Property<Integer> property = source.getContainerProperty(eachItemId,  m_valueProperty);
 	           if (property == null) continue;
-	           selected.add((Integer)property.getValue());
+	           selected.add(property.getValue());
 	        }
 	        
 	        //remove unselected

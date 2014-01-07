@@ -644,6 +644,9 @@ find $RPM_BUILD_ROOT%{instprefix}/lib ! -type d | \
 find $RPM_BUILD_ROOT%{instprefix}/etc -type d | \
 	sed -e "s,^$RPM_BUILD_ROOT,%dir ," | \
 	sort >> %{_tmppath}/files.main
+find $RPM_BUILD_ROOT%{instprefix}/system ! -type d | \
+	sed -e "s|^$RPM_BUILD_ROOT|%attr(755,root,root) |" | \
+	sort >> %{_tmppath}/files.main
 
 # jetty
 find $RPM_BUILD_ROOT%{jettydir} ! -type d | \
@@ -680,7 +683,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{logdir}
 			%{instprefix}/data
 			%{instprefix}/deploy
-			%{instprefix}/system
 
 %if %{with_docs}
 %files docs
@@ -708,6 +710,7 @@ rm -rf $RPM_BUILD_ROOT
 %config %{jettydir}/%{servletdir}/WEB-INF/ncs*.xml
 %config %{jettydir}/%{servletdir}/WEB-INF/jsp/alarm/ncs-*
 %config %{jettydir}/%{servletdir}/WEB-INF/jsp/ncs
+%dir %{sharedir}/etc-pristine/drools-engine.d/ncs
 %{sharedir}/etc-pristine/drools-engine.d/ncs/*
 %{sharedir}/etc-pristine/ncs-northbounder-configuration.xml
 
@@ -715,7 +718,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644 root root 755)
 %config %{jettydir}/opennms-remoting/WEB-INF/*.xml
 %config %{jettydir}/%{servletdir}/WEB-INF/*.properties
-%config %{jettydir}/opennms-remoting/WEB-INF/*.properties
 
 %files plugins
 
@@ -855,16 +857,6 @@ if [ "$RPM_INSTALL_PREFIX0/logs" != "$RPM_INSTALL_PREFIX2" ]; then
 		echo "done"
 	fi
 fi
-
-for dir in controller daemon webapp; do
-	if [ -f "$RPM_INSTALL_PREFIX2/$dir" ]; then
-		printf -- "ERROR: not sure what to do... $RPM_INSTALL_PREFIX2/$dir is a file, but it should be a directory or symlink.  Expect problems.  :)"
-	else
-		if [ ! -d "$RPM_INSTALL_PREFIX2/$dir" ]; then
-			mkdir -p "$RPM_INSTALL_PREFIX2/$dir"
-		fi
-	fi
-done
 
 if [ "$RPM_INSTALL_PREFIX0/share" != "$RPM_INSTALL_PREFIX1" ]; then
 	printf -- "- making symlink for $RPM_INSTALL_PREFIX0/share... "

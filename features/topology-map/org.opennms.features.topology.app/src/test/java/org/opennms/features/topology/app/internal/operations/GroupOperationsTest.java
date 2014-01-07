@@ -52,15 +52,18 @@ import org.opennms.core.test.MockLogAppender;
 import org.opennms.features.topology.api.GraphContainer;
 import org.opennms.features.topology.api.OperationContext;
 import org.opennms.features.topology.api.SelectionManager;
+import org.opennms.features.topology.api.topo.Criteria;
 import org.opennms.features.topology.api.topo.Vertex;
 import org.opennms.features.topology.api.topo.VertexRef;
 import org.opennms.features.topology.plugins.topo.simple.SimpleGraphProvider;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Validator.InvalidValueException;
+import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.Form;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 
 public class GroupOperationsTest {
@@ -68,15 +71,18 @@ public class GroupOperationsTest {
 	private static class TestOperationContext implements OperationContext {
 
 		private final GraphContainer m_graphContainer;
-		private final Window m_window;
+		private final UI m_window;
 
 		public TestOperationContext(GraphContainer graphContainer) {
 			m_graphContainer = graphContainer;
-			m_window = new Window();
+			m_window = new UI() {
+				@Override
+				protected void init(VaadinRequest request) {
+				}};
 		}
 
 		@Override
-		public Window getMainWindow() {
+		public UI getMainWindow() {
 			return m_window;
 		}
 
@@ -102,7 +108,7 @@ public class GroupOperationsTest {
 	}
 	
 	private static Form getForm(final Window prompt) {
-	    for (Iterator<Component> itr = prompt.getComponentIterator(); itr.hasNext();) {
+	    for (Iterator<Component> itr = prompt.iterator(); itr.hasNext();) {
             Component component = itr.next();
             if (component instanceof Form) return (Form)component;
             LoggerFactory.getLogger(GroupOperationsTest.class).info("Not a Form: " + component.getClass());
@@ -111,9 +117,9 @@ public class GroupOperationsTest {
 	}
 
 	private static Window getPrompt(final OperationContext context) {
-	    Window window = context.getMainWindow();
-        assertEquals(1, window.getChildWindows().size());
-        Window prompt = window.getChildWindows().iterator().next();
+	    UI window = context.getMainWindow();
+        assertEquals(1, window.getWindows().size());
+        Window prompt = window.getWindows().iterator().next();
         assertNotNull(prompt);
         return prompt;
 	}
@@ -155,6 +161,7 @@ public class GroupOperationsTest {
 		EasyMock.expect(graphContainer.getSelectionManager()).andReturn(selectionManager).anyTimes();
 		graphContainer.redoLayout();
 		EasyMock.expectLastCall().anyTimes();
+		EasyMock.expect(graphContainer.getCriteria()).andReturn(new Criteria[0]).anyTimes();
 
 		EasyMock.replay(graphContainer);
 		EasyMock.replay(selectionManager);
@@ -181,11 +188,11 @@ public class GroupOperationsTest {
 
 			// Grab the window, put a value into the form field, and commit the form to complete
 			// the operation.
-			Window window = context.getMainWindow();
-			assertEquals(1, window.getChildWindows().size());
-			Window prompt = window.getChildWindows().iterator().next();
+			UI window = context.getMainWindow();
+			assertEquals(1, window.getWindows().size());
+			Window prompt = window.getWindows().iterator().next();
 
-			for (Iterator<Component> itr = prompt.getComponentIterator(); itr.hasNext();) {
+			for (Iterator<Component> itr = prompt.iterator(); itr.hasNext();) {
 				Component component = itr.next();
 				try {
 					Form form = (Form)component;
@@ -241,11 +248,11 @@ public class GroupOperationsTest {
 
 			// Grab the window, put a value into the form field, and commit the form to complete
 			// the operation.
-			Window window = context.getMainWindow();
-			assertEquals(1, window.getChildWindows().size());
-			Window prompt = window.getChildWindows().iterator().next();
+			UI window = context.getMainWindow();
+			assertEquals(1, window.getWindows().size());
+			Window prompt = window.getWindows().iterator().next();
 
-			for (Iterator<Component> itr = prompt.getComponentIterator(); itr.hasNext();) {
+			for (Iterator<Component> itr = prompt.iterator(); itr.hasNext();) {
 				Component component = itr.next();
 				try {
 					Form form = (Form)component;
@@ -325,11 +332,11 @@ public class GroupOperationsTest {
 
 			// Grab the window, put a value into the form field, and commit the form to complete
 			// the operation.
-			Window window = context.getMainWindow();
-			assertEquals(1, window.getChildWindows().size());
-			Window prompt = window.getChildWindows().iterator().next();
+			UI window = context.getMainWindow();
+			assertEquals(1, window.getWindows().size());
+			Window prompt = window.getWindows().iterator().next();
 
-			for (Iterator<Component> itr = prompt.getComponentIterator(); itr.hasNext();) {
+			for (Iterator<Component> itr = prompt.iterator(); itr.hasNext();) {
 				Component component = itr.next();
 				try {
 					Form form = (Form)component;
@@ -377,11 +384,11 @@ public class GroupOperationsTest {
 
 			// Grab the window, put a value into the form field, and commit the form to complete
 			// the operation.
-			Window window = context.getMainWindow();
-			assertEquals(1, window.getChildWindows().size());
-			Window prompt = window.getChildWindows().iterator().next();
+			UI window = context.getMainWindow();
+			assertEquals(1, window.getWindows().size());
+			Window prompt = window.getWindows().iterator().next();
 
-			for (Iterator<Component> itr = prompt.getComponentIterator(); itr.hasNext();) {
+			for (Iterator<Component> itr = prompt.iterator(); itr.hasNext();) {
 				Component component = itr.next();
 				try {
 					Form form = (Form)component;
@@ -431,11 +438,11 @@ public class GroupOperationsTest {
 
 			// Grab the window, put a value into the form field, and commit the form to complete
 			// the operation.
-			Window window = context.getMainWindow();
-			assertEquals(1, window.getChildWindows().size());
-			Window prompt = window.getChildWindows().iterator().next();
+			UI window = context.getMainWindow();
+			assertEquals(1, window.getWindows().size());
+			Window prompt = window.getWindows().iterator().next();
 
-			for (Iterator<Component> itr = prompt.getComponentIterator(); itr.hasNext();) {
+			for (Iterator<Component> itr = prompt.iterator(); itr.hasNext();) {
 				Component component = itr.next();
 				try {
 					Form form = (Form)component;
@@ -478,11 +485,11 @@ public class GroupOperationsTest {
 
 		// Grab the window, put a value into the form field, and commit the form to complete
 		// the operation.
-		Window window = context.getMainWindow();
-		assertEquals(1, window.getChildWindows().size());
-		Window prompt = window.getChildWindows().iterator().next();
+		UI window = context.getMainWindow();
+		assertEquals(1, window.getWindows().size());
+		Window prompt = window.getWindows().iterator().next();
 
-		for (Iterator<Component> itr = prompt.getComponentIterator(); itr.hasNext();) {
+		for (Iterator<Component> itr = prompt.iterator(); itr.hasNext();) {
 			Component component = itr.next();
 			try {
 				Form form = (Form)component;
@@ -610,11 +617,11 @@ public class GroupOperationsTest {
 
 			// Grab the window, put a value into the form field, and commit the form to complete
 			// the operation.
-			Window window = context.getMainWindow();
-			assertEquals(1, window.getChildWindows().size());
-			Window prompt = window.getChildWindows().iterator().next();
+			UI window = context.getMainWindow();
+			assertEquals(1, window.getWindows().size());
+			Window prompt = window.getWindows().iterator().next();
 
-			for (Iterator<Component> itr = prompt.getComponentIterator(); itr.hasNext();) {
+			for (Iterator<Component> itr = prompt.iterator(); itr.hasNext();) {
 				Component component = itr.next();
 				try {
 					Form form = (Form)component;
@@ -650,11 +657,11 @@ public class GroupOperationsTest {
 
 			// Grab the window, put a value into the form field, and commit the form to complete
 			// the operation.
-			Window window = context.getMainWindow();
-			assertEquals(1, window.getChildWindows().size());
-			Window prompt = window.getChildWindows().iterator().next();
+			UI window = context.getMainWindow();
+			assertEquals(1, window.getWindows().size());
+			Window prompt = window.getWindows().iterator().next();
 
-			for (Iterator<Component> itr = prompt.getComponentIterator(); itr.hasNext();) {
+			for (Iterator<Component> itr = prompt.iterator(); itr.hasNext();) {
 				Component component = itr.next();
 				try {
 					Form form = (Form)component;
@@ -697,11 +704,11 @@ public class GroupOperationsTest {
 
 			// Grab the window, put a value into the form field, and commit the form to complete
 			// the operation.
-			Window window = context.getMainWindow();
-			assertEquals(1, window.getChildWindows().size());
-			Window prompt = window.getChildWindows().iterator().next();
+			UI window = context.getMainWindow();
+			assertEquals(1, window.getWindows().size());
+			Window prompt = window.getWindows().iterator().next();
 
-			for (Iterator<Component> itr = prompt.getComponentIterator(); itr.hasNext();) {
+			for (Iterator<Component> itr = prompt.iterator(); itr.hasNext();) {
 				Component component = itr.next();
 				try {
 					Form form = (Form)component;

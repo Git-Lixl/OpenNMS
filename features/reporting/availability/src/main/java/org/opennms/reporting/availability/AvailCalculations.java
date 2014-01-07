@@ -38,12 +38,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.opennms.core.logging.Logging;
 import org.opennms.reporting.datablock.IfService;
 import org.opennms.reporting.datablock.Interface;
@@ -51,6 +49,8 @@ import org.opennms.reporting.datablock.Node;
 import org.opennms.reporting.datablock.OutageSince;
 import org.opennms.reporting.datablock.OutageSvcTimesList;
 import org.opennms.reporting.datablock.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * AvailCalculations does all computations for all reports for a category. The
@@ -152,278 +152,279 @@ public class AvailCalculations extends Object {
      * @param catIndex a int.
      * @param sectionIndex a int.
      */
-    public AvailCalculations(List<Node> nodes, long endTime, long lastMonthEndTime, List<String> monitoredServices, Report report, TreeMap<Double, List<String>> offenders, double warning, double normal, String comments, String name, String format, String monthFormat, int catIndex, int sectionIndex) {
-        m_sectionIndex = sectionIndex;
-        org.opennms.reporting.availability.Category category = new org.opennms.reporting.availability.Category();
-        category.setWarning(warning);
-        category.setNormal(normal);
-        category.setCatComments(comments);
-        category.setCatName(name);
-        category.setCatIndex(catIndex);
-        category.setNodeCount(nodes.size());
-        int ipaddrCount = 0;
-        int serviceCount = 0;
-        
-        for(Node tmpNode : nodes) {
-            if (tmpNode != null) {
-                ipaddrCount += tmpNode.getInterfaceCount();
-                serviceCount += tmpNode.getServiceCount();
-            }
-        }
-        category.setIpaddrCount(ipaddrCount);
-        category.setServiceCount(serviceCount);
+    public AvailCalculations(final List<Node> nodes, final long endTime, final long lastMonthEndTime, final List<String> monitoredServices, final Report report, final TreeMap<Double, List<String>> offenders, final double warning, final double normal, final String comments, final String name, final String format, final String monthFormat, final int catIndex, final int sectionIndex) {
+        Logging.withPrefix(LOG4J_CATEGORY, new Runnable() {
+            @Override public void run() {
+                m_sectionIndex = sectionIndex;
+                org.opennms.reporting.availability.Category category = new org.opennms.reporting.availability.Category();
+                category.setWarning(warning);
+                category.setNormal(normal);
+                category.setCatComments(comments);
+                category.setCatName(name);
+                category.setCatIndex(catIndex);
+                category.setNodeCount(nodes.size());
+                int ipaddrCount = 0;
+                int serviceCount = 0;
 
-        org.opennms.reporting.availability.Categories categories = report.getCategories();
-        Logging.putPrefix(LOG4J_CATEGORY);
+                for(Node tmpNode : nodes) {
+                    if (tmpNode != null) {
+                        ipaddrCount += tmpNode.getInterfaceCount();
+                        serviceCount += tmpNode.getServiceCount();
+                    }
+                }
+                category.setIpaddrCount(ipaddrCount);
+                category.setServiceCount(serviceCount);
 
-        LOG.debug("Inside AvailCalculations using endTime {}", endTime);
+                org.opennms.reporting.availability.Categories categories = report.getCategories();
 
-        m_monitoredServices = monitoredServices;
-        m_endLastMonthTime = lastMonthEndTime;
-        m_daysInLastMonth = getDaysForMonth(m_endLastMonthTime);
-        m_report = report;
+                LOG.debug("Inside AvailCalculations using endTime {}", endTime);
 
-        m_nodes = nodes;
+                m_monitoredServices = monitoredServices;
+                m_endLastMonthTime = lastMonthEndTime;
+                m_daysInLastMonth = getDaysForMonth(m_endLastMonthTime);
+                m_report = report;
 
-        m_endTime = endTime;
-        String label;
-        String descr;
+                m_nodes = nodes;
 
-
-        // Please node the following 4 formats are displayed on the graphical
-        // report.
-        // (i) last12MoAvail
-        // (ii) LastMonthsDailyAvailability
-        // (iii) MonthToDateDailyAvailability
-        // (iv) lastMoTop20offenders
+                m_endTime = endTime;
+                String label;
+                String descr;
 
 
-        LOG.debug("Now computing last 12 months daily availability ");
-        //
-        // N Months Availability
-        //
-        label = AvailabilityConstants.NMONTH_TOTAL_LABEL;
-        descr = AvailabilityConstants.NMONTH_TOTAL_DESCR;
-        if (label == null || label.length() == 0)
-            label = "The last 12 Months Availability";
-        if (descr == null || descr.length() == 0)
-            descr = "The last 12 Months Availability";
-        CatSections catSections = new CatSections();
-        lastNMonthsAvailability(NMONTHS, m_endLastMonthTime, catSections, label, descr);
+                // Please node the following 4 formats are displayed on the graphical
+                // report.
+                // (i) last12MoAvail
+                // (ii) LastMonthsDailyAvailability
+                // (iii) MonthToDateDailyAvailability
+                // (iv) lastMoTop20offenders
 
-        LOG.debug("Computed lastNMonthsAvailability");
 
-        //
-        // Last Months Daily Availability
-        //
+                LOG.debug("Now computing last 12 months daily availability ");
+                //
+                // N Months Availability
+                //
+                label = AvailabilityConstants.NMONTH_TOTAL_LABEL;
+                descr = AvailabilityConstants.NMONTH_TOTAL_DESCR;
+                if (label == null || label.length() == 0)
+                    label = "The last 12 Months Availability";
+                if (descr == null || descr.length() == 0)
+                    descr = "The last 12 Months Availability";
+                CatSections catSections = new CatSections();
+                lastNMonthsAvailability(NMONTHS, m_endLastMonthTime, catSections, label, descr);
 
-        LOG.debug("Now computing last months daily availability ");
-        label = AvailabilityConstants.LAST_MONTH_DAILY_LABEL;
-        descr = AvailabilityConstants.LAST_MONTH_DAILY_DESCR;
-        if (label == null || label.length() == 0)
-            label = "The last Months Daily Availability";
-        if (descr == null || descr.length() == 0)
-            descr = "Daily Average of svcs monitored and availability of svcs divided by the total svc minutes (last month)";
-        if (monthFormat.equalsIgnoreCase("calendar")){
-			lastCalMoDailyAvailability(m_daysInLastMonth, m_endLastMonthTime, catSections, label, descr, "LastMonthsDailyAvailability");
-        }else {
-        	lastMoDailyAvailability(m_daysInLastMonth, m_endLastMonthTime, catSections, label, descr, "LastMonthsDailyAvailability");
-        }
+                LOG.debug("Computed lastNMonthsAvailability");
 
-		LOG.debug("Computed lastNDaysDailyAvailability");
+                //
+                // Last Months Daily Availability
+                //
 
-        //
-        // Month To Date Daily Availability
-        //
+                LOG.debug("Now computing last months daily availability ");
+                label = AvailabilityConstants.LAST_MONTH_DAILY_LABEL;
+                descr = AvailabilityConstants.LAST_MONTH_DAILY_DESCR;
+                if (label == null || label.length() == 0)
+                    label = "The last Months Daily Availability";
+                if (descr == null || descr.length() == 0)
+                    descr = "Daily Average of svcs monitored and availability of svcs divided by the total svc minutes (last month)";
+                if (monthFormat.equalsIgnoreCase("calendar")){
+                    lastCalMoDailyAvailability(m_daysInLastMonth, m_endLastMonthTime, catSections, label, descr, "LastMonthsDailyAvailability");
+                }else {
+                    lastMoDailyAvailability(m_daysInLastMonth, m_endLastMonthTime, catSections, label, descr, "LastMonthsDailyAvailability");
+                }
 
-        LOG.debug("Now computing  month to date daily availability ");
-        label = AvailabilityConstants.LAST_MTD_DAILY_LABEL;
-        descr = AvailabilityConstants.LAST_MTD_DAILY_DESCR;
-        if (label == null || label.length() == 0)
-            label = "Month To Date Daily Availability";
-        if (descr == null || descr.length() == 0)
-            descr = "Daily Average of svc monitored and availability of svcs div by total svc minutes of month frm 1st till date";
-        Calendar calendar = new GregorianCalendar();
-        calendar.setTime(new Date(m_endTime));
-        int numDaysInMonth = calendar.get(Calendar.DAY_OF_MONTH);
-		if (monthFormat.equalsIgnoreCase("calendar")){
-			lastCalMTDDailyAvailability(numDaysInMonth, m_endTime, catSections, label, descr, "MonthToDateDailyAvailability");
-		}else {
-			lastMTDDailyAvailability(numDaysInMonth, m_endTime, catSections, label, descr, "MonthToDateDailyAvailability");
-		}
-        
+                LOG.debug("Computed lastNDaysDailyAvailability");
 
-        LOG.debug("Computed lastNDaysDailyAvailability");
+                //
+                // Month To Date Daily Availability
+                //
 
-        //
-        // Last Months Top Offenders
-        //
+                LOG.debug("Now computing  month to date daily availability ");
+                label = AvailabilityConstants.LAST_MTD_DAILY_LABEL;
+                descr = AvailabilityConstants.LAST_MTD_DAILY_DESCR;
+                if (label == null || label.length() == 0)
+                    label = "Month To Date Daily Availability";
+                if (descr == null || descr.length() == 0)
+                    descr = "Daily Average of svc monitored and availability of svcs div by total svc minutes of month frm 1st till date";
+                Calendar calendar = new GregorianCalendar();
+                calendar.setTime(new Date(m_endTime));
+                int numDaysInMonth = calendar.get(Calendar.DAY_OF_MONTH);
+                if (monthFormat.equalsIgnoreCase("calendar")){
+                    lastCalMTDDailyAvailability(numDaysInMonth, m_endTime, catSections, label, descr, "MonthToDateDailyAvailability");
+                }else {
+                    lastMTDDailyAvailability(numDaysInMonth, m_endTime, catSections, label, descr, "MonthToDateDailyAvailability");
+                }
 
-        LOG.debug("Now computing Last Months Top Offenders ");
-        label = AvailabilityConstants.NOFFENDERS_LABEL;
-        descr = AvailabilityConstants.NOFFENDERS_DESCR;
-        if (label == null || label.length() == 0)
-            label = "Last Months Top Offenders";
-        if (descr == null || descr.length() == 0)
-            descr = "This is the list of the worst available devices in the category for the last month";
-        lastMoTopNOffenders(offenders, catSections, label, descr);
 
-        LOG.debug("Computed lastMoTopNOffenders ");
+                LOG.debug("Computed lastNDaysDailyAvailability");
 
-        //
-        // Last N days Daily Availability
-        //
-        if (!format.equals("SVG")) {
+                //
+                // Last Months Top Offenders
+                //
 
-            LOG.debug("Now computing LAST_30_DAYS_DAILY_LABEL ");
-            label = AvailabilityConstants.LAST_30_DAYS_DAILY_LABEL;
-            descr = AvailabilityConstants.LAST_30_DAYS_DAILY_DESCR;
-            if (label == null || label.length() == 0)
-                label = "The last 30 Days Daily Availability";
-            if (descr == null || descr.length() == 0)
-                descr = "Daily average of svcs and dvcs monitored and their availability divided by total mins for 30days";
-            lastNDaysDailyAvailability(THIRTY, m_endTime, catSections, label, descr, "Last30DaysDailyAvailability");
+                LOG.debug("Now computing Last Months Top Offenders ");
+                label = AvailabilityConstants.NOFFENDERS_LABEL;
+                descr = AvailabilityConstants.NOFFENDERS_DESCR;
+                if (label == null || label.length() == 0)
+                    label = "Last Months Top Offenders";
+                if (descr == null || descr.length() == 0)
+                    descr = "This is the list of the worst available devices in the category for the last month";
+                lastMoTopNOffenders(offenders, catSections, label, descr);
 
-            LOG.debug("Computed lastNDaysDailyAvailability");
-        }
+                LOG.debug("Computed lastMoTopNOffenders ");
 
-        //
-        // N days total availability
-        //
-        if (!format.equals("SVG")) {
+                //
+                // Last N days Daily Availability
+                //
+                if (!format.equals("SVG")) {
 
-            LOG.debug("Now computing LAST_30_DAYS_TOTAL_LABEL ");
-            label = AvailabilityConstants.LAST_30_DAYS_TOTAL_LABEL;
-            descr = AvailabilityConstants.LAST_30_DAYS_TOTAL_DESCR;
-            if (label == null || label.length() == 0)
-                label = "The last 30 Days Total Availability";
-            if (descr == null || descr.length() == 0)
-                descr = "Average of svcs monitored and availability of svcs divided by total svc minutes of the last 30 days";
-            lastNDaysTotalAvailability(THIRTY, m_endTime, catSections, label, descr);
+                    LOG.debug("Now computing LAST_30_DAYS_DAILY_LABEL ");
+                    label = AvailabilityConstants.LAST_30_DAYS_DAILY_LABEL;
+                    descr = AvailabilityConstants.LAST_30_DAYS_DAILY_DESCR;
+                    if (label == null || label.length() == 0)
+                        label = "The last 30 Days Daily Availability";
+                    if (descr == null || descr.length() == 0)
+                        descr = "Daily average of svcs and dvcs monitored and their availability divided by total mins for 30days";
+                    lastNDaysDailyAvailability(THIRTY, m_endTime, catSections, label, descr, "Last30DaysDailyAvailability");
 
-            LOG.debug("Computed lastNDaysTotalAvailability");
-        }
+                    LOG.debug("Computed lastNDaysDailyAvailability");
+                }
 
-        //
-        // Last Months Total Availability
-        //
-        if (!format.equals("SVG")) {
+                //
+                // N days total availability
+                //
+                if (!format.equals("SVG")) {
 
-            LOG.debug("Now computing LAST_MONTH_TOTAL_LABEL ");
-            label = AvailabilityConstants.LAST_MONTH_TOTAL_LABEL;
-            descr = AvailabilityConstants.LAST_MONTH_TOTAL_DESCR;
-            if (label == null || label.length() == 0)
-                label = "The last Months Total Availability";
-            if (descr == null || descr.length() == 0)
-                descr = "Average of svcs monitored and availability of svcs divided by the total svc minutes of the month";
-            lastMoTotalAvailability(m_daysInLastMonth, m_endLastMonthTime, catSections, label, descr);
+                    LOG.debug("Now computing LAST_30_DAYS_TOTAL_LABEL ");
+                    label = AvailabilityConstants.LAST_30_DAYS_TOTAL_LABEL;
+                    descr = AvailabilityConstants.LAST_30_DAYS_TOTAL_DESCR;
+                    if (label == null || label.length() == 0)
+                        label = "The last 30 Days Total Availability";
+                    if (descr == null || descr.length() == 0)
+                        descr = "Average of svcs monitored and availability of svcs divided by total svc minutes of the last 30 days";
+                    lastNDaysTotalAvailability(THIRTY, m_endTime, catSections, label, descr);
 
-            LOG.debug("Computed lastNDaysDailyAvailability");
-        }
+                    LOG.debug("Computed lastNDaysTotalAvailability");
+                }
 
-        //
-        // Month To Date Total Availability
-        //
-        if (!format.equals("SVG")) {
+                //
+                // Last Months Total Availability
+                //
+                if (!format.equals("SVG")) {
 
-            LOG.debug("Now computing LAST_MTD_TOTAL_LABEL ");
-            label = AvailabilityConstants.LAST_MTD_TOTAL_LABEL;
-            descr = AvailabilityConstants.LAST_MTD_TOTAL_DESCR;
-            if (label == null || label.length() == 0)
-                label = "Month To Date Total Availability";
-            if (descr == null || descr.length() == 0)
-                descr = "Average of svc monitored and availability of svcs dividedby total svc minutes of month frm 1st till date";
-            lastMoTotalAvailability(numDaysInMonth, m_endTime, catSections, label, descr);
+                    LOG.debug("Now computing LAST_MONTH_TOTAL_LABEL ");
+                    label = AvailabilityConstants.LAST_MONTH_TOTAL_LABEL;
+                    descr = AvailabilityConstants.LAST_MONTH_TOTAL_DESCR;
+                    if (label == null || label.length() == 0)
+                        label = "The last Months Total Availability";
+                    if (descr == null || descr.length() == 0)
+                        descr = "Average of svcs monitored and availability of svcs divided by the total svc minutes of the month";
+                    lastMoTotalAvailability(m_daysInLastMonth, m_endLastMonthTime, catSections, label, descr);
 
-            LOG.debug("Computed MTDTotalAvailability");
-        }
+                    LOG.debug("Computed lastNDaysDailyAvailability");
+                }
 
-        m_services = new HashMap<String, Map<IfService, OutageSvcTimesList>>();
-            
-        for(Node node : nodes) {
-            if (node != null) {
-                for(Interface intf : node.getInterfaces()) {
-                    if (intf != null) {
-                        for(Service svc : intf.getServices()) {
-                            if (svc != null) {
-                                OutageSvcTimesList outages = svc.getOutages();
-                                if (outages != null) {
-                                    IfService ifservice = new IfService(node.getNodeID(), intf.getName(), -1, node.getName(), svc.getName());
-                                    Map<IfService, OutageSvcTimesList> svcOutages = m_services.get(svc.getName());
-                                    if (svcOutages == null)
-                                        svcOutages = new HashMap<IfService, OutageSvcTimesList>();
-                                    svcOutages.put(ifservice, outages);
-                                    m_services.put(svc.getName(), svcOutages);
+                //
+                // Month To Date Total Availability
+                //
+                if (!format.equals("SVG")) {
+
+                    LOG.debug("Now computing LAST_MTD_TOTAL_LABEL ");
+                    label = AvailabilityConstants.LAST_MTD_TOTAL_LABEL;
+                    descr = AvailabilityConstants.LAST_MTD_TOTAL_DESCR;
+                    if (label == null || label.length() == 0)
+                        label = "Month To Date Total Availability";
+                    if (descr == null || descr.length() == 0)
+                        descr = "Average of svc monitored and availability of svcs dividedby total svc minutes of month frm 1st till date";
+                    lastMoTotalAvailability(numDaysInMonth, m_endTime, catSections, label, descr);
+
+                    LOG.debug("Computed MTDTotalAvailability");
+                }
+
+                m_services = new HashMap<String, Map<IfService, OutageSvcTimesList>>();
+
+                for(Node node : nodes) {
+                    if (node != null) {
+                        for(Interface intf : node.getInterfaces()) {
+                            if (intf != null) {
+                                for(Service svc : intf.getServices()) {
+                                    if (svc != null) {
+                                        OutageSvcTimesList outages = svc.getOutages();
+                                        if (outages != null) {
+                                            IfService ifservice = new IfService(node.getNodeID(), intf.getName(), -1, node.getName(), svc.getName());
+                                            Map<IfService, OutageSvcTimesList> svcOutages = m_services.get(svc.getName());
+                                            if (svcOutages == null)
+                                                svcOutages = new HashMap<IfService, OutageSvcTimesList>();
+                                            svcOutages.put(ifservice, outages);
+                                            m_services.put(svc.getName(), svcOutages);
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                LOG.debug("Services {}", m_services);
+                m_nodes = null;
+                //
+                // N Days Daily Service Availability
+                //
+                if (!format.equals("SVG")) {
+
+                    LOG.debug("Now computing LAST_30_DAYS_SVC_AVAIL_LABEL ");
+                    label = AvailabilityConstants.LAST_30_DAYS_SVC_AVAIL_LABEL;
+                    descr = AvailabilityConstants.LAST_30_DAYS_SVC_AVAIL_DESCR;
+                    if (label == null || label.length() == 0)
+                        label = "The last 30 days Daily Service Availability";
+                    if (descr == null || descr.length() == 0)
+                        descr = "The last 30 days Daily Service Availability is the daily average of services";
+                    lastNDaysDailyServiceAvailability(THIRTY, m_endTime, catSections, label, descr);
+
+                    LOG.debug("Computed lastNDaysDailyServiceAvailability");
+                }
+
+                //
+                // Last Months Daily Service Availability
+                //
+                if (!format.equals("SVG")) {
+
+                    LOG.debug("Now computing LAST_MONTH_SVC_AVAIL_LABE");
+                    label = AvailabilityConstants.LAST_MONTH_SVC_AVAIL_LABEL;
+                    descr = AvailabilityConstants.LAST_MONTH_SVC_AVAIL_DESCR;
+                    if (label == null || label.length() == 0)
+                        label = "The last Months Daily Service Availability";
+                    if (descr == null || descr.length() == 0)
+                        descr = "The last Months Daily Service Availability is the daily average of services and devices";
+                    lastNDaysDailyServiceAvailability(m_daysInLastMonth, m_endLastMonthTime, catSections, label, descr);
+
+                    LOG.debug("Computed lastNDaysDailyServiceAvailability");
+                }
+
+                //
+                // Top N Service Outages
+                //
+                if (!format.equals("SVG")) {
+
+                    LOG.debug("Now computing TOP20_SVC_OUTAGES_LABEL");
+                    label = AvailabilityConstants.TOP20_SVC_OUTAGES_LABEL;
+                    descr = AvailabilityConstants.TOP20_SVC_OUTAGES_DESCR;
+                    if (label == null || label.length() == 0)
+                        label = "Last Month Top Service Outages for ";
+                    if (descr == null || descr.length() == 0)
+                        descr = "Last Month Top Service Outages for ";
+                    lastMonTopNServiceOutages(catSections, label, descr);
+
+                    LOG.debug("Computed lastMonTopNServiceOutages");
+                }
+
+                m_services = null;
+                category.addCatSections(catSections);
+                categories.addCategory(category);
+
+                m_report.setCategories(categories);
+
+                LOG.debug("Leaving AvailCalculations");
             }
-        }
-
-        LOG.debug("Services {}", m_services);
-        m_nodes = null;
-        //
-        // N Days Daily Service Availability
-        //
-        if (!format.equals("SVG")) {
-
-            LOG.debug("Now computing LAST_30_DAYS_SVC_AVAIL_LABEL ");
-            label = AvailabilityConstants.LAST_30_DAYS_SVC_AVAIL_LABEL;
-            descr = AvailabilityConstants.LAST_30_DAYS_SVC_AVAIL_DESCR;
-            if (label == null || label.length() == 0)
-                label = "The last 30 days Daily Service Availability";
-            if (descr == null || descr.length() == 0)
-                descr = "The last 30 days Daily Service Availability is the daily average of services";
-            lastNDaysDailyServiceAvailability(THIRTY, m_endTime, catSections, label, descr);
-
-            LOG.debug("Computed lastNDaysDailyServiceAvailability");
-        }
-
-        //
-        // Last Months Daily Service Availability
-        //
-        if (!format.equals("SVG")) {
-
-            LOG.debug("Now computing LAST_MONTH_SVC_AVAIL_LABE");
-            label = AvailabilityConstants.LAST_MONTH_SVC_AVAIL_LABEL;
-            descr = AvailabilityConstants.LAST_MONTH_SVC_AVAIL_DESCR;
-            if (label == null || label.length() == 0)
-                label = "The last Months Daily Service Availability";
-            if (descr == null || descr.length() == 0)
-                descr = "The last Months Daily Service Availability is the daily average of services and devices";
-            lastNDaysDailyServiceAvailability(m_daysInLastMonth, m_endLastMonthTime, catSections, label, descr);
-
-            LOG.debug("Computed lastNDaysDailyServiceAvailability");
-        }
-
-        //
-        // Top N Service Outages
-        //
-        if (!format.equals("SVG")) {
-
-            LOG.debug("Now computing TOP20_SVC_OUTAGES_LABEL");
-            label = AvailabilityConstants.TOP20_SVC_OUTAGES_LABEL;
-            descr = AvailabilityConstants.TOP20_SVC_OUTAGES_DESCR;
-            if (label == null || label.length() == 0)
-                label = "Last Month Top Service Outages for ";
-            if (descr == null || descr.length() == 0)
-                descr = "Last Month Top Service Outages for ";
-            lastMonTopNServiceOutages(catSections, label, descr);
-
-            LOG.debug("Computed lastMonTopNServiceOutages");
-        }
-
-        m_services = null;
-        category.addCatSections(catSections);
-        categories.addCategory(category);
-
-        m_report.setCategories(categories);
-        report = m_report;
-
-
-        LOG.debug("Leaving AvailCalculations");
+        });
     }
 
     /**
@@ -452,17 +453,17 @@ public class AvailCalculations extends Object {
         // For each monitored service, get all individual outages.
         //
         TreeMap<Long, List<OutageSince>> treeMap = null;
-        
-        for(String service : m_services.keySet()) {
+
+        for(Entry<String, Map<IfService, OutageSvcTimesList>> serviceEntry : m_services.entrySet()) {
             treeMap = new TreeMap<Long, List<OutageSince>>();
-            Map<IfService, OutageSvcTimesList> ifSvcOutageList = m_services.get(service);
-            
-            for(IfService ifservice : ifSvcOutageList.keySet()) {
-                if (ifservice != null) {
-                    OutageSvcTimesList outageSvcList = (OutageSvcTimesList) ifSvcOutageList.get(ifservice);
+            Map<IfService, OutageSvcTimesList> ifSvcOutageList = serviceEntry.getValue();
+
+            for(Entry<IfService, OutageSvcTimesList> ifserviceEntry : ifSvcOutageList.entrySet()) {
+                if (ifserviceEntry.getKey() != null) {
+                    OutageSvcTimesList outageSvcList = ifserviceEntry.getValue();
                     if (outageSvcList != null) {
                         long rollingWindow = m_daysInLastMonth * ROLLING_WINDOW;
-                        List<OutageSince> svcOutages = outageSvcList.getServiceOutages(ifservice.getNodeName(), m_endLastMonthTime, rollingWindow);
+                        List<OutageSince> svcOutages = outageSvcList.getServiceOutages(ifserviceEntry.getKey().getNodeName(), m_endLastMonthTime, rollingWindow);
                         for(OutageSince outageSince : svcOutages) {
                             if (outageSince != null) {
                                 long outage = outageSince.getOutage() / 1000;
@@ -477,13 +478,14 @@ public class AvailCalculations extends Object {
                 }
             }
             LOG.debug("Top 20 service outages from the list {}", treeMap);
-            
-            
+
+
             int top20Count = 0;
             Rows rows = new Rows();
 
-            loop : for(Long outage : treeMap.keySet()) {
-                List<OutageSince> list = treeMap.get(outage);
+            final SimpleDateFormat fmt = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+
+            loop : for(List<OutageSince> list : treeMap.values()) {
                 for(OutageSince outageSince : list) {
                     top20Count++;
                     String nodeName = outageSince.getNodeName();
@@ -504,7 +506,6 @@ public class AvailCalculations extends Object {
                     value.setType("data");
 
                     Value datevalue = new Value();
-                    SimpleDateFormat fmt = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
                     datevalue.setContent(fmt.format(new Date(outageSince.getOutTime())));
                     datevalue.setType("other");
 
@@ -523,14 +524,14 @@ public class AvailCalculations extends Object {
             col.addColTitle(0, "Node Name");
             col.addColTitle(1, "Duration Of Outage");
             col.addColTitle(2, "Service Lost Time");
-			ClassicTable table = new ClassicTable();
-			table.setCol(col);
-			table.setRows(rows);
-			Section section = new Section();
-			section.setClassicTable(table);
-            section.setSectionName(label + " " + service);
-            section.setSectionTitle(label + " " + service);
-            section.setSectionDescr(descr + " " + service);
+            ClassicTable table = new ClassicTable();
+            table.setCol(col);
+            table.setRows(rows);
+            Section section = new Section();
+            section.setClassicTable(table);
+            section.setSectionName(label + " " + serviceEntry.getKey());
+            section.setSectionTitle(label + " " + serviceEntry.getKey());
+            section.setSectionDescr(descr + " " + serviceEntry.getKey());
             section.setSectionIndex(m_sectionIndex);
             m_sectionIndex++;
             catSections.addSection(section);
@@ -596,8 +597,8 @@ public class AvailCalculations extends Object {
     private void lastMoTotalAvailability(int days, long endTime, CatSections catSections, String label, String descr) {
         lastNDaysTotalAvailability(days, endTime, catSections, label, descr);
     }
-	
-	
+
+
     /**
      * 
      * Last Months Top N offenders.
@@ -617,15 +618,16 @@ public class AvailCalculations extends Object {
         //
         LOG.debug("Offenders {}", offenders);
         LOG.debug("Inside lastMoTopNOffenders");
-        Set<Double> percentValues = offenders.keySet();
-        Iterator<Double> iter = percentValues.iterator();
+        Set<Entry<Double, List<String>>> percentEntries = offenders.entrySet();
+        Iterator<Entry<Double, List<String>>> iter = percentEntries.iterator();
 
         Rows rows = new Rows();
         int top20Count = 0;
         loop: while (iter.hasNext()) {
-            Double percent = (Double) iter.next();
+            Entry<Double, List<String>> percentEntry = iter.next();
+            Double percent = percentEntry.getKey();
             if (percent.doubleValue() < 100.0) {
-                List<String> nodeNames = offenders.get(percent);
+                List<String> nodeNames = percentEntry.getValue();
                 if (nodeNames != null) {
                     ListIterator<String> lstIter = nodeNames.listIterator();
                     while (lstIter.hasNext()) {
@@ -655,11 +657,11 @@ public class AvailCalculations extends Object {
         Col col = new Col();
         col.addColTitle(0, "Node Name");
         col.addColTitle(1, "Percentage Availability");
-		ClassicTable table = new ClassicTable();
-		table.setCol(col);
-		table.setRows(rows);
-		Section section = new Section();
-		section.setClassicTable(table);
+        ClassicTable table = new ClassicTable();
+        table.setCol(col);
+        table.setRows(rows);
+        Section section = new Section();
+        section.setClassicTable(table);
         section.setSectionName("lastMoTop20offenders");
         section.setSectionTitle(label);
         section.setSectionDescr(descr);
@@ -690,7 +692,7 @@ public class AvailCalculations extends Object {
     private void lastMoDailyAvailability(int days, long endTime, CatSections sections, String label, String descr, String sectionName) {
         lastNDaysDailyAvailability(days, endTime, sections, label, descr, sectionName);
     }
-	/**
+    /**
      * Last Months Daily availability
      * 
      * @param days
@@ -710,8 +712,8 @@ public class AvailCalculations extends Object {
     private void lastCalMoDailyAvailability(int days, long endTime, CatSections sections, String label, String descr, String sectionName) {
         lastNDaysCalDailyAvailability(days, endTime, sections, label, descr, sectionName);
     }
-	
-	/**
+
+    /**
      * Last N days daily availability.
      * 
      * @param days
@@ -732,9 +734,9 @@ public class AvailCalculations extends Object {
 
         LOG.debug("Inside lastNDaysDailyAvailability");
         int numdays = 0;
-	    CalendarTableBuilder calBuilder = new CalendarTableBuilder(endTime);
+        CalendarTableBuilder calBuilder = new CalendarTableBuilder(endTime);
         TreeMap<Date, Double> treeMap = new TreeMap<Date, Double>();
-        SimpleDateFormat fmt = new SimpleDateFormat("dd MMM, yyyy");
+        final SimpleDateFormat fmt = new SimpleDateFormat("dd MMM, yyyy");
         String periodEnd = fmt.format(new java.util.Date(endTime));
         String periodFrom = "";
         while (numdays++ < days) {
@@ -751,36 +753,32 @@ public class AvailCalculations extends Object {
             }
             double percentAvail;
             if (serviceCount > 0){
-                
+
                 LOG.debug("LOOK: calculating percentAvail using outage {} service count {} ROLLING_WINODW {} endTime {}", endTime, outage, serviceCount, ROLLING_WINDOW);
                 percentAvail = 100.0 * (1 - (outage * 1.0) / (1.0 * serviceCount * ROLLING_WINDOW));
-        }
+            }
             else
                 percentAvail = 100.0;
 
             //need a double object in here
-			
-			treeMap.put(new Date(endTime), new Double (percentAvail));
-                        Date nicedate = new Date(endTime);
-                        LOG.debug("Inserting {} into {}", nicedate, percentAvail);
+
+            treeMap.put(new Date(endTime), new Double (percentAvail));
+            Date nicedate = new Date(endTime);
+            LOG.debug("Inserting {} into {}", nicedate, percentAvail);
 
             periodFrom = fmt.format(new java.util.Date(endTime));
             endTime -= ROLLING_WINDOW;
         }
 
-        Set<Date> keyDates = treeMap.keySet();
-        Iterator<Date> iter = keyDates.iterator();
         int dateSlot = 0;
-		while (iter.hasNext()) {
-			Date key = iter.next();
-            Double percent = treeMap.get(key);
-                        LOG.debug("Inserting value {} into date slot {}", dateSlot, percent.doubleValue());
-			dateSlot++;
-                        LOG.debug("Inserting value {} into date slot {}", dateSlot, percent.doubleValue());
-			calBuilder.setPctValue(dateSlot, percent.doubleValue());
-		}
-		
-		Section section = new Section();
+        for (final Map.Entry<Date,Double> entry : treeMap.entrySet()) {
+            final Double percent = entry.getValue();
+            dateSlot++;
+            LOG.debug("Inserting value {} into date slot {}", dateSlot, percent.doubleValue());
+            calBuilder.setPctValue(dateSlot, percent.doubleValue());
+        }
+
+        Section section = new Section();
         section.setCalendarTable(calBuilder.getTable());
         section.setSectionName(sectionName); // "LastMonthsDailyAvailability");
         section.setSectionTitle(label);
@@ -790,10 +788,10 @@ public class AvailCalculations extends Object {
         m_sectionIndex++;
         catSections.addSection(section);
         LOG.debug("Leaving lastNDaysCalDailyAvailability");
-		
-		}
 
-	
+    }
+
+
     /**
      * Last N days daily availability.
      * 
@@ -817,7 +815,7 @@ public class AvailCalculations extends Object {
         int numdays = 0;
         Rows rows = new Rows();
         TreeMap<Date, String> treeMap = new TreeMap<Date, String>();
-        SimpleDateFormat fmt = new SimpleDateFormat("dd MMM, yyyy");
+        final SimpleDateFormat fmt = new SimpleDateFormat("dd MMM, yyyy");
         String periodEnd = fmt.format(new java.util.Date(endTime));
         String periodFrom = "";
         while (numdays++ < days) {
@@ -844,35 +842,33 @@ public class AvailCalculations extends Object {
             endTime -= ROLLING_WINDOW;
         }
 
-        Set<Date> keyDates = treeMap.keySet();
-        Iterator<Date> iter = keyDates.iterator();
-        while (iter.hasNext()) {
-            Date key = iter.next();
-            Value dateValue = new Value();
-            SimpleDateFormat fmtmp = new SimpleDateFormat("dd");
+        final SimpleDateFormat fmtmp = new SimpleDateFormat("dd");
+        for (final Map.Entry<Date,String> entry : treeMap.entrySet()) {
+            final Date key = entry.getKey();
+            final String percent = entry.getValue();
+
+            final Value dateValue = new Value();
             dateValue.setContent(fmtmp.format(key));
             dateValue.setType("title");
 
-            String percent = treeMap.get(key);
-            Value value = new Value();
+            final Value value = new Value();
             value.setContent(percent);
             value.setType("data");
 
-            Row row = new Row();
+            final Row row = new Row();
             row.addValue(dateValue);
             row.addValue(value);
             rows.addRow(row);
-
         }
 
         Col col = new Col();
         col.addColTitle(0, "Date");
         col.addColTitle(1, "Percentage Availability");
-		ClassicTable table = new ClassicTable();
-		table.setCol(col);
-		table.setRows(rows);
-		Section section = new Section();
-		section.setClassicTable(table);
+        ClassicTable table = new ClassicTable();
+        table.setCol(col);
+        table.setRows(rows);
+        Section section = new Section();
+        section.setClassicTable(table);
         section.setSectionName(sectionName); // "LastMonthsDailyAvailability");
         section.setSectionTitle(label);
         section.setSectionDescr(descr);
@@ -904,7 +900,7 @@ public class AvailCalculations extends Object {
         int serviceCount = 0;
         long outage = 0;
         int numdays = 0;
-        SimpleDateFormat fmt = new SimpleDateFormat("dd MMM, yyyy");
+        final SimpleDateFormat fmt = new SimpleDateFormat("dd MMM, yyyy");
         String periodEnd = fmt.format(new java.util.Date(endTime));
         String periodFrom = "";
         while (numdays++ < days) {
@@ -938,11 +934,11 @@ public class AvailCalculations extends Object {
         Col col = new Col();
         col.addColTitle(0, "Date");
         col.addColTitle(1, "Percentage Availability");
-		ClassicTable table = new ClassicTable();
-		table.setCol(col);
-		table.setRows(rows);
-		Section section = new Section();
-		section.setClassicTable(table);
+        ClassicTable table = new ClassicTable();
+        table.setCol(col);
+        table.setRows(rows);
+        Section section = new Section();
+        section.setClassicTable(table);
         section.setSectionName("Last" + days + "TotalAvailability");
         section.setSectionTitle(label);
         section.setSectionDescr(descr);
@@ -981,11 +977,11 @@ public class AvailCalculations extends Object {
 
         calendar.set(year, month, numDays, 23, 59, 59);
         endTime = calendar.getTime().getTime();
-        SimpleDateFormat fmt = new SimpleDateFormat("MMM, yyyy");
+        final SimpleDateFormat fmt = new SimpleDateFormat("MMM, yyyy");
         String periodEnd = fmt.format(new java.util.Date(endTime));
         TreeMap<Date, String> treeMap = new TreeMap<Date, String>(); // Holds all the month/percent
-                                            // values to be displayed in order
-                                            // on pdf.
+        // values to be displayed in order
+        // on pdf.
         String periodFrom = null;
 
         while (numMonths++ < nMonths) {
@@ -1024,21 +1020,20 @@ public class AvailCalculations extends Object {
             endTime = calendar.getTime().getTime();
         }
 
-        Set<Date> keyDates = treeMap.keySet();
-        Iterator<Date> iter = keyDates.iterator();
-        while (iter.hasNext()) {
-            Date key = iter.next();
-            Value dateValue = new Value();
-            SimpleDateFormat fmtmp = new SimpleDateFormat("MMM");
+        final SimpleDateFormat fmtmp = new SimpleDateFormat("MMM");
+        for (final Map.Entry<Date,String> entry : treeMap.entrySet()) {
+            final Date key = entry.getKey();
+            final String percent = entry.getValue();
+
+            final Value dateValue = new Value();
             dateValue.setContent(fmtmp.format(key) + "");
             dateValue.setType("title");
 
-            Value value = new Value();
-            String percent = treeMap.get(key);
+            final Value value = new Value();
             value.setContent(percent);
             value.setType("data");
 
-            Row row = new Row();
+            final Row row = new Row();
             row.addValue(dateValue);
             row.addValue(value);
             rows.addRow(row);
@@ -1047,11 +1042,11 @@ public class AvailCalculations extends Object {
         Col col = new Col();
         col.addColTitle(0, "Date");
         col.addColTitle(1, "Percentage Availability");
-		ClassicTable table = new ClassicTable();
-		table.setCol(col);
-		table.setRows(rows);
-		Section section = new Section();
-		section.setClassicTable(table);
+        ClassicTable table = new ClassicTable();
+        table.setCol(col);
+        table.setRows(rows);
+        Section section = new Section();
+        section.setClassicTable(table);
         section.setSectionName("last12MoAvail");
         section.setSectionTitle(label);
         section.setSectionDescr(descr);
@@ -1127,21 +1122,20 @@ public class AvailCalculations extends Object {
     private void lastNDaysDailyServiceAvailability(int days, long endTime, CatSections catSections, String label, String descr) {
         LOG.debug("Inside lastNDaysDailyServiceAvailability {}", days);
 
+        final SimpleDateFormat fmtmp = new SimpleDateFormat("dd MMM, yyyy");
 
         long outage;
         String periodFrom = "";
-        SimpleDateFormat fmtmp = new SimpleDateFormat("dd MMM, yyyy");
         String periodTo = "";
         periodTo = fmtmp.format(new java.util.Date(endTime));
-        for(String service : m_monitoredServices) {
-            TreeMap<Date, Double> treeMap = new TreeMap<Date, Double>();
-            Rows rows = new Rows();
+        for(final String service : m_monitoredServices) {
+            final TreeMap<Date, Double> treeMap = new TreeMap<Date, Double>();
+            final Rows rows = new Rows();
             LOG.debug("SERvice {}", service);
 
             long curTime = endTime;
             Map<IfService, OutageSvcTimesList> svcOutages = null;
-            if (m_services != null)
-                svcOutages = m_services.get(service);
+            if (m_services != null) svcOutages = m_services.get(service);
             if (svcOutages == null || svcOutages.size() <= 0) {
                 int daysCnt = 0;
                 while (daysCnt++ < days) {
@@ -1153,33 +1147,33 @@ public class AvailCalculations extends Object {
                     curTime -= ROLLING_WINDOW;
                 }
 
-                Set<Date> keys = treeMap.keySet();
-                Iterator<Date> iter = keys.iterator();
-                while (iter.hasNext()) {
-                    Date tmp = iter.next();
-                    Value dateValue = new Value();
-                    SimpleDateFormat fmt = new SimpleDateFormat("dd");
+                final SimpleDateFormat fmt = new SimpleDateFormat("dd");
+
+                for (final Date tmp : treeMap.keySet()) {
+                    final Value dateValue = new Value();
                     dateValue.setContent(fmt.format(tmp) + "");
                     dateValue.setType("title");
 
-                    Value value = new Value();
+                    final Value value = new Value();
                     value.setContent("100.0");
                     value.setType("data");
 
-                    Row row = new Row();
+                    final Row row = new Row();
                     row.addValue(dateValue);
                     row.addValue(value);
                     rows.addRow(row);
                 }
 
-                Col col = new Col();
+                final Col col = new Col();
                 col.addColTitle(0, "Date");
                 col.addColTitle(1, "Percentage Availability");
-				ClassicTable table = new ClassicTable();
-				table.setCol(col);
-				table.setRows(rows);
-				Section section = new Section();
-				section.setClassicTable(table);
+
+                final ClassicTable table = new ClassicTable();
+                table.setCol(col);
+                table.setRows(rows);
+
+                final Section section = new Section();
+                section.setClassicTable(table);
                 section.setPeriod(periodFrom + " to " + periodTo);
                 section.setSectionName(label + " " + service);
                 section.setSectionTitle(label + " " + service);
@@ -1196,12 +1190,12 @@ public class AvailCalculations extends Object {
                     // For each node in the service table.
                     //
                     // Iterate each svc node for getting the ifservice
-                    Set<IfService> keys = svcOutages.keySet();
-                    Iterator<IfService> iter = keys.iterator();
-                    while (iter.hasNext()) {
-                        IfService ifservice = (IfService) iter.next();
+                    for (final Map.Entry<IfService, OutageSvcTimesList> entry : svcOutages.entrySet()) {
+                        final IfService ifservice = entry.getKey();
+                        final OutageSvcTimesList outageList = entry.getValue();
+
                         LOG.debug(ifservice.toString());
-                        OutageSvcTimesList outageList = (OutageSvcTimesList) svcOutages.get(ifservice);
+
                         if (outageList != null) {
                             outage = outageList.getDownTime(curTime, ROLLING_WINDOW);
                             // Keep track of the number of services being
@@ -1226,22 +1220,21 @@ public class AvailCalculations extends Object {
                     curTime -= ROLLING_WINDOW;
                 }
 
-                Set<Date> keys = treeMap.keySet();
-                Iterator<Date> iter = keys.iterator();
-                while (iter.hasNext()) {
-                    Date tmp = iter.next();
-                    Value dateValue = new Value();
-                    SimpleDateFormat fmt = new SimpleDateFormat("dd");
+                final SimpleDateFormat fmt = new SimpleDateFormat("dd");
+
+                for (final Map.Entry<Date,Double> entry : treeMap.entrySet()) {
+                    final Date tmp = entry.getKey();
+                    final Double val = entry.getValue();
+
+                    final Value dateValue = new Value();
                     dateValue.setContent(fmt.format(tmp) + "");
                     dateValue.setType("title");
 
-                    Double val = treeMap.get(tmp);
-
-                    Value value = new Value();
+                    final Value value = new Value();
                     value.setContent("" + val);
                     value.setType("data");
 
-                    Row row = new Row();
+                    final Row row = new Row();
                     row.addValue(dateValue);
                     row.addValue(value);
                     rows.addRow(row);
@@ -1250,11 +1243,11 @@ public class AvailCalculations extends Object {
                 Col col = new Col();
                 col.addColTitle(0, "Date");
                 col.addColTitle(1, "Percentage Availability");
-				ClassicTable table = new ClassicTable();
-				table.setCol(col);
-				table.setRows(rows);
-				Section section = new Section();
-				section.setClassicTable(table);
+                ClassicTable table = new ClassicTable();
+                table.setCol(col);
+                table.setRows(rows);
+                Section section = new Section();
+                section.setClassicTable(table);
                 section.setPeriod(periodFrom + " to " + periodTo);
                 section.setSectionName(label + " " + service);
                 section.setSectionTitle(label + " " + service);

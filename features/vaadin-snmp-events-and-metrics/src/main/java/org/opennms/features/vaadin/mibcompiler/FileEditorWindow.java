@@ -32,14 +32,14 @@ import java.io.File;
 import org.opennms.features.vaadin.api.Logger;
 
 import com.vaadin.data.util.TextFileProperty;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.themes.Runo;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.Button.ClickEvent;
 
 /**
  * The File Editor Window.
@@ -76,7 +76,7 @@ public class FileEditorWindow extends Window implements Button.ClickListener {
         this.logger = logger;
 
         setCaption((readOnly ? "View" : "Edit") + " MIB");
-        addStyleName(Runo.WINDOW_DIALOG);
+        addStyleName("dialog");
         setModal(true);
         setClosable(false);
         setWidth("800px");
@@ -84,7 +84,6 @@ public class FileEditorWindow extends Window implements Button.ClickListener {
 
         editor = new TextArea();
         editor.setPropertyDataSource(new TextFileProperty(file));
-        editor.setWriteThrough(false);
         editor.setImmediate(false);
         editor.setSizeFull();
         editor.setRows(30);
@@ -92,21 +91,22 @@ public class FileEditorWindow extends Window implements Button.ClickListener {
 
         cancel = new Button(readOnly ? "Close" : "Cancel");
         cancel.setImmediate(false);
-        cancel.addListener(this);
+        cancel.addClickListener(this);
         save = new Button("Save");
         save.setImmediate(false);
-        save.addListener(this);
+        save.addClickListener(this);
 
         HorizontalLayout toolbar = new HorizontalLayout();
         toolbar.addComponent(cancel);
         if (!readOnly)
             toolbar.addComponent(save);
 
-        addComponent(editor);
-        addComponent(toolbar);
-
-        ((VerticalLayout) getContent()).setExpandRatio(editor, 1.0f);
-        ((VerticalLayout) getContent()).setComponentAlignment(toolbar, Alignment.BOTTOM_RIGHT);
+        VerticalLayout layout = new VerticalLayout();
+        layout.addComponent(editor);
+        layout.addComponent(toolbar);
+        layout.setExpandRatio(editor, 1.0f);
+        layout.setComponentAlignment(toolbar, Alignment.BOTTOM_RIGHT);
+        setContent(layout);
     }
 
     /* (non-Javadoc)
@@ -116,7 +116,7 @@ public class FileEditorWindow extends Window implements Button.ClickListener {
     public void buttonClick(ClickEvent event) {
         if (event.getButton().equals(save)) {
             if (editor.isReadOnly()) {
-                showNotification("Unsupported action for readOnly viewer.", Notification.TYPE_WARNING_MESSAGE);
+                Notification.show("Unsupported action for readOnly viewer.", Notification.Type.WARNING_MESSAGE);
             } else {
                 editor.commit();
                 logger.info("The file " + file + " has been changed.");

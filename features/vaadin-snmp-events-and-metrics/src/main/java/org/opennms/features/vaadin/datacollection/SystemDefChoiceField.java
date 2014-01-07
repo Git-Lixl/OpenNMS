@@ -31,10 +31,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.opennms.netmgt.config.datacollection.SystemDefChoice;
-import org.vaadin.addon.customfield.CustomField;
 
 import com.vaadin.data.Property;
+import com.vaadin.data.util.converter.Converter.ConversionException;
 import com.vaadin.data.validator.RegexpValidator;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.CustomField;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.TextField;
@@ -45,7 +47,7 @@ import com.vaadin.ui.TextField;
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a> 
  */
 @SuppressWarnings("serial")
-public class SystemDefChoiceField extends CustomField {
+public class SystemDefChoiceField extends CustomField<SystemDefChoice> {
 
     /** The Constant SINGLE. */
     private static final String SINGLE = "Single";
@@ -57,49 +59,88 @@ public class SystemDefChoiceField extends CustomField {
     private static final List<String> OPTIONS = Arrays.asList(new String[] { SINGLE, MASK });
 
     /** The OID type. */
-    private OptionGroup oidType;
+    private final OptionGroup oidType = new OptionGroup("OID Type", OPTIONS);
 
     /** The OID value. */
-    private TextField oidValue;
+    private final TextField oidValue = new TextField("OID Value");
 
     /**
      * Instantiates a new system definition choice field.
+     *
+     * @param caption the caption
      */
-    public SystemDefChoiceField() {
-        oidType = new OptionGroup("OID Type", OPTIONS);
+    public SystemDefChoiceField(String caption) {
+        setCaption(caption);
         oidType.setNullSelectionAllowed(false);
         oidType.select("Single");
 
-        oidValue = new TextField("OID Value");
         oidValue.setWidth("100%");
         oidValue.setNullSettingAllowed(false);
         oidValue.setRequired(true);
         oidValue.setImmediate(true);
         oidValue.addValidator(new RegexpValidator("^\\.[.\\d]+$", "Invalid OID {0}"));
+    }
 
+    /* (non-Javadoc)
+     * @see com.vaadin.ui.CustomField#initContent()
+     */
+    @Override
+    public Component initContent() {
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
         layout.setWidth("100%");
         layout.addComponent(oidType);
         layout.addComponent(oidValue);
         layout.setExpandRatio(oidValue, 1);
-
-        setWriteThrough(false);
-        setCompositionRoot(layout);
+        return layout;
     }
 
     /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.CustomField#getType()
+     * @see com.vaadin.ui.AbstractField#getType()
      */
     @Override
-    public Class<?> getType() {
+    public Class<SystemDefChoice> getType() {
         return SystemDefChoice.class;
     }
 
     /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.CustomField#setPropertyDataSource(com.vaadin.data.Property)
+     * @see com.vaadin.ui.AbstractField#setInternalValue(java.lang.Object)
      */
     @Override
+    protected void setInternalValue(SystemDefChoice systemDef) {
+        super.setInternalValue(systemDef); // TODO Is this required ?
+        boolean oidTypeState = oidType.isReadOnly();
+        oidType.setReadOnly(false);
+        oidType.select(systemDef.getSysoid() == null ? MASK : SINGLE);
+        if (oidTypeState)
+            oidType.setReadOnly(true);
+        boolean oidValueState = oidValue.isReadOnly();
+        oidValue.setReadOnly(false);
+        oidValue.setValue(systemDef.getSysoid() == null ? systemDef.getSysoidMask() : systemDef.getSysoid());
+        if (oidValueState)
+            oidValue.setReadOnly(true);
+    }
+
+    /* (non-Javadoc)
+     * @see com.vaadin.ui.AbstractField#getInternalValue()
+     */
+    @Override
+    protected SystemDefChoice getInternalValue() {
+        SystemDefChoice systemDef = new SystemDefChoice();
+        String type = (String) oidType.getValue();
+        if (type.equals(SINGLE)) {
+            systemDef.setSysoid((String) oidValue.getValue());
+        } else {
+            systemDef.setSysoidMask((String) oidValue.getValue());
+        }
+        return systemDef;
+    }
+
+    /* (non-Javadoc)
+     * @see com.vaadin.ui.AbstractField#setPropertyDataSource(com.vaadin.data.Property)
+     */
+    @Override
+    @SuppressWarnings("rawtypes")
     public void setPropertyDataSource(Property newDataSource) {
         Object value = newDataSource.getValue();
         if (value instanceof SystemDefChoice) {
@@ -110,21 +151,6 @@ public class SystemDefChoiceField extends CustomField {
             throw new ConversionException("Invalid type");
         }
         super.setPropertyDataSource(newDataSource);
-    }
-
-    /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.CustomField#getValue()
-     */
-    @Override
-    public Object getValue() {
-        SystemDefChoice dto = new SystemDefChoice();
-        String type = (String) oidType.getValue();
-        if (type.equals(SINGLE)) {
-            dto.setSysoid((String) oidValue.getValue());
-        } else {
-            dto.setSysoidMask((String) oidValue.getValue());
-        }
-        return dto;
     }
 
     /* (non-Javadoc)

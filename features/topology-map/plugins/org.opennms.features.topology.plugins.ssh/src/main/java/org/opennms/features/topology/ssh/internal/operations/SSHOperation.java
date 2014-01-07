@@ -48,9 +48,9 @@ public class SSHOperation implements Operation {
 
 	    if (targets != null) {
 	        for(final VertexRef target : targets) {
-	            final Item vertexItem = operationContext.getGraphContainer().getBaseTopology().getVertex(target).getItem();
+	            final Item vertexItem = operationContext.getGraphContainer().getBaseTopology().getVertex(target, operationContext.getGraphContainer().getCriteria()).getItem();
 	            if (vertexItem != null) {
-	                final Property ipAddrProperty = vertexItem.getItemProperty("ipAddr");
+	                final Property<String> ipAddrProperty = vertexItem.getItemProperty("ipAddr");
 	                ipAddr = ipAddrProperty == null ? "" : (String) ipAddrProperty.getValue();
 	                //Property portProperty = operationContext.getGraphContainer().getVertexItem(target).getItemProperty("port");
 	                port = 22; //portProperty == null ? -1 : (Integer) portProperty.getValue();

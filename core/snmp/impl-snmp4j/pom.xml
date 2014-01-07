@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.opennms.core</groupId>
     <artifactId>org.opennms.core.snmp</artifactId>
-    <version>1.13.0-SNAPSHOT</version>
+    <version>1.13.1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.core.snmp</groupId>
@@ -24,7 +24,7 @@
             <!--  don't export anything this is implementation only -->
             <Export-Package></Export-Package>
             <Private-Package>org.opennms.netmgt.snmp.snmp4j.*</Private-Package>
-            <Import-Package>org.apache.log4j.*;resolution:=optional,*</Import-Package>
+            <Import-Package>org.apache.commons.lang.*;org.apache.log4j.*;resolution:=optional,*</Import-Package>
             <Embed-Dependency>snmp4j;inline=true</Embed-Dependency>
           </instructions>
         </configuration>
@@ -38,15 +38,19 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.snmp4j</groupId>
-      <artifactId>snmp4j</artifactId>
-      <version>1.11.1</version>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.snmp4j</groupId>
-      <artifactId>snmp4j-agent</artifactId>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>snmp4j-dependencies</artifactId>
+      <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>snmp4j-agent-dependencies</artifactId>
       <scope>test</scope>
-      <version>1.4.1</version>
+      <type>pom</type>
     </dependency>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>

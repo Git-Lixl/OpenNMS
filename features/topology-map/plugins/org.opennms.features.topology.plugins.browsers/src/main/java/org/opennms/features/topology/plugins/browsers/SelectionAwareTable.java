@@ -28,6 +28,14 @@
 
 package org.opennms.features.topology.plugins.browsers;
 
+import com.vaadin.ui.Table;
+import org.opennms.features.topology.api.SelectionListener;
+import org.opennms.features.topology.api.SelectionNotifier;
+import org.opennms.features.topology.api.VerticesUpdateManager;
+import org.opennms.osgi.EventConsumer;
+import org.opennms.osgi.EventProxy;
+import org.opennms.osgi.EventProxyAware;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,69 +43,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.opennms.features.topology.api.SelectionContext;
-import org.opennms.features.topology.api.SelectionListener;
-import org.opennms.features.topology.api.SelectionNotifier;
-
-import com.vaadin.data.Container;
-import com.vaadin.ui.Table;
-
-public class SelectionAwareTable extends Table implements SelectionListener, SelectionNotifier {
+public class SelectionAwareTable extends Table implements VerticesUpdateManager.VerticesUpdateListener, EventProxyAware {
 
 	private static final long serialVersionUID = 2761774077365441249L;
 
 	private final OnmsDaoContainer<?,? extends Serializable> m_container;
 	private final Set<SelectionNotifier> m_selectionNotifiers = new CopyOnWriteArraySet<SelectionNotifier>();
 	private List<String> nonCollapsibleColumns = new ArrayList<String>();
-	
+	private EventProxy eventProxy;
+
 	/**
 	 *  Leave OnmsDaoContainer without generics; the Aries blueprint code cannot match up
 	 *  the arguments if you put the generic types in.
 	 */
-	@SuppressWarnings("unchecked")
 	public SelectionAwareTable(String caption, OnmsDaoContainer container) {
 		super(caption, container);
 		m_container = container;
-	}
-
-	@Override
-	public void selectionChanged(SelectionContext selectionManager) {
-		m_container.selectionChanged(selectionManager);
-	}
-
-	/**
-	 * Delegate {@link SelectionNotifier} calls to the container.
-	 */
-	@Override
-	public void addSelectionListener(SelectionListener listener) {
-		if (listener != null) {
-			m_container.addSelectionListener(listener);
-			for (SelectionNotifier notifier : m_selectionNotifiers) {
-				notifier.addSelectionListener(listener);
-			}
-		}
-	}
-
-	/**
-	 * Delegate {@link SelectionNotifier} calls to the container.
-	 */
-	@Override
-	public void removeSelectionListener(SelectionListener listener) {
-		m_container.removeSelectionListener(listener);
-		for (SelectionNotifier notifier : m_selectionNotifiers) {
-			notifier.removeSelectionListener(listener);
-		}
-	}
-
-	/**
-	 * Delegate {@link SelectionNotifier} calls to the container.
-	 */
-	@Override
-	public void setSelectionListeners(Set<SelectionListener> listeners) {
-		m_container.setSelectionListeners(listeners);
-		for (SelectionNotifier notifier : m_selectionNotifiers) {
-			notifier.setSelectionListeners(listeners);
-		}
 	}
 
 	/**
@@ -105,7 +66,7 @@ public class SelectionAwareTable extends Table implements SelectionListener, Sel
 	 * that the {@link SelectionListener} instances are registered with all of the
 	 * {@link ColumnGenerator} classes that also implement {@link SelectionNotifier}.
 	 */
-	public void setColumnGenerators(@SuppressWarnings("unchecked") Map generators) {
+	public void setColumnGenerators(@SuppressWarnings("rawtypes") Map generators) {
 		for (Object key : generators.keySet()) {
 			super.addGeneratedColumn(key, (ColumnGenerator)generators.get(key));
 			// If any of the column generators are {@link SelectionNotifier} instances,
@@ -123,10 +84,17 @@ public class SelectionAwareTable extends Table implements SelectionListener, Sel
 	 */
 	@Override
 	public void setCellStyleGenerator(CellStyleGenerator generator) {
-		try {
-			((TableAware)generator).setTable(this);
-		} catch (ClassCastException e) {}
 		super.setCellStyleGenerator(generator);
+	}
+
+	@Override
+	public String toString() {
+		Object value = getValue();
+		if (value == null) {
+			return null;
+		} else {
+			return value.toString();
+		}
 	}
 	
 	/**
@@ -141,11 +109,47 @@ public class SelectionAwareTable extends Table implements SelectionListener, Sel
 	    
 	    // set new value
 	    if (nonCollapsibleColumns == null) nonCollapsibleColumns = new ArrayList<String>();
-        this.nonCollapsibleColumns = nonCollapsibleColumns;
         
         // set non collapsible
-        for (Object eachPropertyId : this.nonCollapsibleColumns) {
+        for (Object eachPropertyId : nonCollapsibleColumns) {
             setColumnCollapsible(eachPropertyId,  false);
         }
+    }
+
+    @Override
+    @EventConsumer
+    public void verticesUpdated(VerticesUpdateManager.VerticesUpdateEvent event) {
+        m_container.verticesUpdated(event);
+    }
+
+    /**
+     * Make sure that the OnmsDaoContainer cache is reset.
+     */
+    @Override
+    public void resetPageBuffer() {
+        if (m_container != null && m_container.getCache() != null && m_container.getPage() != null) {
+            m_container.getCache().reload(m_container.getPage());
+        }
+        super.resetPageBuffer();
+    }
+
+    @Override
+    public void setEventProxy(EventProxy eventProxy) {
+        this.eventProxy = eventProxy;
+
+        // set EventProxy on all ColumnGenerators
+        for (Object eachPropertyId : getContainerPropertyIds()) {
+            ColumnGenerator columnGenerator = getColumnGenerator(eachPropertyId);
+            if (columnGenerator != null && EventProxyAware.class.isAssignableFrom(columnGenerator.getClass())) {
+                ((EventProxyAware) columnGenerator).setEventProxy(eventProxy);
+            }
+        }
+    }
+
+    protected EventProxy getEventProxy() {
+        if (eventProxy != null) {
+            return eventProxy;
+        }
+        throw new IllegalArgumentException("EventProxy should not be null!");
     }
 }

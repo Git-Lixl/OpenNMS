@@ -27,16 +27,13 @@
  *******************************************************************************/
 package org.opennms.features.vaadin.mibcompiler;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-
 import org.opennms.features.vaadin.mibcompiler.api.MibParser;
 import org.opennms.netmgt.config.DataCollectionConfigDao;
 import org.opennms.netmgt.config.EventConfDao;
 import org.opennms.netmgt.model.events.EventProxy;
 import org.ops4j.pax.vaadin.AbstractApplicationFactory;
 
-import com.vaadin.Application;
+import com.vaadin.ui.UI;
 
 /**
  * A factory for creating MibCompilerApplication objects.
@@ -58,10 +55,10 @@ public class MibCompilerApplicationFactory extends AbstractApplicationFactory {
     private MibParser mibParser;
 
     /* (non-Javadoc)
-     * @see org.ops4j.pax.vaadin.ApplicationFactory#createApplication(javax.servlet.http.HttpServletRequest)
+     * @see org.ops4j.pax.vaadin.AbstractApplicationFactory#getUI()
      */
     @Override
-    public Application createApplication(HttpServletRequest request) throws ServletException {
+    public UI createUI() {
         if (eventProxy == null)
             throw new RuntimeException("eventProxy cannot be null.");
         if (eventConfDao == null)
@@ -79,10 +76,10 @@ public class MibCompilerApplicationFactory extends AbstractApplicationFactory {
     }
 
     /* (non-Javadoc)
-     * @see org.ops4j.pax.vaadin.ApplicationFactory#getApplicationClass()
+     * @see org.ops4j.pax.vaadin.AbstractApplicationFactory#getUIClass()
      */
     @Override
-    public Class<? extends Application> getApplicationClass() throws ClassNotFoundException {
+    public Class<? extends UI> getUIClass() {
         return MibCompilerApplication.class;
     }
 
@@ -107,7 +104,7 @@ public class MibCompilerApplicationFactory extends AbstractApplicationFactory {
     /**
      * Sets the OpenNMS Event Proxy.
      *
-     * @param eventConfDao the new OpenNMS Event Proxy
+     * @param eventProxy the new OpenNMS Event Proxy
      */
     public void setEventProxy(EventProxy eventProxy) {
         this.eventProxy = eventProxy;
@@ -116,7 +113,7 @@ public class MibCompilerApplicationFactory extends AbstractApplicationFactory {
     /**
      * Sets the OpenNMS Data Collection Configuration DAO.
      *
-     * @param eventConfDao the new OpenNMS Data Collection Configuration DAO
+     * @param dataCollectionDao the new OpenNMS Data Collection Configuration DAO
      */
     public void setDataCollectionDao(DataCollectionConfigDao dataCollectionDao) {
         this.dataCollectionDao = dataCollectionDao;

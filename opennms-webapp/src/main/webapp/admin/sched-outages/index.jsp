@@ -36,12 +36,11 @@
 	org.opennms.netmgt.config.poller.*,
 	org.opennms.web.element.*,
 	org.opennms.netmgt.model.OnmsNode,
+	org.opennms.netmgt.model.OnmsNode.NodeType,
 	org.opennms.netmgt.EventConstants,
 	org.opennms.netmgt.xml.event.Event,
 	org.opennms.web.api.Util,
-	java.net.*,
-	java.io.*,
-	org.opennms.netmgt.utils.*
+	java.net.*
 "%>
 
 <%!public void sendOutagesChangedEvent() throws ServletException {
@@ -83,8 +82,8 @@
 				thisPackage.removeOutageCalendar(deleteName); //Will quietly do nothing if outage doesn't exist
 			}
 	
-			for (Iterator iter = CollectdConfigFactory.getInstance().getCollectdConfig().getPackages().iterator(); iter.hasNext();) {
-				org.opennms.netmgt.config.collectd.Package thisPackage = ((CollectdPackage) iter.next()).getPackage();
+			for (Iterator<CollectdPackage> iter = CollectdConfigFactory.getInstance().getCollectdConfig().getPackages().iterator(); iter.hasNext();) {
+				org.opennms.netmgt.config.collectd.Package thisPackage = iter.next().getPackage();
 				thisPackage.removeOutageCalendar(deleteName); //Will quietly do nothing if outage doesn't exist
 			}
 	
@@ -177,8 +176,8 @@ div.nodeintbox {
 			CollectdConfigFactory.init();
 			List<String> collectionOutages = new ArrayList<String>();
 	
-			for (Iterator iter = CollectdConfigFactory.getInstance().getCollectdConfig().getPackages().iterator(); iter.hasNext();) {
-				org.opennms.netmgt.config.collectd.Package thisPackage = ((CollectdPackage) iter.next()).getPackage();
+			for (Iterator<CollectdPackage> iter = CollectdConfigFactory.getInstance().getCollectdConfig().getPackages().iterator(); iter.hasNext();) {
+				org.opennms.netmgt.config.collectd.Package thisPackage = iter.next().getPackage();
 				collectionOutages.addAll(thisPackage.getOutageCalendarCollection());
 			}
 	
@@ -194,7 +193,7 @@ div.nodeintbox {
 			org.opennms.netmgt.config.poller.Node[] nodeList = pollFactory.getNodeIds(outageName);
 				for (int j = 0; j < nodeList.length; j++) {
 					OnmsNode elementNode = NetworkElementFactory.getInstance(getServletContext()).getNode(nodeList[j].getId());
-		%> <%=elementNode == null || elementNode.getType().charAt(0) == 'D' ? "Node: Node ID " + nodeList[j].getId() + " Not Found" : "Node: " + elementNode.getLabel()%><br/>
+		%> <%=elementNode == null || elementNode.getType() == NodeType.DELETED ? "Node: Node ID " + nodeList[j].getId() + " Not Found" : "Node: " + elementNode.getLabel()%><br/>
 		<%
 			}
 				org.opennms.netmgt.config.poller.Interface[] interfaceList = pollFactory.getInterfaces(outageName);

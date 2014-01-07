@@ -31,7 +31,7 @@ package org.opennms.features.topology.netutils.internal;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import com.vaadin.terminal.ExternalResource;
+import com.vaadin.server.ExternalResource;
 import com.vaadin.ui.Embedded;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -46,19 +46,18 @@ import com.vaadin.ui.Window;
 @SuppressWarnings("serial")
 public class ResourceGraphsWindow extends Window {
 
-	private final double sizePercentage = 0.80; // Window size ratio to the main window
-	private final int widthCushion = 50; //Border cushion for width of window;
-	private final int heightCushion = 110; //Border cushion for height of window
+	private static final double sizePercentage = 0.80; // Window size ratio to the main window
+	private static final int widthCushion = 50; //Border cushion for width of window;
+	private static final int heightCushion = 110; //Border cushion for height of window
 	private Embedded rgBrowser = null; //Browser component which is directed at the Resource Graphs page
-	private final String noLabel = "no such label"; //Label given to vertexes that have no real label.
+	private static final String noLabel = "no such label"; //Label given to vertexes that have no real label.
 	
 	/**
 	 * The ResourceGraphsWindow method constructs a sub-window instance which can be added to a
 	 * main window. The sub-window contains an embedded browser which displays the Resource Graphs
 	 * page of the currently selected node
 	 * @param node Selected node
-	 * @param width Width of the main window
-	 * @param height Height of the main window
+	 * @param nodeURL Node URL
 	 * @throws MalformedURLException
 	 */
 	public ResourceGraphsWindow(final Node node, final URL nodeURL) throws MalformedURLException{
@@ -80,15 +79,15 @@ public class ResourceGraphsWindow extends Window {
 		VerticalLayout layout = new VerticalLayout();
 		layout.addComponent(rgBrowser);
 		
-		addComponent(layout);
+		setContent(layout);
 	}
 	
 	@Override
 	public void attach() {
 		super.attach();
 		
-		int width = (int)getApplication().getMainWindow().getWidth();
-    	int height = (int)getApplication().getMainWindow().getHeight();
+		int width = getUI().getPage().getBrowserWindowWidth();
+    	int height = getUI().getPage().getBrowserWindowHeight();
     	
 		/*Sets the browser and window size based on the main window*/
 		int browserWidth = (int)(sizePercentage * width), browserHeight = (int)(sizePercentage * height);

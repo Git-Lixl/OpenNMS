@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 
+use Config;
 use Cwd;
 use File::Basename;
 use File::Find;
@@ -16,6 +17,7 @@ use vars qw(
 	$JAVA_HOME
 	$MVN
 	$MAVEN_OPTS
+	$PATHSEP
 	$PREFIX
 	$TESTS
 	$VERBOSE
@@ -24,8 +26,15 @@ use vars qw(
 $BUILD_PROFILE = "default";
 $HELP          = undef;
 $JAVA_HOME     = undef;
+$PATHSEP       = $Config{'path_sep'};
 $VERBOSE       = undef;
 @ARGS          = ();
+
+eval {
+	setpriority(0, 0, 10);
+};
+
+if (not defined $PATHSEP) { $PATHSEP = ':'; }
 
 # If we were called from bin, remove the /bin so we're always
 # rooted in the top-of-tree
@@ -106,16 +115,19 @@ END
 	exit 1;
 }
 
-if (not defined $JAVA_HOME) {
+if (not defined $JAVA_HOME or $JAVA_HOME eq "") {
 	debug("--java-home not passed, searching for \$JAVA_HOME");
-	if (exists $ENV{'JAVA_HOME'} and -e $ENV{'JAVA_HOME'}) {
+	if (exists $ENV{'JAVA_HOME'} and -e $ENV{'JAVA_HOME'} and $ENV{'JAVA_HOME'} ne "") {
 		$JAVA_HOME = $ENV{'JAVA_HOME'};
 	} else {
 		warning("\$JAVA_HOME is not set, things might go wonky.  Or not.");
 	}
 }
-$ENV{'JAVA_HOME'} = $JAVA_HOME;
 
+if (defined $JAVA_HOME and $JAVA_HOME ne "") {
+	$ENV{'JAVA_HOME'} = $JAVA_HOME;
+	$ENV{'PATH'}      = File::Spec->catfile($JAVA_HOME, 'bin') . $PATHSEP . $ENV{'PATH'};
+}
 
 if (not exists $ENV{'JAVA_VENDOR'}) {
 	warning("You do not have \$JAVA_VENDOR set. This is probably OK, but on some platforms");
@@ -172,13 +184,22 @@ if (-r File::Spec->catfile($ENV{'HOME'}, '.opennms-buildrc')) {
 $ENV{'MAVEN_OPTS'} = $MAVEN_OPTS;
 
 info("JAVA_HOME = $JAVA_HOME") if (defined $JAVA_HOME and $JAVA_HOME ne "");
+info("PATH = " . $ENV{'PATH'});
 info("MVN = $MVN");
 info("MAVEN_OPTS = $MAVEN_OPTS"); 
 
+chomp(my $git_branch=`$GIT symbolic-ref HEAD 2>/dev/null || $GIT rev-parse HEAD 2>/dev/null`);
+$git_branch =~ s,^refs/heads/,,;
+info("Git Branch = $git_branch");
+
 sub clean_git {
-	my @command = ($GIT, "clean", "-fdx", ".");
-	info("running:", @command);
-	handle_errors_and_exit_on_failure(system(@command));
+	if (-d '.git') {
+		my @command = ($GIT, "clean", "-fdx", ".");
+		info("running:", @command);
+		handle_errors_and_exit_on_failure(system(@command));
+	} else {
+		warning("No .git directory found, skipping clean.");
+	}
 }
 
 sub clean_m2_repository {

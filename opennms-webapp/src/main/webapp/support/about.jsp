@@ -32,7 +32,8 @@
 <%@page language="java"
 	contentType="text/html"
 	session="true"
-	import="org.opennms.web.springframework.security.Authentication,
+	import="org.opennms.web.api.Authentication,
+		org.opennms.core.db.DataSourceFactory,
 		org.opennms.core.resource.Vault,
 		org.opennms.core.utils.WebSecurityUtils,
 		org.opennms.core.utils.DBUtils,
@@ -47,10 +48,10 @@
     String dbName;
     String dbVersion;
     try {
-      Connection conn = Vault.getDbConnection();
+      Connection conn = DataSourceFactory.getInstance().getConnection();
       d.watch(conn);
-      dbName = Vault.getDbConnection().getMetaData().getDatabaseProductName();
-      dbVersion = Vault.getDbConnection().getMetaData().getDatabaseProductVersion();
+      dbName = conn.getMetaData().getDatabaseProductName();
+      dbVersion = conn.getMetaData().getDatabaseProductVersion();
    	} catch (Exception e) {
    	  dbName = "Unknown";
       dbVersion = "Unknown";

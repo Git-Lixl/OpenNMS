@@ -30,7 +30,7 @@ package org.opennms.features.topology.api.support;
 
 import java.net.URL;
 
-import com.vaadin.terminal.ExternalResource;
+import com.vaadin.server.ExternalResource;
 import com.vaadin.ui.Embedded;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -55,9 +55,9 @@ public class InfoWindow extends Window {
     
     private static final long serialVersionUID = -510407825043696244L;
 	
-    private final double sizePercentage = 0.80; // Window size ratio to the main window
-    private final int widthCushion = 50; //Border cushion for width of window;
-    private final int heightCushion = 110; //Border cushion for height of window
+    private static final double sizePercentage = 0.80; // Window size ratio to the main window
+    private static final int widthCushion = 50; //Border cushion for width of window;
+    private static final int heightCushion = 110; //Border cushion for height of window
     private Embedded infoBrowser = null; //Browser component which is directed at the Resource Graphs page
 
     
@@ -74,15 +74,15 @@ public class InfoWindow extends Window {
         VerticalLayout layout = new VerticalLayout();
         layout.addComponent(infoBrowser);
 
-        addComponent(layout);
+        setContent(layout);
     }
     
     @Override
     public void attach() {
     	super.attach();
     	
-    	int width = (int)getApplication().getMainWindow().getWidth();
-    	int height = (int)getApplication().getMainWindow().getHeight();
+    	int width = getUI().getPage().getBrowserWindowWidth();
+    	int height = getUI().getPage().getBrowserWindowHeight();
     	
     	/*Sets the browser and window sizes based on the main window*/
         int browserWidth = (int)(sizePercentage * width), browserHeight = (int)(sizePercentage * height);

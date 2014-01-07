@@ -34,9 +34,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -298,52 +298,45 @@ public class TestMenuBarBuilder {
 
             @Override
             public Undoer execute(List<VertexRef> targets, OperationContext operationContext) {
-                // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
             public boolean display(List<VertexRef> targets, OperationContext operationContext) {
-                // TODO Auto-generated method stub
                 return false;
             }
 
             @Override
             public boolean enabled(List<VertexRef> targets, OperationContext operationContext) {
-                // TODO Auto-generated method stub
                 return false;
             }
 
             @Override
             public String getId() {
-                // TODO Auto-generated method stub
                 return null;
             }
 
 			@Override
 			public boolean isChecked(List<VertexRef> targets,
 					OperationContext operationContext) {
-				// TODO Auto-generated method stub
 				return false;
 			}
 
 			@Override
 			public void applyHistory(GraphContainer context,
 					Map<String, String> settings) {
-				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public Map<String, String> createHistory(GraphContainer context) {
-				// TODO Auto-generated method stub
 				return null;
 			}};
 	}
 
 	@Test
     public void commandManagerParseConfigTest() {
-        Dictionary<Object,Object> props = new Properties();
+        Dictionary<String,String> props = new Hashtable<String,String>();
         props.put("toplevelMenuOrder", "File,Edit,View,Additions,Help");
         props.put("submenu.File.groups", "start,new,close,save,print,open,import,additions,end");
         props.put("submenu.Edit.groups", "start,undo,cut,find,add,end,additions");
@@ -386,25 +379,21 @@ public class TestMenuBarBuilder {
 
             @Override
             public Undoer execute(List<VertexRef> targets, OperationContext operationContext) {
-                // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
             public boolean display(List<VertexRef> targets, OperationContext operationContext) {
-                // TODO Auto-generated method stub
                 return false;
             }
 
             @Override
             public boolean enabled(List<VertexRef> targets, OperationContext operationContext) {
-                // TODO Auto-generated method stub
                 return false;
             }
 
             @Override
             public String getId() {
-                // TODO Auto-generated method stub
                 return null;
             }};
     }

@@ -84,9 +84,8 @@ public class NodeDaoHibernate extends AbstractDaoHibernate<OnmsNode, Integer> im
      */
     @Override
     public String getLabelForId(Integer id) {
-        String label = null;
-        label = findObjects(String.class, "select n.label from OnmsNode as n where n.id = ?", id).get(0);
-        return label;
+        List<String> list = findObjects(String.class, "select n.label from OnmsNode as n where n.id = ?", id);
+        return list == null || list.isEmpty() ? null : list.get(0);
     }
 
     /** {@inheritDoc} */
@@ -222,17 +221,17 @@ public class NodeDaoHibernate extends AbstractDaoHibernate<OnmsNode, Integer> im
     }
 
     public static class SimpleSurveillanceStatus implements SurveillanceStatus {
+        private static final Logger LOG = LoggerFactory.getLogger(SimpleSurveillanceStatus.class);
 
         private int m_serviceOutages;
         private int m_upNodeCount;
         private int m_nodeCount;
 
         public SimpleSurveillanceStatus(Number serviceOutages, Number upNodeCount, Number nodeCount) {
-            System.err.println(String.format("Args: %s (%s), %s (%s), %s (%s)", 
-                                             serviceOutages, serviceOutages == null ? null : serviceOutages.getClass(),
-                                                 upNodeCount, upNodeCount == null ? null : upNodeCount.getClass(),
-                                                     nodeCount, nodeCount == null ? null : nodeCount.getClass()
-                    ));
+            LOG.debug("Args: {} ({}), {} ({}), {} ({})",
+                serviceOutages, serviceOutages == null ? null : serviceOutages.getClass(),
+                upNodeCount, upNodeCount == null ? null : upNodeCount.getClass(),
+                nodeCount, nodeCount == null ? null : nodeCount.getClass());
 
             m_serviceOutages = serviceOutages == null ? 0 : serviceOutages.intValue();
             m_upNodeCount = upNodeCount == null ? 0 : upNodeCount.intValue();

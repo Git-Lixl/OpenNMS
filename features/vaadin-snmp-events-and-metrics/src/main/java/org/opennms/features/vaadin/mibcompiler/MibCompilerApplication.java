@@ -32,19 +32,21 @@ import org.opennms.netmgt.config.DataCollectionConfigDao;
 import org.opennms.netmgt.config.EventConfDao;
 import org.opennms.netmgt.model.events.EventProxy;
 
-import com.vaadin.Application;
-import com.vaadin.terminal.Sizeable;
+import com.vaadin.annotations.Theme;
+import com.vaadin.annotations.Title;
+import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Window;
-import com.vaadin.ui.themes.Runo;
+import com.vaadin.ui.UI;
 
 /**
  * The Class MIB Compiler Application.
  * 
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a> 
  */
+@Theme("opennms")
+@Title("MIB Compiler Application")
 @SuppressWarnings("serial")
-public class MibCompilerApplication extends Application {
+public class MibCompilerApplication extends UI {
 
     /** The OpenNMS Event Proxy. */
     private EventProxy eventProxy;
@@ -61,7 +63,7 @@ public class MibCompilerApplication extends Application {
     /**
      * Sets the OpenNMS Event Proxy.
      *
-     * @param eventConfDao the new OpenNMS Event Proxy
+     * @param eventProxy the new OpenNMS event proxy
      */
     public void setEventProxy(EventProxy eventProxy) {
         this.eventProxy = eventProxy;
@@ -88,7 +90,7 @@ public class MibCompilerApplication extends Application {
     /**
      * Sets the OpenNMS Data Collection Configuration DAO.
      *
-     * @param eventConfDao the new OpenNMS Data Collection Configuration DAO
+     * @param dataCollectionDao the new OpenNMS Data Collection Configuration DAO
      */
     public void setDataCollectionDao(DataCollectionConfigDao dataCollectionDao) {
         this.dataCollectionDao = dataCollectionDao;
@@ -98,7 +100,7 @@ public class MibCompilerApplication extends Application {
      * @see com.vaadin.Application#init()
      */
     @Override
-    public void init() {
+    public void init(VaadinRequest request) {
         if (eventProxy == null)
             throw new RuntimeException("eventProxy cannot be null.");
         if (eventConfDao == null)
@@ -106,19 +108,16 @@ public class MibCompilerApplication extends Application {
         if (dataCollectionDao == null)
             throw new RuntimeException("dataCollectionDao cannot be null.");
 
-        setTheme(Runo.THEME_NAME);
-
         final HorizontalSplitPanel mainPanel = new HorizontalSplitPanel();
         final MibConsolePanel mibConsole = new MibConsolePanel();
         final MibCompilerPanel mibPanel = new MibCompilerPanel(dataCollectionDao, eventConfDao, eventProxy, mibParser, mibConsole);
 
         mainPanel.setSizeFull();
-        mainPanel.setSplitPosition(25, Sizeable.UNITS_PERCENTAGE);
+        mainPanel.setSplitPosition(25, Unit.PERCENTAGE);
         mainPanel.addComponent(mibPanel);
         mainPanel.addComponent(mibConsole);
 
-        final Window mainWindow = new Window("MIB Compiler Application", mainPanel);
-        setMainWindow(mainWindow);
+        setContent(mainPanel);
     }
 
 }

@@ -32,13 +32,13 @@ import java.util.Date;
 import org.slf4j.LoggerFactory;
 import org.opennms.features.vaadin.api.Logger;
 
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.Runo;
+import com.vaadin.ui.Button.ClickEvent;
 
 /**
  * The Class MIB Console Panel.
@@ -47,6 +47,8 @@ import com.vaadin.ui.themes.Runo;
  */
 @SuppressWarnings("serial")
 public class MibConsolePanel extends Panel implements Logger {
+
+    /** The Constant LOG. */
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(MibConsolePanel.class);
 
     /** The Constant ERROR. */
@@ -64,30 +66,31 @@ public class MibConsolePanel extends Panel implements Logger {
     /** The log content. */
     private final VerticalLayout logContent;
 
-    /** The clear button. */
-    private final Button clearButton;
-
     /**
      * Instantiates a new MIB Console Panel.
      */
     public MibConsolePanel() {
         super("MIB Console");
-        addStyleName(Runo.PANEL_LIGHT);
+        addStyleName("light");
 
-        clearButton = new Button("Clear Log");
-        clearButton.addListener(new Button.ClickListener() {
+        Button clearButton = new Button("Clear Log");
+        clearButton.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
                 logContent.removeAllComponents();
             }
         });
-        addComponent(clearButton);
-        ((VerticalLayout) getContent()).setComponentAlignment(clearButton, Alignment.TOP_RIGHT);
+
+        VerticalLayout layout = new VerticalLayout();
+        layout.addComponent(clearButton);
+        layout.setComponentAlignment(clearButton, Alignment.TOP_RIGHT);
 
         logContent = new VerticalLayout();
-        addComponent(logContent);
+        layout.addComponent(logContent);
 
         setSizeFull();
+
+        setContent(layout);
     }
 
     /**
@@ -98,7 +101,7 @@ public class MibConsolePanel extends Panel implements Logger {
      */
     private void logMsg(String level, String message) {
         String msg = new Date().toString() + level + message;
-        Label error = new Label(msg, Label.CONTENT_XHTML);
+        Label error = new Label(msg, ContentMode.HTML);
         logContent.addComponent(error);
         scrollIntoView();
         LOG.info(message);
@@ -109,8 +112,8 @@ public class MibConsolePanel extends Panel implements Logger {
      */
     private void scrollIntoView() {
         final VerticalLayout layout = (VerticalLayout) getContent();
-        if (getApplication() != null && layout.getComponentCount() > 0)
-            getApplication().getMainWindow().scrollIntoView(layout.getComponent(layout.getComponentCount() - 1));
+        if (getUI() != null && layout.getComponentCount() > 0)
+            getUI().scrollIntoView(layout.getComponent(layout.getComponentCount() - 1));
     }
 
     /* (non-Javadoc)

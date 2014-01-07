@@ -234,28 +234,11 @@ public class EventsArchiver {
 
         // Make sure we can connect to the database
         try {
-            DataSourceFactory.init();
             m_conn = DataSourceFactory.getInstance().getConnection();
-        } catch (IOException e) {
-            LOG.error("IOException while initializing database", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (MarshalException e) {
-            LOG.error("MarshalException while initializing database", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (ValidationException e) {
-            LOG.error("ValidationException while initializing database", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (PropertyVetoException e) {
-            LOG.error("PropertyVetoException while initializing database", e);
-            throw new UndeclaredThrowableException(e);
         } catch (SQLException e) {
-            LOG.error("SQLException while initializing database", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (ClassNotFoundException e) {
-            LOG.error("ClassNotFoundException while initializing database", e);
+            LOG.error("Exception while connecting to database", e);
             throw new UndeclaredThrowableException(e);
         }
-        // XXX should we be throwing ArchiverException instead?
     }
 
     /**
@@ -460,8 +443,7 @@ public class EventsArchiver {
         
         // initialize the prepared statements
         try {
-            m_eventsGetStmt =
-                m_conn.prepareStatement(DB_SELECT_EVENTS_TO_ARCHIVE);
+            m_eventsGetStmt = m_conn.prepareStatement(DB_SELECT_EVENTS_TO_ARCHIVE);
             m_eventDeleteStmt = m_conn.prepareStatement(DB_DELETE_EVENT);
         } catch (SQLException e) {
             LOG.error("EventsArchiver: Exception in opening the database connection or in the prepared statement for the get events", e);

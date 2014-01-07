@@ -28,25 +28,21 @@
 package org.opennms.features.vaadin.datacollection;
 
 import java.util.ArrayList;
-import java.util.List;
 
+import org.opennms.features.vaadin.api.OnmsBeanContainer;
 import org.opennms.netmgt.config.DataCollectionConfigDao;
 import org.opennms.netmgt.config.datacollection.IncludeCollection;
-import org.vaadin.addon.customfield.CustomField;
+import org.vaadin.dialogs.ConfirmDialog;
 
-import com.vaadin.data.Property;
-import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.CustomField;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.Runo;
-
-import de.steinwedel.vaadin.MessageBox;
-import de.steinwedel.vaadin.MessageBox.ButtonType;
-import de.steinwedel.vaadin.MessageBox.EventListener;
+import com.vaadin.ui.Button.ClickEvent;
 
 /**
  * The Include Collection Field.
@@ -54,25 +50,19 @@ import de.steinwedel.vaadin.MessageBox.EventListener;
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a> 
  */
 @SuppressWarnings("serial")
-public class IncludeCollectionField extends CustomField {
+public class IncludeCollectionField extends CustomField<ArrayList<IncludeCollection>> {
 
-    /** The Include Field Table. */
-    private final Table table = new Table();
+    /** The Constant serialVersionUID. */
+    private static final long serialVersionUID = 3677540981240383672L;
 
     /** The Container. */
-    private final BeanItemContainer<IncludeCollectionWrapper> container = new BeanItemContainer<IncludeCollectionWrapper>(IncludeCollectionWrapper.class);
+    private final OnmsBeanContainer<IncludeCollectionWrapper> container = new OnmsBeanContainer<IncludeCollectionWrapper>(IncludeCollectionWrapper.class);
+
+    /** The Include Field Table. */
+    private final Table table = new Table("Includes List", container);
 
     /** The Toolbar. */
     private final HorizontalLayout toolbar = new HorizontalLayout();
-
-    /** The add button. */
-    private final Button add;
-
-    /** The edit button. */
-    private final Button edit;
-
-    /** The delete button. */
-    private final Button delete;
 
     /**
      * Instantiates a new include collection field.
@@ -80,16 +70,16 @@ public class IncludeCollectionField extends CustomField {
      * @param dataCollectionConfigDao the data collection configuration DAO
      */
     public IncludeCollectionField(final DataCollectionConfigDao dataCollectionConfigDao) {
-        table.setCaption("Includes List");
-        table.setContainerDataSource(container);
-        table.setStyleName(Runo.TABLE_SMALL);
+        setCaption("Include Collections");
+
+        table.addStyleName("light");
         table.setVisibleColumns(new Object[]{"type", "value"});
         table.setColumnHeaders(new String[]{"Type", "Value"});
         table.setSelectable(true);
         table.setImmediate(true);
         table.setHeight("125px");
         table.setWidth("100%");
-        add = new Button("Add", new Button.ClickListener() {
+        final Button add = new Button("Add", new Button.ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
                 final IncludeCollectionWrapper obj = new IncludeCollectionWrapper();
@@ -100,27 +90,25 @@ public class IncludeCollectionField extends CustomField {
                         table.select(obj);
                     }
                 };
-                getApplication().getMainWindow().addWindow(w);
+                getUI().addWindow(w);
             }
         });
-        edit = new Button("Edit", new Button.ClickListener() {
+        final Button edit = new Button("Edit", new Button.ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
                 final Object value = table.getValue();
                 if (value == null) {
-                    getApplication().getMainWindow().showNotification("Please select a IncludeCollection from the table.");
+                    Notification.show("Please select a IncludeCollection from the table.");
                     return;
                 }
                 IncludeCollectionWindow w = new IncludeCollectionWindow(dataCollectionConfigDao, container, (IncludeCollectionWrapper) value) {
                     @Override
-                    public void fieldChanged() {
-                        table.refreshRowCache();
-                    }
+                    public void fieldChanged() {}
                 };
-                getApplication().getMainWindow().addWindow(w);
+                getUI().addWindow(w);
             }
         });
-        delete = new Button("Delete", new Button.ClickListener() {
+        final Button delete = new Button("Delete", new Button.ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
                 deleteHandler();
@@ -131,57 +119,51 @@ public class IncludeCollectionField extends CustomField {
         toolbar.addComponent(edit);
         toolbar.addComponent(delete);
         toolbar.setVisible(table.isEditable());
+    }
 
+    /* (non-Javadoc)
+     * @see com.vaadin.ui.CustomField#initContent()
+     */
+    @Override
+    public Component initContent() {
         VerticalLayout layout = new VerticalLayout();
         layout.addComponent(table);
         layout.addComponent(toolbar);
         layout.setComponentAlignment(toolbar, Alignment.MIDDLE_RIGHT);
-
-        setWriteThrough(false);
-        setCompositionRoot(layout);
+        return layout;
     }
 
     /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.CustomField#getType()
+     * @see com.vaadin.ui.AbstractField#getType()
      */
     @Override
-    public Class<?> getType() {
-        return ArrayList.class;
+    @SuppressWarnings("unchecked")
+    public Class<ArrayList<IncludeCollection>> getType() {
+        return (Class<ArrayList<IncludeCollection>>) new ArrayList<IncludeCollection>().getClass();
     }
 
     /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.CustomField#setPropertyDataSource(com.vaadin.data.Property)
+     * @see com.vaadin.ui.AbstractField#setInternalValue(java.lang.Object)
      */
     @Override
-    public void setPropertyDataSource(Property newDataSource) {
-        Object value = newDataSource.getValue();
-        if (value instanceof List<?>) {
-            @SuppressWarnings("unchecked")
-            List<IncludeCollection> list = (List<IncludeCollection>) value;
-            List<IncludeCollectionWrapper> groups = new ArrayList<IncludeCollectionWrapper>();
-            for (IncludeCollection ic : list) {
-                groups.add(new IncludeCollectionWrapper(ic));
-            }
-            container.removeAllItems();
-            container.addAll(groups);
-            table.setPageLength(groups.size());
-        } else {
-            throw new ConversionException("Invalid type");
+    protected void setInternalValue(ArrayList<IncludeCollection> includeCollections) {
+        super.setInternalValue(includeCollections); // TODO Is this required ?
+        container.removeAllItems();
+        for (IncludeCollection ic : includeCollections) {
+            container.addBean(new IncludeCollectionWrapper(ic));
         }
-        super.setPropertyDataSource(newDataSource);
     }
 
     /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.CustomField#getValue()
+     * @see com.vaadin.ui.AbstractField#getInternalValue()
      */
     @Override
-    public Object getValue() {
-        List<IncludeCollection> list = new ArrayList<IncludeCollection>();
+    protected ArrayList<IncludeCollection> getInternalValue() {
+        ArrayList<IncludeCollection> beans = new ArrayList<IncludeCollection>();
         for (Object itemId: container.getItemIds()) {
-            IncludeCollectionWrapper obj = container.getItem(itemId).getBean();
-            list.add(obj.createIncludeCollection());
+            beans.add(container.getItem(itemId).getBean().createIncludeCollection());
         }
-        return list;
+        return beans;
     }
 
     /* (non-Javadoc)
@@ -199,20 +181,17 @@ public class IncludeCollectionField extends CustomField {
     private void deleteHandler() {
         final Object itemId = table.getValue();
         if (itemId == null) {
-            getApplication().getMainWindow().showNotification("Please select a IncludeCollection from the table.");
+            Notification.show("Please select a IncludeCollection from the table.");
             return;
         }
-        MessageBox mb = new MessageBox(getApplication().getMainWindow(),
-                                       "Are you sure?",
-                                       MessageBox.Icon.QUESTION,
-                                       "Do you really want to remove the selected Include Collection field<br/>This action cannot be undone.",
-                                       new MessageBox.ButtonConfig(MessageBox.ButtonType.YES, "Yes"),
-                                       new MessageBox.ButtonConfig(MessageBox.ButtonType.NO, "No"));
-        mb.addStyleName(Runo.WINDOW_DIALOG);
-        mb.show(new EventListener() {
-            @Override
-            public void buttonClicked(ButtonType buttonType) {
-                if (buttonType == MessageBox.ButtonType.YES) {
+        ConfirmDialog.show(getUI(),
+                           "Are you sure?",
+                           "Do you really want to remove the selected Include Collection field?\nThis action cannot be undone.",
+                           "Yes",
+                           "No",
+                           new ConfirmDialog.Listener() {
+            public void onClose(ConfirmDialog dialog) {
+                if (dialog.isConfirmed()) {
                     table.removeItem(itemId);
                 }
             }

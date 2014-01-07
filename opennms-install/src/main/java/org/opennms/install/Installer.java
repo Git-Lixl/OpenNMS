@@ -56,10 +56,9 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.opennms.bootstrap.Bootstrap;
-import org.opennms.core.db.ConnectionFactoryUtil;
+import org.opennms.core.db.DataSourceConfigurationFactory;
 import org.opennms.core.db.install.InstallerDb;
 import org.opennms.core.db.install.SimpleDataSource;
-import org.opennms.core.logging.Logging;
 import org.opennms.core.schema.ExistingResourceAccessor;
 import org.opennms.core.schema.Migration;
 import org.opennms.core.schema.Migrator;
@@ -105,6 +104,7 @@ public class Installer {
     boolean m_ignore_database_version = false;
     boolean m_do_not_revert = false;
     boolean m_remove_database = false;
+    boolean m_skip_upgrade_tools = false;
 
     String m_etc_dir = "";
     String m_tomcat_conf = null;
@@ -158,12 +158,12 @@ public class Installer {
         	final File cfgFile = ConfigFileConstants.getFile(ConfigFileConstants.OPENNMS_DATASOURCE_CONFIG_FILE_NAME);
             
             InputStream is = new FileInputStream(cfgFile);
-            final JdbcDataSource adminDsConfig = ConnectionFactoryUtil.marshalDataSourceFromConfig(is, ADMIN_DATA_SOURCE_NAME);
+            final JdbcDataSource adminDsConfig = new DataSourceConfigurationFactory(is).getJdbcDataSource(ADMIN_DATA_SOURCE_NAME);
             final DataSource adminDs = new SimpleDataSource(adminDsConfig);
             is.close();
 
             is = new FileInputStream(cfgFile);
-            final JdbcDataSource dsConfig = ConnectionFactoryUtil.marshalDataSourceFromConfig(is, OPENNMS_DATA_SOURCE_NAME);
+            final JdbcDataSource dsConfig = new DataSourceConfigurationFactory(is).getJdbcDataSource(OPENNMS_DATA_SOURCE_NAME);
             final DataSource ds = new SimpleDataSource(dsConfig);
             is.close();
 
@@ -290,6 +290,11 @@ public class Installer {
 
         System.out.println();
         System.out.println("Installer completed successfully!");
+
+        if (!m_skip_upgrade_tools) {
+            System.setProperty("opennms.manager.class", "org.opennms.upgrade.support.Upgrade");
+            Bootstrap.main(new String[] {});
+        }
     }
 
 	private void checkIPv6() {
@@ -505,6 +510,10 @@ public class Installer {
         options.addOption("r", "rpm-install", false,
                           "RPM install (deprecated)");
 
+        // upgrade tools options
+        options.addOption("S", "skip-upgrade-tools", false,
+                "Skip the execution of the upgrade tools (post-processing tasks)");
+
         CommandLineParser parser = new PosixParser();
         m_commandLine = parser.parse(options, argv);
 
@@ -570,6 +579,7 @@ public class Installer {
         }
         m_fix_constraint_remove_rows = m_commandLine.hasOption("X");
         m_install_webapp = m_commandLine.hasOption("y");
+        m_skip_upgrade_tools = m_commandLine.hasOption("S");
 
         if (m_commandLine.getArgList().size() > 0) {
             usage(options, m_commandLine, "Unknown command-line arguments: "
@@ -942,7 +952,6 @@ public class Installer {
      * @throws java.lang.Exception if any.
      */
     public static void main(String[] argv) throws Exception {
-        Logging.configureInstallerLogging();
         new Installer().install(argv);
     }
 

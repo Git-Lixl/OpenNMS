@@ -45,10 +45,12 @@ import org.opennms.netmgt.linkd.RouterInterface;
 import org.opennms.netmgt.linkd.snmp.CdpCacheTableEntry;
 import org.opennms.netmgt.model.DataLinkInterface;
 import org.opennms.netmgt.model.NetworkBuilder;
+import org.opennms.netmgt.model.OnmsAtInterface;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.SnmpInterfaceBuilder;
+import org.opennms.netmgt.model.OnmsNode.NodeType;
 
 /**
  * @author <a href="mailto:brozow@opennms.org">Mathew Brozowski</a>
@@ -102,7 +104,7 @@ public abstract class LinkdNetworkBuilder {
             Map<Integer,InetAddress>ifindextonetmaskmap)
     {
         NetworkBuilder nb = getNetworkBuilder();
-        nb.addNode(name).setForeignSource("linkd").setForeignId(name).setSysObjectId(sysoid).setSysName(name).setType("A");
+        nb.addNode(name).setForeignSource("linkd").setForeignId(name).setSysObjectId(sysoid).setSysName(name).setType(NodeType.ACTIVE);
         final Map<Integer, SnmpInterfaceBuilder> ifindexsnmpbuildermap = new HashMap<Integer, SnmpInterfaceBuilder>();
         for (Integer ifIndex: ifindextoifnamemap.keySet()) {
             ifindexsnmpbuildermap.put(ifIndex, nb.addSnmpInterface(ifIndex).
@@ -146,7 +148,7 @@ public abstract class LinkdNetworkBuilder {
     
     protected OnmsNode getNodeWithoutSnmp(String name, String ipaddr) {
         NetworkBuilder nb = getNetworkBuilder();
-        nb.addNode(name).setForeignSource("linkd").setForeignId(name).setType("A");
+        nb.addNode(name).setForeignSource("linkd").setForeignId(name).setType(NodeType.ACTIVE);
         nb.addInterface(ipaddr).setIsSnmpPrimary("N").setIsManaged("M");
         return nb.getCurrentNode();
     }
@@ -168,9 +170,10 @@ public abstract class LinkdNetworkBuilder {
         System.err.println("-----------------------------------------------------------");
         System.err.println("Local cdp nodeid: "+nodeid);
         System.err.println("Local cdp ifindex: "+cdp.getCdpIfIndex());
+        System.err.println("Local cdp port: "+cdp.getCdpIfName());
         System.err.println("Target cdp deviceId: "+cdp.getCdpTargetDeviceId());
         System.err.println("Target cdp nodeid: "+cdp.getCdpTargetNodeId());
-        System.err.println("Target cdp ifindex: "+cdp.getCdpTargetIfIndex());
+        System.err.println("Target cdp ifname: "+cdp.getCdpTargetIfName());
         System.err.println("-----------------------------------------------------------");
         System.err.println("");        
     	
@@ -182,7 +185,8 @@ public abstract class LinkdNetworkBuilder {
         System.err.println("getCdpCacheDeviceIndex: "+cdpCacheTableEntry.getCdpCacheDeviceIndex());
         System.err.println("getCdpCacheAddressType: "+cdpCacheTableEntry.getCdpCacheAddressType());
         System.err.println("getCdpCacheAddress: "+cdpCacheTableEntry.getCdpCacheAddress());
-        System.err.println("getCdpCacheIpv4Address: "+cdpCacheTableEntry.getCdpCacheIpv4Address().getHostName());
+        if (cdpCacheTableEntry.getCdpCacheIpv4Address() != null )
+            System.err.println("getCdpCacheIpv4Address: "+cdpCacheTableEntry.getCdpCacheIpv4Address().getHostName());
         System.err.println("getCdpCacheVersion: "+cdpCacheTableEntry.getCdpCacheVersion());
         System.err.println("getCdpCacheDeviceId: "+cdpCacheTableEntry.getCdpCacheDeviceId());
         System.err.println("getCdpCacheDevicePort: "+cdpCacheTableEntry.getCdpCacheDevicePort());
@@ -214,7 +218,21 @@ public abstract class LinkdNetworkBuilder {
         System.err.println("");
       
     }
-    
+
+    protected void printAtInterface(OnmsAtInterface at) {
+        System.out.println("----------------net to media------------------");
+        System.out.println("id: " + at.getId());
+        System.out.println("nodeid: " + at.getNode().getId());
+        System.out.println("nodelabel: " + m_nodeDao.get(at.getNode().getId()).getLabel());       
+        System.out.println("ip: " + at.getIpAddress());
+        System.out.println("mac: " + at.getMacAddress());
+        System.out.println("ifindex: " + at.getIfIndex());
+        System.out.println("source: " + at.getSourceNodeId());
+        System.out.println("sourcenodelabel: " + m_nodeDao.get(at.getSourceNodeId()).getLabel());       
+        System.out.println("--------------------------------------");
+        System.out.println("");
+
+    }
     protected void printLink(DataLinkInterface datalinkinterface) {
         System.out.println("----------------Link------------------");
         Integer nodeid = datalinkinterface.getNode().getId();

@@ -1,78 +1,108 @@
 package org.opennms.features.topology.app.internal;
 
-import java.util.Map;
-
-import org.opennms.features.topology.api.Graph;
-import org.opennms.features.topology.api.GraphContainer;
-import org.opennms.features.topology.api.Layout;
-import org.opennms.features.topology.api.Point;
-import org.opennms.features.topology.api.SelectionManager;
-import org.opennms.features.topology.api.topo.Edge;
-import org.opennms.features.topology.api.topo.StatusProvider;
-import org.opennms.features.topology.api.topo.Vertex;
+import com.vaadin.server.PaintException;
+import org.opennms.features.topology.api.*;
+import org.opennms.features.topology.api.support.VertexHopGraphProvider.VertexHopCriteria;
+import org.opennms.features.topology.api.topo.*;
+import org.opennms.features.topology.app.internal.gwt.client.SharedEdge;
+import org.opennms.features.topology.app.internal.gwt.client.SharedVertex;
+import org.opennms.features.topology.app.internal.gwt.client.TopologyComponentState;
 import org.opennms.features.topology.app.internal.support.IconRepositoryManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.vaadin.terminal.PaintException;
-import com.vaadin.terminal.PaintTarget;
+import java.util.*;
 
 public class GraphPainter extends BaseGraphVisitor {
 
 	private final GraphContainer m_graphContainer;
 	private final IconRepositoryManager m_iconRepoManager;
-	private final PaintTarget m_target;
 	private final Layout m_layout;
 	private final StatusProvider m_statusProvider;
+	private final TopologyComponentState m_componentState;
+    private final List<SharedVertex> m_vertices = new ArrayList<SharedVertex>();
+    private final List<SharedEdge> m_edges = new ArrayList<SharedEdge>();
+    private static final Logger s_log = LoggerFactory.getLogger(VEProviderGraphContainer.class);
+    private final Map<VertexRef,Status> m_statusMap = new HashMap<VertexRef, Status>();
+    private Set<VertexRef> m_focusVertices = new HashSet<VertexRef>();
 
-	GraphPainter(GraphContainer graphContainer, Layout layout, IconRepositoryManager iconRepoManager, PaintTarget target, StatusProvider statusProvider) {
+    GraphPainter(GraphContainer graphContainer, Layout layout, IconRepositoryManager iconRepoManager, StatusProvider statusProvider, TopologyComponentState componentState) {
 		m_graphContainer = graphContainer;
 		m_layout = layout;
 		m_iconRepoManager = iconRepoManager;
-		m_target = target;
 		m_statusProvider = statusProvider;
+		m_componentState = componentState;
 	}
 	
 	public StatusProvider getStatusProvider() {
 	    return m_statusProvider;
 	}
 
-	@Override
-	public void visitGraph(Graph graph) throws PaintException {
-		m_target.startTag("graph");
-	}
+    @Override
+    public void visitGraph(Graph graph) throws PaintException {
+        m_focusVertices.clear();
+        Criteria[] criterias = m_graphContainer.getCriteria();
+        for(Criteria criteria : criterias){
+            try{
+                VertexHopCriteria c = (VertexHopCriteria) criteria;
+                m_focusVertices.addAll(c.getVertices());
+            }catch(ClassCastException e){}
+        }
 
-	@Override
-	public void visitVertex(Vertex vertex) throws PaintException {
-		Point initialLocation = m_layout.getInitialLocation(vertex);
-		Point location = m_layout.getLocation(vertex);
-		m_target.startTag("vertex");
-		m_target.addAttribute("key", vertex.getKey());
-		m_target.addAttribute("initialX", initialLocation.getX());
-		m_target.addAttribute("initialY", initialLocation.getY());
-		m_target.addAttribute("x", location.getX());
-		m_target.addAttribute("y", location.getY());
-		m_target.addAttribute("selected", isSelected(m_graphContainer.getSelectionManager(), vertex));
-		if(m_graphContainer.getStatusProvider() != null) {
-		    addStatusProviderProperties(m_graphContainer.getStatusProvider(), vertex, m_target);
-//		    m_target.addAttribute("status", getStatus(vertex) );
-		}
-
-		m_target.addAttribute("iconUrl", m_iconRepoManager.findIconUrlByKey(vertex.getIconKey()));
-		m_target.addAttribute("label", vertex.getLabel());
-		m_target.addAttribute("tooltipText", getTooltipText(vertex));
-		m_target.endTag("vertex");
-	}
-
-    private void addStatusProviderProperties(StatusProvider statusProvider, Vertex vertex, PaintTarget target) throws PaintException {
-        if (statusProvider.getStatusForVertex(vertex) == null) return;
-        Map<String, String> statusProps = statusProvider.getStatusForVertex(vertex).getStatusProperties();
-        if (statusProps == null) return;
-        for(String key : statusProps.keySet()) {
-            target.addAttribute(key, statusProps.get(key));
+        if (m_statusProvider != null) {
+            Map<VertexRef, Status> newStatusMap = m_statusProvider.getStatusForVertices(m_graphContainer.getBaseTopology(), new ArrayList<VertexRef>(graph.getDisplayVertices()), m_graphContainer.getCriteria());
+            if (newStatusMap != null) {
+                m_statusMap.clear();
+                m_statusMap.putAll(newStatusMap);
+            }
         }
     }
 
+    @Override
+	public void visitVertex(Vertex vertex) throws PaintException {
+		Point initialLocation = m_layout.getInitialLocation(vertex);
+		Point location = m_layout.getLocation(vertex);
+		SharedVertex v = new SharedVertex();
+		v.setKey(vertex.getKey());
+		v.setInitialX(initialLocation.getX());
+		v.setInitialY(initialLocation.getY());
+		v.setX(location.getX());
+		v.setY(location.getY());
+		v.setSelected(isSelected(m_graphContainer.getSelectionManager(), vertex));
+        v.setStatus(getStatus(vertex));
+        v.setStatusCount(getStatusCount(vertex));
+        v.setSVGIconId(m_iconRepoManager.findSVGIconIdByKey(vertex.getIconKey()));
+		v.setLabel(vertex.getLabel());
+		v.setTooltipText(getTooltipText(vertex));
+        v.setStyleName(getVertexStyle(vertex));
+		m_vertices.add(v);
+	}
+
+    private String getVertexStyle(Vertex vertex) {
+        StringBuilder style = new StringBuilder();
+        style.append("vertex");
+        if(isSelected(m_graphContainer.getSelectionManager(), vertex)){
+            style.append(" selected");
+        }
+
+        if(m_componentState.isHighlightFocus()) {
+            if(!m_focusVertices.contains(vertex)) {
+                style.append(" opacity-40");
+            }
+        }
+
+        return style.toString();
+
+    }
+
+    private String getStatusCount(Vertex vertex) {
+        Status status = m_statusMap.get(vertex);
+        Map<String, String> statusProperties = status != null ? status.getStatusProperties() : new HashMap<String, String>();
+        return statusProperties.get("statusCount") == null ? "" : statusProperties.get("statusCount");
+    }
+
     private String getStatus(Vertex vertex) {
-        return m_statusProvider != null && m_statusProvider.getStatusForVertex(vertex) != null ? m_statusProvider.getStatusForVertex(vertex).computeStatus() : "";
+        return m_statusMap.get(vertex) != null ? m_statusMap.get(vertex).computeStatus() : "";
     }
 
     private static String getTooltipText(Vertex vertex) {
@@ -85,14 +115,28 @@ public class GraphPainter extends BaseGraphVisitor {
 
 	@Override
 	public void visitEdge(Edge edge) throws PaintException {
-		m_target.startTag("edge");
-		m_target.addAttribute("key", edge.getKey());
-		m_target.addAttribute("source", getSourceKey(edge));
-		m_target.addAttribute("target", getTargetKey(edge));
-		m_target.addAttribute("selected", isSelected(m_graphContainer.getSelectionManager(), edge));
-		m_target.addAttribute("cssClass", getStyleName(edge));
-		m_target.addAttribute("tooltipText", getTooltipText(edge));
-		m_target.endTag("edge");
+		String sourceKey = getSourceKey(edge);
+		String targetKey = getTargetKey(edge);
+		if (sourceKey == null) {
+			s_log.debug("Discarding edge with no source vertex in the base topology: {}", edge);
+		} else if (targetKey == null) {
+			s_log.debug("Discarding edge with no target vertex in the base topology: {}", edge);
+		} else {
+			SharedEdge e = new SharedEdge();
+			e.setKey(edge.getKey());
+			e.setSourceKey(sourceKey);
+			e.setTargetKey(targetKey);
+			e.setSelected(isSelected(m_graphContainer.getSelectionManager(), edge));
+
+            if(m_componentState.isHighlightFocus()){
+                e.setCssClass(getStyleName(edge) + " opacity-50");
+            }else{
+                e.setCssClass(getStyleName(edge));
+            }
+
+			e.setTooltipText(getTooltipText(edge));
+			m_edges.add(e);
+		}
 	}
 
 	/**
@@ -108,15 +152,16 @@ public class GraphPainter extends BaseGraphVisitor {
 
 	@Override
 	public void completeGraph(Graph graph) throws PaintException {
-		m_target.endTag("graph");
+		m_componentState.setVertices(m_vertices);
+		m_componentState.setEdges(m_edges);
 	}
 
 	private String getSourceKey(Edge edge) {
-		return m_graphContainer.getBaseTopology().getVertex(edge.getSource().getVertex()).getKey();
+		return m_graphContainer.getBaseTopology().getVertex(edge.getSource().getVertex(), m_graphContainer.getCriteria()).getKey();
 	}
 
 	private String getTargetKey(Edge edge) {
-		return m_graphContainer.getBaseTopology().getVertex(edge.getTarget().getVertex()).getKey();
+		return m_graphContainer.getBaseTopology().getVertex(edge.getTarget().getVertex(), m_graphContainer.getCriteria()).getKey();
 	}
 
 	/**

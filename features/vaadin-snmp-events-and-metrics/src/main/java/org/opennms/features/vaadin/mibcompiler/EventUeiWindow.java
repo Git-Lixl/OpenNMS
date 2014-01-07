@@ -33,7 +33,6 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.themes.Runo;
 
 /**
  * The Class Event UEI Window.
@@ -64,30 +63,30 @@ public abstract class EventUeiWindow extends Window implements Button.ClickListe
         setHeight("150px");
         setResizable(false);
         setClosable(false);
-        addStyleName(Runo.WINDOW_DIALOG);
+        addStyleName("dialog");
 
         ueiBase = new TextField("UEI Base");
         ueiBase.setNullSettingAllowed(false);
-        ueiBase.setWriteThrough(false);
         ueiBase.setWidth("100%");
         ueiBase.setRequired(true);
         ueiBase.setValue(defaultUei);
         ueiBase.setRequiredError("UEI Base cannot be null.");
 
         okButton = new Button("Continue");
-        okButton.addListener(this);
+        okButton.addClickListener(this);
 
         cancelButton = new Button("Cancel");
-        cancelButton.addListener(this);
+        cancelButton.addClickListener(this);
 
         HorizontalLayout toolbar = new HorizontalLayout();
         toolbar.addComponent(okButton);
         toolbar.addComponent(cancelButton);
 
-        addComponent(ueiBase);
-        addComponent(toolbar);
-
-        ((VerticalLayout) getContent()).setComponentAlignment(toolbar, Alignment.BOTTOM_RIGHT);
+        VerticalLayout layout = new VerticalLayout();
+        layout.addComponent(ueiBase);
+        layout.addComponent(toolbar);
+        layout.setComponentAlignment(toolbar, Alignment.BOTTOM_RIGHT);
+        setContent(layout);
     }
 
     /* (non-Javadoc)

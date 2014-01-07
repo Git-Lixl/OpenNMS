@@ -21,7 +21,7 @@ public class VertexSelectionTree extends Tree implements SelectionListener {
         
         m_graphContainer = graphContainer;
         
-        this.addListener(new ValueChangeListener() {
+        this.addValueChangeListener(new ValueChangeListener() {
             
             @Override
             public void valueChange(com.vaadin.data.Property.ValueChangeEvent event) {
@@ -52,4 +52,13 @@ public class VertexSelectionTree extends Tree implements SelectionListener {
 
     public String getTitle() { return m_title; }
 
+    @Override
+    public String toString() {
+        Object value = getValue();
+        if (value == null) {
+            return null;
+        } else {
+            return value.toString();
+        }
+    }
 }

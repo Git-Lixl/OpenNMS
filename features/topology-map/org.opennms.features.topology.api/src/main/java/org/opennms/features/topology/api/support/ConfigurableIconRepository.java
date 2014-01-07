@@ -28,10 +28,7 @@
 
 package org.opennms.features.topology.api.support;
 
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.opennms.features.topology.api.IconRepository;
@@ -41,6 +38,7 @@ import org.osgi.service.cm.ManagedService;
 public class ConfigurableIconRepository implements IconRepository, ManagedService {
 
 	private final AtomicReference<Map<String, String>> m_iconMap;
+    private final List<String> m_svgDefs = new ArrayList<String>();
 
 	public ConfigurableIconRepository() {
 		this(Collections.<String, String>emptyMap());
@@ -53,32 +51,36 @@ public class ConfigurableIconRepository implements IconRepository, ManagedServic
 	private Map<String, String> iconMap() {
 		return m_iconMap.get();
 	}
+
     @Override
     public boolean contains(String type) {
         return iconMap().containsKey(type);
     }
     
     @Override
-    public String getIconUrl(String type) {
+    public String getSVGIconId(String type) {
         return iconMap().get(type);
     }
-    
-	@Override
-	@SuppressWarnings("unchecked")
-	public void updated(Dictionary properties) throws ConfigurationException {
+
+    @Override
+    public List<String> getSVGIconFiles() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+	public void updated(Dictionary<String,?> properties) throws ConfigurationException {
 		
 		while(true) {
 			Map<String, String> oldMap = m_iconMap.get();
 			
 			// create the new map using the old as defaults
 			Map<String, String> newMap = new HashMap<String, String>(oldMap);
-			for(Object key : Collections.list(properties.keys())) {
-				String k = (String)key;
+			for(String key : Collections.list(properties.keys())) {
 				String v = ((String)properties.get(key));
 				if (v == null || v.trim().isEmpty()) {
-					newMap.remove(k);
+					newMap.remove(key);
 				} else {
-					newMap.put(k, v.trim());
+					newMap.put(key, v.trim());
 				}
 			}
 

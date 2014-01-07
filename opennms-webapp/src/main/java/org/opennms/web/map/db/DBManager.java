@@ -34,7 +34,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -50,17 +49,14 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-import org.slf4j.MDC;
+import org.opennms.core.db.DataSourceFactory;
 import org.opennms.core.logging.Logging;
 import org.opennms.core.resource.Vault;
 import org.opennms.core.resource.db.DbConnectionFactory;
 import org.opennms.core.resource.db.SimpleDbConnectionFactory;
 import org.opennms.core.utils.InetAddressUtils;
-
 import org.opennms.web.map.MapsConstants;
 import org.opennms.web.map.MapsException;
-
 import org.opennms.web.map.view.VElementInfo;
 import org.opennms.web.map.view.VMapInfo;
 import org.slf4j.Logger;
@@ -100,8 +96,15 @@ public class DBManager extends Manager {
      * @throws org.opennms.web.map.MapsException if any.
      */
     public DBManager() throws MapsException {
-        Logging.putPrefix(MapsConstants.LOG4J_CATEGORY);
-            LOG.debug("Instantiating DBManager (using Vault)");
+        Logging.withPrefix(MapsConstants.LOG4J_CATEGORY, new Runnable() {
+
+            @Override
+            public void run() {
+                LOG.debug("Instantiating DBManager (using Vault)");
+            }
+            
+        });
+        
     }
 
     /**
@@ -110,10 +113,12 @@ public class DBManager extends Manager {
      * @param params a java$util$Map object.
      * @throws org.opennms.web.map.MapsException if any.
      */
-    public DBManager(java.util.Map<String, String> params)
+    public DBManager(final java.util.Map<String, String> params)
             throws MapsException {
-        Logging.putPrefix(MapsConstants.LOG4J_CATEGORY);
-            LOG.debug("Instantiating DBManager with params: {}", params);
+        Logging.withPrefix(MapsConstants.LOG4J_CATEGORY, new Runnable() {
+            public void run() { LOG.debug("Instantiating DBManager with params: {}", params); }
+        });
+
         String url = params.get("url");
         String driver = params.get("driver");
         String user = params.get("user");
@@ -145,7 +150,7 @@ public class DBManager extends Manager {
             }
         } else {
             try {
-                return Vault.getDbConnection();
+                return DataSourceFactory.getInstance().getConnection();
             } catch (SQLException e) {
                 LOG.error("Exception while creating connection");
                 throw new MapsException(e);
@@ -156,11 +161,7 @@ public class DBManager extends Manager {
     void releaseConnection(Connection conn) throws MapsException {
         try {
             if (conn != null && !conn.isClosed()) {
-                if (m_factory != null) {
-                    conn.close();
-                } else {
-                    Vault.releaseDbConnection(conn);
-                }
+                conn.close();
             }
         } catch (Throwable e) {
             LOG.error("Exception while releasing connection");
@@ -673,8 +674,7 @@ public class DBManager extends Manager {
             statement.setInt(2, mapId);
             statement.setString(3, type);
             rs = statement.executeQuery();
-            DbElement el = rs2Element(rs);
-            return el;
+            return rs2Element(rs);
         } catch (Throwable e) {
             LOG.error("Exception while getting element with elementid={} and mapid={}", id, mapId);
             throw new MapsException(e);
@@ -977,8 +977,7 @@ public class DBManager extends Manager {
             statement = conn.prepareStatement(sqlQuery);
             statement.setInt(1, id);
             rs = statement.executeQuery();
-            DbMap map = rs2Map(rs);
-            return map;
+            return rs2Map(rs);
         } catch (Throwable e) {
             LOG.error("Exception while getting map with mapid={}", id);
             throw new MapsException(e);
@@ -1191,8 +1190,7 @@ public class DBManager extends Manager {
             statement = conn.prepareStatement(sqlQuery);
             statement.setInt(1, mapId);
             rs = statement.executeQuery();
-            VMapInfo mm = rs2MapMenu(rs);
-            return mm;
+            return rs2MapMenu(rs);
         } catch (Throwable e) {
             LOG.error("Exception while getting map-menu for mapid {}", mapId);
             throw new MapsException(e);
@@ -2154,7 +2152,7 @@ public class DBManager extends Manager {
     }
 
     private String getLabel(String fqdn) {
-        if (fqdn.indexOf(".")>0 && !validate(fqdn)) {
+        if (fqdn.indexOf('.')>0 && !validate(fqdn)) {
             return fqdn.substring(0, fqdn.indexOf('.'));
         } else {
             return fqdn;

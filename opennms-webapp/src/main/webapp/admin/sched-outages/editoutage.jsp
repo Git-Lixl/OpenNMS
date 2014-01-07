@@ -35,15 +35,14 @@
         import="java.util.*,
         org.opennms.netmgt.config.*,
         org.opennms.netmgt.config.poller.*,
+        org.opennms.core.db.DataSourceFactory,
+        org.opennms.core.utils.DBUtils,
         org.opennms.core.utils.WebSecurityUtils,
-        org.opennms.core.resource.Vault,
         org.opennms.web.element.*,
         org.opennms.web.pathOutage.*,
         org.opennms.netmgt.model.OnmsNode,
         org.opennms.netmgt.EventConstants,
         org.opennms.netmgt.xml.event.Event,
-        org.opennms.core.utils.*,
-        org.opennms.netmgt.utils.*,
         org.opennms.web.api.Util,
         org.exolab.castor.xml.ValidationException,
         java.net.*,
@@ -145,20 +144,21 @@
     
 
     private static Set<Integer> getDependencyNodesByCriticalPath(String criticalpathip) throws SQLException {
-	    Connection conn = Vault.getDbConnection();
+	    final Connection conn = DataSourceFactory.getInstance().getConnection();
+	    final DBUtils d = new DBUtils(PathOutageFactory.class, conn);
 	    Set<Integer> pathNodes = new TreeSet<Integer>();
         try {
             PreparedStatement stmt = conn.prepareStatement(GET_NODES_IN_PATH);
+            d.watch(stmt);
             stmt.setString(1, criticalpathip);
 
             ResultSet rs = stmt.executeQuery();
+            d.watch(rs);
             while (rs.next()) {
                 pathNodes.add(rs.getInt(1));
             }
-            rs.close();
-            stmt.close();
         } finally {
-            Vault.releaseDbConnection(conn);
+            d.cleanUp();
         }
 	    return pathNodes;
         
@@ -179,20 +179,22 @@
 	}
 	
 	private static Set<Integer> getDependencyNodesByNodeid(int nodeid) throws SQLException {
-	    Connection conn = Vault.getDbConnection();
+	    final Connection conn = DataSourceFactory.getInstance().getConnection();
+	    final DBUtils d = new DBUtils(PathOutageFactory.class, conn);
+
 	    Set<Integer> pathNodes = new TreeSet<Integer>();
         try {
             PreparedStatement stmt = conn.prepareStatement(GET_DEPENDENCY_NODES_BY_NODEID);
+            d.watch(stmt);
             stmt.setInt(1, nodeid);
 
             ResultSet rs = stmt.executeQuery();
+            d.watch(rs);
             while (rs.next()) {
                 pathNodes.add(rs.getInt(1));
             }
-            rs.close();
-            stmt.close();
         } finally {
-            Vault.releaseDbConnection(conn);
+            d.cleanUp();
         }
 	    
 	    return pathNodes;
@@ -828,7 +830,7 @@ function updateOutageTypeDisplay(selectElement) {
 <h2>Editing Outage: <%= theOutage.getName() %></h2>
 
 		<label>Nodes and Interfaces:</label>
-			<table class="normal" border="0">
+			<table class="normal">
 				<tr>
 					<th valign="top">Node Labels</th>
 					<th valign="top">Interfaces</th>
@@ -1015,7 +1017,7 @@ function updateOutageTypeDisplay(selectElement) {
 					}
 				%>
 			</table>
-			<table class="normal" border="0">
+			<table class="normal">
 				<tr id="chooseDay" style="display: none">
 					<td>
 						<span id="chooseDayOfMonth" style="display: none">

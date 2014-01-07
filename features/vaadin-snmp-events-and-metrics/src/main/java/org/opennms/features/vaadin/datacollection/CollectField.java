@@ -30,79 +30,88 @@ package org.opennms.features.vaadin.datacollection;
 import java.util.List;
 
 import org.opennms.netmgt.config.datacollection.Collect;
-import org.vaadin.addon.customfield.CustomField;
 
 import com.vaadin.data.Property;
+import com.vaadin.data.util.converter.Converter.ConversionException;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.CustomField;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.ListSelect;
+import com.vaadin.ui.Notification;
 
 /**
  * The Collect Field.
  * 
+ * TODO: when a new group is added, the groupField must be updated.
+ * 
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a> 
  */
-// TODO when a new group is added, the groupField must be updated.
 @SuppressWarnings("serial")
-public class CollectField extends CustomField implements Button.ClickListener {
+public class CollectField extends CustomField<Collect> implements Button.ClickListener {
 
     /** The group field. */
-    private ComboBox groupField = new ComboBox();
+    private final ComboBox groupField = new ComboBox();
 
     /** The list field. */
-    private ListSelect listField = new ListSelect();
+    private final ListSelect listField = new ListSelect();
 
     /** The Toolbar. */
-    private HorizontalLayout toolbar = new HorizontalLayout();
+    private final HorizontalLayout toolbar = new HorizontalLayout();
 
     /** The add button. */
-    private Button add;
+    private final Button add = new Button("Add Group", this);
 
     /** The delete button. */
-    private Button delete;
+    private final Button delete = new Button("Delete Selected", this);
 
     /**
      * Instantiates a new collect field.
      *
+     * @param caption the caption
      * @param groups the available groups
      */
-    public CollectField(List<String> groups) {
+    public CollectField(String caption, List<String> groups) {
+        setCaption(caption);
         listField.setRows(10);
 
         for (String group : groups) {
             groupField.addItem(group);
         }
 
-        add = new Button("Add Group", (Button.ClickListener) this);
-        delete = new Button("Delete Selected", (Button.ClickListener) this);
         toolbar.addComponent(delete);
         toolbar.addComponent(groupField);
         toolbar.addComponent(add);
         toolbar.setVisible(listField.isReadOnly());
+    }
 
+    /* (non-Javadoc)
+     * @see com.vaadin.ui.CustomField#initContent()
+     */
+    @Override
+    public Component initContent() {
         HorizontalLayout layout = new HorizontalLayout();
         layout.addComponent(listField);
         layout.addComponent(toolbar);
         layout.setComponentAlignment(toolbar, Alignment.BOTTOM_RIGHT);
-
-        setWriteThrough(false);
-        setCompositionRoot(layout);
+        return layout;
     }
 
     /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.CustomField#getType()
+     * @see com.vaadin.ui.AbstractField#getType()
      */
     @Override
-    public Class<?> getType() {
+    public Class<Collect> getType() {
         return Collect.class;
     }
 
     /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.CustomField#setPropertyDataSource(com.vaadin.data.Property)
+     * @see com.vaadin.ui.AbstractField#setPropertyDataSource(com.vaadin.data.Property)
      */
     @Override
+    @SuppressWarnings("rawtypes")
     public void setPropertyDataSource(Property newDataSource) {
         Object value = newDataSource.getValue();
         if (value instanceof Collect) {
@@ -118,10 +127,10 @@ public class CollectField extends CustomField implements Button.ClickListener {
     }
 
     /* (non-Javadoc)
-     * @see org.vaadin.addon.customfield.CustomField#getValue()
+     * @see com.vaadin.ui.AbstractField#getValue()
      */
     @Override
-    public Object getValue() {
+    public Collect getValue() {
         Collect dto = new Collect();
         for (Object itemId: listField.getItemIds()) {
             dto.getIncludeGroupCollection().add((String) itemId);
@@ -130,7 +139,7 @@ public class CollectField extends CustomField implements Button.ClickListener {
     }
 
     /* (non-Javadoc)
-     * @see com.vaadin.ui.AbstractComponent#setReadOnly(boolean)
+     * @see com.vaadin.ui.AbstractField#setReadOnly(boolean)
      */
     @Override
     public void setReadOnly(boolean readOnly) {
@@ -166,7 +175,7 @@ public class CollectField extends CustomField implements Button.ClickListener {
     private void deleteHandler() {
         final Object itemId = listField.getValue();
         if (itemId == null) {
-            getApplication().getMainWindow().showNotification("Please select a MIB Group from the table.");
+            Notification.show("Please select a MIB Group from the table.");
         } else {
             listField.removeItem(itemId);
         }
