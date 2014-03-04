@@ -51,7 +51,6 @@ public class CollectorThresholdingSet extends ThresholdingSet {
     
     // CollectionSpecification parameters
     boolean storeByIfAlias = false;
-    boolean storeByForeignSource = false;
     
     /**
      * <p>Constructor for CollectorThresholdingSet.</p>
@@ -65,12 +64,6 @@ public class CollectorThresholdingSet extends ThresholdingSet {
         super(nodeId, hostAddress, serviceName, repository);
         String storeByIfAliasString = ParameterMap.getKeyedString(roProps, "storeByIfAlias", null);
         storeByIfAlias = storeByIfAliasString != null && storeByIfAliasString.toLowerCase().equals("true");
-        storeByForeignSource = isStoreByForeignSource();
-        log().debug("storeByForeignSource = " + storeByForeignSource);
-    }
-    
-    public static boolean isStoreByForeignSource() {
-       return Boolean.getBoolean("org.opennms.rrd.storeByForeignSource");
     }
     
     /*
