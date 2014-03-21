@@ -33,6 +33,7 @@ import java.util.List;
 
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
+import org.opennms.netmgt.capsd.EventUtils;
 import org.opennms.netmgt.daemon.SpringServiceDaemon;
 import org.opennms.netmgt.dao.NodeDao;
 import org.opennms.netmgt.dao.ResourceDao;
@@ -114,16 +115,11 @@ public class Statsd implements SpringServiceDaemon {
     private boolean isReloadConfigEventTarget(Event event) {
         boolean isTarget = false;
         
-        List<Parm> parmCollection = event.getParmCollection();
-
-        for (Parm parm : parmCollection) {
-            if (EventConstants.PARM_DAEMON_NAME.equals(parm.getParmName()) && "Statsd".equalsIgnoreCase(parm.getValue().getContent())) {
-                isTarget = true;
-                break;
-            }
+        if ("Statsd".equalsIgnoreCase(EventUtils.getParm(event, EventConstants.PARM_DAEMON_NAME))) {
+            isTarget = true;
+            log().debug("isReloadConfigEventTarget: Statsd was target of reload event: "+isTarget);
         }
         
-        log().debug("isReloadConfigEventTarget: Statsd was target of reload event: "+isTarget);
         return isTarget;
     }
 
