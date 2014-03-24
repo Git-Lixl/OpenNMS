@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2007-2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2007-2014 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -29,7 +29,6 @@
 package org.opennms.netmgt.statsd;
 
 import java.text.ParseException;
-import java.util.List;
 
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
@@ -44,7 +43,6 @@ import org.opennms.netmgt.model.events.EventForwarder;
 import org.opennms.netmgt.model.events.annotations.EventHandler;
 import org.opennms.netmgt.model.events.annotations.EventListener;
 import org.opennms.netmgt.xml.event.Event;
-import org.opennms.netmgt.xml.event.Parm;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -72,6 +70,11 @@ public class Statsd implements SpringServiceDaemon {
     private Scheduler m_scheduler;
     private ReportDefinitionBuilder m_reportDefinitionBuilder;
     private volatile EventForwarder m_eventForwarder;
+    
+    private long m_reportsStarted = 0;
+    private long m_reportsCompleted = 0;
+    private long m_reportsPersisted = 0;
+    private long m_reportRunTime = 0;
 
     /**
      * <p>handleReloadConfigEvent</p>
@@ -214,12 +217,17 @@ public class Statsd implements SpringServiceDaemon {
         
         getTransactionTemplate().execute(new TransactionCallbackWithoutResult() {
             public void doInTransactionWithoutResult(TransactionStatus status) {
+                long reportStartTime = System.currentTimeMillis();
                 log().debug("Starting report " + report);
+                accountReportStart();
                 report.walk();
                 log().debug("Completed report " + report);
+                accountReportComplete();
                 
                 m_reportPersister.persist(report);
                 log().debug("Report " + report + " persisted");
+                accountReportPersist();
+                accountReportRunTime(System.currentTimeMillis() - reportStartTime);
             }
         });
     }
@@ -403,5 +411,37 @@ public class Statsd implements SpringServiceDaemon {
      */
     public EventForwarder getEventForwarder() {
         return m_eventForwarder;
+    }
+    
+    private synchronized void accountReportStart() {
+        m_reportsStarted++;
+    }
+    
+    private synchronized void accountReportComplete() {
+        m_reportsCompleted++;
+    }
+    
+    private synchronized void accountReportPersist() {
+        m_reportsPersisted++;
+    }
+    
+    private synchronized void accountReportRunTime(long runtime) {
+        m_reportRunTime += runtime;
+    }
+    
+    public long getReportsStarted() {
+        return m_reportsStarted;
+    }
+    
+    public long getReportsCompleted() {
+        return m_reportsCompleted;
+    }
+    
+    public long getReportsPersisted() {
+        return m_reportsPersisted;
+    }
+    
+    public long getReportRunTime() {
+        return m_reportRunTime;
     }
 }
