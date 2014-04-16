@@ -174,7 +174,7 @@
                     availValue = ElementUtil.getServiceStatusString(service);
                 }
 
-                String timelineUrl = "/opennms/rest/timeline/html/" + String.valueOf(nodeId) + "/" + service.getServiceName() + "/" + timelineStart + "/" + timelineEnd + "/" + timelineWidth;
+                String timelineUrl = "/opennms/rest/timeline/html/" + String.valueOf(nodeId) + "/" + ipAddr + "/" + service.getServiceName() + "/" + timelineStart + "/" + timelineEnd + "/" + timelineWidth;
 
                 if (service.isManaged()) {
         %>

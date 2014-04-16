@@ -31,6 +31,7 @@ package org.opennms.web.rest;
 import com.sun.jersey.spi.resource.PerRequest;
 import org.opennms.core.criteria.CriteriaBuilder;
 import org.opennms.core.criteria.restrictions.Restrictions;
+import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.OutageDao;
 import org.opennms.netmgt.model.OnmsOutage;
 import org.opennms.netmgt.model.OnmsOutageCollection;
@@ -53,6 +54,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -66,14 +68,43 @@ import java.util.GregorianCalendar;
 public class TimelineRestService extends OnmsRestService {
 
     private static class TimescaleDescriptor {
+        /**
+         * The divisor to use for calculating the number of labels
+         */
         private int m_divisor;
+        /**
+         * The calendar field type to be used
+         */
         private int m_type;
+        /**
+         * The calendar field types to be zeroed
+         */
         private int[] m_typesToZero;
+        /**
+         * The increment for the calendar field
+         */
         private int m_increment;
+        /**
+         * The date format to be used
+         */
         private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        /**
+         * Red color
+         */
         private static final Color ONMS_RED = Color.decode("#CC0000");
+        /**
+         * Green color
+         */
         private static final Color ONMS_GREEN = Color.decode("#336600");
 
+        /**
+         * Constructor for an instance.
+         *
+         * @param divisor     the divisor to be used
+         * @param type        the calendar field type
+         * @param increment   the increment for the calendar field type
+         * @param typesToZero the calendar field types to be zeroed
+         */
         public TimescaleDescriptor(int divisor, int type, int increment, int... typesToZero) {
             this.m_divisor = divisor;
             this.m_type = type;
@@ -97,6 +128,13 @@ public class TimelineRestService extends OnmsRestService {
             return m_increment;
         }
 
+        /**
+         * Checks whether this instance matches the required number of labels.
+         *
+         * @param delta the delta used
+         * @param num   the number of labels
+         * @return true, if matches, false otherwise
+         */
         public boolean match(long delta, int num) {
             return (delta / m_divisor < num);
         }
@@ -267,10 +305,12 @@ public class TimelineRestService extends OnmsRestService {
     @GET
     @Produces("text/javascript")
     @Transactional
-    @Path("html/{nodeId}/{serviceName}/{start}/{end}/{width}")
+    @Path("html/{nodeId}/{ipAddress}/{serviceName}/{start}/{end}/{width}")
     public Response html(
             @PathParam("nodeId")
             final int nodeId,
+            @PathParam("ipAddress")
+            final String ipAddress,
             @PathParam("serviceName")
             final String serviceName,
             @PathParam("start")
@@ -293,6 +333,7 @@ public class TimelineRestService extends OnmsRestService {
 
             builder.or(Restrictions.isNull("ifRegainedService"), Restrictions.gt("ifRegainedService", d));
             builder.eq("serviceType.name", serviceName);
+            builder.eq("ipInterface.ipAddress", InetAddressUtils.addr(ipAddress));
 
             builder.alias("monitoredService", "monitoredService");
             builder.alias("monitoredService.ipInterface", "ipInterface");
@@ -322,6 +363,8 @@ public class TimelineRestService extends OnmsRestService {
         htmlBuffer.append("<img src=\"/opennms/rest/timeline/image/");
         htmlBuffer.append(nodeId);
         htmlBuffer.append("/");
+        htmlBuffer.append(ipAddress);
+        htmlBuffer.append("/");
         htmlBuffer.append(serviceName);
         htmlBuffer.append("/");
         htmlBuffer.append(start);
@@ -332,9 +375,13 @@ public class TimelineRestService extends OnmsRestService {
         htmlBuffer.append("\" usemap=\"");
         htmlBuffer.append(nodeId);
         htmlBuffer.append("-");
+        htmlBuffer.append(ipAddress);
+        htmlBuffer.append("-");
         htmlBuffer.append(serviceName);
         htmlBuffer.append("\"><map name=\"");
         htmlBuffer.append(nodeId);
+        htmlBuffer.append("-");
+        htmlBuffer.append(ipAddress);
         htmlBuffer.append("-");
         htmlBuffer.append(serviceName);
         htmlBuffer.append("\">");
@@ -356,10 +403,12 @@ public class TimelineRestService extends OnmsRestService {
     @GET
     @Produces("image/png")
     @Transactional
-    @Path("image/{nodeId}/{serviceName}/{start}/{end}/{width}")
+    @Path("image/{nodeId}/{ipAddress}/{serviceName}/{start}/{end}/{width}")
     public Response image(
             @PathParam("nodeId")
             final int nodeId,
+            @PathParam("ipAddress")
+            final String ipAddress,
             @PathParam("serviceName")
             final String serviceName,
             @PathParam("start")
@@ -381,6 +430,7 @@ public class TimelineRestService extends OnmsRestService {
 
             builder.or(Restrictions.isNull("ifRegainedService"), Restrictions.gt("ifRegainedService", d));
             builder.eq("serviceType.name", serviceName);
+            builder.eq("ipInterface.ipAddress", InetAddressUtils.addr(ipAddress));
 
             builder.alias("monitoredService", "monitoredService");
             builder.alias("monitoredService.ipInterface", "ipInterface");
