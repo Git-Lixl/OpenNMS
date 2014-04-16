@@ -155,7 +155,7 @@ public class TimelineRestService extends OnmsRestService {
             graphics2D.setColor(ONMS_RED);
             int n1 = (int) ((p1 - start) / (delta / width));
             int n2 = (int) ((p2 - start) / (delta / width));
-            graphics2D.fillRect(n1, 2, n2 - n1, 16);
+            graphics2D.fillRect(n1, 2, (n2 - n1 > 0 ? n2 - n1 : 1), 16);
         }
 
         public void drawGreen(Graphics2D graphics2D, int width) {
@@ -350,7 +350,7 @@ public class TimelineRestService extends OnmsRestService {
 
         htmlBuffer.append("</map>");
 
-        return Response.ok("document.write('"+htmlBuffer.toString()+"');").build();
+        return Response.ok("document.write('" + htmlBuffer.toString() + "');").build();
     }
 
     @GET
