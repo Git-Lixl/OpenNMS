@@ -450,7 +450,13 @@
 </div>
 
 <div class="TwoColRight">
-  
+    <!-- Timeline box -->
+    <c:if test="${fn:length( model.intfs ) < 10}">
+        <jsp:include page="/includes/nodeTimeline-box.jsp" flush="false" >
+            <jsp:param name="node" value="${model.id}" />
+        </jsp:include>
+    </c:if>
+
   <!-- general info box -->
   <h3 class="o-box">General (Status: ${model.status})</h3>
   <div class="boxWrapper">
