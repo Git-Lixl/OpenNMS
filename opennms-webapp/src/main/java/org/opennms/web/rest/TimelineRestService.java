@@ -54,7 +54,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -139,7 +138,15 @@ public class TimelineRestService extends OnmsRestService {
             return (delta / m_divisor < num);
         }
 
-        public void draw(Graphics2D graphics2D, long delta, long start, int width) {
+        /**
+         * Draws the header an a given graphics context.
+         *
+         * @param graphics2D the graphics context to be used
+         * @param delta      the delta
+         * @param start      the start value
+         * @param width      the width of the header
+         */
+        public void drawHeader(Graphics2D graphics2D, long delta, long start, int width) {
             Calendar calendar = GregorianCalendar.getInstance();
 
             calendar.setTimeInMillis(start * 1000);
@@ -159,9 +166,16 @@ public class TimelineRestService extends OnmsRestService {
                 graphics2D.drawString(d, n - graphics2D.getFontMetrics().stringWidth(d) / 2, 10);
                 calendar.add(getType(), getIncrement());
             }
-
         }
 
+        /**
+         * Draws vertical lines on a given graphics context.
+         *
+         * @param graphics2D the graphics context
+         * @param delta      the delta
+         * @param start      the start value
+         * @param width      the width of the graphic
+         */
         public void drawLine(Graphics2D graphics2D, long delta, long start, int width) {
             Calendar calendar = GregorianCalendar.getInstance();
 
@@ -182,6 +196,15 @@ public class TimelineRestService extends OnmsRestService {
             }
         }
 
+        /**
+         * Draws an event on a given graphics context.
+         *
+         * @param graphics2D the graphics context
+         * @param delta      the delta
+         * @param start      the start value
+         * @param width      the width of the graphic
+         * @param onmsOutage the outage to be drawn
+         */
         public void drawEvent(Graphics2D graphics2D, long delta, long start, int width, OnmsOutage onmsOutage) {
             long p1 = onmsOutage.getServiceLostEvent().getEventCreateTime().getTime() / 1000;
             long p2 = start + delta;
@@ -196,11 +219,27 @@ public class TimelineRestService extends OnmsRestService {
             graphics2D.fillRect(n1, 2, (n2 - n1 > 0 ? n2 - n1 : 1), 16);
         }
 
+        /**
+         * Draws a solid green bar of a given length.
+         *
+         * @param graphics2D the graphics context
+         * @param width      the width of the graphic
+         */
         public void drawGreen(Graphics2D graphics2D, int width) {
             graphics2D.setColor(ONMS_GREEN);
             graphics2D.fillRect(0, 2, width, 16);
         }
 
+        /**
+         * Returns the HTML map entry for a given outage instance.
+         *
+         * @param graphics2D the graphics context
+         * @param delta      the delta
+         * @param start      the start value
+         * @param width      the width of the graphic
+         * @param onmsOutage the outage to be used
+         * @return the HTML map entry
+         */
         public String getMapEntry(Graphics2D graphics2D, long delta, long start, int width, OnmsOutage onmsOutage) {
             long p1 = onmsOutage.getServiceLostEvent().getEventCreateTime().getTime() / 1000;
             long p2 = start + delta;
@@ -225,10 +264,15 @@ public class TimelineRestService extends OnmsRestService {
         }
     }
 
+    /**
+     * The static list of timescales
+     */
     public static final ArrayList<TimescaleDescriptor> TIMESCALE_DESCRIPTORS = new ArrayList<TimescaleDescriptor>();
 
+    /**
+     * Initialization of the timescale list
+     */
     static {
-
         TIMESCALE_DESCRIPTORS.add(new TimescaleDescriptor(60 * 1, Calendar.MINUTE, 1, Calendar.SECOND));
         TIMESCALE_DESCRIPTORS.add(new TimescaleDescriptor(60 * 2, Calendar.MINUTE, 2, Calendar.SECOND));
         TIMESCALE_DESCRIPTORS.add(new TimescaleDescriptor(60 * 3, Calendar.MINUTE, 3, Calendar.SECOND));
@@ -270,13 +314,7 @@ public class TimelineRestService extends OnmsRestService {
     @Produces("image/png")
     @Transactional
     @Path("header/{start}/{end}/{width}")
-    public Response header(
-            @PathParam("start")
-            final long start,
-            @PathParam("end")
-            final long end,
-            @PathParam("width")
-            final int width) throws IOException {
+    public Response header(@PathParam("start") final long start, @PathParam("end") final long end, @PathParam("width") final int width) throws IOException {
         int delta = (int) end - (int) start;
 
         BufferedImage bufferedImage = new BufferedImage(width, 20, BufferedImage.TYPE_INT_ARGB);
@@ -290,7 +328,7 @@ public class TimelineRestService extends OnmsRestService {
 
         for (TimescaleDescriptor desc : TIMESCALE_DESCRIPTORS) {
             if (desc.match(delta, numLabels)) {
-                desc.draw(graphics2D, delta, start, width);
+                desc.drawHeader(graphics2D, delta, start, width);
                 break;
             }
         }
@@ -306,20 +344,7 @@ public class TimelineRestService extends OnmsRestService {
     @Produces("text/javascript")
     @Transactional
     @Path("html/{nodeId}/{ipAddress}/{serviceName}/{start}/{end}/{width}")
-    public Response html(
-            @PathParam("nodeId")
-            final int nodeId,
-            @PathParam("ipAddress")
-            final String ipAddress,
-            @PathParam("serviceName")
-            final String serviceName,
-            @PathParam("start")
-            final long start,
-            @PathParam("end")
-            final long end,
-            @PathParam("width")
-            final int width) throws IOException {
-
+    public Response html(@PathParam("nodeId") final int nodeId, @PathParam("ipAddress") final String ipAddress, @PathParam("serviceName") final String serviceName, @PathParam("start") final long start, @PathParam("end") final long end, @PathParam("width") final int width) throws IOException {
         int delta = (int) end - (int) start;
 
         OnmsOutageCollection onmsOutageCollection;
@@ -404,19 +429,7 @@ public class TimelineRestService extends OnmsRestService {
     @Produces("image/png")
     @Transactional
     @Path("image/{nodeId}/{ipAddress}/{serviceName}/{start}/{end}/{width}")
-    public Response image(
-            @PathParam("nodeId")
-            final int nodeId,
-            @PathParam("ipAddress")
-            final String ipAddress,
-            @PathParam("serviceName")
-            final String serviceName,
-            @PathParam("start")
-            final long start,
-            @PathParam("end")
-            final long end,
-            @PathParam("width")
-            final int width) throws IOException {
+    public Response image(@PathParam("nodeId") final int nodeId, @PathParam("ipAddress") final String ipAddress, @PathParam("serviceName") final String serviceName, @PathParam("start") final long start, @PathParam("end") final long end, @PathParam("width") final int width) throws IOException {
         int delta = (int) end - (int) start;
 
         OnmsOutageCollection onmsOutageCollection;

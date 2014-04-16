@@ -93,7 +93,7 @@
 %>
 
 <div id="availability-box">
-    <h3 class="o-box">Timeline</h3>
+    <h3 class="o-box">Outage Timeline</h3>
     <table class="o-box">
         <%
             if (overallRtcValue < 0) {
