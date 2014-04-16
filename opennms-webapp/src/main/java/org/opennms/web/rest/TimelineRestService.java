@@ -53,6 +53,7 @@ import javax.ws.rs.core.UriInfo;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -205,12 +206,15 @@ public class TimelineRestService extends OnmsRestService {
          * @param width      the width of the graphic
          * @param onmsOutage the outage to be drawn
          */
-        public void drawEvent(Graphics2D graphics2D, long delta, long start, int width, OnmsOutage onmsOutage) {
+        public void drawEvent(Graphics2D graphics2D, long delta, long start, int width, OnmsOutage onmsOutage) throws IOException {
             long p1 = onmsOutage.getServiceLostEvent().getEventCreateTime().getTime() / 1000;
             long p2 = start + delta;
 
             if (onmsOutage.getServiceRegainedEvent() != null) {
                 p2 = onmsOutage.getServiceRegainedEvent().getEventCreateTime().getTime() / 1000;
+            } else {
+                Image image = ImageIO.read(new File("jetty-webapps/opennms/images/timeline-important.png"));
+                graphics2D.drawImage(image, width - 18, 2, null);
             }
 
             graphics2D.setColor(ONMS_RED);
