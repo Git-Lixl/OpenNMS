@@ -34,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -101,6 +102,8 @@ public class BSFClient implements Client<BSFRequest, BSFResponse> {
                 // bsfManager.declareBean("node_label", svc.getNodeLabel(), String.class);
                 bsfManager.declareBean("svc_name", m_serviceName, String.class);
                 bsfManager.declareBean("results", m_results, HashMap.class);
+                bsfManager.declareBean("port", port, Integer.class);
+                bsfManager.declareBean("timeout", timeout, Integer.class);
 
                 for (final Entry<String, Object> entry : map.entrySet()) {
                     bsfManager.declareBean(entry.getKey(), entry.getValue(), String.class);
@@ -204,7 +207,7 @@ public class BSFClient implements Client<BSFRequest, BSFResponse> {
     }
 
     public void setFileExtensions(String[] fileExtensions) {
-        this.m_fileExtensions = fileExtensions;
+        this.m_fileExtensions = Arrays.copyOf(fileExtensions, fileExtensions.length);
     }
 
     public String getRunType() {

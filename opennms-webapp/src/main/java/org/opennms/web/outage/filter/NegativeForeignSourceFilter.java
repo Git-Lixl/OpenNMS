@@ -30,10 +30,9 @@ package org.opennms.web.outage.filter;
 
 import javax.servlet.ServletContext;
 
-import org.hibernate.Hibernate;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
-import org.opennms.web.element.NetworkElementFactory;
+import org.hibernate.type.StringType;
 import org.opennms.web.filter.EqualsFilter;
 import org.opennms.web.filter.SQLType;
 
@@ -47,7 +46,6 @@ import org.opennms.web.filter.SQLType;
 public class NegativeForeignSourceFilter extends EqualsFilter<String> {
     /** Constant <code>TYPE="foreignsourcenot"</code> */
     public static final String TYPE = "foreignsourcenot";
-    private ServletContext m_servletContext;
 
     /**
      * Constructor for NegativeForeignSourceFilter.
@@ -56,7 +54,6 @@ public class NegativeForeignSourceFilter extends EqualsFilter<String> {
      */
     public NegativeForeignSourceFilter(String foreignSource, ServletContext servletContext) {
         super(TYPE, SQLType.STRING, "OUTAGES.NODEID", "NODE.foreignSource", foreignSource);
-        m_servletContext = servletContext;
     }
 
     /** {@inheritDoc} */
@@ -68,7 +65,7 @@ public class NegativeForeignSourceFilter extends EqualsFilter<String> {
     /** {@inheritDoc} */
     @Override
     public Criterion getCriterion() {
-        return Restrictions.sqlRestriction(" {alias}.nodeid not in (SELECT DISTINCT NODE.nodeID FROM NODE WHERE NODE.foreignSource=?)", getValue(), Hibernate.STRING);
+        return Restrictions.sqlRestriction(" {alias}.nodeid not in (SELECT DISTINCT NODE.nodeID FROM NODE WHERE NODE.foreignSource=?)", getValue(), StringType.INSTANCE);
     }
 
     /**
@@ -82,6 +79,8 @@ public class NegativeForeignSourceFilter extends EqualsFilter<String> {
 
     /** {@inheritDoc} */
     public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (!(obj instanceof NegativeForeignSourceFilter)) return false;
         return (this.toString().equals(obj.toString()));
     }
 }

@@ -163,7 +163,7 @@ public class Reportd implements SpringServiceDaemon {
      */
     @EventHandler(uei = EventConstants.REPORTD_RUN_REPORT)
     public void handleRunReportEvent(Event e){
-       String reportName = new String();
+       String reportName = "";
        
        for(Parm parm : e.getParmCollection()){
        
@@ -206,7 +206,11 @@ public class Reportd implements SpringServiceDaemon {
 
                 m_reportScheduler.rebuildReportSchedule();
 
-                LOG.debug("handleRelodConfigEvent: reports rescheduled.");
+                LOG.debug("handleReloadConfigEvent: reports rescheduled.");
+                
+                m_reportDeliveryService.reloadConfiguration();
+                
+                LOG.debug("handleReloadConfigEvent: Configuration reloaded for report delivery service {}", m_reportDeliveryService.getClass().getName());
 
                 ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_SUCCESSFUL_UEI, "Reportd");
                 ebldr.addParam(EventConstants.PARM_DAEMON_NAME, "Reportd");

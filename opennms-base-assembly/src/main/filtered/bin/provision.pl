@@ -37,6 +37,7 @@ use vars qw(
 	$password
 
 	$url_root
+	$user_config_file
 );
 
 $BUILD = (qw$LastChangedRevision 1 $)[-1];
@@ -46,6 +47,11 @@ $XML = XML::Twig->new();
 $url_root = 'http://localhost:8980/opennms/rest';
 $username = 'admin';
 $password = 'admin';
+
+$user_config_file = ($^O eq "MSWin32") ? $ENV{LOCALAPPDATA} . "\\OpenNMS\\provision.plrc" : $ENV{HOME} . "/.opennms/provision.plrc";
+
+# load user-overridden defaults if present
+load_user_config();
 
 =head1 OPTIONS
 
@@ -66,6 +72,9 @@ user must have administrative privileges in the OpenNMS web UI.
 
 Defaults to 'admin'.
 
+May be overridden by setting $username in $HOME/.opennms/provision.plrc
+(UNIX) or %LOCALAPPDATA%\OpenNMS\provision.plrc (Windows).
+
 =item B<--password>
 
 The password associated with the administrative username specified
@@ -73,10 +82,16 @@ in B<-username>.
 
 Defaults to 'admin'.
 
+May be overridden by setting $password in $HOME/.opennms/provision.plrc
+(UNIX) or %LOCALAPPDATA%\OpenNMS\provision.plrc (Windows).
+
 =item B<--url>
 
 The URL of the OpenNMS REST interface.  Defaults to
 'http://localhost:8980/opennms/rest'.
+
+May be overridden by setting $url_root in $HOME/.opennms/provision.plrc
+(UNIX) or %LOCALAPPDATA%\OpenNMS\provision.plrc (Windows).
 
 =back
 
@@ -224,6 +239,8 @@ Set a property on a node, given the foreign source and foreign id.  Valid proper
 
 =item * node-label
 
+=item * parent-foreign-source
+
 =item * parent-foreign-id
 
 =item * parent-node-label
@@ -357,7 +374,7 @@ sub cmd_interface {
 
 Add a service to the interface identified by the given foreign source, node ID, and IP address.
 
-=item B<service remove E<lt>foreign-source<gt> E<lt>foreign-idE<gt> E<lt>ip-addressE<gt> E<lt>service-nameE<gt>>
+=item B<service remove E<lt>foreign-sourceE<gt> E<lt>foreign-idE<gt> E<lt>ip-addressE<gt> E<lt>service-nameE<gt>>
 
 Remove a service from the interface identified by the given foreign source, node ID, and IP address.
 
@@ -457,7 +474,7 @@ Add an asset to the node identified by the given foreign source and node foreign
 
 Remove an asset from the node identified by the given foreign source and node foreign ID.
 
-=item B<asset set E<lt>foreign-source<gt> E<lt>foreign-idE<gt> E<lt>keyE<gt> E<lt>valueE<gt>>
+=item B<asset set E<lt>foreign-sourceE<gt> E<lt>foreign-idE<gt> E<lt>keyE<gt> E<lt>valueE<gt>>
 
 Set an asset value given the node foreign source, foreign ID, and asset key.
 
@@ -721,8 +738,12 @@ sub dump_requisition {
 sub dump_node {
 	my $node = shift;
 
+	my @parent_info;
+	push (@parent_info, "foreign Label: " . $node->{'att'}->{'parent-node-label'}) if $node->{'att'}->{'parent-node-label'};
+	push (@parent_info, "foreign ID: " . $node->{'att'}->{'parent-foreign-id'}) if $node->{'att'}->{'parent-foreign-id'};
+	push (@parent_info, "foreign Source: " . $node->{'att'}->{'parent-foreign-source'}) if $node->{'att'}->{'parent-foreign-source'};
 	print ("    * ", $node->{'att'}->{'node-label'}, " (foreign ID: ", $node->{'att'}->{'foreign-id'}, ")\n");
-	print ("      * parent: ", $node->{'att'}->{'parent-node-label'}, " (foreign ID: ", $node->{'att'}->{'parent-foreign-id'}, ")\n") if ($node->{'att'}->{'parent-node-label'} or $node->{'att'}->{'parent-foreign-id'});
+	print ("      * parent: (", join(", ", @parent_info), ")\n") if ($node->{'att'}->{'parent-node-label'} or $node->{'att'}->{'parent-foreign-id'});
 	print ("      * city: ", $node->{'att'}->{'city'}, "\n") if ($node->{'att'}->{'city'});
 	print ("      * building: ", $node->{'att'}->{'building'}, "\n") if ($node->{'att'}->{'building'});
 	print ("      * assets:\n") if ($node->descendants('asset'));
@@ -767,6 +788,15 @@ sub dump_interface {
 sub print_version {
 	printf("%s build %d\n", (split('/', $0))[-1], $BUILD);
 	exit 0;
+}
+
+sub load_user_config {
+	my $have_config = open USERCONFIG, "<${user_config_file}";
+	return if (! defined $have_config);
+	while (my $configline = <USERCONFIG>) {
+		eval $configline;
+	}
+	close USERCONFIG;
 }
 
 =back

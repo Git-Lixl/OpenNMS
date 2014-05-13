@@ -32,7 +32,7 @@
 <%@page language="java"
 	contentType="text/html"
 	session="true"
-	import="org.opennms.web.api.Authentication,
+	import="
 		org.opennms.core.resource.Vault
 	"
 %>
@@ -72,6 +72,10 @@
   <tr>
     <td class="standardheader">RRD store by Group:</td>
     <td class="standard"><%=Vault.getProperty("org.opennms.rrd.storeByGroup")%></td>
+  </tr>
+  <tr>
+    <td class="standardheader">RRD store by Foreign Source:</td>
+    <td class="standard"><%=Vault.getProperty("org.opennms.rrd.storeByForeignSource")%></td>
   </tr>
   <tr>
     <td class="standardheader">Web-Application Logfiles:</td>

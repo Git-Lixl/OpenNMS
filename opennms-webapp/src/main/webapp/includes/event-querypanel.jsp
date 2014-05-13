@@ -32,17 +32,13 @@
 <%@page language="java"
 	contentType="text/html"
 	session="true"
-	import="java.util.*,
-		org.opennms.web.element.NetworkElementFactory,
-		org.opennms.web.event.*
-		"
 %>
 
 <script type="text/javascript">
 <!--
 function Blank_TextField_Validator()
 {
-  if(document.event_search.msgmatchany.value == "")
+  if(document.event_search.msgmatchany.value == "" && document.event_search.relativetime.value == 0)
      {
      alert("Please Enter in Event Search Text");
      document.event_search.msgmatchany.focus();

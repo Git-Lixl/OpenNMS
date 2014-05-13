@@ -73,7 +73,7 @@ public class SimpleVertexProvider implements VertexProvider {
 	}
 
 	@Override
-	public Vertex getVertex(VertexRef reference) {
+	public Vertex getVertex(VertexRef reference, Criteria... criteria) {
 		return getSimpleVertex(reference);
 	}
 
@@ -85,7 +85,7 @@ public class SimpleVertexProvider implements VertexProvider {
 	}
 
 	@Override
-	public List<Vertex> getVertices(Collection<? extends VertexRef> references) {
+	public List<Vertex> getVertices(Collection<? extends VertexRef> references, Criteria... criteria) {
 		List<Vertex> vertices = new ArrayList<Vertex>();
 		for(VertexRef ref : references) {
 			Vertex vertex = getSimpleVertex(ref);
@@ -154,7 +154,7 @@ public class SimpleVertexProvider implements VertexProvider {
 	}
 
 	@Override
-	public List<Vertex> getChildren(VertexRef group) {
+	public List<Vertex> getChildren(VertexRef group, Criteria... criteria) {
 		Set<VertexRef> children = m_children.get(group);
 		return children == null ? Collections.<Vertex>emptyList() : getVertices(children);
 	}
@@ -193,7 +193,7 @@ public class SimpleVertexProvider implements VertexProvider {
 
 	private void removeVertices(List<? extends VertexRef> all) {
 		for(VertexRef vertex : all) {
-			LoggerFactory.getLogger(this.getClass()).debug("Removing vertex: {}", vertex);
+			LoggerFactory.getLogger(this.getClass()).trace("Removing vertex: {}", vertex);
 			// Remove the vertex from the main map
 			m_vertexMap.remove(vertex.getId());
 			// Remove the vertex from the parent and child maps
@@ -208,7 +208,7 @@ public class SimpleVertexProvider implements VertexProvider {
 				LoggerFactory.getLogger(this.getClass()).warn("Discarding invalid vertex: {}", vertex);
 				continue;
 			}
-			LoggerFactory.getLogger(this.getClass()).debug("Adding vertex: {}", vertex);
+			LoggerFactory.getLogger(this.getClass()).trace("Adding vertex: {}", vertex);
 			m_vertexMap.put(vertex.getId(), vertex);
 		}
 	}
@@ -256,17 +256,22 @@ public class SimpleVertexProvider implements VertexProvider {
 		fireVerticesRemoved(all);
 	}
 
-	/**
+    @Override
+    public int getVertexTotalCount() {
+        return m_vertexMap.size();
+    }
+
+    /**
 	 * @deprecated You should search by the namespace and ID tuple instead
 	 */
 	@Override
 	public boolean containsVertexId(String id) {
-		return containsVertexId(new AbstractVertexRef(getVertexNamespace(), id));
+		return containsVertexId(new DefaultVertexRef(getVertexNamespace(), id));
 	}
 
 	@Override
-	public boolean containsVertexId(VertexRef id) {
-		return getVertex(id) != null;
+	public boolean containsVertexId(VertexRef id, Criteria... criteria) {
+		return getVertex(id, criteria) != null;
 	}
 
 }

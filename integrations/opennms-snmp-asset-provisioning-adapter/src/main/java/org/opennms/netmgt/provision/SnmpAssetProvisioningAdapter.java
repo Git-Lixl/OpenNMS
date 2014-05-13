@@ -43,8 +43,8 @@ import org.slf4j.LoggerFactory;
 import org.opennms.core.utils.PropertiesUtils;
 
 import org.opennms.netmgt.EventConstants;
-import org.opennms.netmgt.config.SnmpAgentConfigFactory;
 import org.opennms.netmgt.config.SnmpAssetAdapterConfig;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.config.snmpAsset.adapter.AssetField;
 import org.opennms.netmgt.config.snmpAsset.adapter.MibObj;
 import org.opennms.netmgt.config.snmpAsset.adapter.MibObjs;
@@ -52,6 +52,7 @@ import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsAssetRecord;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.EventForwarder;
 import org.opennms.netmgt.model.events.annotations.EventHandler;
 import org.opennms.netmgt.model.events.annotations.EventListener;
@@ -186,7 +187,7 @@ public class SnmpAssetProvisioningAdapter extends SimplerQueuedProvisioningAdapt
 			boolean foundAValue = false;
 			for (int i = 0; i < values.length; i++) {
 				// If the value is a NO_SUCH_OBJECT or NO_SUCH_INSTANCE error, then skip it
-				if (values[i].isError()) {
+				if (values[i] == null || values[i].isError()) {
 					// No value for this OID
 					continue;
 				}
@@ -399,11 +400,20 @@ public class SnmpAssetProvisioningAdapter extends SimplerQueuedProvisioningAdapt
 	@EventHandler(uei = EventConstants.RELOAD_DAEMON_CONFIG_UEI)
 	public void handleReloadConfigEvent(final Event event) {
 		if (isReloadConfigEventTarget(event)) {
+			EventBuilder ebldr = null;
 			LOG.debug("Reloading the SNMP asset adapter configuration");
 			try {
 				m_config.update();
+		                ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_SUCCESSFUL_UEI, "Provisiond." + NAME);
+		                ebldr.addParam(EventConstants.PARM_DAEMON_NAME, "Provisiond." + NAME);
 			} catch (Throwable e) {
 				LOG.info("Unable to reload SNMP asset adapter configuration", e);
+				ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_FAILED_UEI, "Provisiond." + NAME);
+				ebldr.addParam(EventConstants.PARM_DAEMON_NAME, "Provisiond." + NAME);
+				ebldr.addParam(EventConstants.PARM_REASON, e.getLocalizedMessage().substring(1, 128));
+			}
+			if (ebldr != null) {
+				getEventForwarder().sendNow(ebldr.getEvent());
 			}
 		}
 	}

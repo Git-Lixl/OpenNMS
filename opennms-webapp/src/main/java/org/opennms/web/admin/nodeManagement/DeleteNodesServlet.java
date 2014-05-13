@@ -44,11 +44,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.opennms.core.db.DataSourceFactory;
-import org.opennms.core.resource.Vault;
 import org.opennms.core.utils.DBUtils;
 import org.opennms.core.utils.WebSecurityUtils;
 import org.opennms.netmgt.EventConstants;
-import org.opennms.netmgt.dao.support.DefaultResourceDao;
+import org.opennms.netmgt.model.ResourceTypeUtils;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.web.api.Util;
@@ -77,19 +76,13 @@ public class DeleteNodesServlet extends HttpServlet {
     /** {@inheritDoc} */
     @Override
     public void init() throws ServletException {
-        try {
-            DataSourceFactory.init();
-        } catch (Throwable e) {
-            throw new ServletException("Could not initialize database factory: " + e, e);
-        }
-
         WebApplicationContext webAppContext = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
         ResourceService resourceService = (ResourceService) webAppContext.getBean("resourceService", ResourceService.class);
 
-        m_snmpRrdDirectory = new File(resourceService.getRrdDirectory(), DefaultResourceDao.SNMP_DIRECTORY);
+        m_snmpRrdDirectory = new File(resourceService.getRrdDirectory(), ResourceTypeUtils.SNMP_DIRECTORY);
         LOG.debug("SNMP RRD directory: {}", m_snmpRrdDirectory);
 
-        m_rtRrdDirectory = new File(resourceService.getRrdDirectory(), DefaultResourceDao.RESPONSE_DIRECTORY);
+        m_rtRrdDirectory = new File(resourceService.getRrdDirectory(), ResourceTypeUtils.RESPONSE_DIRECTORY);
         LOG.debug("Response time RRD directory: {}", m_rtRrdDirectory);
     }
 
@@ -146,7 +139,7 @@ public class DeleteNodesServlet extends HttpServlet {
         final DBUtils d = new DBUtils(getClass());
 
         try {
-            Connection conn = Vault.getDbConnection();
+            Connection conn = DataSourceFactory.getInstance().getConnection();
             d.watch(conn);
 
             PreparedStatement stmt = conn.prepareStatement("SELECT DISTINCT ipaddr FROM ipinterface WHERE nodeid=?");

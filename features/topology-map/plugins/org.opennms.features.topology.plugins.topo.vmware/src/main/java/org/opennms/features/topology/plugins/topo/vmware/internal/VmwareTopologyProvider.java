@@ -31,13 +31,21 @@ package org.opennms.features.topology.plugins.topo.vmware.internal;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
+import org.opennms.features.topology.api.GraphContainer;
+import org.opennms.features.topology.api.OperationContext;
+import org.opennms.features.topology.api.support.VertexHopGraphProvider;
 import org.opennms.features.topology.api.topo.AbstractVertex;
 import org.opennms.features.topology.api.topo.Edge;
 import org.opennms.features.topology.api.topo.EdgeRef;
 import org.opennms.features.topology.api.topo.GraphProvider;
+import org.opennms.features.topology.api.topo.SearchProvider;
+import org.opennms.features.topology.api.topo.SearchQuery;
+import org.opennms.features.topology.api.topo.SearchResult;
 import org.opennms.features.topology.api.topo.Vertex;
 import org.opennms.features.topology.api.topo.VertexRef;
 import org.opennms.features.topology.plugins.topo.simple.SimpleGraphProvider;
@@ -48,7 +56,9 @@ import org.opennms.netmgt.model.OnmsNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VmwareTopologyProvider extends SimpleGraphProvider implements GraphProvider {
+import com.google.common.collect.Lists;
+
+public class VmwareTopologyProvider extends SimpleGraphProvider implements GraphProvider, SearchProvider {
     public static final String TOPOLOGY_NAMESPACE_VMWARE = "vmware";
     private static final Logger LOG = LoggerFactory.getLogger(VmwareTopologyProvider.class);
 
@@ -208,7 +218,7 @@ public class VmwareTopologyProvider extends SimpleGraphProvider implements Graph
                 try {
                     entityName = new String(URLDecoder.decode(splitBySlash[1], "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                    LOG.error(e.getMessage(), e);
                 }
             }
 
@@ -294,7 +304,7 @@ public class VmwareTopologyProvider extends SimpleGraphProvider implements Graph
                 try {
                     entityName = new String(URLDecoder.decode(splitBySlash[1], "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                    LOG.error(e.getMessage(), e);
                 }
             }
 
@@ -379,5 +389,71 @@ public class VmwareTopologyProvider extends SimpleGraphProvider implements Graph
             }
         }
         debugAll();
+    }
+
+    @Override
+    public void onFocusSearchResult(SearchResult searchResult, OperationContext operationContext) {
+        GraphContainer m_graphContainer = operationContext.getGraphContainer();
+        VertexRef vertexRef = getVertex(searchResult.getNamespace(), searchResult.getId());
+        m_graphContainer.getSelectionManager().setSelectedVertexRefs(Lists.newArrayList(vertexRef));
+    }
+
+    @Override
+    public void onDefocusSearchResult(SearchResult searchResult, OperationContext operationContext) {
+        GraphContainer graphContainer = operationContext.getGraphContainer();
+        VertexRef vertexRef = getVertex(searchResult.getNamespace(), searchResult.getId());
+        graphContainer.getSelectionManager().deselectVertexRefs(Lists.newArrayList(vertexRef));
+    }
+
+    @Override
+    public void onCenterSearchResult(final SearchResult searchResult, final GraphContainer graphContainer) {
+        // TODO: implement?
+    }
+
+    @Override
+    public void onToggleCollapse(final SearchResult searchResult, final GraphContainer graphContainer) {
+        // TODO: implement?
+    }
+
+    @Override
+    public String getSearchProviderNamespace() {
+        return "vmware";
+    }
+
+    @Override
+    public boolean supportsPrefix(String searchPrefix) {
+        return searchPrefix.contains("nodes=");
+    }
+
+    //FIXME: This should return the list of vertexrefs for the "zoom to focus" operation
+    @Override
+    public Set<VertexRef> getVertexRefsBy(SearchResult searchResult, GraphContainer container) {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public void addVertexHopCriteria(SearchResult searchResult, GraphContainer container) {
+        VertexHopGraphProvider.FocusNodeHopCriteria criteria = VertexHopGraphProvider.getFocusNodeHopCriteriaForContainer(container);
+        criteria.add(getVertex(searchResult.getNamespace(), searchResult.getId()));
+    }
+
+    @Override
+    public void removeVertexHopCriteria(SearchResult searchResult, GraphContainer container) {
+        VertexHopGraphProvider.FocusNodeHopCriteria criteria = VertexHopGraphProvider.getFocusNodeHopCriteriaForContainer(container);
+        criteria.remove(getVertex(searchResult.getNamespace(), searchResult.getLabel()));
+    }
+
+    @Override
+    public List<SearchResult> query(SearchQuery searchQuery, GraphContainer graphContainer) {
+        List<Vertex> vertices = m_vertexProvider.getVertices();
+        List<SearchResult> searchResults = Lists.newArrayList();
+
+        for(Vertex vertex : vertices){
+            if(searchQuery.matches(vertex.getLabel())) {
+                searchResults.add(new SearchResult(vertex));
+            }
+        }
+
+        return searchResults;
     }
 }

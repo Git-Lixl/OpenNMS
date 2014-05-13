@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2006-2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2006-2014 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -35,7 +35,7 @@ import java.util.concurrent.Callable;
 
 import org.opennms.core.concurrent.WaterfallCallable;
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.netmgt.config.EventConfDao;
+import org.opennms.netmgt.config.api.EventConfDao;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.EventIpcManager;
 import org.opennms.netmgt.snmp.TrapNotification;
@@ -43,6 +43,7 @@ import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.eventconf.Logmsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.opennms.netmgt.xml.eventconf.Snmp;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
@@ -84,6 +85,16 @@ class TrapQueueProcessor implements WaterfallCallable, InitializingBean {
     private EventConfDao m_eventConfDao;
 
     private TrapNotification m_trapNotification;
+    
+    private static long s_v1TrapsReceived = 0;
+    
+    private static long s_v2cTrapsReceived = 0;
+    
+    private static long s_v3TrapsReceived = 0;
+    
+    private static long s_trapsDiscarded = 0;
+    
+    private static long s_trapsErrored = 0;
 
     /**
      * Process a V2 trap and convert it to an event for transmission.
@@ -160,6 +171,7 @@ class TrapQueueProcessor implements WaterfallCallable, InitializingBean {
             LOG.info(e.getMessage());
         } catch (Throwable e) {
             LOG.error("Unexpected error processing trap: {}", e, e);
+            s_trapsErrored++;
         }
         return null;
     }
@@ -180,11 +192,22 @@ class TrapQueueProcessor implements WaterfallCallable, InitializingBean {
         }
 
         if (econf != null) {
-        	final Logmsg logmsg = econf.getLogmsg();
+            final Snmp snmp = econf.getSnmp();
+            if (snmp != null) {
+                if ("v1".equals(snmp.getVersion())) {
+                    s_v1TrapsReceived++;
+                } else if ("v2c".equals(snmp.getVersion())) {
+                    s_v2cTrapsReceived++;
+                } else if ("v3".equals(snmp.getVersion())) {
+                    s_v3TrapsReceived++;
+                }
+            }
+            final Logmsg logmsg = econf.getLogmsg();
             if (logmsg != null) {
                 final String dest = logmsg.getDest();
                 if ("discardtraps".equals(dest)) {
                     LOG.debug("Trap discarded due to matching event having logmsg dest == discardtraps");
+                    s_trapsDiscarded++;
                     return;
                 }
             }
@@ -229,7 +252,7 @@ class TrapQueueProcessor implements WaterfallCallable, InitializingBean {
     /**
      * <p>getEventConfDao</p>
      *
-     * @return a {@link org.opennms.netmgt.config.EventConfDao} object.
+     * @return a {@link org.opennms.netmgt.config.api.EventConfDao} object.
      */
     public EventConfDao getEventConfDao() {
         return m_eventConfDao;
@@ -238,7 +261,7 @@ class TrapQueueProcessor implements WaterfallCallable, InitializingBean {
     /**
      * <p>setEventConfDao</p>
      *
-     * @param eventConfDao a {@link org.opennms.netmgt.config.EventConfDao} object.
+     * @param eventConfDao a {@link org.opennms.netmgt.config.api.EventConfDao} object.
      */
     public void setEventConfDao(EventConfDao eventConfDao) {
         m_eventConfDao = eventConfDao;
@@ -294,5 +317,25 @@ class TrapQueueProcessor implements WaterfallCallable, InitializingBean {
         Assert.state(m_eventMgr != null, "property eventMgr must be set");
         Assert.state(m_newSuspect != null, "property newSuspect must be set");
         Assert.state(m_trapNotification != null, "property trapNotification must be set");
+    }
+    
+    public static long getV1TrapsReceived() {
+        return s_v1TrapsReceived;
+    }
+    
+    public static long getV2cTrapsReceived() {
+        return s_v2cTrapsReceived;
+    }
+    
+    public static long getV3TrapsReceived() {
+        return s_v3TrapsReceived;
+    }
+    
+    public static long getTrapsDiscarded() {
+        return s_trapsDiscarded;
+    }
+    
+    public static long getTrapsErrored() {
+        return s_trapsErrored;
     }
 }

@@ -35,8 +35,6 @@ import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.ui.AbstractComponentConnector;
 import com.vaadin.shared.ui.Connect;
 
-import java.util.List;
-
 
 @Connect(org.opennms.features.topology.app.internal.ui.SearchBox.class)
 public class SearchBoxConnector extends AbstractComponentConnector {
@@ -60,20 +58,29 @@ public class SearchBoxConnector extends AbstractComponentConnector {
     public void onStateChanged(StateChangeEvent stateChangeEvent) {
         super.onStateChanged(stateChangeEvent);
 
-        if(stateChangeEvent.hasPropertyChanged("suggestions")){
+        if(stateChangeEvent.hasPropertyChanged("suggestions") || stateChangeEvent.hasPropertyChanged("triggerCount")){
             SuggestOracle.Response response = new SuggestOracle.Response(getState().getSuggestions());
             if(m_callback != null){
                 m_callback.onSuggestionsReady(m_request, response);
             }
+            getState().getTriggerCount();
+        }
 
-        } else if (stateChangeEvent.hasPropertyChanged("selected")) {
-            getWidget().setSelected(getState().getSelected());
+        if (stateChangeEvent.hasPropertyChanged("selected")) {
+            //deduplicate the list of selected and have it change the token field background
+            //or something
 
-        } else if (stateChangeEvent.hasPropertyChanged("focused")) {
+        }
+
+        if (stateChangeEvent.hasPropertyChanged("focused")) {
             getWidget().setFocused(getState().getFocused());
         }
 
     }
+
+    private static native void log(Object message) /*-{
+        $wnd.console.debug(message);
+    }-*/;
 
     @Override
     public VSearchBox createWidget(){
@@ -88,8 +95,8 @@ public class SearchBoxConnector extends AbstractComponentConnector {
         m_request = request;
     }
 
-    public void selectSuggestion(List<SearchSuggestion> suggestions) {
-        m_rpc.selectSuggestion(suggestions);
+    public void selectSuggestion(SearchSuggestion suggestion) {
+        m_rpc.selectSuggestion(suggestion);
     }
 
     public void removeSelected(SearchSuggestion searchSuggestion) {
@@ -98,5 +105,17 @@ public class SearchBoxConnector extends AbstractComponentConnector {
 
     public void removeFocused(SearchSuggestion searchSuggestion) {
         m_rpc.removeFocused(searchSuggestion);
+    }
+
+    public void addToFocus(SearchSuggestion searchSugestion){
+        m_rpc.addToFocus(searchSugestion);
+    }
+
+    public void centerOnSuggestion(SearchSuggestion searchSuggestion) {
+        m_rpc.centerSearchSuggestion(searchSuggestion);
+    }
+
+    public void toggleSuggestionCollapse(SearchSuggestion searchSuggestion) {
+        m_rpc.toggleSuggestionCollapse(searchSuggestion);
     }
 }

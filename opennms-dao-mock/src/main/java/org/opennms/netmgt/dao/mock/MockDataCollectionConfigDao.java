@@ -1,6 +1,7 @@
 package org.opennms.netmgt.dao.mock;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -8,7 +9,7 @@ import org.opennms.netmgt.config.DataCollectionConfigDao;
 import org.opennms.netmgt.config.MibObject;
 import org.opennms.netmgt.config.datacollection.DatacollectionConfig;
 import org.opennms.netmgt.config.datacollection.ResourceType;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.rrd.RrdRepository;
 
 public class MockDataCollectionConfigDao implements DataCollectionConfigDao {
 
@@ -69,6 +70,11 @@ public class MockDataCollectionConfigDao implements DataCollectionConfigDao {
 
     @Override
     public void reload() {
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    @Override
+    public Date getLastUpdate() {
         throw new UnsupportedOperationException("Not yet implemented!");
     }
 

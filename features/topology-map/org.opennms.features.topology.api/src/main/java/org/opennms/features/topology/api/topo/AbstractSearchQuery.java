@@ -36,10 +36,16 @@ public abstract class AbstractSearchQuery implements SearchQuery{
         m_queryString = queryString;
     }
 
+    @Override
     public String getQueryString(){
         return m_queryString;
     }
 
     @Override
-    public abstract boolean matches(VertexRef vertexRef);
+    public String toString() {
+    	return m_queryString;
+    }
+
+    @Override
+    public abstract boolean matches(String label);
 }

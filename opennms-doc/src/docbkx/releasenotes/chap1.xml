@@ -4,7 +4,117 @@
 
 	<subtitle>About This Release</subtitle>
 
+	<!-- Start 1.13 -->
+
+	<section id="introduction-1.13.1">
+		<title>Release 1.13.1</title>
+
+		<para>
+			Release 1.13.1 is the 2nd unstable release; it is a preview of
+			what will eventually become the OpenNMS 1.14.x stable series.
+			It contains a large number of changes over 1.13.0, including
+			Java8 support, many core cleanups, support for running Camel
+         and ActiveMQ in the OpenNMS Karaf container, MANY ReST-related
+         cleanups for XML and JSON output, plus tons of other fixes
+         and features.
+		</para>
+		<para>
+			The codename for 1.13.1 is <emphasis>Seigmen</emphasis>
+		</para>
+	</section>
+
+	<section id="introduction-1.13.0">
+		<title>Release 1.13.0</title>
+
+		<para>
+			Release 1.13.0 is the first unstable release; it is a preview of
+			what will eventually become the OpenNMS 1.14.x stable series.
+			It contains a number of enhancements, most notably GUI work in the
+			topology UI, as well as some code cleanup and other updates that
+			are too invasive to include in 1.12.
+		</para>
+		<para>
+			The codename for 1.13.0 is <emphasis>Hedningarna</emphasis>
+		</para>
+	</section>
+
 	<!-- Start 1.12 -->
+
+	<section id="introduction-1.12.6">
+		<title>Release 1.12.6</title>
+
+		<para>
+			Release 1.12.6 is the seventh in the stable 1.12 series of OpenNMS.
+			It contains a number of important fixes including a potential security leak
+			in the ReST interface.
+			see <ulink url="http://www.opennms.org/wiki/What%27s_New_in_OpenNMS_1.12">What's
+			New in OpenNMS 1.12</ulink>.
+		</para>
+		<para>
+			The codename for 1.12.6 is <emphasis>Sascha Konietzko</emphasis>
+		</para>
+	</section>
+
+	<section id="introduction-1.12.5">
+		<title>Release 1.12.5</title>
+
+		<para>
+			Release 1.12.5 is the sixth in the stable 1.12 series of OpenNMS.
+			It contains a fix for upgrades when using storeByForeignSource, plus
+			a few other small changes.
+			see <ulink url="http://www.opennms.org/wiki/What%27s_New_in_OpenNMS_1.12">What's
+			New in OpenNMS 1.12</ulink>.
+		</para>
+		<para>
+			The codename for 1.12.5 is <emphasis>John Lee Hooker</emphasis>
+		</para>
+	</section>
+
+	<section id="introduction-1.12.4">
+		<title>Release 1.12.4</title>
+
+		<para>
+			Release 1.12.4 is the fifth in the stable 1.12 series of OpenNMS.
+			It contains more upgrade tool bugfixes, as well as a number of small
+			bug fixes and enhancements.
+			see <ulink url="http://www.opennms.org/wiki/What%27s_New_in_OpenNMS_1.12">What's
+			New in OpenNMS 1.12</ulink>.
+		</para>
+		<para>
+			The codename for 1.12.4 is <emphasis>Iggy Pop</emphasis>
+		</para>
+	</section>
+
+	<section id="introduction-1.12.3">
+		<title>Release 1.12.3</title>
+
+		<para>
+			Release 1.12.3 is the fourth in the stable 1.12 series of OpenNMS.
+			It contains a critical bugfix to the upgrade tools added in 1.12.2,
+			as well as a few small config updates.
+			see <ulink url="http://www.opennms.org/wiki/What%27s_New_in_OpenNMS_1.12">What's
+			New in OpenNMS 1.12</ulink>.
+		</para>
+		<para>
+			The codename for 1.12.3 is <emphasis>Charles Mingus</emphasis>
+		</para>
+	</section>
+
+	<section id="introduction-1.12.2">
+		<title>Release 1.12.2</title>
+
+		<para>
+			Release 1.12.2 is the third in the stable 1.12 series of OpenNMS.
+			It contains quite a few bug fixes and enhancements since the
+			1.12.1 release.  For a high-level overview of what has changed
+			since OpenNMS 1.10,
+			see <ulink url="http://www.opennms.org/wiki/What%27s_New_in_OpenNMS_1.12">What's
+			New in OpenNMS 1.12</ulink>.
+		</para>
+		<para>
+			The codename for 1.12.2 is <emphasis>Liberace</emphasis>
+		</para>
+	</section>
 
 	<section id="introduction-1.12.1">
 		<title>Release 1.12.1</title>

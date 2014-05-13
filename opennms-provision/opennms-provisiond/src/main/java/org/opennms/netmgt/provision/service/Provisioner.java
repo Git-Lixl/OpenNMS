@@ -42,12 +42,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.tasks.Task;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.url.GenericURLFactory;
 import org.opennms.netmgt.EventConstants;
-import org.opennms.netmgt.config.SnmpAgentConfigFactory;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.daemon.SpringServiceDaemon;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;

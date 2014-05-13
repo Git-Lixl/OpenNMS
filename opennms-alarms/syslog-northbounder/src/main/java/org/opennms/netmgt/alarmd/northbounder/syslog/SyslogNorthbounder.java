@@ -136,13 +136,13 @@ public class SyslogNorthbounder extends AbstractNorthbounder implements Initiali
         
         LOG.info("Forwarding {} alarms to destination:{}", alarms.size(), m_destination.getName());
 
-    	Map<Integer, Map<String, String>> alarmMappings = new HashMap<Integer, Map<String, String>>();    	
+    	Map<Integer, Map<String, Object>> alarmMappings = new HashMap<Integer, Map<String, Object>>();    	
         
     	SyslogIF instance;
     	try {
     		instance = Syslog.getInstance(m_destination.getName());
     	} catch (SyslogRuntimeException e) {
-    		LOG.error("Could not find Syslog instance for destination: {}.", m_destination.getName(), e);
+    		LOG.error("Could not find Syslog instance for destination: '{}': {}", m_destination.getName(), e);
     		throw e;
     	}
 
@@ -159,7 +159,7 @@ public class SyslogNorthbounder extends AbstractNorthbounder implements Initiali
 
     		LOG.debug("Creating formatted log message for alarm: {}.", alarm.getId());
 
-    		Map<String, String> mapping = null;
+    		Map<String, Object> mapping = null;
 
     		String syslogMessage;
     		int level;
@@ -182,14 +182,14 @@ public class SyslogNorthbounder extends AbstractNorthbounder implements Initiali
     			instance.log(level, syslogMessage);
     			
     		} catch (Exception e1) {
-    			LOG.error("Caught exception sending to destination: {}", m_destination.getName(), e1);
+    			LOG.error("Caught exception sending to destination: '{}': {}", m_destination.getName(), e1);
     		}
     	}
     }
     
-	private Map<String, String> createMapping(Map<Integer, Map<String, String>> alarmMappings, NorthboundAlarm alarm) {
-		Map<String, String> mapping;
-		mapping = new HashMap<String, String>();
+	private Map<String, Object> createMapping(Map<Integer, Map<String, Object>> alarmMappings, NorthboundAlarm alarm) {
+		Map<String, Object> mapping;
+		mapping = new HashMap<String, Object>();
 		mapping.put("ackUser", alarm.getAckUser());
 		mapping.put("appDn", alarm.getAppDn());
 		mapping.put("logMsg", alarm.getLogMsg());
@@ -247,9 +247,10 @@ public class SyslogNorthbounder extends AbstractNorthbounder implements Initiali
 		return mapping;
 	}
 
-	protected void buildParmMappings(final NorthboundAlarm alarm, final Map<String, String> mapping) {
+	protected void buildParmMappings(final NorthboundAlarm alarm, final Map<String, Object> mapping) {
 		List<EventParm<?>> parmCollection = new LinkedList<EventParm<?>>();
 		String parms = alarm.getEventParms();
+		if (parms == null) return;
 
 		char separator = ';';
 		String[] parmArray = StringUtils.split(parms, separator);
@@ -325,7 +326,7 @@ public class SyslogNorthbounder extends AbstractNorthbounder implements Initiali
     	try {
     		Syslog.createInstance(instName, instanceConfiguration);
     	} catch (SyslogRuntimeException e) {
-    		LOG.error("Could not create northbound instance, {}", instName, e);
+    		LOG.error("Could not create northbound instance, '{}': {}", instName, e);
     		throw e;
     	}
 

@@ -50,9 +50,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Type;
-import org.opennms.core.xml.bind.InetAddressXmlAdapter;
+import org.opennms.core.network.InetAddressXmlAdapter;
 import org.springframework.core.style.ToStringCreator;
 
 
@@ -65,6 +66,7 @@ import org.springframework.core.style.ToStringCreator;
 @Entity
 @Table(name="outages")
 @Filter(name=FilterManager.AUTH_FILTER_NAME, condition="exists (select distinct x.nodeid from node x join category_node cn on x.nodeid = cn.nodeid join category_group cg on cn.categoryId = cg.categoryId where x.nodeid = nodeid and cg.groupId in (:userGroups))")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OnmsOutage implements Serializable {
 
     /**
@@ -122,6 +124,13 @@ public class OnmsOutage implements Serializable {
      * default constructor
      */
     public OnmsOutage() {
+    }
+
+    /**
+     */
+    public OnmsOutage(Date ifLostService, OnmsMonitoredService monitoredService) {
+        m_ifLostService = ifLostService;
+        m_monitoredService = monitoredService;
     }
 
     /**

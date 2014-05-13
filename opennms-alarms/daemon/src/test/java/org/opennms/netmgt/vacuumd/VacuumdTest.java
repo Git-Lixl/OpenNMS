@@ -51,12 +51,12 @@ import org.junit.runner.RunWith;
 import org.opennms.core.db.DataSourceFactory;
 import org.opennms.core.fiber.Fiber;
 import org.opennms.core.fiber.PausableFiber;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.ConfigurationTestUtils;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.MockDatabase;
 import org.opennms.core.test.db.TemporaryDatabaseAware;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.alarmd.Alarmd;
 import org.opennms.netmgt.config.VacuumdConfigFactory;
@@ -65,6 +65,8 @@ import org.opennms.netmgt.config.vacuumd.Trigger;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.mock.EventAnticipator;
 import org.opennms.netmgt.dao.mock.MockEventIpcManager;
+import org.opennms.netmgt.dao.mock.MockEventIpcManager.EmptyEventConfDao;
+import org.opennms.netmgt.eventd.EventExpander;
 import org.opennms.netmgt.mock.MockNetwork;
 import org.opennms.netmgt.mock.MockNode;
 import org.opennms.netmgt.model.OnmsNode;
@@ -140,6 +142,9 @@ public class VacuumdTest implements TemporaryDatabaseAware<MockDatabase>, Initia
         }
 
         m_eventdIpcMgr.setEventWriter(m_database);
+        EventExpander expander = new EventExpander();
+        expander.setEventConfDao(new EmptyEventConfDao());
+        m_eventdIpcMgr.setEventExpander(expander);
 
         m_vacuumd = Vacuumd.getSingleton();
         m_vacuumd.setEventManager(m_eventdIpcMgr);

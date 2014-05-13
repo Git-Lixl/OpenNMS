@@ -53,7 +53,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.opennms.core.xml.bind.InetAddressXmlAdapter;
+import org.opennms.core.network.InetAddressXmlAdapter;
 
 @XmlRootElement(name = "event")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -1445,11 +1445,7 @@ public class Event implements Serializable {
 	}
 
 	/**
-	 * Sets the value of field 'interface'. The field 'interface' has the
-	 * following description: The interface to which this event is pertinent
-	 * 
-	 * @param _interface
-	 * @param interface the value of field 'interface'.
+	 * The interface to which this event is pertinent
 	 */
 	public void setInterface(final String _interface) {
 		_interfaceAddress = addr(_interface);

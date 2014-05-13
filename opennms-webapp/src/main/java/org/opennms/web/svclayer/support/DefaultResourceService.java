@@ -38,8 +38,10 @@ import java.util.Map;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.dao.api.GraphDao;
 import org.opennms.netmgt.dao.api.ResourceDao;
+import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsResource;
 import org.opennms.netmgt.model.PrefabGraph;
+import org.opennms.netmgt.model.ResourceTypeUtils;
 import org.opennms.netmgt.model.RrdGraphAttribute;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.EventProxy;
@@ -133,36 +135,6 @@ public class DefaultResourceService implements ResourceService, InitializingBean
     }
 
     /**
-     * <p>findDomainResources</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    @Override
-    public List<OnmsResource> findDomainResources() {
-        return m_resourceDao.findDomainResources();
-    }
-    
-    /**
-     * <p>findNodeSourceResources</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    @Override
-    public List<OnmsResource> findNodeSourceResources() {
-        return m_resourceDao.findNodeSourceResources();
-    }
-
-    /**
-     * <p>findNodeResources</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    @Override
-    public List<OnmsResource> findNodeResources() {
-        return m_resourceDao.findNodeResources();
-    }
-
-    /**
      * <p>findTopLevelResources</p>
      *
      * @return a {@link java.util.List} object.
@@ -174,6 +146,20 @@ public class DefaultResourceService implements ResourceService, InitializingBean
 
     /** {@inheritDoc} */
     @Override
+    public List<OnmsResource> findNodeChildResources(OnmsNode node) {
+        List<OnmsResource> resources = new ArrayList<OnmsResource>();
+        if (node != null) {
+            if (ResourceTypeUtils.isStoreByForeignSource() && node.getForeignSource() != null) {
+                String source = node.getForeignSource() + ':' + node.getForeignId();
+                resources.addAll(findNodeSourceChildResources(source));
+            } else {
+                resources.addAll(findNodeChildResources(node.getId()));
+            }
+        }
+        return resources;
+    }
+
+    /** {@inheritDoc} */
     public List<OnmsResource> findNodeChildResources(int nodeId) {
         List<OnmsResource> resources = new ArrayList<OnmsResource>();
         OnmsResource resource = m_resourceDao.getResourceById(OnmsResource.createResourceId("node", Integer.toString(nodeId)));
@@ -241,7 +227,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
 
         return matchingChildResources;
     }
-    
+
     private static OnmsResource checkLabelForQuotes(OnmsResource childResource) {
         
         String lbl  = Util.convertToJsSafeString(childResource.getLabel());

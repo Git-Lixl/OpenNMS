@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2006-2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2006-2014 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -42,11 +42,11 @@ import java.util.Map;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.core.utils.TimeoutTracker;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.Distributable;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
 import org.opennms.netmgt.poller.NetworkInterfaceNotSupportedException;
+import org.opennms.netmgt.poller.PollStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,10 +170,22 @@ final public class TcpMonitor extends AbstractServiceMonitor {
                 LOG.debug("poll: banner = {}", response);
                 LOG.debug("poll: responseTime= {}ms", responseTime);
 
-                if (response.indexOf(strBannerMatch) > -1) {
+                //Could it be a regex?
+                if (strBannerMatch.charAt(0)=='~'){
+                  if (!response.matches(strBannerMatch.substring(1)))
+                    serviceStatus = PollStatus.unavailable("Banner does not match Regex '"+strBannerMatch+"'");
+                  else
                     serviceStatus = PollStatus.available(responseTime);
-                } else
+                }
+                else {
+                  if (response.indexOf(strBannerMatch) > -1) {
+                    serviceStatus = PollStatus.available(responseTime);
+                  }
+                  else {
                     serviceStatus = PollStatus.unavailable("Banner: '"+response+"' does not contain match string '"+strBannerMatch+"'");
+                  }
+                }
+
             } catch (NoRouteToHostException e) {
             	String reason = "No route to host exception for address " + hostAddress;
                 LOG.debug(reason, e);

@@ -28,33 +28,45 @@
 
 package org.opennms.netmgt.collectd;
 
-import com.vmware.vim25.mo.ManagedEntity;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.rmi.RemoteException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
-import org.opennms.core.db.DataSourceFactory;
-import org.opennms.core.utils.BeanUtils;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.utils.ParameterMap;
-import org.opennms.netmgt.collectd.vmware.vijava.*;
-import org.opennms.netmgt.config.collector.AttributeGroupType;
-import org.opennms.netmgt.config.collector.CollectionSet;
+import org.opennms.netmgt.collectd.vmware.vijava.VmwareCollectionAttributeType;
+import org.opennms.netmgt.collectd.vmware.vijava.VmwareCollectionResource;
+import org.opennms.netmgt.collectd.vmware.vijava.VmwareCollectionSet;
+import org.opennms.netmgt.collectd.vmware.vijava.VmwareMultiInstanceCollectionResource;
+import org.opennms.netmgt.collectd.vmware.vijava.VmwarePerformanceValues;
+import org.opennms.netmgt.collectd.vmware.vijava.VmwareSingleInstanceCollectionResource;
+import org.opennms.netmgt.collection.api.AttributeGroupType;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.CollectionException;
+import org.opennms.netmgt.collection.api.CollectionInitializationException;
+import org.opennms.netmgt.collection.api.CollectionSet;
+import org.opennms.netmgt.collection.api.ServiceCollector;
 import org.opennms.netmgt.config.vmware.vijava.Attrib;
 import org.opennms.netmgt.config.vmware.vijava.VmwareCollection;
 import org.opennms.netmgt.config.vmware.vijava.VmwareGroup;
 import org.opennms.netmgt.dao.VmwareDatacollectionConfigDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.netmgt.model.RrdRepository;
 import org.opennms.netmgt.model.events.EventProxy;
+import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.protocols.vmware.VmwareViJavaAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.net.MalformedURLException;
-import java.rmi.RemoteException;
-import java.util.*;
+import com.vmware.vim25.mo.ManagedEntity;
 
 /**
  * The Class VmwareCollector
@@ -106,7 +118,6 @@ public class VmwareCollector implements ServiceCollector {
             logger.error("vmwareDatacollectionConfigDao should be a non-null value.");
         }
 
-        initDatabaseConnectionFactory();
         initializeRrdRepository();
     }
 
@@ -125,18 +136,6 @@ public class VmwareCollector implements ServiceCollector {
         final File f = new File(m_vmwareDatacollectionConfigDao.getRrdPath());
         if (!f.isDirectory() && !f.mkdirs()) {
             throw new RuntimeException("Unable to create RRD file repository.  Path doesn't already exist and could not make directory: " + m_vmwareDatacollectionConfigDao.getRrdPath());
-        }
-    }
-
-    /**
-     * Initializes the database connection factory.
-     */
-    private void initDatabaseConnectionFactory() {
-        try {
-            DataSourceFactory.init();
-        } catch (final Exception e) {
-            logger.error("initDatabaseConnectionFactory: Error initializing DataSourceFactory. Error message: '{}'", e.getMessage());
-            throw new UndeclaredThrowableException(e);
         }
     }
 
@@ -205,7 +204,7 @@ public class VmwareCollector implements ServiceCollector {
             }
         }
 
-        VmwareCollectionSet collectionSet = new VmwareCollectionSet(agent);
+        VmwareCollectionSet collectionSet = new VmwareCollectionSet();
 
         collectionSet.setCollectionTimestamp(new Date());
 
@@ -235,10 +234,10 @@ public class VmwareCollector implements ServiceCollector {
         try {
             vmwareViJavaAccess.connect();
         } catch (MalformedURLException e) {
-            logger.warn("Error connecting VMware management server '{}': '{}'", vmwareManagementServer, e.getMessage());
+            logger.warn("Error connecting VMware management server '{}': '{}' exception: {} cause: '{}'", vmwareManagementServer, e.getMessage(), e.getClass().getName(), e.getCause());
             return collectionSet;
         } catch (RemoteException e) {
-            logger.warn("Error connecting VMware management server '{}': '{}'", vmwareManagementServer, e.getMessage());
+            logger.warn("Error connecting VMware management server '{}': '{}' exception: {} cause: '{}'", vmwareManagementServer, e.getMessage(), e.getClass().getName(), e.getCause());
             return collectionSet;
         }
 
@@ -257,7 +256,7 @@ public class VmwareCollector implements ServiceCollector {
         }
 
         for (final VmwareGroup vmwareGroup : collection.getVmwareGroup()) {
-            final AttributeGroupType attribGroupType = new AttributeGroupType(vmwareGroup.getName(), "all");
+            final AttributeGroupType attribGroupType = new AttributeGroupType(vmwareGroup.getName(), AttributeGroupType.IF_TYPE_ALL);
 
             if ("node".equalsIgnoreCase(vmwareGroup.getResourceType())) {
                 // single instance value
@@ -275,7 +274,7 @@ public class VmwareCollector implements ServiceCollector {
                     }
                 }
 
-                collectionSet.getResources().add(vmwareCollectionResource);
+                collectionSet.getCollectionResources().add(vmwareCollectionResource);
             } else {
                 // multi instance value
 
@@ -322,7 +321,7 @@ public class VmwareCollector implements ServiceCollector {
                     }
 
                     for (String instance : resources.keySet()) {
-                        collectionSet.getResources().add(resources.get(instance));
+                        collectionSet.getCollectionResources().add(resources.get(instance));
                     }
                 }
             }

@@ -30,8 +30,11 @@ package org.opennms.netmgt.model;
 
 import java.io.Serializable;
 import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -52,6 +55,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.annotations.Type;
 import org.opennms.netmgt.model.OnmsArpInterface.StatusType;
 import org.opennms.netmgt.xml.bind.StatusTypeXmlAdapter;
@@ -60,8 +64,21 @@ import org.opennms.netmgt.xml.bind.StatusTypeXmlAdapter;
 @Entity
 @Table(name = "datalinkinterface")
 @XmlAccessorType(XmlAccessType.NONE)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class DataLinkInterface implements Serializable, Comparable<DataLinkInterface> {
     private static final long serialVersionUID = -3336726327359373609L;
+
+    public static enum DiscoveryProtocol {
+        bridge,
+        cdp,
+        iproute,
+        lldp,
+        ospf,
+        isis,
+        wifi,
+        NA
+    }
+
     private Integer m_id;
     private OnmsNode m_node;
     private Integer m_ifIndex;
@@ -71,6 +88,9 @@ public class DataLinkInterface implements Serializable, Comparable<DataLinkInter
     private Integer m_linkTypeId;
     private Date m_lastPollTime;
     private String m_source = "linkd";
+
+    private DiscoveryProtocol m_protocol;
+    
     /**
      * work around a marshalling issue by storing the OnmsNode nodeId *
      */
@@ -117,10 +137,10 @@ public class DataLinkInterface implements Serializable, Comparable<DataLinkInter
      * Get the ID as a string.  This exists only for XML serialization.
      */
     @XmlID
-    @XmlAttribute(name = "id")
+    @XmlAttribute(name="id")
     @Transient
     public String getDataLinkInterfaceId() {
-        return getId().toString();
+        return getId() == null? null : getId().toString();
     }
 
     public void setDataLinkInterfaceId(final String id) {
@@ -128,7 +148,7 @@ public class DataLinkInterface implements Serializable, Comparable<DataLinkInter
     }
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "nodeId")
+    @JoinColumn(name="nodeId")
     @XmlTransient
     public OnmsNode getNode() {
         return m_node;
@@ -198,6 +218,17 @@ public class DataLinkInterface implements Serializable, Comparable<DataLinkInter
 
     public void setLinkTypeId(final Integer linkTypeId) {
         m_linkTypeId = linkTypeId;
+    }
+
+    @Enumerated(EnumType.STRING)
+    @XmlElement(name = "protocol")
+    @Column(name = "protocol", length=31, nullable = true)
+    public DiscoveryProtocol getProtocol() {
+        return m_protocol;
+    }
+
+    public void setProtocol(DiscoveryProtocol protocol) {
+        m_protocol = protocol;
     }
 
     @XmlElement(name = "lastPollTime")

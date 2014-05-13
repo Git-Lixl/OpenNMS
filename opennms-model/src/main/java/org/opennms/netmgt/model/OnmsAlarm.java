@@ -36,6 +36,7 @@ import java.util.Map;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -43,6 +44,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -55,12 +57,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.Type;
-import org.opennms.core.xml.bind.InetAddressXmlAdapter;
+import org.opennms.core.network.InetAddressXmlAdapter;
 import org.springframework.core.style.ToStringCreator;
 
 /**
@@ -70,6 +71,7 @@ import org.springframework.core.style.ToStringCreator;
 @Entity
 @Table(name="alarms")
 @Filter(name=FilterManager.AUTH_FILTER_NAME, condition="exists (select distinct x.nodeid from node x join category_node cn on x.nodeid = cn.nodeid join category_group cg on cn.categoryId = cg.categoryId where x.nodeid = nodeid and cg.groupId in (:userGroups))")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OnmsAlarm implements Acknowledgeable, Serializable {
     private static final long serialVersionUID = 7275548439687562161L;
     
@@ -1012,9 +1014,9 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
      * @return a {@link java.util.Map} object.
      */
     @XmlTransient
-    @CollectionOfElements
+    @ElementCollection
     @JoinTable(name="alarm_attributes", joinColumns = @JoinColumn(name="alarmId"))
-    @MapKey(columns=@Column(name="attribute"))
+    @MapKeyColumn(name="attribute")
     @Column(name="attributeValue", nullable=false)
     public Map<String, String> getDetails() {
         return m_details;

@@ -177,7 +177,7 @@ public class Transaction {
 
     private Connection doGetConnection(String dsName) throws SQLException {
         if (!m_connections.containsKey(dsName)) {
-            DataSource ds = DataSourceFactory.getDataSource(dsName);
+            DataSource ds = DataSourceFactory.getInstance(dsName);
             if (ds == null) {
                 throw new IllegalArgumentException("Could not find this datasource by using the DataSourceFactory: " + dsName);
             }
@@ -192,10 +192,12 @@ public class Transaction {
 
     /**
      * <p>finalize</p>
+     * @throws Throwable 
      */
     @Override
-    protected void finalize() {
+    protected void finalize() throws Throwable {
         m_dbUtils.cleanUp();
+        super.finalize();
     }
 
 }

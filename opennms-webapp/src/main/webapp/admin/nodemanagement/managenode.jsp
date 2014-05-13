@@ -45,7 +45,7 @@
 
 <%
     HttpSession userSession = request.getSession(false);
-    List interfaces = null;
+    List<ManagedInterface> interfaces = null;
     Integer lineItems= new Integer(0);
     
     //EventConfFactory eventFactory = EventConfFactory.getInstance();
@@ -57,13 +57,12 @@
 	throw new ServletException("User session is null");
     }
 
-    interfaces = (List) userSession.getAttribute("interfaces.nodemanagement");
-    if (interfaces.size() < 1) {
-    	throw new NoManagedInterfacesException("element/nodeList.htm");
-    }
+    interfaces = (List<ManagedInterface>) userSession.getAttribute("interfaces.nodemanagement");
     if (interfaces == null) {
 	throw new ServletException("Session attribute "
 				   + "interfaces.nodemanagement is null");
+    } else if (interfaces.size() < 1) {
+    	throw new NoManagedInterfacesException("element/nodeList.htm");
     }
     lineItems = (Integer) userSession.getAttribute("lineItems.nodemanagement");
     if (lineItems == null) {
@@ -152,7 +151,7 @@
   
         if (lineItems.intValue() > 0)
         {
-                ManagedInterface firstInterface = (ManagedInterface)interfaces.get(0);
+                ManagedInterface firstInterface = interfaces.get(0);
                 nodeLabel = NetworkElementFactory.getInstance(getServletContext()).getNodeLabel(firstInterface.getNodeid());
     
                 if ( interfaces.size() == 1)
@@ -191,6 +190,7 @@
 
   <h3>Manage and Unmanage Interfaces and Services</h3>
 
+  <!--
   <p>
     The two tables below represent each managed and unmanged interface,
     and service combination.  The 'Managed' column indicates if the
@@ -204,6 +204,14 @@
     Managing or Unmanaging an interface will automatically mark each
     service on that interface as managed or unmanaged accordingly.  A
     service cannot be managed if its interface is not managed.
+  </p>
+  -->
+
+  <p>
+    The table below represent each managed and unmanged interface,
+    and service combination.  The 'Managed' column indicates if the
+    service is managed or not on the interface, with checked rows meaning
+    the interface/service is managed, and unchecked meaning not managed.
   </p>
 
   <%
@@ -257,7 +265,7 @@
 <jsp:include page="/includes/footer.jsp" flush="true"/>
 
 <%!
-      public String buildManageTableRows(List interfaces, int start, int stop)
+      public String buildManageTableRows(List<ManagedInterface> interfaces, int start, int stop)
       	throws java.sql.SQLException
       {
           StringBuffer rows = new StringBuffer();
@@ -265,7 +273,7 @@
           for (int i = start; i < stop; i++)
           {
                 
-                ManagedInterface curInterface = (ManagedInterface)interfaces.get(i);
+                ManagedInterface curInterface = interfaces.get(i);
 		String intKey = curInterface.getNodeid() + "-" + curInterface.getAddress();
                 StringBuffer serviceArray = new StringBuffer("[");
                 String prepend = "";
@@ -275,18 +283,17 @@
                     prepend = ",";
                 }
                 serviceArray.append("]");
-                
+
                 rows.append(buildInterfaceRow(intKey, 
                                               interfaceIndex, 
                                               serviceArray.toString(), 
                                               (curInterface.getStatus().equals("managed") ? "checked" : ""),
                                               curInterface.getAddress()));
-                    
                   
-                List interfaceServices = curInterface.getServices();
+                List<ManagedService> interfaceServices = curInterface.getServices();
                 for (int k = 0; k < interfaceServices.size(); k++) 
                 {
-                     ManagedService curService = (ManagedService)interfaceServices.get(k);
+                     ManagedService curService = interfaceServices.get(k);
                      String serviceKey = curInterface.getNodeid() + "-" + curInterface.getAddress() + "-" + curService.getId();
                      rows.append(buildServiceRow(serviceKey,
                                                  interfaceIndex,
@@ -308,7 +315,7 @@
       public String buildInterfaceRow(String key, int interfaceIndex, String serviceArray, String status, String address)
       {
           StringBuffer row = new StringBuffer( "<tr>");
-          
+          /*
           row.append("<td class=\"standardheaderplain\" width=\"5%\" align=\"center\">");
           row.append("<input type=\"checkbox\" name=\"interfaceCheck\" value=\"").append(key).append("\" onclick=\"javascript:updateServices(" + interfaceIndex + ", " + serviceArray + ")\" ").append(status).append(" >");
           row.append("</td>").append("\n");
@@ -317,7 +324,8 @@
           row.append(address);
           row.append("</td>").append("\n");
           row.append("<td class=\"standardheaderplain\" width=\"10%\" align=\"center\">").append("&nbsp;").append("</td></tr>").append("\n");
-          
+          */ 
+          row.append("<input type=\"hidden\" name=\"interfaceCheck\" value=\"").append(key).append("\" onclick=\"javascript:updateServices(" + interfaceIndex + ", " + serviceArray + ")\" ").append(status).append(" >");
           return row.toString();
       }
       

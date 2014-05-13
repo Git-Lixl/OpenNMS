@@ -29,8 +29,10 @@
 package org.opennms.core.db;
 
 import java.beans.PropertyVetoException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -40,6 +42,7 @@ import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
+import org.opennms.core.test.ConfigurationTestUtils;
 import org.opennms.core.utils.ConfigFileConstants;
 
 /**
@@ -115,9 +118,12 @@ public class C3P0ConnectionFactoryTest extends TestCase {
     }
 
     private C3P0ConnectionFactory makeFactory(String database) throws MarshalException, ValidationException, PropertyVetoException, SQLException, IOException {
-        InputStream stream = this.getClass().getResourceAsStream(ConfigFileConstants.getFileName(ConfigFileConstants.OPENNMS_DATASOURCE_CONFIG_FILE_NAME));
+        InputStream stream = new ByteArrayInputStream(ConfigurationTestUtils.getConfigForResourceWithReplacements(this, ConfigFileConstants.getFileName(ConfigFileConstants.OPENNMS_DATASOURCE_CONFIG_FILE_NAME)).getBytes());
+        DataSourceConfigurationFactory factory = new DataSourceConfigurationFactory(stream);
         try {
-            return new C3P0ConnectionFactory(stream, database);
+            factory.getJdbcDataSource("opennms").marshal(new OutputStreamWriter(System.err));
+            System.err.println();
+            return new C3P0ConnectionFactory(factory.getJdbcDataSource("opennms"));
         } finally {
             IOUtils.closeQuietly(stream);
         }

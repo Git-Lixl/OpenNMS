@@ -40,7 +40,7 @@
 <%@page language="java"
         contentType="text/html"
         session="true"
-        import="org.opennms.web.alarm.*" %>
+%>
 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
@@ -51,7 +51,7 @@
   <c:choose>
     <c:when test="${empty summaries}">
       <p class="noBottomMargin">
-        There are no current problems.
+        There are no pending problems.
       </p>
     </c:when>
     <c:otherwise>

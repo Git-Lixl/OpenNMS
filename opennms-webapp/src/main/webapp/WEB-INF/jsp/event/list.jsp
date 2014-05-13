@@ -86,11 +86,11 @@
     	action = AcknowledgeType.UNACKNOWLEDGED.getShortName();
     }
 
-    pageContext.setAttribute("addPositiveFilter", "[+]");
-    pageContext.setAttribute("addNegativeFilter", "[-]");
-    pageContext.setAttribute("addBeforeFilter", "[&gt;]");
-    pageContext.setAttribute("addAfterFilter", "[&lt;]");
-    pageContext.setAttribute("filterFavoriteSelectTagHandler", new FilterFavoriteSelectTagHandler());
+    pageContext.setAttribute("addPositiveFilter", "<i class=\"fa fa-plus-square-o\"></i>");
+    pageContext.setAttribute("addNegativeFilter", "<i class=\"fa fa-minus-square-o\"></i>");
+    pageContext.setAttribute("addBeforeFilter", "<i class=\"fa fa-toggle-right\"></i>");
+    pageContext.setAttribute("addAfterFilter", "<i class=\"fa fa-toggle-left\"></i>");
+    pageContext.setAttribute("filterFavoriteSelectTagHandler", new FilterFavoriteSelectTagHandler("All Events"));
 %>
 
 
@@ -102,6 +102,8 @@
   <jsp:param name="breadcrumb" value="<a href= 'event/index' title='Events System Page'>Events</a>" />
   <jsp:param name="breadcrumb" value="List" />
 </jsp:include>
+
+<link rel="stylesheet" href="css/font-awesome-4.0.3/css/font-awesome.min.css">
 
   <script type="text/javascript">
     function checkAllCheckboxes() {
@@ -219,8 +221,49 @@
 	  	<input type="hidden" name="uei" id="uei" value="" /> <!-- Set by java script -->
 	  </form>
 
-      <jsp:include page="/includes/event-querypanel.jsp" flush="false" />
+
           
+            <% if( parms.getFilters().size() > 0 || AcknowledgeType.UNACKNOWLEDGED.toNormalizedAcknowledgeType().equals(parms.getAckType()) || AcknowledgeType.ACKNOWLEDGED.toNormalizedAcknowledgeType().equals(parms.getAckType()) ) { %>
+                <div>
+                <p>
+                    Favorites:
+                    <onms:select
+                            defaultText="All Events"
+                            elements='${favorites}'
+                            selected='${favorite}'
+                            handler='${filterFavoriteSelectTagHandler}'
+                            onChange='changeFavorite(this)'/>
+                </p>
+            <% } %>
+
+            <jsp:include page="/includes/event-querypanel.jsp" flush="false" />
+
+            <% if( parms.getFilters().size() > 0 || AcknowledgeType.UNACKNOWLEDGED.toNormalizedAcknowledgeType().equals(parms.getAckType()) || AcknowledgeType.ACKNOWLEDGED.toNormalizedAcknowledgeType().equals(parms.getAckType()) ) { %>
+                <p>
+                    <onms:filters
+                            context="/event/list"
+                            favorite="${favorite}"
+                            parameters="${parms}"
+                            showRemoveLink="true"
+                            showAcknowledgeFilter="true"
+                            acknowledgeFilterPrefix="Event(s)"
+                            acknowledgeFilterSuffix="event(s)"
+                            callback="${callback}" />
+
+                    <onms:favorite
+                            favorite="${favorite}"
+                            parameters="${parms}"
+                            callback="${callback}"
+                            context="/event/list"
+                            createFavoriteController="/event/createFavorite"
+                            deleteFavoriteController="/event/deleteFavorite"
+                            onDeselect="<%=FavoriteTag.Action.CLEAR_FILTERS%>"/>
+
+                </p>
+                </div>
+            <% } %>
+            <onms:alert/>
+
             <% if( events.length > 0 ) { %>
               <% String baseUrl = this.makeLink(callback, parms, favorite); %>
               <% if ( eventCount == -1 ) { %>
@@ -239,36 +282,6 @@
                 </jsp:include>
               <% } %>
             <% } %>
-
-            <% if( parms.getFilters().size() > 0 || AcknowledgeType.UNACKNOWLEDGED.toNormalizedAcknowledgeType().equals(parms.getAckType()) || AcknowledgeType.ACKNOWLEDGED.toNormalizedAcknowledgeType().equals(parms.getAckType()) ) { %>
-                <p>
-                    Favorites:
-                    <onms:select
-                            elements='${favorites}'
-                            selected='${favorite}'
-                            handler='${filterFavoriteSelectTagHandler}'
-                            onChange='changeFavorite(this)'/>
-                    <onms:favorite
-                            favorite="${favorite}"
-                            parameters="${parms}"
-                            callback="${callback}"
-                            context="/event/list"
-                            createFavoriteController="/event/createFavorite"
-                            deleteFavoriteController="/event/deleteFavorite"
-                            onDeselect="<%=FavoriteTag.Action.CLEAR_FILTERS%>"/>
-                    <onms:filters
-                        context="/event/list"
-                        favorite="${favorite}"
-                        parameters="${parms}"
-                        showRemoveLink="true"
-                        showAcknowledgeFilter="true"
-                        acknowledgeFilterPrefix="Event(s)"
-                        acknowledgeFilterSuffix="event(s)"
-                        callback="${callback}" />
-
-              </p>
-            <% } %>
-            <onms:alert/>
 
     <% if( req.isUserInRole( Authentication.ROLE_ADMIN ) || !req.isUserInRole( Authentication.ROLE_READONLY ) ) { %>
       <form action="event/acknowledge" method="post" name="acknowledge_form">

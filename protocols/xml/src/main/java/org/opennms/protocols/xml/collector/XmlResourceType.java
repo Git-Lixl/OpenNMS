@@ -28,11 +28,10 @@
 
 package org.opennms.protocols.xml.collector;
 
-import org.opennms.netmgt.collectd.CollectionAgent;
 import org.opennms.netmgt.collectd.PersistenceSelectorStrategy;
-import org.opennms.netmgt.config.StorageStrategy;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.StorageStrategy;
 import org.opennms.netmgt.config.datacollection.ResourceType;
-
 import org.springframework.orm.ObjectRetrievalFailureException;
 
 /**
@@ -44,9 +43,6 @@ public class XmlResourceType  {
 
     /** The resource type name. */
     private String m_resourceType;
-
-    /** The collection agent. */
-    private CollectionAgent m_agent;
 
     /** The persistence selector strategy. */
     private PersistenceSelectorStrategy m_persistenceSelectorStrategy;
@@ -61,12 +57,11 @@ public class XmlResourceType  {
      * @param resourceType the resource type
      */
     public XmlResourceType(CollectionAgent agent, ResourceType resourceType) {
-        m_agent = agent;
         m_resourceType = resourceType.getName();
         instantiatePersistenceSelectorStrategy(resourceType.getPersistenceSelectorStrategy().getClazz());
         instantiateStorageStrategy(resourceType.getStorageStrategy().getClazz());
-        m_storageStrategy.setParameters(resourceType.getStorageStrategy().getParameterCollection());
-        m_persistenceSelectorStrategy.setParameters(resourceType.getPersistenceSelectorStrategy().getParameterCollection());
+        m_storageStrategy.setParameters(resourceType.getStorageStrategy().getParameters());
+        m_persistenceSelectorStrategy.setParameters(resourceType.getPersistenceSelectorStrategy().getParameters());
     }
 
     /**
@@ -110,8 +105,6 @@ public class XmlResourceType  {
             throw new ObjectRetrievalFailureException(StorageStrategy.class, className, "Could not instantiate", e);
         }
         m_storageStrategy.setResourceTypeName(m_resourceType);
-        if (m_agent != null)
-            m_storageStrategy.setStorageStrategyService(m_agent);
     }
 
     /**

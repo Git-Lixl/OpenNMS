@@ -28,14 +28,12 @@
 
 package org.opennms.features.topology.api;
 
+import com.vaadin.data.Property;
 import java.util.Collection;
-
 import org.opennms.features.topology.api.topo.Criteria;
 import org.opennms.features.topology.api.topo.GraphProvider;
 import org.opennms.features.topology.api.topo.StatusProvider;
 import org.opennms.features.topology.api.topo.VertexRef;
-
-import com.vaadin.data.Property;
 
 public interface GraphContainer extends DisplayState {
 
@@ -49,9 +47,12 @@ public interface GraphContainer extends DisplayState {
 
     Criteria[] getCriteria();
 
-    void setCriteria(Criteria critiera);
+    void addCriteria(Criteria criteria);
 
     void removeCriteria(Criteria criteria);
+
+    // clears all criteria which are currently sets
+    void clearCriteria();
 
     void addChangeListener(ChangeListener listener);
 
@@ -77,15 +78,13 @@ public interface GraphContainer extends DisplayState {
 
     void setStatusProvider(StatusProvider statusProvider);
 
-    // TODO move to another location, The user name should not be stored here! (maybe VaadinApplicationContext is the right place)
-    String getUserName();
-
-    // TODO move to another location, The user name should not be stored here! (maybe VaadinApplicationContext is the right place)
-    void setUserName(String userName);
-
     // TODO move to another location. This should not be stored here! (maybe VaadinApplicationContext is the right place)
     String getSessionId();
 
     // TODO move to another location. This should not be stored here! (maybe VaadinApplicationContext is the right place)
     void setSessionId(String sessionId);
+
+    void setDirty(boolean dirty);
+    
+    void fireGraphChanged();
 }

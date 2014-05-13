@@ -61,7 +61,7 @@ import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.dao.mock.EventAnticipator;
 import org.opennms.netmgt.dao.mock.MockEventIpcManager;
 import org.opennms.netmgt.dao.support.NullRrdStrategy;
-import org.opennms.netmgt.eventd.datablock.EventUtil;
+import org.opennms.netmgt.eventd.EventUtil;
 import org.opennms.netmgt.mock.MockElement;
 import org.opennms.netmgt.mock.MockEventUtil;
 import org.opennms.netmgt.mock.MockInterface;
@@ -76,7 +76,6 @@ import org.opennms.netmgt.mock.MockVisitorAdapter;
 import org.opennms.netmgt.mock.OutageAnticipator;
 import org.opennms.netmgt.mock.PollAnticipator;
 import org.opennms.netmgt.mock.TestCapsdConfigManager;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.model.events.EventUtils;
 import org.opennms.netmgt.poller.pollables.PollableNetwork;
 import org.opennms.netmgt.rrd.RrdUtils;
@@ -185,7 +184,7 @@ public class PollerTest {
 		m_eventMgr.addEventListener(m_outageAnticipator);
 		m_eventMgr.setSynchronous(false);
 		
-		QueryManager queryManager = new DefaultQueryManager();
+		DefaultQueryManager queryManager = new DefaultQueryManager();
 		queryManager.setDataSource(m_db);
 		
 		DefaultPollContext pollContext = new DefaultPollContext();

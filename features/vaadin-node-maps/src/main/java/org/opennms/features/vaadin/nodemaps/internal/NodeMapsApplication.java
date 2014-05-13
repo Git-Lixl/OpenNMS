@@ -36,11 +36,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.opennms.features.topology.api.HasExtraComponents;
 import org.opennms.features.topology.api.VerticesUpdateManager;
 import org.opennms.features.topology.api.VerticesUpdateManager.VerticesUpdateEvent;
-import org.opennms.features.topology.api.topo.AbstractVertexRef;
+import org.opennms.features.topology.api.topo.DefaultVertexRef;
 import org.opennms.features.topology.api.topo.VertexRef;
 import org.opennms.features.topology.plugins.browsers.AlarmTable;
 import org.opennms.features.topology.plugins.browsers.NodeTable;
@@ -110,8 +109,8 @@ import com.vaadin.ui.VerticalSplitPanel;
 @Title("OpenNMS Node Maps")
 @Theme("opennms")
 @JavaScript({
-    "http://maps.google.com/maps/api/js?sensor=false",
-    "http://cdn.leafletjs.com/leaflet-0.5.1/leaflet-src.js",
+    "//maps.google.com/maps/api/js?sensor=false",
+    "gwt/public/leaflet-0.5.1/leaflet-src.js",
     "gwt/public/openlayers/OpenLayers.js",
     "gwt/public/markercluster/leaflet.markercluster-src.js"
 
@@ -144,11 +143,6 @@ public class NodeMapsApplication extends UI {
 
     public void setHeaderHtml(final String headerHtml) {
         m_headerHtml = headerHtml;
-
-        /**
-         * Added some magic to hide search controls and header if displayed inside an iframe
-         */
-        m_headerHtml += "<script type='text/javascript'>if (window.location != window.parent.location) { document.getElementById('header').style.display = 'none'; var style = document.createElement(\"style\"); style.type = 'text/css'; style.innerHTML = '.leaflet-control-container { display: none; }'; document.body.appendChild(style); }</script>";
     }
 
     public void setAlarmTable(final AlarmTable table) {
@@ -332,8 +326,18 @@ public class NodeMapsApplication extends UI {
                 headerLayout.addStyleName("onmsheader");
                 m_rootLayout.addComponent(headerLayout);
             } catch (final IOException e) {
-                IOUtils.closeQuietly(is);
+                closeQuietly(is);
                 LOG.debug("failed to get header layout data", e);
+            }
+        }
+    }
+
+    private void closeQuietly(InputStream is) {
+        if (is != null) {
+            try {
+                is.close();
+            } catch (final IOException closeE) {
+                LOG.debug("failed to close HTML input stream", closeE);
             }
         }
     }
@@ -351,7 +355,7 @@ public class NodeMapsApplication extends UI {
 
                 final Set<VertexRef> nodeSet = new HashSet<VertexRef>();
                 for (final Integer nodeId : nodeIds) {
-                    nodeSet.add(new AbstractVertexRef("nodes", nodeId.toString(), null));
+                    nodeSet.add(new DefaultVertexRef("nodes", nodeId.toString(), null));
                 }
 
                 listener.verticesUpdated(new VerticesUpdateEvent(nodeSet));

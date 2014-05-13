@@ -191,7 +191,7 @@ public class HelpClickListener implements Button.ClickListener {
         sb.append("");
         sb.append("<div class='help-content'>");
         sb.append("On this configuration page you can create, edit, preview or delete ");
-        sb.append("Wallboard configurations. Each Wallboard configuration consists of ");
+        sb.append("Ops Board configurations. Each Ops Board configuration consists of ");
         sb.append("multiple Dashlet entries. Each Dashlet entry requires to set at least ");
         sb.append("four parameters:<br/><br/>");
         sb.append("");
@@ -200,6 +200,7 @@ public class HelpClickListener implements Button.ClickListener {
         sb.append("    <th>Name</th>");
         sb.append("    <th>Description</th>");
         sb.append("  </tr>");
+        sb.append("  <tr><td class='help-table-cell'>title</td><td class='help-table-cell'>The title for this Dashlet instance</td></tr>");
         sb.append("  <tr><td class='help-table-cell'>duration</td><td class='help-table-cell'>Time in seconds the Dashlet will be displayed</td></tr>");
         sb.append("  <tr><td class='help-table-cell'>priority</td><td class='help-table-cell'>Lower priority means that the Dashlet will be displayed more often</td></tr>");
         sb.append("  <tr><td class='help-table-cell'>boostedDuration</td><td class='help-table-cell'>This value is added to the duration value if the Dashlet is \"boosted\"</td></tr>");

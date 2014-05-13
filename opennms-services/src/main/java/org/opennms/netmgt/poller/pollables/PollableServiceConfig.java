@@ -31,18 +31,18 @@ package org.opennms.netmgt.poller.pollables;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.opennms.netmgt.config.PollOutagesConfig;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.poller.Downtime;
 import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.config.poller.Parameter;
 import org.opennms.netmgt.config.poller.Service;
-import org.opennms.netmgt.model.PollStatus;
+import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitor;
 import org.opennms.netmgt.scheduler.ScheduleInterval;
 import org.opennms.netmgt.scheduler.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a PollableServiceConfig
@@ -88,7 +88,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
      * @return
      */
     private synchronized Service findService(Package pkg) {
-        for (Service s : m_pkg.getServiceCollection()) {
+        for (Service s : m_pkg.getServices()) {
             if (s.getName().equalsIgnoreCase(m_service.getSvcName())) {
                 return s;
             }
@@ -101,7 +101,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
     /**
      * <p>poll</p>
      *
-     * @return a {@link org.opennms.netmgt.model.PollStatus} object.
+     * @return a {@link org.opennms.netmgt.poller.PollStatus} object.
      */
     @Override
     public PollStatus poll() {
@@ -168,7 +168,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
 
     private Map<String,Object> createPropertyMap(Service svc) {
         Map<String,Object> m = new ConcurrentSkipListMap<String,Object>();
-        for (Parameter p : svc.getParameterCollection()) {
+        for (Parameter p : svc.getParameters()) {
             String val = p.getValue();
             if (val == null) {
             	val = (p.getAnyObject() == null ? "" : p.getAnyObject().toString());
@@ -206,13 +206,13 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
         if (m_service.getStatus().isDown()) {
             long downSince = m_timer.getCurrentTime() - m_service.getStatusChangeTime();
             boolean matched = false;
-            for (Downtime dt : m_pkg.getDowntimeCollection()) {
+            for (Downtime dt : m_pkg.getDowntimes()) {
                 if (dt.getBegin() <= downSince) {
                     if (dt.getDelete() != null && (dt.getDelete().equals("yes") || dt.getDelete().equals("true"))) {
                         when = -1;
                         matched = true;
                     }
-                    else if (dt.hasEnd() && dt.getEnd() > downSince) {
+                    else if (dt.getEnd() != null && dt.getEnd() > downSince) {
                         // in this interval
                         //
                         when = dt.getInterval();
@@ -247,7 +247,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
     @Override
     public synchronized boolean scheduledSuspension() {
         long nodeId=m_service.getNodeId();
-        for (String outageName : m_pkg.getOutageCalendarCollection()) {
+        for (String outageName : m_pkg.getOutageCalendars()) {
             // Does the outage apply to the current time?
             if (m_pollOutagesConfig.isTimeInOutage(m_timer.getCurrentTime(), outageName)) {
                 // Does the outage apply to this interface?

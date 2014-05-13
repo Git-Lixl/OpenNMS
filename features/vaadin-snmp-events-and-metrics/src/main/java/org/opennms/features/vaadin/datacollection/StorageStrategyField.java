@@ -65,10 +65,9 @@ public class StorageStrategyField extends AbstractStrategyField<StorageStrategy>
      */
     @Override
     protected void setInternalValue(StorageStrategy strategy) {
-        super.setInternalValue(strategy); // TODO Is this required ?
         setComboValue(strategy.getClazz());
         container.removeAllItems();
-        container.addAll(strategy.getParameterCollection());
+        container.addAll(strategy.getParameters());
     }
 
     /* (non-Javadoc)

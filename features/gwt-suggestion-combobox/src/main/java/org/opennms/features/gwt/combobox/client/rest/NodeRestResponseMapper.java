@@ -38,38 +38,54 @@ import com.google.gwt.core.client.JsArray;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.json.client.JSONValue;
 
 public class NodeRestResponseMapper {
 
     
-    public static List<NodeDetail> mapNodeJSONtoNodeDetail(String jsonString){
-        List<NodeDetail> nodeDetails = new ArrayList<NodeDetail>();
-        JSONObject jsonObject = JSONParser.parseStrict(jsonString).isObject();
-        
-        if(jsonObject != null && jsonObject.containsKey("node")) {
-            if(jsonObject.get("node").isObject() != null) {
-                JSONObject jso = jsonObject.get("node").isObject();
-                nodeDetails.add(createNodeDetailsOverlay(jso.getJavaScriptObject()));
-                
-            }else if(jsonObject.get("node").isArray() != null) {
-                JSONArray jArray = jsonObject.get("node").isArray();
-                JsArray<NodeDetail> nodedetails = createNodeDetailsArray(jArray.getJavaScriptObject());
-                for(int i = 0; i < nodedetails.length(); i++) {
-                    if(!nodedetails.get(i).getNodeType().equals("D")) {
-                        nodeDetails.add(nodedetails.get(i));
-                    }
+    public static List<NodeDetail> mapNodeJSONtoNodeDetail(final String jsonString) {
+        final List<NodeDetail> nodeDetails = new ArrayList<NodeDetail>();
+        final JSONValue value = JSONParser.parseStrict(jsonString);
+        final JSONObject obj = value.isObject();
+        final JSONArray arr = value.isArray();
+        JsArray<NodeDetail> jsDetails = null;
+
+        if (obj != null) {
+            jsDetails = createNodeDetailsArray(obj.getJavaScriptObject());
+        } else if (arr != null) {
+            jsDetails = createNodeDetailsArray(arr.getJavaScriptObject());
+        } else {
+            doLog(jsonString + " does not parse as an array or object!", value);
+        }
+
+        if (jsDetails != null) {
+            for(int i = 0; i < jsDetails.length(); i++) {
+                if(!jsDetails.get(i).getNodeType().equals("D")) {
+                    nodeDetails.add(jsDetails.get(i));
                 }
             }
         }
-        
+
         return nodeDetails;
     }
     
-    private static native NodeDetail createNodeDetailsOverlay(JavaScriptObject jso) /*-{
-        return jso;
+    private static native JsArray<NodeDetail> createNodeDetailsArray(final JavaScriptObject jso) /*-{
+        if (jso.node) {
+            if( Object.prototype.toString.call( jso.node ) === '[object Array]' ) {
+                return jso.node;
+            } else {
+                return [ jso.node ];
+            }
+        } else {
+            if( Object.prototype.toString.call( jso ) === '[object Array]' ) {
+                return jso;
+            } else {
+                return [ jso ];
+            }
+        }
     }-*/;
-    
-    private static native JsArray<NodeDetail> createNodeDetailsArray(JavaScriptObject jso) /*-{
-        return jso;
+
+    public static native void doLog(final String message, final Object o) /*-{
+        console.log(message,o);
     }-*/;
 }

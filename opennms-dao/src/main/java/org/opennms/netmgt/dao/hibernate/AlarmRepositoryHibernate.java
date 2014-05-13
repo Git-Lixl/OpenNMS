@@ -36,7 +36,7 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.hibernate.criterion.Restrictions;
 import org.opennms.core.criteria.CriteriaBuilder;
-import org.opennms.core.utils.BeanUtils;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.netmgt.dao.api.AcknowledgmentDao;
 import org.opennms.netmgt.dao.api.AlarmDao;
 import org.opennms.netmgt.dao.api.AlarmRepository;
@@ -189,7 +189,8 @@ public class AlarmRepositoryHibernate implements AlarmRepository, InitializingBe
     @Transactional
     @Override
     public OnmsAlarm[] getMatchingAlarms(OnmsCriteria criteria) {
-        return m_alarmDao.findMatching(criteria).toArray(new OnmsAlarm[0]);
+        List<OnmsAlarm> alarms = m_alarmDao.findMatching(criteria);
+        return alarms == null ? new OnmsAlarm[0] : alarms.toArray(new OnmsAlarm[0]);
     }
 
     /**

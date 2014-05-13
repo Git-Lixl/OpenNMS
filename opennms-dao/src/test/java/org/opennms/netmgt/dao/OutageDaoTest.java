@@ -42,9 +42,9 @@ import org.hibernate.criterion.Restrictions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.EventDao;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
@@ -143,10 +143,8 @@ public class OutageDaoTest implements InitializingBean {
 
         OnmsEvent event = new OnmsEvent();
 
-        OnmsOutage outage = new OnmsOutage();
+        OnmsOutage outage = new OnmsOutage(new Date(), monitoredService);
         outage.setServiceLostEvent(event);
-        outage.setIfLostService(new Date());
-        outage.setMonitoredService(monitoredService);
         m_outageDao.save(outage);
 
         //it works we're so smart! hehe
@@ -302,10 +300,8 @@ public class OutageDaoTest implements InitializingBean {
     }
 
     private OnmsOutage getOutage(OnmsMonitoredService monitoredService, OnmsEvent event) {
-        OnmsOutage outage = new OnmsOutage();
-        outage.setMonitoredService(monitoredService);
+        OnmsOutage outage = new OnmsOutage(new Date(), monitoredService);
         outage.setServiceLostEvent(event);
-        outage.setIfLostService(new Date());
         m_outageDao.save(outage);
         return outage;
     }

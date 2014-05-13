@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.opennms.netmgt.EventConstants;
+
 /**
  * <pre>
  * The key for an event - it extends the {@link LinkedHashMap} and basically is a
@@ -310,11 +312,12 @@ public class EventKey extends LinkedHashMap<String, Object> implements Serializa
             return;
         }
 
-        for (String key : keySet()) {
+        for (final Map.Entry<String,Object> entry : entrySet()) {
+            final String key = entry.getKey();
             // m_hashCode = 31 * m_hashCode;
 
             // value
-            Object value = get(key);
+            final Object value = entry.getValue();
 
             // add key
             m_hashCode += (key == null ? 0 : key.hashCode());
@@ -426,7 +429,7 @@ public class EventKey extends LinkedHashMap<String, Object> implements Serializa
         } else if (event.getParmCollection().size() > 0) {
             ArrayList<String> eventparms = new ArrayList<String>();
             for (org.opennms.netmgt.xml.event.Parm evParm : event.getParmCollection()) {
-                eventparms.add(EventUtil.getValueAsString(evParm.getValue()));
+                eventparms.add(EventConstants.getValueAsString(evParm.getValue()));
             }
             int vbnumber = Integer.parseInt(mename);
             if (vbnumber > 0 && vbnumber <= eventparms.size()) {

@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2006-2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2006-2014 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -34,7 +34,7 @@ import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 
 import org.opennms.core.logging.Logging;
-import org.opennms.core.utils.BeanUtils;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.daemon.AbstractServiceDaemon;
 import org.opennms.netmgt.model.events.StoppableEventListener;
@@ -136,7 +136,7 @@ public class Capsd extends AbstractServiceDaemon {
         // Thread.dumpStack();
 
         // Stop the broadcast event receiver
-        m_eventListener.stop();
+        m_eventListener.close();
 
         // Stop the Suspect Event Processor thread pool
         m_suspectRunner.shutdown();
@@ -314,6 +314,17 @@ public class Capsd extends AbstractServiceDaemon {
     public void setEventListener(StoppableEventListener eventListener) {
         m_eventListener = eventListener;
     }
+    
+    public ExecutorService getSuspectRunner() {
+        return m_suspectRunner;
+    }
+    
+    public ExecutorService getRescanRunner() {
+        return m_rescanRunner;
+    }
 
+    public Scheduler getScheduler() {
+        return m_scheduler;
+    }
 } // end Capsd class
 

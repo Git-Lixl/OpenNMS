@@ -36,7 +36,7 @@ import org.opennms.features.vaadin.datacollection.DataCollectionWindow;
 import org.opennms.features.vaadin.events.EventWindow;
 import org.opennms.features.vaadin.mibcompiler.api.MibParser;
 import org.opennms.netmgt.config.DataCollectionConfigDao;
-import org.opennms.netmgt.config.EventConfDao;
+import org.opennms.netmgt.config.api.EventConfDao;
 import org.opennms.netmgt.config.datacollection.DatacollectionGroup;
 import org.opennms.netmgt.model.events.EventProxy;
 import org.opennms.netmgt.xml.eventconf.Events;
@@ -75,7 +75,8 @@ public class MibCompilerPanel extends Panel {
     private static final String MIB_FILE_EXTENTION = ".mib";
 
     /** The Constant MIBS_ROOT_DIR. */
-    private static final File MIBS_ROOT_DIR = new File(ConfigFileConstants.getHome(),  "/share/mibs"); // TODO Must be configurable
+    // TODO Make the MIBs directory configurable
+    private static final File MIBS_ROOT_DIR = new File(ConfigFileConstants.getHome(),  "share" + File.separatorChar + "mibs");
 
     /** The Constant MIBS_COMPILED_DIR. */
     private static final File MIBS_COMPILED_DIR = new File(MIBS_ROOT_DIR, COMPILED);
@@ -265,12 +266,25 @@ public class MibCompilerPanel extends Panel {
                 if (action == ACTION_COMPILE) {
                     if (parseMib(logger, new File(MIBS_PENDING_DIR, fileName))) {
                         // Renaming the file to be sure that the target name is correct and always has a file extension.
-                        String mibFileName = mibParser.getMibName() + MIB_FILE_EXTENTION;
-                        logger.info("Renaming file " + fileName + " to " + mibFileName);
-                        mibsTree.removeItem(target);
-                        addTreeItem(mibFileName, COMPILED);
-                        File file = new File(MIBS_PENDING_DIR, fileName);
-                        file.renameTo(new File(MIBS_COMPILED_DIR, mibFileName));
+                        final String mibFileName = mibParser.getMibName() + MIB_FILE_EXTENTION;
+                        final File currentFile = new File(MIBS_PENDING_DIR, fileName);
+                        final File suggestedFile = new File(MIBS_COMPILED_DIR, mibFileName);
+                        if (suggestedFile.exists()) {
+                            ConfirmDialog.show(getUI(),
+                                               "Are you sure?",
+                                                   "The MIB " + mibFileName + " already exist on the compiled directory?<br/>Override the existing file could break other compiled mibs, so proceed with caution.<br/>This cannot be undone.",
+                                                   "Yes",
+                                                   "No",
+                                                   new ConfirmDialog.Listener() {
+                                public void onClose(ConfirmDialog dialog) {
+                                    if (dialog.isConfirmed()) {
+                                        renameFile(logger, currentFile, suggestedFile);
+                                    }
+                                }
+                            });
+                        } else {
+                            renameFile(logger, currentFile, suggestedFile);
+                        }
                     }
                 }
                 if (action == ACTION_EVENTS) {
@@ -281,6 +295,20 @@ public class MibCompilerPanel extends Panel {
                 }
             }
         });
+    }
+
+    /**
+     * Rename file.
+     *
+     * @param logger the logger
+     * @param currentFile the current file
+     * @param suggestedFile the suggested file
+     */
+    private void renameFile(Logger logger, File currentFile, File suggestedFile) {
+        logger.info("Renaming file " + currentFile.getName() + " to " + suggestedFile.getName());
+        mibsTree.removeItem(currentFile.getName());
+        addTreeItem(suggestedFile.getName(), COMPILED);
+        currentFile.renameTo(suggestedFile);
     }
 
     /**
@@ -317,7 +345,8 @@ public class MibCompilerPanel extends Panel {
         } else {
             List<String> dependencies = mibParser.getMissingDependencies();
             if (dependencies.isEmpty()) {
-                logger.error("Problem found when compiling the MIB: <pre>" + mibParser.getFormattedErrors() + "</pre>");
+                String preStyle = "white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;";
+                logger.error("Problem found when compiling the MIB: <pre style=\"" + preStyle + "\">" + mibParser.getFormattedErrors() + "</pre>");
             } else {
                 logger.error("Dependencies required: <b>" + dependencies + "</b>");
             }
@@ -359,7 +388,7 @@ public class MibCompilerPanel extends Panel {
                 try {
                     logger.info("Found " + events.getEventCount() + " events.");
                     final String eventsFileName = fileName.replaceFirst("\\..*$", ".events.xml");
-                    final File configDir = new File(ConfigFileConstants.getHome(), "etc/events/");
+                    final File configDir = new File(ConfigFileConstants.getHome(), "etc" + File.separatorChar + "events");
                     final File eventFile = new File(configDir, eventsFileName);
                     final EventWindow w = new EventWindow(eventsDao, eventsProxy, eventFile, events, logger);
                     getUI().addWindow(w);
@@ -384,7 +413,7 @@ public class MibCompilerPanel extends Panel {
             if (dcGroup == null) {
                 Notification.show("The MIB couldn't be processed for data collection because: " + mibParser.getFormattedErrors(), Notification.Type.ERROR_MESSAGE);
             } else {
-                if (dcGroup.getGroupCount() > 0) {
+                if (dcGroup.getGroups().size() > 0) {
                     try {
                         final String dataFileName = fileName.replaceFirst("\\..*$", ".xml");
                         final DataCollectionWindow w = new DataCollectionWindow(mibParser, dataCollectionDao, dataFileName, dcGroup, logger);

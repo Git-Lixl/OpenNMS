@@ -41,20 +41,21 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.opennms.core.test.ConfigurationTestUtils;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
+import org.opennms.core.test.TestContextAware;
+import org.opennms.core.test.TestContextAwareExecutionListener;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.test.http.annotations.JUnitHttpServer;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.netmgt.config.CollectdConfigFactory;
-import org.opennms.netmgt.config.CollectdPackage;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.CollectionSet;
+import org.opennms.netmgt.collection.api.ServiceCollector;
 import org.opennms.netmgt.config.collectd.Filter;
 import org.opennms.netmgt.config.collectd.Package;
 import org.opennms.netmgt.config.collectd.Parameter;
 import org.opennms.netmgt.config.collectd.Service;
-import org.opennms.netmgt.config.collector.CollectionSet;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.ServiceTypeDao;
@@ -80,6 +81,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
 @TestExecutionListeners({
+    TestContextAwareExecutionListener.class,
     JUnitCollectorExecutionListener.class
 })
 @ContextConfiguration(locations={
@@ -181,7 +183,7 @@ public class HttpCollectorTest implements TestContextAware, InitializingBean {
 
     /**
      * Test method for {@link org.opennms.netmgt.collectd.HttpCollector#collect(
-     *   org.opennms.netmgt.collectd.CollectionAgent, org.opennms.netmgt.model.events.EventProxy, Map)}.
+     *   org.opennms.netmgt.collection.api.CollectionAgent, org.opennms.netmgt.model.events.EventProxy, Map)}.
      */
     @Test
     @JUnitHttpServer(port=10342, vhosts={"127.0.0.1"})
@@ -329,11 +331,6 @@ public class HttpCollectorTest implements TestContextAware, InitializingBean {
         }
     )
     public void testPersistApacheStatsViaCapsd() throws Exception {
-        // TODO: Do we need this init? applicationContext-collectdTest.xml should take care of this
-        CollectdConfigFactory collectdConfig = new CollectdConfigFactory(ConfigurationTestUtils.getInputStreamForResource(this, "/org/opennms/netmgt/capsd/collectd-configuration.xml"), "nms1", false);
-        CollectdConfigFactory.setInstance(collectdConfig);
-        CollectdConfigFactory.init();
-
         // Add the HTTP collector to capsd
         m_collectd.setServiceCollector("HTTP", m_collector);
         m_collectd.init();
@@ -420,8 +417,7 @@ public class HttpCollectorTest implements TestContextAware, InitializingBean {
         service.addParameter(portParm);
         pkg.addService(service);
 
-        CollectdPackage wpkg = new CollectdPackage(pkg, "default", false);
-        CollectionSpecification collectionSpecification = new CollectionSpecification(wpkg, svcName, collector);
+        CollectionSpecification collectionSpecification = new CollectionSpecification(pkg, svcName, collector);
         collectionSpecification.initialize(m_collectionAgent);
 
         CollectionSet collectionSet = collectionSpecification.collect(m_collectionAgent);

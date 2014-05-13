@@ -34,10 +34,21 @@ public class DefaultMapViewManager implements MapViewManager{
     }
     @Override
     public void setMapBounds(BoundingBox boundingBox) {
-        m_mapBounds = boundingBox;
-        m_center = m_mapBounds.getCenter();
-        
-        fireUpdate();
+        if (!m_mapBounds.equals(boundingBox)) {
+            if(boundingBox.getHeight() < m_viewPortHeight/2){
+                //Don't allow the height to be less than half the viewport height
+                m_mapBounds = new BoundingBox(boundingBox.getCenter(), boundingBox.getWidth(), m_viewPortHeight/2);
+            } else {
+                m_mapBounds = boundingBox;
+            }
+
+            m_center = m_mapBounds.getCenter();
+            fireUpdate();
+        }
+
+        if(m_mapBounds.getWidth() < m_viewPortWidth && m_mapBounds.getHeight() < m_viewPortHeight){
+            m_mapBounds = m_mapBounds.computeWithAspectRatio(getViewPortAspectRatio());
+        }
     }
     @Override
     public void setViewPort(int width, int height) {

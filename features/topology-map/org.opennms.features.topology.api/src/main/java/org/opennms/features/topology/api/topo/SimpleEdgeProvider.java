@@ -39,17 +39,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.opennms.features.topology.api.topo.Criteria.ElementType;
 import org.slf4j.LoggerFactory;
 
 public class SimpleEdgeProvider implements EdgeProvider {
 	
-	private static abstract class MatchingCriteria implements Criteria {
+	private static class MatchingCriteria extends Criteria {
 		
 		private String m_namespace;
-		
-		public MatchingCriteria(String namespace) {
+		private String m_regex;
+		public MatchingCriteria(String namespace, String regex) {
 			m_namespace = namespace;
+            m_regex = regex;
 		}
 
 		@Override
@@ -61,22 +61,34 @@ public class SimpleEdgeProvider implements EdgeProvider {
 		public String getNamespace() {
 			return m_namespace;
 		}
-		
-		public abstract boolean matches(Edge edge);
+
+        @Override
+        public int hashCode() {
+            return m_namespace.hashCode() * 31 + m_regex.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof MatchingCriteria) {
+                MatchingCriteria c = (MatchingCriteria) obj;
+                return c.getNamespace().equals(this.getNamespace()) && c.m_regex.equals(this.m_regex);
+            }else {
+                return false;
+            }
+
+        }
+
+        public  boolean matches(Edge edge){
+            return edge.getLabel().matches(m_regex);
+        }
 		
 	}
 	
 	public static Criteria labelMatches(String namespace, final String regex) {
-		return new MatchingCriteria(namespace) {
-			
-			@Override
-			public boolean matches(Edge edge) {
-				return edge.getLabel().matches(regex);
-			}
-		}; 
-	}
-	
-	private final String m_namespace;
+        return new MatchingCriteria(namespace, regex);
+    }
+
+    private final String m_namespace;
 	private final Map<String, Edge> m_edgeMap = new LinkedHashMap<String, Edge>();
 	private final Set<EdgeListener> m_listeners = new CopyOnWriteArraySet<EdgeListener>();
 	private final String m_contributesTo;
@@ -181,7 +193,7 @@ public class SimpleEdgeProvider implements EdgeProvider {
 				LoggerFactory.getLogger(this.getClass()).warn("Discarding invalid edge: {}", edge);
 				continue;
 			}
-			LoggerFactory.getLogger(this.getClass()).debug("Adding edge: {}", edge);
+			LoggerFactory.getLogger(this.getClass()).trace("Adding edge: {}", edge);
 			m_edgeMap.put(edge.getId(), edge);
 		}
 	}
@@ -213,7 +225,9 @@ public class SimpleEdgeProvider implements EdgeProvider {
 	@Override
 	public List<Edge> getEdges(Criteria... criteria) {
 		List<Edge> edges = new ArrayList<Edge>();
-		edges.addAll(m_edgeMap.values());
+		for (Edge edge : m_edgeMap.values()) {
+			edges.add(edge.clone());
+		}
 
 		for (Criteria criterium : criteria) {
 			try {

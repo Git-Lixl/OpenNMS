@@ -31,14 +31,13 @@ package org.opennms.features.gwt.ksc.add.client;
 import java.util.ArrayList;
 import java.util.List;
 
-
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.json.client.JSONValue;
 
 public class KscReportRestResponseMapper {
 
@@ -49,34 +48,46 @@ public class KscReportRestResponseMapper {
 
     public static List<KscReport> translate(final String jsonText) {
         final List<KscReport> reports = new ArrayList<KscReport>();
-        final JSONObject jsonObject = JSONParser.parseStrict(jsonText).isObject();
+        final JSONValue value = JSONParser.parseStrict(jsonText);
+        final JSONArray arr = value.isArray();
+        final JSONObject obj = value.isObject();
+        JsArray<KscReport> jsReports = null;
 
-        if(jsonObject != null && jsonObject.containsKey("kscReport")) {
-            if(jsonObject.get("kscReport").isArray() != null) {
-                final JSONArray jArray = jsonObject.get("kscReport").isArray();
-                final JsArray<KscReport> jsReports = translateJsonReportList(jArray.getJavaScriptObject());
-                for(int i = 0; i < jsReports.length(); i++) {
-                    reports.add(jsReports.get(i));
-                }
-            } else if (jsonObject.get("kscReport").isObject() != null) {
-                final KscReport report = translateJsonReport(jsonObject.get("kscReport").isObject().getJavaScriptObject());
-                reports.add(report);
-            } else {
-                GWT.log("invalid object response: " + jsonObject);
-            }
+        if (obj != null) {
+            jsReports = translateJsonReportList(obj.getJavaScriptObject());
+        } else if (arr != null) {
+            jsReports = translateJsonReportList(arr.getJavaScriptObject());
         } else {
-            GWT.log("invalid object response: " + jsonObject);
+            doLog(jsonText + " did not parse as an object or array!", value);
         }
 
+        if (jsReports != null) {
+            for(int i = 0; i < jsReports.length(); i++) {
+                reports.add(jsReports.get(i));
+            }
+        }
+
+        doLog("KSC reports:",reports);
         return reports;
     }
 
-    private static native KscReport translateJsonReport(final JavaScriptObject jso) /*-{
-        return jso;
-    }-*/;
-
     private static native JsArray<KscReport> translateJsonReportList(final JavaScriptObject jso) /*-{
-        return jso;
+        if (jso.kscReport) {
+            if( Object.prototype.toString.call( jso.kscReport ) === '[object Array]' ) {
+                return jso.kscReport;
+            } else {
+                return [ jso.kscReport ];
+            }
+        } else {
+            if( Object.prototype.toString.call( jso ) === '[object Array]' ) {
+                return jso;
+            } else {
+                return [ jso ];
+            }
+        }
     }-*/;
 
+    public static native void doLog(final String message, final Object o) /*-{
+        console.log(message,o);
+    }-*/;
 }

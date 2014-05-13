@@ -42,11 +42,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
+import org.opennms.core.network.IPAddress;
+import org.opennms.core.network.IPAddressRange;
+import org.opennms.core.network.IPAddressRangeSet;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.config.snmp.Definition;
-import org.opennms.netmgt.model.discovery.IPAddress;
-import org.opennms.netmgt.model.discovery.IPAddressRange;
-import org.opennms.netmgt.model.discovery.IPAddressRangeSet;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.event.Parm;
 
@@ -376,18 +376,18 @@ public class SnmpEventInfoTest {
         
         String snmpConfigXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
         "<snmp-config timeout=\"800\" read-community=\"public\" write-community=\"private\" xmlns=\"http://xmlns.opennms.org/xsd/config/snmp\">\n" + 
-        "    <definition version=\"v2c\">\n" + 
-        "        <specific>192.168.0.5</specific>\n" + 
-        "    </definition>\n" + 
+        "   <definition version=\"v2c\">\n" + 
+        "      <specific>192.168.0.5</specific>\n" + 
+        "   </definition>\n" + 
         "</snmp-config>\n" + 
         "";
         
         String expectedConfig = "" +
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
         "<snmp-config timeout=\"800\" read-community=\"public\" write-community=\"private\" xmlns=\"http://xmlns.opennms.org/xsd/config/snmp\">\n" + 
-        "    <definition read-community=\"abc\">\n" + 
-        "        <specific>192.168.0.5</specific>\n" + 
-        "    </definition>\n" + 
+        "   <definition read-community=\"abc\">\n" + 
+        "      <specific>192.168.0.5</specific>\n" + 
+        "   </definition>\n" + 
         "</snmp-config>\n" +
         "";
 

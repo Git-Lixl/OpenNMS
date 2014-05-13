@@ -43,8 +43,7 @@ import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.mock.snmp.MockSnmpAgent;
-import org.opennms.netmgt.config.SnmpAgentConfigFactory;
-import org.opennms.netmgt.config.SnmpAgentConfigProxyMapper;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.snmp.SnmpAgentAddress;
 import org.opennms.netmgt.snmp.mock.MockSnmpStrategy;
 import org.slf4j.Logger;
@@ -72,6 +71,8 @@ public class JUnitSnmpAgentExecutionListener extends AbstractTestExecutionListen
     private static final String STRATEGY_CLASS_KEY = "org.opennms.core.test-api.snmp.strategyClass";
     private static final String AGENT_KEY = "org.opennms.core.test-api.snmp.agentList";
     private static final String PROVIDER_KEY = "org.opennms.core.test-api.snmp.dataProvider";
+    public static final String IPADDRESS_KEY = "org.opennms.core.test-api.snmp.ipAddress";
+    public static final String PORT_KEY = "org.opennms.core.test-api.snmp.port";
 
     @Override
     public void beforeTestMethod(final TestContext testContext) throws Exception {
@@ -213,6 +214,8 @@ public class JUnitSnmpAgentExecutionListener extends AbstractTestExecutionListen
     	    }
 
     	    mapper.addProxy(hostAddress, listenAddress);
+    	    testContext.setAttribute(IPADDRESS_KEY, listenAddress.getAddress());
+    	    testContext.setAttribute(PORT_KEY, listenAddress.getPort());
 
     	    LOG.debug("using MockSnmpAgent on {} for 'real' address {}", listenAddress, agentAddress);
 

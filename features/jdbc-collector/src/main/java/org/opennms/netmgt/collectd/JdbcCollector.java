@@ -28,10 +28,7 @@
 
 package org.opennms.netmgt.collectd;
 
-import java.beans.PropertyVetoException;
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.UndeclaredThrowableException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -41,28 +38,26 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.exolab.castor.xml.MarshalException;
-import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.db.DataSourceFactory;
-import org.opennms.core.utils.BeanUtils;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.utils.ParameterMap;
-import org.opennms.netmgt.collectd.CollectionAgent;
-import org.opennms.netmgt.collectd.CollectionException;
-import org.opennms.netmgt.collectd.ServiceCollector;
 import org.opennms.netmgt.collectd.jdbc.JdbcAgentState;
 import org.opennms.netmgt.collectd.jdbc.JdbcCollectionAttributeType;
 import org.opennms.netmgt.collectd.jdbc.JdbcCollectionResource;
 import org.opennms.netmgt.collectd.jdbc.JdbcCollectionSet;
 import org.opennms.netmgt.collectd.jdbc.JdbcMultiInstanceCollectionResource;
 import org.opennms.netmgt.collectd.jdbc.JdbcSingleInstanceCollectionResource;
-import org.opennms.netmgt.config.collector.AttributeGroupType;
-import org.opennms.netmgt.config.collector.CollectionSet;
+import org.opennms.netmgt.collection.api.AttributeGroupType;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.CollectionException;
+import org.opennms.netmgt.collection.api.CollectionSet;
+import org.opennms.netmgt.collection.api.ServiceCollector;
 import org.opennms.netmgt.config.jdbc.JdbcColumn;
 import org.opennms.netmgt.config.jdbc.JdbcDataCollection;
 import org.opennms.netmgt.config.jdbc.JdbcQuery;
 import org.opennms.netmgt.dao.JdbcDataCollectionConfigDao;
-import org.opennms.netmgt.model.RrdRepository;
 import org.opennms.netmgt.model.events.EventProxy;
+import org.opennms.netmgt.rrd.RrdRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +104,6 @@ public class JdbcCollector implements ServiceCollector {
         m_scheduledNodes.clear();
         
         initializeRrdDirs();
-        initDatabaseConnectionFactory();
     }
     
     private void initializeRrdDirs() {
@@ -126,52 +120,8 @@ public class JdbcCollector implements ServiceCollector {
         }
     }
 
-    private void initDatabaseConnectionFactory() {
-        try {            
-            DataSourceFactory.init();
-        } catch (IOException e) {
-            LOG.error("initDatabaseConnectionFactory: IOException getting database connection", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (MarshalException e) {
-            LOG.error("initDatabaseConnectionFactory: Marshall Exception getting database connection", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (ValidationException e) {
-            LOG.error("initDatabaseConnectionFactory: Validation Exception getting database connection", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (SQLException e) {
-            LOG.error("initDatabaseConnectionFactory: Failed getting connection to the database.", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (PropertyVetoException e) {
-            LOG.error("initDatabaseConnectionFactory: Failed getting connection to the database.", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (ClassNotFoundException e) {
-            LOG.error("initDatabaseConnectionFactory: Failed loading database driver.", e);
-            throw new UndeclaredThrowableException(e);
-        }
-    }
-    
     private void initDatabaseConnectionFactory(String dataSourceName) {
-        try {            
-            DataSourceFactory.init(dataSourceName);
-        } catch (IOException e) {
-            LOG.error("initDatabaseConnectionFactory: IOException getting database connection", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (MarshalException e) {
-            LOG.error("initDatabaseConnectionFactory: Marshall Exception getting database connection", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (ValidationException e) {
-            LOG.error("initDatabaseConnectionFactory: Validation Exception getting database connection", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (SQLException e) {
-            LOG.error("initDatabaseConnectionFactory: Failed getting connection to the database.", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (PropertyVetoException e) {
-            LOG.error("initDatabaseConnectionFactory: Failed getting connection to the database.", e);
-            throw new UndeclaredThrowableException(e);
-        } catch (ClassNotFoundException e) {
-            LOG.error("initDatabaseConnectionFactory: Failed loading database driver.", e);
-            throw new UndeclaredThrowableException(e);
-        }
+        DataSourceFactory.init(dataSourceName);
     }
 
     @Override
@@ -198,7 +148,7 @@ public class JdbcCollector implements ServiceCollector {
             LOG.debug(sb.toString());
             throw new IllegalStateException(sb.toString());
         } else {
-            nodeState = new JdbcAgentState(agent.getInetAddress(), parameters);
+            nodeState = new JdbcAgentState(agent.getAddress(), parameters);
             LOG.info("initialize: Scheduling interface for collection: {}", nodeState.getAddress());
             m_scheduledNodes.put(scheduledNodeKey, nodeState);
         }
@@ -243,7 +193,7 @@ public class JdbcCollector implements ServiceCollector {
             loadAttributeTypeList(collection);
         
             // Create a new collection set.
-            JdbcCollectionSet collectionSet = new JdbcCollectionSet(agent);
+            JdbcCollectionSet collectionSet = new JdbcCollectionSet();
             collectionSet.setCollectionTimestamp(new Date());
         
             // Cycle through all of the queries for this collection

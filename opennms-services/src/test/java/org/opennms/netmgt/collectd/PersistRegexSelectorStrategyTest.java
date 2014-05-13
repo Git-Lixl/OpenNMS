@@ -34,20 +34,17 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.easymock.EasyMock;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.opennms.core.test.MockPlatformTransactionManager;
-import org.opennms.netmgt.config.CollectdPackage;
+import org.opennms.netmgt.collection.api.AttributeGroupType;
+import org.opennms.netmgt.collection.api.ServiceParameters;
 import org.opennms.netmgt.config.MibObject;
 import org.opennms.netmgt.config.collectd.Filter;
-import org.opennms.netmgt.config.collectd.Service;
 import org.opennms.netmgt.config.collectd.Package;
-import org.opennms.netmgt.config.collector.AttributeGroupType;
-import org.opennms.netmgt.config.collector.ServiceParameters;
+import org.opennms.netmgt.config.collectd.Service;
 import org.opennms.netmgt.config.datacollection.Parameter;
 import org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy;
 import org.opennms.netmgt.config.datacollection.StorageStrategy;
@@ -59,7 +56,6 @@ import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.snmp.SnmpInstId;
 import org.opennms.netmgt.snmp.SnmpValue;
 import org.opennms.netmgt.snmp.snmp4j.Snmp4JValueFactory;
-
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -100,9 +96,8 @@ public class PersistRegexSelectorStrategyTest {
         Service service = new Service();
         service.setName("SNMP");
         pkg.addService(service);
-        CollectdPackage collectdPkg = new CollectdPackage(pkg, "localhost", false);
         Map<String, Object> map = new TreeMap<String, Object>();
-        List<org.opennms.netmgt.config.collectd.Parameter> params = collectdPkg.getService("SNMP").getParameterCollection();
+        List<org.opennms.netmgt.config.collectd.Parameter> params = pkg.getService("SNMP").getParameters();
         for (org.opennms.netmgt.config.collectd.Parameter p : params) {
             map.put(p.getKey(), p.getValue());
         }
@@ -110,7 +105,7 @@ public class PersistRegexSelectorStrategyTest {
         serviceParams = new ServiceParameters(map);
 
         PlatformTransactionManager ptm = new MockPlatformTransactionManager();
-        CollectionAgent agent = DefaultCollectionAgent.create(1, ipInterfaceDao, ptm);
+        SnmpCollectionAgent agent = DefaultCollectionAgent.create(1, ipInterfaceDao, ptm);
         OnmsSnmpCollection snmpCollection = new OnmsSnmpCollection(agent, serviceParams);
 
         org.opennms.netmgt.config.datacollection.ResourceType rt = new org.opennms.netmgt.config.datacollection.ResourceType();
@@ -129,7 +124,7 @@ public class PersistRegexSelectorStrategyTest {
 
         resourceA = new GenericIndexResource(resourceType, rt.getName(), new SnmpInstId("1.2.3.4.5.6.7.8.9.1.1"));
         
-        AttributeGroupType groupType = new AttributeGroupType("mib2-interfaces", "all");
+        AttributeGroupType groupType = new AttributeGroupType("mib2-interfaces", AttributeGroupType.IF_TYPE_ALL);
         MibObject mibObject = new MibObject();
         mibObject.setOid(".1.2.3.4.5.6.7.8.9.2.1");
         mibObject.setInstance("1");

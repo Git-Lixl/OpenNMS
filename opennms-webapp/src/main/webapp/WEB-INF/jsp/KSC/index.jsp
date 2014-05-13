@@ -34,11 +34,7 @@
   session="true"
   import="
   org.opennms.web.api.Util,
-  org.opennms.web.servlet.XssRequestWrapper,
-  org.opennms.web.controller.ksc.CustomViewController,
-  org.opennms.web.svclayer.ResourceService,
-  org.springframework.web.context.WebApplicationContext,
-  org.springframework.web.context.support.WebApplicationContextUtils
+  org.opennms.web.servlet.XssRequestWrapper
   "
 %>
 
@@ -48,19 +44,9 @@
 <%
     final HttpServletRequest req = new XssRequestWrapper(request);
     final String match = req.getParameter("match");
-    pageContext.setAttribute("topLevelResources", m_resourceService.findTopLevelResources());
     pageContext.setAttribute("match", match);
-    final String baseHref = Util.calculateUrlBase(request);
 %>
-    
-<%!
-    public ResourceService m_resourceService;
-    
-    public void init() throws ServletException {
-      WebApplicationContext m_webAppContext = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
-      m_resourceService = (ResourceService) m_webAppContext.getBean("resourceService", ResourceService.class);
-    }
-%>
+<c:set var="baseHref" value="<%=Util.calculateUrlBase(request)%>"/>
 
 <jsp:include page="/includes/header.jsp" flush="false" >
   <jsp:param name="title" value="Key SNMP Customized Performance Reports" />
@@ -97,12 +83,12 @@
 		
 		
 	</script>
-    <opennms:kscCustomReportList id="kscReportList" dataObject="customData"></opennms:kscCustomReportList>
+    <opennms:kscCustomReportList id="kscReportList" dataObject="customData" isreadonly="${isReadOnly}"></opennms:kscCustomReportList>
     <!-- For IE Only -->
-    <div name="opennms-kscCustomReportList" id="kscReportList-ie" dataObject="customData"></div>
+    <div name="opennms-kscCustomReportList" id="kscReportList-ie" dataObject="customData" isreadonly="${isReadOnly}"></div>
   </div>
 
-  <h3 class="o-box">Node & Domain Interface Reports</h3>
+  <h3 class="o-box">Node &amp; Domain Interface Reports</h3>
   <div class="boxWrapper">
   <p>Select resource for desired performance report</p>
     <script type="text/javascript">

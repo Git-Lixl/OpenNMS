@@ -28,36 +28,67 @@
 
 package org.opennms.features.topology.plugins.topo.linkd.internal;
 
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.JAXB;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import com.google.common.collect.Lists;
+import org.opennms.core.criteria.CriteriaBuilder;
 import org.opennms.features.topology.api.GraphContainer;
 import org.opennms.features.topology.api.OperationContext;
-import org.opennms.features.topology.api.support.AbstractSearchSelectionOperation;
-import org.opennms.features.topology.api.topo.*;
+import org.opennms.features.topology.api.support.VertexHopGraphProvider;
+import org.opennms.features.topology.api.support.VertexHopGraphProvider.FocusNodeHopCriteria;
+import org.opennms.features.topology.api.support.VertexHopGraphProvider.VertexHopCriteria;
+import org.opennms.features.topology.api.topo.AbstractEdge;
+import org.opennms.features.topology.api.topo.AbstractSearchProvider;
+import org.opennms.features.topology.api.topo.AbstractTopologyProvider;
+import org.opennms.features.topology.api.topo.AbstractVertex;
+import org.opennms.features.topology.api.topo.Criteria;
+import org.opennms.features.topology.api.topo.Edge;
+import org.opennms.features.topology.api.topo.GraphProvider;
+import org.opennms.features.topology.api.topo.SearchProvider;
+import org.opennms.features.topology.api.topo.SearchQuery;
+import org.opennms.features.topology.api.topo.SearchResult;
+import org.opennms.features.topology.api.topo.SimpleLeafVertex;
+import org.opennms.features.topology.api.topo.Vertex;
+import org.opennms.features.topology.api.topo.VertexRef;
+import org.opennms.features.topology.api.topo.WrappedEdge;
+import org.opennms.features.topology.api.topo.WrappedGraph;
+import org.opennms.features.topology.api.topo.WrappedGroup;
+import org.opennms.features.topology.api.topo.WrappedLeafVertex;
+import org.opennms.features.topology.api.topo.WrappedVertex;
 import org.opennms.netmgt.dao.api.DataLinkInterfaceDao;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.SnmpInterfaceDao;
+import org.opennms.netmgt.dao.api.TopologyDao;
 import org.opennms.netmgt.model.DataLinkInterface;
+import org.opennms.netmgt.model.FilterManager;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.OnmsNode.NodeType;
+import org.opennms.netmgt.model.OnmsSnmpInterface;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
+
 public class LinkdTopologyProvider extends AbstractTopologyProvider implements GraphProvider, SearchProvider {
+	
+	private static Logger LOG = LoggerFactory.getLogger(LinkdTopologyProvider.class);
 
     private class LinkStateMachine {
         LinkState m_upState;
@@ -97,7 +128,7 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
         }
     }
     
-    private interface LinkState{
+    private interface LinkState {
         void setParentInterfaces(OnmsSnmpInterface sourceInterface, OnmsSnmpInterface targetInterface);
         String getLinkStatus();
     }
@@ -115,7 +146,7 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
         }
     }
     
-    private class LinkUpState extends AbstractLinkState{
+    private class LinkUpState extends AbstractLinkState {
 
         public LinkUpState(LinkStateMachine linkStateMachine) {
             super(linkStateMachine);
@@ -147,6 +178,7 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
         }
         
     }
+    
     private class LinkDownState extends AbstractLinkState {
 
         public LinkDownState(LinkStateMachine linkStateMachine) {
@@ -174,7 +206,6 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
     }
     
     private class LinkUnknownState extends AbstractLinkState{
-
 
         public LinkUnknownState(LinkStateMachine linkStateMachine) {
             super(linkStateMachine);
@@ -246,14 +277,22 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
     private boolean addNodeWithoutLink = false;
     
     private DataLinkInterfaceDao m_dataLinkInterfaceDao;
-    
+
     private NodeDao m_nodeDao;
-    
+
     private SnmpInterfaceDao m_snmpInterfaceDao;
 
     private IpInterfaceDao m_ipInterfaceDao;
 
+    private TopologyDao m_topologyDao;
+
     private String m_configurationFile;
+
+    private final boolean m_aclEnabled;
+
+    private FilterManager m_filterManager;
+    
+    private LinkdHopCriteriaFactory m_criteriaHopFactory;
 
     public String getConfigurationFile() {
         return m_configurationFile;
@@ -295,18 +334,40 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
         m_dataLinkInterfaceDao = dataLinkInterfaceDao;
     }
 
+    public void setTopologyDao(TopologyDao topologyDao) {
+        m_topologyDao = topologyDao;
+    }
+
+    public void setFilterManager(FilterManager filterManager){
+        m_filterManager = filterManager;
+    }
+
+    public FilterManager getFilterManager() {
+        return m_filterManager;
+    }
+    
+    public LinkdHopCriteriaFactory getLinkdHopCriteriaFactory() {
+        return m_criteriaHopFactory;
+    }
+    
+    public void setLinkdHopCriteriaFactory(LinkdHopCriteriaFactory factory) {
+        m_criteriaHopFactory = factory;
+    }
+
     /**
      * Used as an init-method in the OSGi blueprint
      * @throws JAXBException 
      * @throws MalformedURLException 
      */
     public void onInit() throws MalformedURLException, JAXBException {
-        log("init: loading topology v1.3");
+        LOG.debug("init: loading topology.");
         load(null);
     }
     
     public LinkdTopologyProvider() {
     	super(TOPOLOGY_NAMESPACE_LINKD);
+        String aclsProp = System.getProperty("org.opennms.web.aclsEnabled");
+        m_aclEnabled = aclsProp != null ? aclsProp.equals("true") : false;
     }
 
     private static WrappedGraph getGraphFromFile(File file) throws JAXBException, MalformedURLException {
@@ -320,39 +381,39 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
         try {
             load(null);
         } catch (MalformedURLException e) {
-            LoggerFactory.getLogger(LinkdTopologyProvider.class).error(e.getMessage(), e);
+            LOG.error(e.getMessage(), e);
         } catch (JAXBException e) {
-            LoggerFactory.getLogger(LinkdTopologyProvider.class).error(e.getMessage(), e);
+            LOG.error(e.getMessage(), e);
         }
     }
 
     @Override
     public void load(String filename) throws MalformedURLException, JAXBException {
         if (filename != null) {
-            LoggerFactory.getLogger(LinkdTopologyProvider.class).warn("Filename that was specified for linkd topology will be ignored: " + filename + ", using " + m_configurationFile + " instead");
+            LOG.warn("Filename that was specified for linkd topology will be ignored: " + filename + ", using " + m_configurationFile + " instead");
         }
-        log("loadtopology: resetContainer ");
+        LOG.debug("loadtopology: resetContainer ");
         resetContainer();
 
         for (DataLinkInterface link: m_dataLinkInterfaceDao.findAll()) {
-            log("loadtopology: parsing link: " + link.getDataLinkInterfaceId());
+            LOG.debug("loadtopology: parsing link: " + link.getDataLinkInterfaceId());
 
             OnmsNode node = m_nodeDao.get(link.getNode().getId());
-            log("loadtopology: found source node: " + node.getLabel());
+            LOG.debug("loadtopology: found source node: " + node.getLabel());
             String sourceId = node.getNodeId();
             Vertex source = getVertex(getVertexNamespace(), sourceId);
             if (source == null) {
-                log("loadtopology: adding source node as vertex: " + node.getLabel());
+                LOG.debug("loadtopology: adding source node as vertex: " + node.getLabel());
                 source = getVertex(node);
                 addVertices(source);
             }
 
             OnmsNode parentNode = m_nodeDao.get(link.getNodeParentId());
-            log("loadtopology: found target node: " + parentNode.getLabel());
+            LOG.debug("loadtopology: found target node: " + parentNode.getLabel());
             String targetId = parentNode.getNodeId();
             Vertex target = getVertex(getVertexNamespace(), targetId);
             if (target == null) {
-                log("loadtopology: adding target as vertex: " + parentNode.getLabel());
+                LOG.debug("loadtopology: adding target as vertex: " + parentNode.getLabel());
                 target = getVertex(parentNode);
                 addVertices(target);
             }
@@ -363,26 +424,34 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
             edge.setTooltipText(getEdgeTooltipText(link, source, target));
         }
         
-        log("loadtopology: adding nodes without links: " + isAddNodeWithoutLink());
+        LOG.debug("loadtopology: adding nodes without links: " + isAddNodeWithoutLink());
         if (isAddNodeWithoutLink()) {
-            for (OnmsNode onmsnode: m_nodeDao.findAll()) {
+
+            List<OnmsNode> allNodes;
+            allNodes = getAllNodesNoACL();
+
+            for (OnmsNode onmsnode: allNodes) {
                 String nodeId = onmsnode.getNodeId();
                 if (getVertex(getVertexNamespace(), nodeId) == null) {
-                    log("loadtopology: adding link-less node: " + onmsnode.getLabel());
+                    LOG.debug("loadtopology: adding link-less node: " + onmsnode.getLabel());
                     addVertices(getVertex(onmsnode));
                 }
             }
+
+
+
+
         }
         
         File configFile = new File(m_configurationFile);
         if (configFile.exists() && configFile.canRead()) {
-            log("loadtopology: loading topology from configuration file: " + m_configurationFile);
+            LOG.debug("loadtopology: loading topology from configuration file: " + m_configurationFile);
             WrappedGraph graph = getGraphFromFile(configFile);
 
             // Add all groups to the topology
             for (WrappedVertex eachVertexInFile: graph.m_vertices) {
                 if (eachVertexInFile.group) {
-                    log("loadtopology: adding group to topology: " + eachVertexInFile.id);
+                    LOG.debug("loadtopology: adding group to topology: " + eachVertexInFile.id);
                     if (eachVertexInFile.namespace == null) {
                         eachVertexInFile.namespace = getVertexNamespace();
                         LoggerFactory.getLogger(this.getClass()).warn("Setting namespace on vertex to default: {}", eachVertexInFile);
@@ -404,7 +473,7 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
             }
             for (Vertex vertex: getVertices()) {
                 if (vertex.getParent() != null && !vertex.equals(vertex.getParent())) {
-                    log("loadtopology: setting parent of " + vertex + " to " + vertex.getParent());
+                    LOG.debug("loadtopology: setting parent of " + vertex + " to " + vertex.getParent());
                     setParent(vertex, vertex.getParent());
                 }
             }
@@ -415,16 +484,38 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
                     final Vertex child = getVertex(eachVertexInFile);
                     final Vertex parent = getVertex(eachVertexInFile.parent);
                     if (child == null || parent == null) continue;
-                    log("loadtopology: setting parent of " + child + " to " + parent);
+                    LOG.debug("loadtopology: setting parent of " + child + " to " + parent);
                     if (!child.equals(parent)) setParent(child, parent);
                 }
             }
         } else {
-            log("loadtopology: could not load topology configFile:" + m_configurationFile);
+            LOG.debug("loadtopology: could not load topology configFile:" + m_configurationFile);
         }
-        log("Found " + getGroups().size() + " groups");        
-        log("Found " + getVerticesWithoutGroups().size() + " vertices");
-        log("Found " + getEdges().size() + " edges");
+        LOG.debug("Found " + getGroups().size() + " groups");        
+        LOG.debug("Found " + getVerticesWithoutGroups().size() + " vertices");
+        LOG.debug("Found " + getEdges().size() + " edges");
+    }
+
+    private List<OnmsNode> getAllNodesNoACL() {
+        if(getFilterManager().isEnabled()){
+            String[] userGroups = getFilterManager().getAuthorizationGroups();
+            List<OnmsNode> nodeList = null;
+            try{
+                getFilterManager().disableAuthorizationFilter();
+                nodeList = m_nodeDao.findAll();
+
+            } finally {
+                // Make sure that we re-enable the authorization filter
+                if(userGroups != null){
+                    getFilterManager().enableAuthorizationFilter(userGroups);
+                }
+            }
+            return nodeList != null ? nodeList : Collections.<OnmsNode>emptyList();
+        } else {
+            return m_nodeDao.findAll();
+        }
+
+
     }
 
     private AbstractVertex getVertex(OnmsNode onmsnode) {
@@ -508,7 +599,6 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
         tooltipText.append( "End Point 2: " + target.getLabel() + ", " + target.getIpAddress());
         tooltipText.append(HTML_TOOLTIP_TAG_END);
 
-        log("getEdgeTooltipText\n" + tooltipText);
         return tooltipText.toString();
     }
 
@@ -541,8 +631,6 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
             tooltipText.append( " / Unmanaged");
         }
         tooltipText.append(HTML_TOOLTIP_TAG_END);
-
-        log("getNodeTooltipText:\n" + tooltipText);
         
         return tooltipText.toString();
 
@@ -574,34 +662,202 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
     }
 
     @Override
-    public List<VertexRef> query(SearchQuery searchQuery) {
-        List<Vertex> vertices = m_vertexProvider.getVertices();
-        List<VertexRef> vertRefs = Lists.newArrayList();
+    public String getSearchProviderNamespace() {
+        return TOPOLOGY_NAMESPACE_LINKD;
+    }
 
-        for(Vertex vertex : vertices){
-            if(searchQuery.matches(vertex)) {
-                vertRefs.add(vertex);
-            }
+
+    //@Override
+    public List<SearchResult> slowQuery(SearchQuery searchQuery, GraphContainer graphContainer) {
+        LOG.debug("SearchProvider->query: called with search query: '{}'", searchQuery);
+        List<SearchResult> searchResults = Lists.newArrayList();
+        
+        CriteriaBuilder cb = new CriteriaBuilder(OnmsNode.class);
+        String ilike = "%"+searchQuery.getQueryString()+"%";  //check this for performance reasons
+//        cb.alias("assetRecord", "asset").match("any").ilike("label", ilike).ilike("sysDescription", ilike).ilike("asset.comment", ilike);
+        cb.match("any").ilike("label", ilike).ilike("sysDescription", ilike);
+        List<OnmsNode> nodes = m_nodeDao.findMatching(cb.toCriteria());
+        
+        if (nodes.size() == 0) {
+            return searchResults;
         }
+        
+        for (OnmsNode node : nodes) {
+            searchResults.add(createSearchResult(node, searchQuery.getQueryString()));
+        }
+        
+        return searchResults;
+    }
 
-        return vertRefs;
+    private SearchResult createSearchResult(OnmsNode node, String queryString) {
+        SearchResult result = new SearchResult("node", node.getId().toString(), node.getLabel(), queryString);
+        return result;
     }
 
     @Override
-    public AbstractSearchSelectionOperation getSelectionOperation() {
-        return new AbstractSearchSelectionOperation() {
+    public List<SearchResult> query(SearchQuery searchQuery, GraphContainer graphContainer) {
+    	//LOG.debug("SearchProvider->query: called with search query: '{}'", searchQuery);
+    	
+        List<Vertex> vertices = getFilteredVertices();
+        List<SearchResult> searchResults = Lists.newArrayList();
 
-            @Override
-            public Undoer execute(List<VertexRef> refs, OperationContext operationContext) {
-
-                GraphContainer m_graphContainer = operationContext.getGraphContainer();
-                Collection<VertexRef> vertices = m_graphContainer.getVertexRefForest(refs);
-                m_graphContainer.getSelectionManager().setSelectedVertexRefs(vertices);
-
-                return null;
+        for(Vertex vertex : vertices){
+            if(searchQuery.matches(vertex.getLabel())) {
+                searchResults.add(new SearchResult(vertex));
             }
-        };
+        }
+        
+        //LOG.debug("SearchProvider->query: found {} search results.", searchResults.size());
+        return searchResults;
     }
+
+    private List<Vertex> getFilteredVertices() {
+        if(m_aclEnabled){
+            //Get All nodes when called should filter with ACL
+            List<OnmsNode> onmsNodes = m_nodeDao.findAll();
+
+            //Transform the onmsNodes list to a list of Ids
+            final List<Integer> nodes = Lists.transform(onmsNodes, new Function<OnmsNode, Integer>() {
+                @Override
+                public Integer apply(OnmsNode node) {
+                    return node.getId();
+                }
+            });
+
+
+            //Filter out the nodes that are not viewable by the user.
+            return Lists.newArrayList(Collections2.filter(m_vertexProvider.getVertices(), new Predicate<Vertex>() {
+                @Override
+                public boolean apply(Vertex vertex) {
+                    return nodes.contains(vertex.getNodeID());
+                }
+            }));
+        } else{
+            return m_vertexProvider.getVertices();
+        }
+
+    }
+
+    @Override
+    public void onFocusSearchResult(SearchResult searchResult, OperationContext operationContext) {
+        LOG.debug("SearchProvider->onFocusSearchResult: called with search result: '{}'", searchResult);
+    }
+
+    @Override
+    public void onDefocusSearchResult(SearchResult searchResult, OperationContext operationContext) {
+        LOG.debug("SearchProvider->onDefocusSearchResult: called with search result: '{}'", searchResult);
+    }
+
+    @Override
+    public boolean supportsPrefix(String searchPrefix) {
+        return AbstractSearchProvider.supportsPrefix("nodes=", searchPrefix);
+    }
+
+    @Override
+    public Set<VertexRef> getVertexRefsBy(SearchResult searchResult, GraphContainer container) {
+        LOG.debug("SearchProvider->getVertexRefsBy: called with search result: '{}'", searchResult);
+        org.opennms.features.topology.api.topo.Criteria criterion = findCriterion(searchResult.getId(), container);
+        
+        Set<VertexRef> vertices = ((VertexHopCriteria)criterion).getVertices();
+        LOG.debug("SearchProvider->getVertexRefsBy: found '{}' vertices.", vertices.size());
+        
+        return vertices;
+    }
+
+    @Override
+    public void removeVertexHopCriteria(SearchResult searchResult, GraphContainer container) {
+        LOG.debug("SearchProvider->removeVertexHopCriteria: called with search result: '{}'", searchResult);
+
+        Criteria criterion = findCriterion(searchResult.getId(), container);
+
+        if (criterion != null) {
+            LOG.debug("SearchProvider->removeVertexHopCriteria: found criterion: {} for searchResult {}.", criterion, searchResult);
+            container.removeCriteria(criterion);
+        } else {
+            LOG.debug("SearchProvider->removeVertexHopCriteria: did not find criterion for searchResult {}.", searchResult);
+        }
+        
+        logCriteriaInContainer(container);
+    }
+    
+    private org.opennms.features.topology.api.topo.Criteria findCriterion(String resultId, GraphContainer container) {
+        
+        org.opennms.features.topology.api.topo.Criteria[] criteria = container.getCriteria();
+        for (org.opennms.features.topology.api.topo.Criteria criterion : criteria) {
+            if (criterion instanceof LinkdHopCriteria ) {
+                
+                String id = ((LinkdHopCriteria) criterion).getId();
+                
+                if (id.equals(resultId)) {
+                    return criterion;
+                }
+            }
+            
+            if (criterion instanceof FocusNodeHopCriteria) {
+                String id = ((FocusNodeHopCriteria)criterion).getId();
+                
+                if (id.equals(resultId)) {
+                    return criterion;
+                }
+            }
+            
+        }
+        return null;
+    }
+
+
+    @Override
+    public void onCenterSearchResult(SearchResult searchResult, GraphContainer graphContainer) {
+        LOG.debug("SearchProvider->onCenterSearchResult: called with search result: '{}'", searchResult);
+    }
+
+    @Override
+    public void onToggleCollapse(SearchResult searchResult, GraphContainer graphContainer) {
+        LOG.debug("SearchProvider->onToggleCollapse: called with search result: '{}'", searchResult);
+    }
+
+    @Override
+    public void addVertexHopCriteria(SearchResult searchResult, GraphContainer container) {
+        LOG.debug("SearchProvider->addVertexHopCriteria: called with search result: '{}'", searchResult);
+        
+        VertexHopCriteria criterion = LinkdHopCriteriaFactory.createCriteria(searchResult.getId(), searchResult.getLabel());
+        container.addCriteria(criterion);
+        
+        LOG.debug("SearchProvider->addVertexHop: adding hop criteria {}.", criterion);
+        
+        logCriteriaInContainer(container);
+    }
+
+    private void logCriteriaInContainer(GraphContainer container) {
+        Criteria[] criteria = container.getCriteria();
+        LOG.debug("SearchProvider->addVertexHopCriteria: there are now {} criteria in the GraphContainer.", criteria.length);
+        for (Criteria crit : criteria) {
+            LOG.debug("SearchProvider->addVertexHopCriteria: criterion: '{}' is in the GraphContainer.", crit);
+        }
+    }
+    
+
+    @Override
+    public VertexHopCriteria getDefaultCriteria() {
+        LOG.debug("SearchProvider->getDefaultCriteria called.");
+
+        final OnmsNode node = m_topologyDao.getDefaultFocusPoint();
+                
+        VertexHopCriteria criterion = null;
+        
+        if (node != null) {
+            final Vertex defaultVertex = getVertex(TOPOLOGY_NAMESPACE_LINKD, node.getNodeId());
+            if (defaultVertex != null) {
+                VertexHopGraphProvider.FocusNodeHopCriteria hopCriteria = new VertexHopGraphProvider.FocusNodeHopCriteria();
+                hopCriteria.add(defaultVertex);
+                return hopCriteria;
+            }
+        }
+        
+        LOG.debug("SearchProvider->getDefaultCriteria:returning hop criteria: '{}'.", criterion);
+        return criterion;
+    }
+
 
     private static String getIfStatusString(int ifStatusNum) {
           if (ifStatusNum < OPER_ADMIN_STATUS.length) {
@@ -672,10 +928,6 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
         return formatter.format(displaySpeed) + " " + units;
     }
 
-    private static void log(final String string) {
-        LoggerFactory.getLogger(LinkdTopologyProvider.class).debug(string);
-    }
-
     public IpInterfaceDao getIpInterfaceDao() {
         return m_ipInterfaceDao;
     }
@@ -683,4 +935,5 @@ public class LinkdTopologyProvider extends AbstractTopologyProvider implements G
     public void setIpInterfaceDao(IpInterfaceDao ipInterfaceDao) {
         m_ipInterfaceDao = ipInterfaceDao;
     }
+    
 }

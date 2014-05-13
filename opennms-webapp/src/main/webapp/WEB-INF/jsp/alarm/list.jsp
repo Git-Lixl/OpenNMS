@@ -88,16 +88,13 @@
     // optional bookmark
     final OnmsFilterFavorite favorite = (OnmsFilterFavorite) req.getAttribute("favorite");
 
-    pageContext.setAttribute("addPositiveFilter", "[+]");
-    pageContext.setAttribute("addNegativeFilter", "[-]");
-    pageContext.setAttribute("addBeforeFilter", "[&gt;]");
-    pageContext.setAttribute("addAfterFilter", "[&lt;]");
-    pageContext.setAttribute("filterFavoriteSelectTagHandler", new FilterFavoriteSelectTagHandler());
-    
-    final String baseHref = org.opennms.web.api.Util.calculateUrlBase(request);
+    pageContext.setAttribute("addPositiveFilter", "<i class=\"fa fa-plus-square-o\"></i>");
+    pageContext.setAttribute("addNegativeFilter", "<i class=\"fa fa-minus-square-o\"></i>");
+    pageContext.setAttribute("addBeforeFilter", "<i class=\"fa fa-toggle-right\"></i>");
+    pageContext.setAttribute("addAfterFilter", "<i class=\"fa fa-toggle-left\"></i>");
+    pageContext.setAttribute("filterFavoriteSelectTagHandler", new FilterFavoriteSelectTagHandler("All Alarms"));
 %>
-
-
+<c:set var="baseHref" value="<%=Util.calculateUrlBase(request)%>"/>
 
 <jsp:include page="/includes/header.jsp" flush="false" >
   <jsp:param name="title" value="Alarm List" />
@@ -107,6 +104,7 @@
   <jsp:param name="breadcrumb" value="List" />
 </jsp:include>
 
+<link rel="stylesheet" href="css/font-awesome-4.0.3/css/font-awesome.min.css">
 
   <script type="text/javascript">
     function checkAllCheckboxes() {
@@ -240,35 +238,22 @@
       </div>
       <!-- end menu -->
 
-
-            <jsp:include page="/includes/alarm-querypanel.jsp" flush="false" />
-          
-            <% if( alarmCount > 0 ) { %>
-              <% String baseUrl = this.makeLink(callback, parms, favorite); %>
-              <jsp:include page="/includes/resultsIndex.jsp" flush="false" >
-                <jsp:param name="count"    value="<%=alarmCount%>" />
-                <jsp:param name="baseurl"  value="<%=baseUrl%>"    />
-                <jsp:param name="limit"    value="<%=parms.getLimit()%>"      />
-                <jsp:param name="multiple" value="<%=parms.getMultiple()%>"   />
-              </jsp:include>
-            <% } %>
-
             <% if( parms.getFilters().size() > 0 || AcknowledgeType.UNACKNOWLEDGED.toNormalizedAcknowledgeType().equals(parms.getAckType()) || AcknowledgeType.ACKNOWLEDGED.toNormalizedAcknowledgeType().equals(parms.getAckType()) ) { %>
+                <div>
                 <p>
                     Favorites:
                     <onms:select
+                            defaultText="All Alarms"
                             elements='${favorites}'
                             selected='${favorite}'
                             handler='${filterFavoriteSelectTagHandler}'
                             onChange='changeFavorite(this)'/>
-                    <onms:favorite
-                            favorite="${favorite}"
-                            parameters="${parms}"
-                            callback="${callback}"
-                            context="/alarm/list"
-                            createFavoriteController="/alarm/createFavorite"
-                            deleteFavoriteController="/alarm/deleteFavorite"
-                            onDeselect="<%=FavoriteTag.Action.CLEAR_FILTERS%>"/>
+                </p>
+            <% } %>
+            <jsp:include page="/includes/alarm-querypanel.jsp" flush="false" />
+
+            <% if( parms.getFilters().size() > 0 || AcknowledgeType.UNACKNOWLEDGED.toNormalizedAcknowledgeType().equals(parms.getAckType()) || AcknowledgeType.ACKNOWLEDGED.toNormalizedAcknowledgeType().equals(parms.getAckType()) ) { %>
+                <p>
                     <onms:filters
                             context="/alarm/list"
                             favorite="${favorite}"
@@ -278,9 +263,29 @@
                             acknowledgeFilterPrefix="Alarm(s)"
                             acknowledgeFilterSuffix="alarm(s)"
                             callback="${callback}" />
+
+                    <onms:favorite
+                            favorite="${favorite}"
+                            parameters="${parms}"
+                            callback="${callback}"
+                            context="/alarm/list"
+                            createFavoriteController="/alarm/createFavorite"
+                            deleteFavoriteController="/alarm/deleteFavorite"
+                            onDeselect="<%=FavoriteTag.Action.CLEAR_FILTERS%>"/>
                 </p>
+                </div>
             <% } %>
             <onms:alert/>
+
+            <% if( alarmCount > 0 ) { %>
+              <% String baseUrl = this.makeLink(callback, parms, favorite); %>
+              <jsp:include page="/includes/resultsIndex.jsp" flush="false" >
+                <jsp:param name="count"    value="<%=alarmCount%>" />
+                <jsp:param name="baseurl"  value="<%=baseUrl%>"    />
+                <jsp:param name="limit"    value="<%=parms.getLimit()%>"      />
+                <jsp:param name="multiple" value="<%=parms.getMultiple()%>"   />
+              </jsp:include>
+            <% } %>
 
       <% if( req.isUserInRole( Authentication.ROLE_ADMIN ) || !req.isUserInRole( Authentication.ROLE_READONLY ) ) { %>
           <form action="<%= Util.calculateUrlBase(request, "alarm/acknowledge") %>" method="post" name="alarm_action_form">
@@ -346,7 +351,7 @@
           <% if( parms.getAckType().equals(AcknowledgeType.BOTH.toNormalizedAcknowledgeType()) ) { %>
               <td class="divider" valign="middle" rowspan="1">
                 <nobr>
-                  <input type="checkbox" name="alarm" disabled="true" <%=alarms[i].isAcknowledged() ? "checked='true'" : ""%> /> 
+                  <input type="checkbox" name="alarm" disabled="disabled" <%=alarms[i].isAcknowledged() ? "checked='true'" : ""%> /> 
                 </nobr>
           <% } else if( req.isUserInRole( Authentication.ROLE_ADMIN ) || !req.isUserInRole( Authentication.ROLE_READONLY ) ) { %>
               <td class="divider" valign="middle" rowspan="1">
@@ -464,7 +469,11 @@
             <% } %>
           </td>
           <td class="divider">
-            <nobr><span title="Event <%= alarms[i].getLastEvent().getId()%>"><a href="event/detail.htm?id=<%= alarms[i].getLastEvent().getId()%>"><fmt:formatDate value="${alarm.lastEventTime}" type="date" dateStyle="short"/>&nbsp;<fmt:formatDate value="${alarm.lastEventTime}" type="time" pattern="HH:mm:ss"/></a></span></nobr>
+            <nobr>
+              <% if(alarms[i].getLastEvent() != null) { %><span title="Event <%= alarms[i].getLastEvent().getId()%>"><a href="event/detail.htm?id=<%= alarms[i].getLastEvent().getId()%>"><% } %>
+                <fmt:formatDate value="${alarm.lastEventTime}" type="date" dateStyle="short"/>&nbsp;<fmt:formatDate value="${alarm.lastEventTime}" type="time" pattern="HH:mm:ss"/>
+              <% if(alarms[i].getLastEvent() != null) { %></a></span><% } %>
+            </nobr>
             <nobr>
               <a href="<%=this.makeLink(callback, parms, new AfterLastEventTimeFilter(alarms[i].getLastEventTime()), true, favorite)%>"  class="filterLink" title="Only show alarms occurring after this one">${addAfterFilter}</a>
               <a href="<%=this.makeLink(callback, parms, new BeforeLastEventTimeFilter(alarms[i].getLastEventTime()), true, favorite)%>" class="filterLink" title="Only show alarms occurring before this one">${addBeforeFilter}</a>

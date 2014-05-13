@@ -50,18 +50,21 @@ import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.core.style.ToStringCreator;
 
 /**
  * Represents the asset information for a node.
- *
+ * 
  * @hibernate.class table="assets"
  */
 @XmlRootElement(name = "assetRecord")
 @Entity
 @Table(name = "assets")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OnmsAssetRecord implements Serializable {
     private static final long serialVersionUID = -8259333820682056097L;
 
@@ -433,6 +436,7 @@ public class OnmsAssetRecord implements Serializable {
     @XmlIDREF
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nodeId")
+    @JsonIgnore
     public OnmsNode getNode() {
         return m_node;
     }
@@ -863,7 +867,7 @@ public class OnmsAssetRecord implements Serializable {
      */
     @Column(name = "userLastModified", length = 20)
     public String getLastModifiedBy() {
-        return m_lastModifiedBy;
+        return m_lastModifiedBy == null? null : m_lastModifiedBy.trim();
     }
 
     /**
@@ -994,7 +998,7 @@ public class OnmsAssetRecord implements Serializable {
      * --# maintContractNumber: The maintenance contract number for this asset.
      *
      * @return a {@link java.lang.String} object.
-     * @deprecated This field is provided for backwards compatibility with OpenNMS < 1.10
+     * @deprecated This field is provided for backwards compatibility with OpenNMS &lt; 1.10
      */
     @Transient
     public String getMaintContractNumber() {
@@ -1005,7 +1009,7 @@ public class OnmsAssetRecord implements Serializable {
      * <p>setMaintContractNumber</p>
      *
      * @param maintcontract a {@link java.lang.String} object.
-     * @deprecated This field is provided for backwards compatibility with OpenNMS < 1.10
+     * @deprecated This field is provided for backwards compatibility with OpenNMS &lt; 1.10
      */
     public void setMaintContractNumber(final String maintcontract) {
         setMaintcontract(maintcontract);
@@ -1333,11 +1337,6 @@ public class OnmsAssetRecord implements Serializable {
         return m_rackunitheight;
     }
 
-    /**
-     * <p>setRackunitheight</p>
-     *
-     * @param snmpcommunity a {@link java.lang.String} object.
-     */
     public void setRackunitheight(final String rackunitheight) {
         m_rackunitheight = rackunitheight;
     }
@@ -1681,7 +1680,7 @@ public class OnmsAssetRecord implements Serializable {
 
     /**
      * <p>getVmwareManagedEntityType</p>
-     * <p/>
+     * 
      * Set the VMware management entity type defines if the machine is a virtual machine or a host system
      *
      * @return a {@link java.lang.String} object
@@ -1693,7 +1692,7 @@ public class OnmsAssetRecord implements Serializable {
 
     /**
      * <p>setVmwareManagedEntityType</p>
-     * <p/>
+     * 
      * Set the VMware management entity type defines if the machine is a virtual machine or a host system
      *
      * @param vmwareManagedEntityType a {@link java.lang.String} object
@@ -1704,7 +1703,7 @@ public class OnmsAssetRecord implements Serializable {
 
     /**
      * <p>getVmwareManagedObjectId</p>
-     * <p/>
+     * 
      * Get the VMware managed object ID as a unique identifier for VMware API
      *
      * @return a {@link java.lang.String} object
@@ -1716,10 +1715,8 @@ public class OnmsAssetRecord implements Serializable {
 
     /**
      * <p>setVmwareManagedObjectId</p>
-     * <p/>
+     * 
      * Set the VMware managed object ID as a unique identifier for VMware API
-     *
-     * @return a {@link java.lang.String} object
      */
     public void setVmwareManagedObjectId(final String vmwareManagedObjectId) {
         m_vmwareManagedObjectId = vmwareManagedObjectId;
@@ -1727,7 +1724,7 @@ public class OnmsAssetRecord implements Serializable {
 
     /**
      * <p>getVmwareManagementServer</p>
-     * <p/>
+     * 
      * Get the vCenter host or ip address
      *
      * @return a {@link java.lang.String} object
@@ -1739,7 +1736,7 @@ public class OnmsAssetRecord implements Serializable {
 
     /**
      * <p>setVmwareManagementServer</p>
-     * <p/>
+     * 
      * Set the vCenter host or ip address
      *
      * @param vmwareManagementServer a {@link java.lang.String} object
@@ -1750,7 +1747,7 @@ public class OnmsAssetRecord implements Serializable {
 
     /**
      * <p>getVmwareState</p>
-     * <p/>
+     * 
      * Get the VMware managed entity state
      *
      * @return a {@link java.lang.String} object
@@ -1762,7 +1759,7 @@ public class OnmsAssetRecord implements Serializable {
 
     /**
      * <p>setVmwareState</p>
-     * <p/>
+     * 
      * Set the VMware managed entity state
      *
      * @param vmwareState a {@link java.lang.String} object
@@ -1773,7 +1770,7 @@ public class OnmsAssetRecord implements Serializable {
 
     /**
      * <p>getVmwareTopologyInfo</p>
-     * <p/>
+     * 
      * Get the VMware topology information
      *
      * @return a {@link java.lang.String} object
@@ -1785,7 +1782,7 @@ public class OnmsAssetRecord implements Serializable {
 
     /**
      * <p>setVmwareTopologyInfo</p>
-     * <p/>
+     * 
      * Set the VMware topology information
      *
      * @param vmwareTopologyInfo a {@link java.lang.String} object
@@ -1913,6 +1910,13 @@ public class OnmsAssetRecord implements Serializable {
             return;
         }
 
+        OnmsGeolocation toGeolocation = this.getGeolocation();
+        if (toGeolocation == null) {
+            toGeolocation = new OnmsGeolocation();
+            this.setGeolocation(toGeolocation);
+        }
+        final OnmsGeolocation fromGeolocation = newRecord.getGeolocation();
+
         //this works because all asset properties are strings
         //if the model dependencies ever change to not include spring, this will break
         final BeanWrapper currentBean = PropertyAccessorFactory.forBeanPropertyAccess(this);
@@ -1931,5 +1935,8 @@ public class OnmsAssetRecord implements Serializable {
                 currentBean.setPropertyValue(propertyName, newBean.getPropertyValue(propertyName));
             }
         }
+
+        toGeolocation.mergeGeolocation(fromGeolocation);
+        setGeolocation(toGeolocation);
     }
 }

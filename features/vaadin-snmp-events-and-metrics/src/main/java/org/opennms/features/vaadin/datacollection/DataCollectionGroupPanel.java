@@ -43,22 +43,23 @@ import org.vaadin.dialogs.ConfirmDialog;
 import com.vaadin.data.util.ObjectProperty;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.Tab;
+import com.vaadin.ui.TextField;
+import com.vaadin.ui.VerticalLayout;
 
 /**
  * The Class DataCollectionGroupPanel.
  * 
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a> 
  */
-// TODO When renaming a group, all the SNMP collections must be updated.
+// FIXME: When renaming a datacollection-group, all the SNMP collections must be updated.
+// FIXME: When a different group is selected and the current one is being edited, warn about discard the changes or save them before continue
 @SuppressWarnings("serial")
 public abstract class DataCollectionGroupPanel extends Panel implements TabSheet.SelectedTabChangeListener {
 
@@ -151,12 +152,12 @@ public abstract class DataCollectionGroupPanel extends Panel implements TabSheet
      * @return the OpenNMS data collection group
      */
     public DatacollectionGroup getOnmsDataCollection() {
-        final DatacollectionGroup dto = new DatacollectionGroup();
-        dto.setName((String) groupName.getValue());
-        dto.getGroupCollection().addAll(groups.getGroups());
-        dto.getResourceTypeCollection().addAll(resourceTypes.getResourceTypes());
-        dto.getSystemDefCollection().addAll(systemDefs.getSystemDefs());
-        return dto;
+        final DatacollectionGroup group = new DatacollectionGroup();
+        group.setName((String) groupName.getValue());
+        group.setGroups(groups.getGroups());
+        group.setResourceTypes(resourceTypes.getResourceTypes());
+        group.setSystemDefs(systemDefs.getSystemDefs());
+        return group;
     }
 
     /**
@@ -184,7 +185,7 @@ public abstract class DataCollectionGroupPanel extends Panel implements TabSheet
      */
     private void processDataCollection(final DataCollectionConfigDao dataCollectionConfigDao, final Logger logger) {
         final DatacollectionGroup dcGroup = getOnmsDataCollection();
-        final File configDir = new File(ConfigFileConstants.getHome(), "etc/datacollection/");
+        final File configDir = new File(ConfigFileConstants.getHome(), "etc" + File.separatorChar + "datacollection");
         final File file = new File(configDir, dcGroup.getName().replaceAll(" ", "_") + ".xml");
         if (file.exists()) {
             ConfirmDialog.show(getUI(),

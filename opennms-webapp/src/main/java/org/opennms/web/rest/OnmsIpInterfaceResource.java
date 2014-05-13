@@ -47,6 +47,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.opennms.core.criteria.CriteriaBuilder;
+import org.opennms.core.criteria.Alias.JoinType;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
@@ -70,13 +71,6 @@ import com.sun.jersey.api.core.ResourceContext;
 import com.sun.jersey.spi.resource.PerRequest;
 
 @Component
-/**
- * <p>OnmsIpInterfaceResource class.</p>
- *
- * @author ranger
- * @version $Id: $
- * @since 1.8.1
- */
 @PerRequest
 @Scope("prototype")
 @Transactional
@@ -119,6 +113,7 @@ public class OnmsIpInterfaceResource extends OnmsRestService {
             final MultivaluedMap<String,String> params = m_uriInfo.getQueryParameters();
             
             final CriteriaBuilder builder = new CriteriaBuilder(OnmsIpInterface.class);
+            builder.alias("monitoredServices.serviceType", "serviceType", JoinType.LEFT_JOIN);
             builder.ne("isManaged", "D");
             builder.limit(20);
             applyQueryFilters(params, builder);
@@ -230,6 +225,10 @@ public class OnmsIpInterfaceResource extends OnmsRestService {
             final BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(ipInterface);
     
             for(final String key : params.keySet()) {
+                // skip nodeId since we already know the node this is associated with and don't want to overwrite it
+                if ("nodeId".equals(key)) {
+                    continue;
+                }
                 if (wrapper.isWritableProperty(key)) {
                     final String stringValue = params.getFirst(key);
                     final Object value = wrapper.convertIfNecessary(stringValue, (Class<?>)wrapper.getPropertyType(key));

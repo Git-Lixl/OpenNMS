@@ -28,13 +28,17 @@
 
 package org.opennms.features.topology.api.topo;
 
-import org.junit.Test;
-import org.opennms.features.topology.api.support.AbstractSearchSelectionOperation;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.opennms.features.topology.api.GraphContainer;
 
 public class AbstractSearchProviderTest {
 
@@ -76,8 +80,8 @@ public class AbstractSearchProviderTest {
         }
 
         @Override
-        public boolean matches(VertexRef vertexRef) {
-            return vertexRef.getLabel().contains(getQueryString());
+        public boolean matches(String provided) {
+            return provided.toLowerCase().contains(getQueryString().toLowerCase());
         }
     }
 
@@ -88,8 +92,8 @@ public class AbstractSearchProviderTest {
         }
 
         @Override
-        public boolean matches(VertexRef vertexRef) {
-            return vertexRef.getLabel().matches(getQueryString());
+        public boolean matches(String provided) {
+            return provided.toLowerCase().matches(getQueryString().toLowerCase());
         }
     }
 
@@ -100,32 +104,66 @@ public class AbstractSearchProviderTest {
 
         SearchProvider searchProvider1 = createSearchProvider();
 
-        assertEquals(10, searchProvider1.query(containsQuery).size());
-        assertEquals(1, searchProvider1.query(exactQuery).size());
+        assertEquals(10, searchProvider1.query(containsQuery, null).size());
+        assertEquals(1, searchProvider1.query(exactQuery, null).size());
     }
 
     private SearchProvider createSearchProvider() {
-        return new SearchProvider() {
+        return new AbstractSearchProvider() {
 
             List<VertexRef> m_vertexRefs = getVertexRefs();
 
             @Override
-            public List<VertexRef> query(SearchQuery searchQuery) {
-                List<VertexRef> verts = new ArrayList<VertexRef>();
+            public String getSearchProviderNamespace() {
+                return "test-namespace";
+            }
+
+            @Override
+            public boolean contributesTo(String namespace) {
+                return false;
+            }
+
+            @Override
+            public List<SearchResult> query(SearchQuery searchQuery, GraphContainer graphContainer) {
+                List<SearchResult> verts = new ArrayList<SearchResult>();
                 for (VertexRef vertexRef : m_vertexRefs) {
-                    if (searchQuery.matches(vertexRef)) {
-                        verts.add(vertexRef);
+                    if (searchQuery.matches(vertexRef.getLabel())) {
+                        verts.add(new SearchResult(vertexRef.getNamespace(), vertexRef.getId(), vertexRef.getLabel(), searchQuery.getQueryString()));
                     }
                 }
                 return verts;
             }
 
             @Override
-            public AbstractSearchSelectionOperation getSelectionOperation() {
-                return null;
+            public boolean supportsPrefix(String searchPrefix) {
+                return false;
             }
 
+            @Override
+            public Set<VertexRef> getVertexRefsBy(SearchResult searchResult, GraphContainer container) {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public void addVertexHopCriteria(SearchResult searchResult, GraphContainer container) {
+            }
+
+            @Override
+            public void removeVertexHopCriteria(SearchResult searchResult, GraphContainer container) {
+            }
         };
+    }
+    
+    @Test
+    public void testSupportsPrefix() {
+        assertFalse(AbstractSearchProvider.supportsPrefix("category=", null));
+        assertFalse(AbstractSearchProvider.supportsPrefix("category=", ""));
+        assertFalse(AbstractSearchProvider.supportsPrefix("category=", "d"));
+        assertTrue(AbstractSearchProvider.supportsPrefix("category=", "c"));
+        assertTrue(AbstractSearchProvider.supportsPrefix("category=", "cat"));
+        assertTrue(AbstractSearchProvider.supportsPrefix("category=", "category"));
+        assertFalse(AbstractSearchProvider.supportsPrefix("category=", "categoryy"));
+        assertTrue(AbstractSearchProvider.supportsPrefix("category=", "category="));
     }
 
     private List<VertexRef> getVertexRefs(){

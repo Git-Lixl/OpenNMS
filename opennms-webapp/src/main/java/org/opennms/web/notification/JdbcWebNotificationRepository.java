@@ -35,24 +35,23 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
-import org.opennms.core.utils.BeanUtils;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.web.notification.filter.NotificationCriteria;
-import org.opennms.web.notification.filter.NotificationIdFilter;
 import org.opennms.web.notification.filter.NotificationCriteria.BaseNotificationCriteriaVisitor;
 import org.opennms.web.notification.filter.NotificationCriteria.NotificationCriteriaVisitor;
+import org.opennms.web.notification.filter.NotificationIdFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.DataAccessUtils;
-import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.RowMapperResultSetExtractor;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
-import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 
 /**
  * <p>JdbcWebNotificationRepository class.</p>
@@ -67,7 +66,7 @@ public class JdbcWebNotificationRepository implements WebNotificationRepository,
 
     
     @Autowired
-    SimpleJdbcTemplate m_simpleJdbcTemplate;
+    JdbcTemplate m_jdbcTemplate;
     
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -175,13 +174,13 @@ public class JdbcWebNotificationRepository implements WebNotificationRepository,
     @Override
     public void acknowledgeMatchingNotification(String user, Date timestamp, NotificationCriteria criteria) {
         String sql = getSql("UPDATE NOTIFICATIONS SET RESPONDTIME=?, ANSWEREDBY=?", criteria);
-        jdbc().update(sql, paramSetter(criteria, new Timestamp(timestamp.getTime()), user));
+        m_jdbcTemplate.update(sql, paramSetter(criteria, new Timestamp(timestamp.getTime()), user));
     }
 
     /** {@inheritDoc} */
     @Override
     public Notification[] getMatchingNotifications(NotificationCriteria criteria) {
-        String sql = getSql("SELECT NOTIFICATIONS.*, SERVICE.SERVICENAME FROM NOTIFICATIONS LEFT OUTER JOIN SERVICE USING (SERVICEID)", criteria);
+        String sql = getSql("SELECT NOTIFICATIONS.*, SERVICE.SERVICENAME, EVENTS.EVENTSEVERITY FROM NOTIFICATIONS LEFT OUTER JOIN SERVICE USING (SERVICEID) LEFT OUTER JOIN EVENTS USING (EVENTID)", criteria);
         return getNotifications(sql, paramSetter(criteria));
     }
 
@@ -215,15 +214,11 @@ public class JdbcWebNotificationRepository implements WebNotificationRepository,
     }
     
     private <T> T queryForObject(String sql, PreparedStatementSetter setter, RowMapper<T> rowMapper) throws DataAccessException {
-        return DataAccessUtils.requiredSingleResult(jdbc().query(sql, setter, new RowMapperResultSetExtractor<T>(rowMapper, 1)));
+        return DataAccessUtils.requiredSingleResult(m_jdbcTemplate.query(sql, setter, new RowMapperResultSetExtractor<T>(rowMapper, 1)));
     }
 
 
     private <T> List<T> queryForList(String sql, PreparedStatementSetter setter, ParameterizedRowMapper<T> rm) {
-        return jdbc().query(sql, setter, new RowMapperResultSetExtractor<T>(rm));
-    }
-    
-    private JdbcOperations jdbc(){
-        return m_simpleJdbcTemplate.getJdbcOperations();
+        return m_jdbcTemplate.query(sql, setter, new RowMapperResultSetExtractor<T>(rm));
     }
 }

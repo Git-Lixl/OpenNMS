@@ -29,22 +29,38 @@
 package org.opennms.features.topology.app.internal;
 
 import com.vaadin.data.Property;
-import org.junit.Before;
-import org.junit.Test;
-import org.opennms.features.topology.api.*;
-import org.opennms.features.topology.api.topo.*;
-import org.opennms.osgi.*;
-import org.osgi.framework.BundleContext;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
+import org.opennms.features.topology.api.AutoRefreshSupport;
+import org.opennms.features.topology.api.Graph;
+import org.opennms.features.topology.api.GraphContainer;
+import org.opennms.features.topology.api.GraphVisitor;
+import org.opennms.features.topology.api.Layout;
+import org.opennms.features.topology.api.LayoutAlgorithm;
+import org.opennms.features.topology.api.MapViewManager;
+import org.opennms.features.topology.api.SelectionContext;
+import org.opennms.features.topology.api.SelectionManager;
+import org.opennms.features.topology.api.VerticesUpdateManager;
+import org.opennms.features.topology.api.topo.DefaultVertexRef;
+import org.opennms.features.topology.api.topo.Criteria;
+import org.opennms.features.topology.api.topo.Edge;
+import org.opennms.features.topology.api.topo.GraphProvider;
+import org.opennms.features.topology.api.topo.StatusProvider;
+import org.opennms.features.topology.api.topo.Vertex;
+import org.opennms.features.topology.api.topo.VertexRef;
+import org.opennms.osgi.EventProxy;
+import org.opennms.osgi.EventRegistry;
+import org.opennms.osgi.OnmsServiceManager;
+import org.opennms.osgi.VaadinApplicationContext;
+import org.opennms.osgi.VaadinApplicationContextCreator;
+import org.osgi.framework.BundleContext;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class OSGiVerticesUpdateManagerTest {
 
@@ -239,7 +255,7 @@ public class OSGiVerticesUpdateManagerTest {
     private List<VertexRef> createVertexRefsWithIds(int... vertIds) {
         List<VertexRef> vertices = new ArrayList<VertexRef>();
         for (int i = 0; i < vertIds.length; i++) {
-            VertexRef vRef = new AbstractVertexRef("nodes", "" + vertIds[i], "");
+            VertexRef vRef = new DefaultVertexRef("nodes", "" + vertIds[i], "");
             vertices.add(vRef);
         }
         return vertices;
@@ -307,13 +323,18 @@ public class OSGiVerticesUpdateManagerTest {
         }
 
         @Override
-        public void setCriteria(Criteria critiera) {
+        public void addCriteria(Criteria critiera) {
            
         }
 
         @Override
         public void removeCriteria(Criteria critiera) {
            
+        }
+
+        @Override
+        public void clearCriteria() {
+
         }
 
         @Override
@@ -377,16 +398,6 @@ public class OSGiVerticesUpdateManagerTest {
         }
 
         @Override
-        public String getUserName() {
-            return null; 
-        }
-
-        @Override
-        public void setUserName(String userName) {
-           
-        }
-
-        @Override
         public String getSessionId() {
             return null; 
         }
@@ -394,6 +405,10 @@ public class OSGiVerticesUpdateManagerTest {
         @Override
         public void setSessionId(String sessionId) {
            
+        }
+
+        @Override
+        public void setDirty(boolean dirty) {
         }
 
         @Override
@@ -428,6 +443,12 @@ public class OSGiVerticesUpdateManagerTest {
 
         @Override
         public void redoLayout() {
+        }
+
+        @Override
+        public void fireGraphChanged() {
+            // TODO Auto-generated method stub
+            
         }
     }
 }

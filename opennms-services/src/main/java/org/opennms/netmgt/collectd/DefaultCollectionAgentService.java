@@ -38,11 +38,11 @@ import java.util.Set;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.config.SnmpPeerFactory;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
-import org.opennms.netmgt.dao.support.DefaultResourceDao;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.PrimaryType;
+import org.opennms.netmgt.model.ResourceTypeUtils;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +55,9 @@ import org.springframework.transaction.interceptor.TransactionProxyFactoryBean;
  * @author ranger
  * @version $Id: $
  */
+// Eventually, we should be constructing these instances in the context and using
+// annotation-based transaction processing.
+//@Transactional(propagation=Propagation.REQUIRED)
 public class DefaultCollectionAgentService implements CollectionAgentService {
     
     private static final Logger LOG = LoggerFactory.getLogger(DefaultCollectionAgentService.class);
@@ -75,7 +78,7 @@ public class DefaultCollectionAgentService implements CollectionAgentService {
         bean.setTarget(agent);
         
         Properties props = new Properties();
-        props.put("*", "PROPAGATION_REQUIRED,readOnly");
+        props.put("*", "PROPAGATION_REQUIRED");
         
         bean.setTransactionAttributes(props);
         
@@ -130,7 +133,7 @@ public class DefaultCollectionAgentService implements CollectionAgentService {
      */
     @Override
     public Boolean isStoreByForeignSource() {
-        return Boolean.getBoolean("org.opennms.rrd.storeByForeignSource");
+        return ResourceTypeUtils.isStoreByForeignSource();
     }
     
      /* (non-Javadoc)
@@ -184,7 +187,7 @@ public class DefaultCollectionAgentService implements CollectionAgentService {
     public File getStorageDir() {
         File dir = new File(String.valueOf(getIpInterface().getNode().getId()));
         if(isStoreByForeignSource() && !(getIpInterface().getNode().getForeignSource() == null) && !(getIpInterface().getNode().getForeignId() == null)) {
-               File fsDir = new File(DefaultResourceDao.FOREIGN_SOURCE_DIRECTORY, getIpInterface().getNode().getForeignSource());
+               File fsDir = new File(ResourceTypeUtils.FOREIGN_SOURCE_DIRECTORY, getIpInterface().getNode().getForeignSource());
             dir = new File(fsDir, getIpInterface().getNode().getForeignId());
         }
         return dir;

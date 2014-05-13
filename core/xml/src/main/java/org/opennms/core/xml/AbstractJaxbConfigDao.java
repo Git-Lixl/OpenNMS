@@ -29,8 +29,8 @@
 package org.opennms.core.xml;
 
 
-import org.opennms.core.utils.FileReloadCallback;
-import org.opennms.core.utils.FileReloadContainer;
+import org.opennms.core.spring.FileReloadCallback;
+import org.opennms.core.spring.FileReloadContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -38,18 +38,18 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 
 /**
- * <p>Abstract AbstractCastorConfigDao class.</p>
+ * <p>Abstract AbstractJaxbConfigDao class.</p>
  *
  * @author <a href="mailto:dj@gregor.com">DJ Gregor</a>
- * @param <K> Castor class
+ * @param <K> JAXB class
  * @param <V> Configuration object that is stored in memory (might be the same
- *            as the Castor class or could be a different class)
+ *            as the JAXB class or could be a different class)
  * @version $Id: $
  */
 public abstract class AbstractJaxbConfigDao<K, V> implements InitializingBean {
-	
-	private static final Logger LOG = LoggerFactory.getLogger(AbstractJaxbConfigDao.class);
-	
+
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractJaxbConfigDao.class);
+
     private Class<K> m_jaxbClass;
     private String m_description;
     private Resource m_configResource;
@@ -58,16 +58,14 @@ public abstract class AbstractJaxbConfigDao<K, V> implements InitializingBean {
     private Long m_reloadCheckInterval = null;
 
     /**
-     * <p>Constructor for AbstractCastorConfigDao.</p>
+     * <p>Constructor for AbstractJaxbConfigDao.</p>
      *
      * @param entityClass a {@link java.lang.Class} object.
      * @param description a {@link java.lang.String} object.
-     * @param <K> a K object.
-     * @param <V> a V object.
      */
     public AbstractJaxbConfigDao(final Class<K> entityClass, final String description) {
         super();
-        
+
         m_jaxbClass = entityClass;
         m_description = description;
     }
@@ -75,10 +73,10 @@ public abstract class AbstractJaxbConfigDao<K, V> implements InitializingBean {
     /**
      * <p>translateConfig</p>
      *
-     * @param castorConfig a K object.
+     * @param config a K object.
      * @return a V object.
      */
-    protected abstract V translateConfig(K castorConfig);
+    protected abstract V translateConfig(K config);
 
     /**
      * <p>loadConfig</p>
@@ -88,15 +86,15 @@ public abstract class AbstractJaxbConfigDao<K, V> implements InitializingBean {
      */
     protected V loadConfig(final Resource resource) {
         long startTime = System.currentTimeMillis();
-        
+
         LOG.debug("Loading {} configuration from {}", m_description, resource);
 
         V config = translateConfig(JaxbUtils.unmarshal(m_jaxbClass, resource));
-        
+
         long endTime = System.currentTimeMillis();
-        
+
         LOG.info("Loaded {} in {} ms", getDescription(), (endTime - startTime));
-        
+
         return config;
     }
 
@@ -106,7 +104,7 @@ public abstract class AbstractJaxbConfigDao<K, V> implements InitializingBean {
     @Override
     public void afterPropertiesSet() {
         Assert.state(m_configResource != null, "property configResource must be set and be non-null");
-    
+
         final V config = loadConfig(m_configResource);
         m_container = new FileReloadContainer<V>(config, m_configResource, m_callback);
 
@@ -132,16 +130,16 @@ public abstract class AbstractJaxbConfigDao<K, V> implements InitializingBean {
     public void setConfigResource(final Resource configResource) {
         m_configResource = configResource;
     }
-    
+
     /**
      * <p>getContainer</p>
      *
-     * @return a {@link org.opennms.netmgt.dao.support.FileReloadContainer} object.
+     * @return a {@link org.opennms.core.spring.FileReloadContainer} object.
      */
     public FileReloadContainer<V> getContainer() {
         return m_container;
     }
-    
+
     public class JaxbReloadCallback implements FileReloadCallback<V> {
         @Override
         public V reload(final V object, final Resource resource) {
@@ -169,7 +167,7 @@ public abstract class AbstractJaxbConfigDao<K, V> implements InitializingBean {
             m_container.setReloadCheckInterval(m_reloadCheckInterval);
         }
     }
-    
+
     /**
      * <p>getDescription</p>
      *

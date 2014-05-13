@@ -28,19 +28,27 @@
 
 package org.opennms.netmgt.collectd;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 import org.easymock.EasyMock;
+import org.junit.After;
+import org.junit.Before;
 import org.opennms.core.test.MockPlatformTransactionManager;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.mock.snmp.MockSnmpAgent;
+import org.opennms.netmgt.collection.api.CollectionAttribute;
+import org.opennms.netmgt.collection.api.CollectionInitializationException;
+import org.opennms.netmgt.collection.api.CollectionResource;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.opennms.netmgt.collection.support.AbstractCollectionSetVisitor;
 import org.opennms.netmgt.config.DataCollectionConfigFactory;
 import org.opennms.netmgt.config.MibObject;
-import org.opennms.netmgt.config.collector.CollectionAttribute;
-import org.opennms.netmgt.config.collector.CollectionResource;
-import org.opennms.netmgt.config.collector.ServiceParameters;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.mock.MockDataCollectionConfig;
 import org.opennms.netmgt.mock.OpenNMSTestCase;
@@ -57,7 +65,7 @@ import org.springframework.core.io.ClassPathResource;
 
 public class SnmpCollectorTestCase extends OpenNMSTestCase {
 
-    private final class AttributeVerifier extends AttributeVisitor {
+	private static final class AttributeVerifier extends AbstractCollectionSetVisitor {
 		private final List<MibObject> list;
 
 		public int attributeCount = 0;
@@ -65,18 +73,15 @@ public class SnmpCollectorTestCase extends OpenNMSTestCase {
 			this.list = list;
 		}
 
-                @Override
-                public void visitAttribute(CollectionAttribute attribute) {
-                    visitAttribute((SnmpAttribute)attribute);
-                }
-                
-		public void visitAttribute(SnmpAttribute attribute) {
-			attributeCount++;
-		    assertMibObjectPresent(attribute, list);
+		@Override
+		public void visitAttribute(CollectionAttribute attribute) {
+			visitAttribute((SnmpAttribute)attribute);
 		}
 
-
-
+		public void visitAttribute(SnmpAttribute attribute) {
+			attributeCount++;
+			assertMibObjectPresent(attribute, list);
+		}
 	}
 
     public MockDataCollectionConfig m_config;
@@ -89,7 +94,7 @@ public class SnmpCollectorTestCase extends OpenNMSTestCase {
     protected OnmsNode m_node;
     protected OnmsIpInterface m_iface;
     
-    protected CollectionAgent m_agent;
+    protected SnmpCollectionAgent m_agent;
     private SnmpWalker m_walker;
     protected SnmpCollectionSet m_collectionSet;
     
@@ -102,8 +107,9 @@ public class SnmpCollectorTestCase extends OpenNMSTestCase {
         super.setVersion(version);
     }
 
+    @Before
     @Override
-    protected void setUp() throws Exception {
+    public void setUp() throws Exception {
         setStartEventd(false);
         super.setUp();
         
@@ -124,13 +130,14 @@ public class SnmpCollectorTestCase extends OpenNMSTestCase {
         
     }
 
+    @After
     @Override
-    protected void tearDown() throws Exception {
+    public void tearDown() throws Exception {
         m_mockAgent.shutDownAndWait();
         super.tearDown();
     }
     
-    protected void assertMibObjectsPresent(CollectionResource resource, final List<MibObject> attrList) {
+    protected static void assertMibObjectsPresent(CollectionResource resource, final List<MibObject> attrList) {
         assertNotNull(resource);
         
         AttributeVerifier attributeVerifier = new AttributeVerifier(attrList);
@@ -138,10 +145,10 @@ public class SnmpCollectorTestCase extends OpenNMSTestCase {
 		assertEquals("Unexpected number of attributes", attrList.size(), attributeVerifier.attributeCount);
     }
 
-    protected void assertMibObjectPresent(SnmpAttribute attribute, List<MibObject> attrList) {
+    protected static void assertMibObjectPresent(SnmpAttribute attribute, List<MibObject> attrList) {
         for (Iterator<MibObject> it = attrList.iterator(); it.hasNext();) {
             MibObject mibObj = it.next();
-            if (mibObj.getOid().equals(attribute.getAttributeType().getOid()))
+            if (mibObj.getOid().equals(((SnmpAttributeType)attribute.getAttributeType()).getOid()))
                 return;
         }
         fail("Unable to find attribue "+attribute+" in attribute list");
@@ -299,14 +306,11 @@ public class SnmpCollectorTestCase extends OpenNMSTestCase {
     }
 
     protected void createWalker(CollectionTracker collector) {
-        m_walker = SnmpUtils.createWalker(m_agent.getAgentConfig(), getName(), collector);
+        m_walker = SnmpUtils.createWalker(m_agent.getAgentConfig(), getClass().getSimpleName(), collector);
         m_walker.start();
     }
 
     protected void waitForSignal() throws InterruptedException {
         m_walker.waitFor();
     }
-    
-    
-
 }
