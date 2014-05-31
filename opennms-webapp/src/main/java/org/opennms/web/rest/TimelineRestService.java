@@ -205,22 +205,22 @@ public class TimelineRestService extends OnmsRestService {
          * @param start      the start value
          * @param width      the width of the graphic
          * @param onmsOutage the outage to be drawn
+         * @return true, if no resolved yet
          */
-        public void drawEvent(Graphics2D graphics2D, long delta, long start, int width, OnmsOutage onmsOutage) throws IOException {
+        public boolean drawEvent(Graphics2D graphics2D, long delta, long start, int width, OnmsOutage onmsOutage) throws IOException {
             long p1 = onmsOutage.getServiceLostEvent().getEventCreateTime().getTime() / 1000;
             long p2 = start + delta;
 
             if (onmsOutage.getServiceRegainedEvent() != null) {
                 p2 = onmsOutage.getServiceRegainedEvent().getEventCreateTime().getTime() / 1000;
-            } else {
-                Image image = ImageIO.read(new File("jetty-webapps/opennms/images/timeline-important.png"));
-                graphics2D.drawImage(image, width - 18, 2, null);
             }
 
             graphics2D.setColor(ONMS_RED);
             int n1 = (int) ((p1 - start) / (delta / width));
             int n2 = (int) ((p2 - start) / (delta / width));
             graphics2D.fillRect(n1, 2, (n2 - n1 > 0 ? n2 - n1 : 1), 16);
+
+            return onmsOutage.getServiceRegainedEvent() == null;
         }
 
         /**
@@ -472,18 +472,25 @@ public class TimelineRestService extends OnmsRestService {
 
         int numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
 
+        boolean unresolvedOutages = false;
+
         for (TimescaleDescriptor desc : TIMESCALE_DESCRIPTORS) {
             if (desc.match(delta, numLabels)) {
                 desc.drawGreen(graphics2D, width);
 
                 for (OnmsOutage onmsOutage : onmsOutageCollection) {
-                    desc.drawEvent(graphics2D, delta, start, width, onmsOutage);
+                    unresolvedOutages |= desc.drawEvent(graphics2D, delta, start, width, onmsOutage);
                 }
 
                 desc.drawLine(graphics2D, delta, start, width);
 
                 break;
             }
+        }
+
+        if (unresolvedOutages) {
+            Image image = ImageIO.read(new File("jetty-webapps/opennms/images/timeline-important.png"));
+            graphics2D.drawImage(image, 2, 2, null);
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
