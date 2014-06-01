@@ -47,8 +47,8 @@
 		org.opennms.netmgt.model.OnmsNode,
 		java.util.*,
         org.springframework.util.Assert,
-        org.opennms.web.servlet.MissingParameterException
-	"
+        org.opennms.web.servlet.MissingParameterException,
+        org.opennms.core.utils.WebSecurityUtils,org.opennms.web.outage.*,java.util.*"
 %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
@@ -68,7 +68,6 @@
         
         m_normalThreshold = m_model.getCategoryNormalThreshold(CategoryModel.OVERALL_AVAILABILITY_CATEGORY);
         m_warningThreshold = m_model.getCategoryWarningThreshold(CategoryModel.OVERALL_AVAILABILITY_CATEGORY);
-
     }
 %>
 
@@ -86,6 +85,13 @@
 
     String availClass;
     String availValue;
+
+    long timelineEnd = new Date().getTime() / 1000;
+    long timelineStart = timelineEnd - 3600 * 24;
+    int timelineWidth = 300;
+    String emptyUrl = "/opennms/rest/timeline/empty/" + timelineStart + "/" + timelineEnd + "/" + timelineWidth;
+
+    Outage[] outages = new OutageModel().getCurrentOutagesForNode(nodeId);
 %>
 
 <div id="availability-box">
@@ -104,7 +110,7 @@
   }
 %>
 
-    <td class="<%= availClass %> nobright">Availability (last 24 hours)</td>
+    <td class="<%= availClass %> nobright" colspan="2">Availability (last 24 hours)</td>
     <td colspan="2" class="<%= availClass %> bright"><%= availValue %></td>
 
   </tr>
@@ -138,9 +144,23 @@
                   availValue = CategoryUtil.formatValue(intfValue) + "%";
                 }
               %>
-              <td class="<%= availClass %> nobright" rowspan="<%=svcs.length+1%>"><a href="<c:out value="${interfaceLink}"/>"><%=ipAddr%></a></td>
-              <td class="<%= availClass %> nobright">Overall</td>
-              <td class="<%= availClass %> bright"><%= availValue %></td>
+              <td class="<%= availClass %> nobright" colspan="4"><a href="<c:out value="${interfaceLink}"/>"><%=ipAddr%></a></td>
+            </tr>
+            <tr class="CellStatus">
+              <td class="<%= availClass %> nobright" rowspan="<%=svcs.length+1%>"></td>
+              <td class="<%= availClass %> bright">Overall</td>
+              <%
+                  if ("Not Monitored".equals(availValue)) {
+              %>
+                <td class="Cleared nobright"><img src="<%=emptyUrl%>"></td>
+              <%
+                  } else {
+              %>
+                <td class="Cleared nobright"><img src="/opennms/rest/timeline/header/<%=timelineStart%>/<%=timelineEnd%>/<%=timelineWidth%>"></td>
+              <%
+                  }
+              %>
+              <td class="<%= availClass %> nobright"><%= availValue %></td>
             </tr>
     
             <% for( int j=0; j < svcs.length; j++ ) { %>
@@ -155,6 +175,17 @@
                   availClass = "Indeterminate";
                   availValue = ElementUtil.getServiceStatusString(service);
                 }
+
+                String warnClass = "Normal";
+
+                for(int o=0;o<outages.length;o++) {
+                  if (outages[o].getIpAddress().equals(ipAddr) && outages[o].getServiceName().equals(service.getServiceName())) {
+                    warnClass = "Critical";
+                  }
+                }
+
+                String timelineUrl = "/opennms/rest/timeline/html/" + String.valueOf(nodeId) + "/" + ipAddr + "/" + service.getServiceName() + "/" + timelineStart + "/" + timelineEnd + "/" + timelineWidth;
+
               %>
                        
                 <c:url var="serviceLink" value="element/service.jsp">
@@ -163,8 +194,21 @@
                   <c:param name="service" value="<%=String.valueOf(service.getServiceId())%>"/>
                 </c:url>
                 <tr class="CellStatus">
-                  <td class="<%= availClass %> nobright"><a href="<c:out value="${serviceLink}"/>"><%=service.getServiceName()%></a></td>
-                  <td class="<%= availClass %> bright"><%= availValue %></td>
+                  <td class="<%= warnClass %> bright"><a href="<c:out value="${serviceLink}"/>"><%=service.getServiceName()%></a></td>
+                  <td class="Cleared nobright">
+                    <%
+                         if (service.isManaged()) {
+                    %>
+                    <script src="<%=timelineUrl%>"></script>
+                    <%
+                        } else {
+                    %>
+                    <img src="<%=emptyUrl%>">
+                    <%
+                        }
+                    %>
+                  </td>
+                  <td class="<%= availClass %> nobright"><%= availValue %></td>
                 </tr>
             <% } %>
           <% } else { %>

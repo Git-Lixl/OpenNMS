@@ -53,7 +53,6 @@ import javax.ws.rs.core.UriInfo;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -88,6 +87,7 @@ public class TimelineRestService extends OnmsRestService {
          * The date format to be used
          */
         private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        private static final SimpleDateFormat SIMPLE_TIME_FORMAT = new SimpleDateFormat("HH:mm");
         /**
          * Red color
          */
@@ -162,9 +162,15 @@ public class TimelineRestService extends OnmsRestService {
 
             while (calendar.getTimeInMillis() / 1000 - getDivisor() < (start + delta)) {
                 int n = (int) ((calendar.getTimeInMillis() / 1000 - start) / (delta / width));
-                graphics2D.drawLine(n, 9, n, 19);
-                String d = SIMPLE_DATE_FORMAT.format(calendar.getTime());
-                graphics2D.drawString(d, n - graphics2D.getFontMetrics().stringWidth(d) / 2, 10);
+                graphics2D.drawLine(n, 16, n, 19);
+                graphics2D.drawLine(n, 0, n, 4);
+                String d;
+                if (getDivisor() <= 3600 * 24) {
+                    d = SIMPLE_TIME_FORMAT.format(calendar.getTime());
+                } else {
+                    d = SIMPLE_DATE_FORMAT.format(calendar.getTime());
+                }
+                graphics2D.drawString(d, n - graphics2D.getFontMetrics().stringWidth(d) / 2, 15);
                 calendar.add(getType(), getIncrement());
             }
         }
@@ -328,7 +334,13 @@ public class TimelineRestService extends OnmsRestService {
         graphics2D.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
         graphics2D.setColor(Color.BLACK);
 
-        int numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
+        int numLabels;
+
+        if (delta <= 3600 * 24) {
+            numLabels = width / graphics2D.getFontMetrics().stringWidth("XX:XX");
+        } else {
+            numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
+        }
 
         for (TimescaleDescriptor desc : TIMESCALE_DESCRIPTORS) {
             if (desc.match(delta, numLabels)) {
@@ -385,7 +397,13 @@ public class TimelineRestService extends OnmsRestService {
         graphics2D.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
         graphics2D.setColor(Color.BLACK);
 
-        int numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
+        int numLabels;
+
+        if (delta <= 3600 * 24) {
+            numLabels = width / graphics2D.getFontMetrics().stringWidth("XX:XX");
+        } else {
+            numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
+        }
 
         StringBuffer htmlBuffer = new StringBuffer();
 
@@ -470,16 +488,20 @@ public class TimelineRestService extends OnmsRestService {
         graphics2D.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
         graphics2D.setColor(Color.BLACK);
 
-        int numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
+        int numLabels;
 
-        boolean unresolvedOutages = false;
+        if (delta <= 3600 * 24) {
+            numLabels = width / graphics2D.getFontMetrics().stringWidth("XX:XX");
+        } else {
+            numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
+        }
 
         for (TimescaleDescriptor desc : TIMESCALE_DESCRIPTORS) {
             if (desc.match(delta, numLabels)) {
                 desc.drawGreen(graphics2D, width);
 
                 for (OnmsOutage onmsOutage : onmsOutageCollection) {
-                    unresolvedOutages |= desc.drawEvent(graphics2D, delta, start, width, onmsOutage);
+                    desc.drawEvent(graphics2D, delta, start, width, onmsOutage);
                 }
 
                 desc.drawLine(graphics2D, delta, start, width);
@@ -488,10 +510,48 @@ public class TimelineRestService extends OnmsRestService {
             }
         }
 
-        if (unresolvedOutages) {
-            Image image = ImageIO.read(new File("jetty-webapps/opennms/images/timeline-important.png"));
-            graphics2D.drawImage(image, 2, 2, null);
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.drawLine(0, 10, width, 10);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(bufferedImage, "png", baos);
+        byte[] imageData = baos.toByteArray();
+
+        return Response.ok(imageData).build();
+    }
+
+    @GET
+    @Produces("image/png")
+    @Transactional
+    @Path("empty/{start}/{end}/{width}")
+    public Response empty(@PathParam("start") final long start, @PathParam("end") final long end, @PathParam("width") final int width) throws IOException {
+        int delta = (int) end - (int) start;
+
+        BufferedImage bufferedImage = new BufferedImage(width, 20, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D graphics2D = (Graphics2D) bufferedImage.getGraphics();
+
+        graphics2D.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+        graphics2D.setColor(Color.BLACK);
+
+        int numLabels;
+
+        if (delta <= 3600 * 24) {
+            numLabels = width / graphics2D.getFontMetrics().stringWidth("XX:XX");
+        } else {
+            numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
         }
+
+        for (TimescaleDescriptor desc : TIMESCALE_DESCRIPTORS) {
+            if (desc.match(delta, numLabels)) {
+                desc.drawLine(graphics2D, delta, start, width);
+
+                break;
+            }
+        }
+
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.drawLine(0, 10, width, 10);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(bufferedImage, "png", baos);
