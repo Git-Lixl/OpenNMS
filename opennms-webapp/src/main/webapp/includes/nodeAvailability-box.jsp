@@ -110,12 +110,12 @@
   }
 %>
 
-    <td class="<%= availClass %> nobright" colspan="2">Availability (last 24 hours)</td>
-    <td colspan="2" class="<%= availClass %> bright"><%= availValue %></td>
+    <td class="<%= availClass %> nobright" colspan="3">Availability (last 24 hours)</td>
+    <td colspan="1" class="<%= availClass %> nobright"><%= availValue %></td>
 
   </tr>
 
-<%  if (overallRtcValue >= 0) { %>
+    <%  if (overallRtcValue >= 0) { %>
        <% Interface[] availIntfs = NetworkElementFactory.getInstance(getServletContext()).getActiveInterfacesOnNode(nodeId); %>
            
         <% for( int i=0; i < availIntfs.length; i++ ) { %>
@@ -144,11 +144,11 @@
                   availValue = CategoryUtil.formatValue(intfValue) + "%";
                 }
               %>
-              <td class="<%= availClass %> nobright" colspan="4"><a href="<c:out value="${interfaceLink}"/>"><%=ipAddr%></a></td>
-            </tr>
+              <td class="Cleared nobright" colspan="2"><a href="<c:out value="${interfaceLink}"/>"><%=ipAddr%></a></td>
+            <!-- </tr>
             <tr class="CellStatus">
               <td class="<%= availClass %> nobright" rowspan="<%=svcs.length+1%>"></td>
-              <td class="<%= availClass %> bright">Overall</td>
+              <td class="<%= availClass %> bright">Overall</td> -->
               <%
                   if ("Not Monitored".equals(availValue)) {
               %>
@@ -194,6 +194,13 @@
                   <c:param name="service" value="<%=String.valueOf(service.getServiceId())%>"/>
                 </c:url>
                 <tr class="CellStatus">
+                    <%
+                        if (j==0) {
+                    %>
+                    <td class="Cleared nobright" rowspan="<%=svcs.length%>"></td>
+                    <%
+                        }
+                    %>
                   <td class="<%= warnClass %> bright"><a href="<c:out value="${serviceLink}"/>"><%=service.getServiceName()%></a></td>
                   <td class="Cleared nobright">
                     <%

@@ -88,6 +88,7 @@ public class TimelineRestService extends OnmsRestService {
          */
         private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         private static final SimpleDateFormat SIMPLE_TIME_FORMAT = new SimpleDateFormat("HH:mm");
+
         /**
          * Red color
          */
@@ -95,7 +96,11 @@ public class TimelineRestService extends OnmsRestService {
         /**
          * Green color
          */
-        private static final Color ONMS_GREEN = Color.decode("#336600");
+        private static final Color ONMS_GREEN = Color.decode("#6F9F3A");
+        /**
+         * Green color
+         */
+        private static final Color ONMS_GRAY = Color.decode("#999999");
 
         /**
          * Constructor for an instance.
@@ -162,6 +167,7 @@ public class TimelineRestService extends OnmsRestService {
 
             while (calendar.getTimeInMillis() / 1000 - getDivisor() < (start + delta)) {
                 int n = (int) ((calendar.getTimeInMillis() / 1000 - start) / (delta / width));
+                graphics2D.setColor(ONMS_GRAY);
                 graphics2D.drawLine(n, 16, n, 19);
                 graphics2D.drawLine(n, 0, n, 4);
                 String d;
@@ -170,6 +176,7 @@ public class TimelineRestService extends OnmsRestService {
                 } else {
                     d = SIMPLE_DATE_FORMAT.format(calendar.getTime());
                 }
+                graphics2D.setColor(Color.BLACK);
                 graphics2D.drawString(d, n - graphics2D.getFontMetrics().stringWidth(d) / 2, 15);
                 calendar.add(getType(), getIncrement());
             }
@@ -194,7 +201,7 @@ public class TimelineRestService extends OnmsRestService {
 
             calendar.add(getType(), -getIncrement());
 
-            graphics2D.setColor(Color.BLACK);
+            graphics2D.setColor(ONMS_GRAY);
 
             while (calendar.getTimeInMillis() / 1000 - getDivisor() < (start + delta)) {
                 int n = (int) ((calendar.getTimeInMillis() / 1000 - start) / (delta / width));
@@ -238,6 +245,22 @@ public class TimelineRestService extends OnmsRestService {
         public void drawGreen(Graphics2D graphics2D, int width) {
             graphics2D.setColor(ONMS_GREEN);
             graphics2D.fillRect(0, 2, width, 16);
+        }
+
+        /**
+         * Computes the number of labels to be used for the timeline
+         *
+         * @param graphics2D the graphics context
+         * @param delta      the delta
+         * @param width      the width of the timeline header
+         * @return the number of labels
+         */
+        public static int computeNumberOfLabels(Graphics2D graphics2D, int delta, int width) {
+            if (delta <= 3600 * 24) {
+                return width / graphics2D.getFontMetrics().stringWidth("XX:XX");
+            } else {
+                return width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
+            }
         }
 
         /**
@@ -334,13 +357,7 @@ public class TimelineRestService extends OnmsRestService {
         graphics2D.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
         graphics2D.setColor(Color.BLACK);
 
-        int numLabels;
-
-        if (delta <= 3600 * 24) {
-            numLabels = width / graphics2D.getFontMetrics().stringWidth("XX:XX");
-        } else {
-            numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
-        }
+        int numLabels = TimescaleDescriptor.computeNumberOfLabels(graphics2D, delta, width);
 
         for (TimescaleDescriptor desc : TIMESCALE_DESCRIPTORS) {
             if (desc.match(delta, numLabels)) {
@@ -397,13 +414,7 @@ public class TimelineRestService extends OnmsRestService {
         graphics2D.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
         graphics2D.setColor(Color.BLACK);
 
-        int numLabels;
-
-        if (delta <= 3600 * 24) {
-            numLabels = width / graphics2D.getFontMetrics().stringWidth("XX:XX");
-        } else {
-            numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
-        }
+        int numLabels = TimescaleDescriptor.computeNumberOfLabels(graphics2D, delta, width);
 
         StringBuffer htmlBuffer = new StringBuffer();
 
@@ -488,13 +499,7 @@ public class TimelineRestService extends OnmsRestService {
         graphics2D.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
         graphics2D.setColor(Color.BLACK);
 
-        int numLabels;
-
-        if (delta <= 3600 * 24) {
-            numLabels = width / graphics2D.getFontMetrics().stringWidth("XX:XX");
-        } else {
-            numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
-        }
+        int numLabels = TimescaleDescriptor.computeNumberOfLabels(graphics2D, delta, width);
 
         for (TimescaleDescriptor desc : TIMESCALE_DESCRIPTORS) {
             if (desc.match(delta, numLabels)) {
@@ -509,9 +514,6 @@ public class TimelineRestService extends OnmsRestService {
                 break;
             }
         }
-
-        graphics2D.setColor(Color.BLACK);
-        graphics2D.drawLine(0, 10, width, 10);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(bufferedImage, "png", baos);
@@ -534,13 +536,7 @@ public class TimelineRestService extends OnmsRestService {
         graphics2D.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
         graphics2D.setColor(Color.BLACK);
 
-        int numLabels;
-
-        if (delta <= 3600 * 24) {
-            numLabels = width / graphics2D.getFontMetrics().stringWidth("XX:XX");
-        } else {
-            numLabels = width / graphics2D.getFontMetrics().stringWidth("XXXX-XX-XX XX:XX");
-        }
+        int numLabels = TimescaleDescriptor.computeNumberOfLabels(graphics2D, delta, width);
 
         for (TimescaleDescriptor desc : TIMESCALE_DESCRIPTORS) {
             if (desc.match(delta, numLabels)) {
@@ -549,9 +545,6 @@ public class TimelineRestService extends OnmsRestService {
                 break;
             }
         }
-
-        graphics2D.setColor(Color.BLACK);
-        graphics2D.drawLine(0, 10, width, 10);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(bufferedImage, "png", baos);

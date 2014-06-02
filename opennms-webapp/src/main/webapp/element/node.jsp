@@ -343,7 +343,7 @@
    if (Boolean.parseBoolean(showNodeStatusBar)) { %>
 <jsp:include page="/includes/nodeStatus-box.jsp?nodeId=${model.id}" flush="false" />
 <% } %>
-<div class="TwoColLeft">
+<div class="TwoColLeft" style="width:48%">
   
   
 
@@ -449,7 +449,7 @@
   
 </div>
 
-<div class="TwoColRight">
+<div class="TwoColRight" style="width:48%">
   
   <!-- general info box -->
   <h3 class="o-box">General (Status: ${model.status})</h3>
