@@ -88,7 +88,7 @@
 
     long timelineEnd = new Date().getTime() / 1000;
     long timelineStart = timelineEnd - 3600 * 24;
-    int timelineWidth = 300;
+    int timelineWidth = 250;
     String emptyUrl = "/opennms/rest/timeline/empty/" + timelineStart + "/" + timelineEnd + "/" + timelineWidth;
 
     Outage[] outages = new OutageModel().getCurrentOutagesForNode(nodeId);
@@ -145,10 +145,6 @@
                 }
               %>
               <td class="Cleared nobright" colspan="2"><a href="<c:out value="${interfaceLink}"/>"><%=ipAddr%></a></td>
-            <!-- </tr>
-            <tr class="CellStatus">
-              <td class="<%= availClass %> nobright" rowspan="<%=svcs.length+1%>"></td>
-              <td class="<%= availClass %> bright">Overall</td> -->
               <%
                   if ("Not Monitored".equals(availValue)) {
               %>
@@ -181,6 +177,7 @@
                 for(int o=0;o<outages.length;o++) {
                   if (outages[o].getIpAddress().equals(ipAddr) && outages[o].getServiceName().equals(service.getServiceName())) {
                     warnClass = "Critical";
+                    break;
                   }
                 }
 
