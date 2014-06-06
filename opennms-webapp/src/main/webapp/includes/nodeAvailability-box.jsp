@@ -163,22 +163,25 @@
               <%
                 Service service = svcs[j];
 
+                String warnClass = "Indeterminate";
+
                 if (service.isManaged()) {
                   double svcValue = m_model.getServiceAvailability(nodeId, ipAddr, service.getServiceId());
                   availClass = CategoryUtil.getCategoryClass(m_normalThreshold, m_warningThreshold, svcValue);
                   availValue = CategoryUtil.formatValue(svcValue) + "%";
+
+                  warnClass = "Normal";
+
+                  for(int o=0;o<outages.length;o++) {
+                    if (outages[o].getIpAddress().equals(ipAddr) && outages[o].getServiceName().equals(service.getServiceName())) {
+                      warnClass = "Critical";
+                      break;
+                    }
+                  }
+
                 } else {
                   availClass = "Indeterminate";
                   availValue = ElementUtil.getServiceStatusString(service);
-                }
-
-                String warnClass = "Normal";
-
-                for(int o=0;o<outages.length;o++) {
-                  if (outages[o].getIpAddress().equals(ipAddr) && outages[o].getServiceName().equals(service.getServiceName())) {
-                    warnClass = "Critical";
-                    break;
-                  }
                 }
 
                 String timelineUrl = "/opennms/rest/timeline/html/" + String.valueOf(nodeId) + "/" + ipAddr + "/" + service.getServiceName() + "/" + timelineStart + "/" + timelineEnd + "/" + timelineWidth;
