@@ -30,6 +30,7 @@ package org.opennms.reporting.jasperreports.svclayer;
 
 import java.io.OutputStream;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -99,7 +100,7 @@ public class JasperReportService implements ReportService {
      */
     @Override
     public List<ReportFormat> getFormats(String reportId) {
-        List<ReportFormat> formats = new ArrayList<ReportFormat>();
+        List<ReportFormat> formats = new ArrayList<>();
         formats.add(ReportFormat.PDF);
         formats.add(ReportFormat.CSV);
         return formats;
@@ -122,7 +123,7 @@ public class JasperReportService implements ReportService {
 
                     try {
                         jasperReport = JasperCompileManager.compileReport(m_globalReportRepository.getTemplateStream(reportId));
-                        defaultValues = JRParameterDefaultValuesEvaluator.evaluateParameterDefaultValues(jasperReport, null);
+                        defaultValues = JRParameterDefaultValuesEvaluator.evaluateParameterDefaultValues(jasperReport, new HashMap<String, Object>());
                     } catch (final JRException e) {
                         LOG.error("unable to compile jasper report", e);
                         throw new ReportException("unable to compile jasperReport", e);
@@ -130,19 +131,19 @@ public class JasperReportService implements ReportService {
 
                     final JRParameter[] reportParms = jasperReport.getParameters();
 
-                    final List<ReportIntParm> intParms = new ArrayList<ReportIntParm>();
+                    final List<ReportIntParm> intParms = new ArrayList<>();
                     reportParameters.setIntParms(intParms);
 
-                    final List<ReportFloatParm> floatParms = new ArrayList<ReportFloatParm>();
+                    final List<ReportFloatParm> floatParms = new ArrayList<>();
                     reportParameters.setFloatParms(floatParms);
 
-                    final List<ReportDoubleParm> doubleParms = new ArrayList<ReportDoubleParm>();
+                    final List<ReportDoubleParm> doubleParms = new ArrayList<>();
                     reportParameters.setDoubleParms(doubleParms);
 
-                    final List<ReportStringParm> stringParms = new ArrayList<ReportStringParm>();
+                    final List<ReportStringParm> stringParms = new ArrayList<>();
                     reportParameters.setStringParms(stringParms);
 
-                    final List<ReportDateParm> dateParms = new ArrayList<ReportDateParm>();
+                    final List<ReportDateParm> dateParms = new ArrayList<>();
                     reportParameters.setDateParms(dateParms);
 
                     for (final JRParameter reportParm : reportParms) {
@@ -190,7 +191,7 @@ public class JasperReportService implements ReportService {
                                 if (defaultValues.containsKey(reportParm.getName()) && (defaultValues.get(reportParm.getName()) != null)) {
                                     intParm.setValue((Integer) defaultValues.get(reportParm.getName()));
                                 } else {
-                                    intParm.setValue(new Integer(0));
+                                    intParm.setValue(0);
                                 }
                                 intParms.add(intParm);
                                 continue;
@@ -242,7 +243,7 @@ public class JasperReportService implements ReportService {
                                     dateParm.setDisplayName(reportParm.getName());
                                 }
                                 dateParm.setName(reportParm.getName());
-                                dateParm.setCount(new Integer(1));
+                                dateParm.setCount(1);
                                 dateParm.setInterval("day");
                                 dateParm.setHours(0);
                                 dateParm.setMinutes(0);
@@ -274,7 +275,7 @@ public class JasperReportService implements ReportService {
                                     dateParm.setDisplayName(reportParm.getName());
                                 }
                                 dateParm.setName(reportParm.getName());
-                                dateParm.setCount(new Integer(1));
+                                dateParm.setCount(1);
                                 dateParm.setInterval("day");
                                 dateParm.setHours(0);
                                 dateParm.setMinutes(0);
@@ -332,7 +333,7 @@ public class JasperReportService implements ReportService {
                             LOG.debug("rendering as PDF as no valid format found");
                             exportReportToPdf(jasperPrint, outputStream);
                         }
-                    } catch (final Exception e) {
+                    } catch (final JRException e) {
                         LOG.error("Unable to render report {}", reportId, e);
                         throw new ReportException("Unable to render report " + reportId, e);
                     }
@@ -350,7 +351,7 @@ public class JasperReportService implements ReportService {
         if (location.contains("jrpxml")) {
             return JRPrintXmlLoader.load(location);
         } else {
-            return (JasperPrint) JRLoader.loadObject(location);
+            return (JasperPrint) JRLoader.loadObjectFromFile(location);
         }
     }
 
@@ -379,7 +380,7 @@ public class JasperReportService implements ReportService {
                     // Find sub reports and provide sub reports as parameter
                     jrReportParms.putAll(buildSubreport(reportId, jasperReport));
 
-                    final String outputFileName = new String(baseDir + "/" + jasperReport.getName() + new SimpleDateFormat("-MMddyyyy-HHmm").format(new Date()) + ".jrprint");
+                    final String outputFileName = baseDir + "/" + jasperReport.getName() + new SimpleDateFormat("-MMddyyyy-HHmm").format(new Date()) + ".jrprint";
                     LOG.debug("jrprint output file: {}", outputFileName);
 
                     try {
@@ -396,7 +397,7 @@ public class JasperReportService implements ReportService {
                         } else {
                             throw new ReportException("No suitable datasource configured for report " + reportId);
                         }
-                    } catch (final Exception e) {
+                    } catch (final SQLException | JRException | ReportException e) {
                         LOG.warn("Failed to run report " + reportId, e);
                         if (e instanceof ReportException) throw (ReportException)e;
                         throw new ReportException(e);
@@ -422,7 +423,7 @@ public class JasperReportService implements ReportService {
      */
     private HashMap<String, Object> buildSubreport(final String mainReportId, final JasperReport mainReport) {
         String repositoryId = mainReportId.substring(0, mainReportId.indexOf('_'));
-        HashMap<String, Object> subreportMap = new HashMap<String, Object>();
+        HashMap<String, Object> subreportMap = new HashMap<>();
 
         // Filter parameter for sub reports
         for (JRParameter parameter : mainReport.getParameters()) {
@@ -524,7 +525,7 @@ public class JasperReportService implements ReportService {
     }
 
     private HashMap<String, Object> buildJRparameters(final HashMap<String, Object> onmsReportParms, final JRParameter[] reportParms) throws ReportException {
-        final HashMap<String, Object> jrReportParms = new HashMap<String, Object>();
+        final HashMap<String, Object> jrReportParms = new HashMap<>();
 
         for (final JRParameter reportParm : reportParms) {
             LOG.debug("found report parm {} of class {}", reportParm.getValueClassName(), reportParm.getName());

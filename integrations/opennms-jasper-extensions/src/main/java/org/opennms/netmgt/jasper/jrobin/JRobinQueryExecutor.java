@@ -35,10 +35,11 @@ import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRDataset;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.query.JRAbstractQueryExecuter;
+import org.jrobin.core.RrdException;
 
 public class JRobinQueryExecutor extends JRAbstractQueryExecuter {
 
-    protected JRobinQueryExecutor(JRDataset dataset, Map<?,?> parametersMap) {
+    protected JRobinQueryExecutor(JRDataset dataset, Map parametersMap) {
         super(dataset, parametersMap);
         parseQuery();
     }
@@ -57,7 +58,7 @@ public class JRobinQueryExecutor extends JRAbstractQueryExecuter {
     public JRDataSource createDatasource() throws JRException {
         try {
             return new RrdXportCmd().executeCommand(getQueryString());
-        } catch (Throwable e) {
+        } catch (RrdException e) {
             throw new JRException("Error creating JRobinDataSource with command: " + getQueryString(), e);
         }
     }

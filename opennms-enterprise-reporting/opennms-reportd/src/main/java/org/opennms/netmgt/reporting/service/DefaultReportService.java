@@ -92,7 +92,7 @@ public class DefaultReportService implements ReportService,InitializingBean {
         } catch (JRException e) {
             LOG.error("Error running report: {}", e.getMessage(), e);
             throw new ReportRunException("Caught JRException: " + e.getMessage());
-        }  catch (Throwable e){
+        }  catch (Exception e){
             LOG.error("Unexpected exception: {}", e.getMessage(), e);
             throw new ReportRunException("Caught unexpected " + e.getClass().getName() + ": " + e.getMessage());
         }        
@@ -225,7 +225,7 @@ public class DefaultReportService implements ReportService,InitializingBean {
                 }
                 reportArchive.close();
             }
-            catch (final Exception e) {
+            catch (final IOException e) {
                 LOG.warn("unable to create {}", zipFile, e);
             }
 
@@ -235,22 +235,21 @@ public class DefaultReportService implements ReportService,InitializingBean {
     }
 
     private void addFileToArchive(ZipOutputStream reportArchive, String file)
-    throws FileNotFoundException, IOException {
-        FileInputStream asf = new FileInputStream(file);
-        reportArchive.putNextEntry(new ZipEntry(file));
-        byte[] buffer = new byte[18024]; 
-        int len;
-        while ((len = asf.read(buffer)) > 0){
-            reportArchive.write(buffer, 0, len);
+            throws FileNotFoundException, IOException {
+        try (FileInputStream asf = new FileInputStream(file)) {
+            reportArchive.putNextEntry(new ZipEntry(file));
+            byte[] buffer = new byte[18024];
+            int len;
+            while ((len = asf.read(buffer)) > 0) {
+                reportArchive.write(buffer, 0, len);
+            }
         }
-
-        asf.close();
         reportArchive.closeEntry();
     }
     
     
-    private Map<String,String> paramListToMap(List<Parameter> parameters){
-        Map<String,String> parmMap = new HashMap<String, String>();
+    private Map<String, Object> paramListToMap(List<Parameter> parameters){
+        Map<String, Object> parmMap = new HashMap<>();
 
         for(Parameter parm : parameters)
             parmMap.put(parm.getName(), parm.getValue());
