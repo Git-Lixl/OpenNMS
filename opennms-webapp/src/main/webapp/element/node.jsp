@@ -234,14 +234,18 @@
 
 <script type="text/javascript">
 function confirmAssetEdit() {
-<c:if test="${model.foreignSource != null}">
   var confirmText = "You are about to edit asset fields for a node that was provisioned " +
     "through a requisition. Any edits made here will be rolled back the next " +
     "time the requisition \"${model.node.foreignSource}\" is " +
     "synchronized (typically every 24 hours) or the node manually rescanned.\n\n" +
     "To learn the best way to make permanent asset changes, talk to your " +
     "OpenNMS administrator.";
+<c:if test="${model.foreignSource != null}">
+<% if (!request.isUserInRole(Authentication.ROLE_READONLY)) { %>
     return confirm(confirmText);
+<% } else { %>
+    return true;
+<% } %>
 </c:if>
 <c:if test="${model.foreignSource == null}">
   return true;
