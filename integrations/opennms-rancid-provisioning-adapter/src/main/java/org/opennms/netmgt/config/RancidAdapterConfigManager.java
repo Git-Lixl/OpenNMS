@@ -146,7 +146,7 @@ abstract public class RancidAdapterConfigManager implements RancidAdapterConfig 
      * @throws java.io.IOException if any.
      */
     protected synchronized void reloadXML(InputStream reader) throws MarshalException, ValidationException, IOException {
-        m_config = CastorUtils.unmarshal(RancidConfiguration.class, reader);
+        m_config = CastorUtils.unmarshal(RancidConfiguration.class, reader, false);
         createPolicyNamePkgMap();
         createUrlIpMap();
         createPackageIpListMap();
@@ -244,9 +244,6 @@ abstract public class RancidAdapterConfigManager implements RancidAdapterConfig 
      * 
      * <strong>Note: </strong>Evaluation of the interface against a package
      * filter will only work if the IP is already in the database.
-     * 
-     * TODO: Factor this method out so that it can be reused? Or use an existing
-     * utility method if one exists?
      * 
      * @param iface
      *            The interface to test against the package.
@@ -408,11 +405,20 @@ abstract public class RancidAdapterConfigManager implements RancidAdapterConfig 
     }
 
     /** {@inheritDoc} */
-    public String getType(String sysoid){
-        if (sysoid != null) {
+    public String getType(String sysoid, String sysdescr){
+        if (sysoid != null && sysdescr != null) {
             for (Mapping map: mappings()) {
+            	if (map.getSysdescrMatch() == null )
+            		continue;
+                if (sysoid.startsWith(map.getSysoidMask()) &&  sysdescr.matches(map.getSysdescrMatch()))
+                	return map.getType();
+            }
+        } else if (sysoid != null ) {
+            for (Mapping map: mappings()) {
+            	if (map.getSysdescrMatch() != null )
+            		continue;
                 if (sysoid.startsWith(map.getSysoidMask()))
-                return map.getType();
+                	return map.getType();
             }
         }
         return getConfiguration().getDefaultType();
