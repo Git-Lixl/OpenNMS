@@ -234,7 +234,7 @@ public class ReportSelectListCellTree extends CellTree {
         
         TreeNode treeNode = getRootTreeNode();
         for(int i = 0; i < treeNode.getChildCount(); i++) {
-            treeNode.setChildOpen(i, true);
+            treeNode.setChildOpen(i, false);
         }
         
     }
