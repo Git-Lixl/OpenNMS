@@ -88,6 +88,7 @@ final class Poller {
     private static boolean reqTargetIp = true;
     private static boolean targetOffset = true;
     private static boolean relayMode = false;
+    private static Boolean checkOnlyMessageId = false;
     private static boolean paramsChecked = false;
     private static Boolean extendedMode = false;
 
@@ -363,6 +364,7 @@ final class Poller {
                 relayMode = true;
             }
             
+            
             if (extendedMode == true) {
                 String requestStr = dcf.getRequestIpAddress();
                 if (log.isDebugEnabled()) {
@@ -377,8 +379,10 @@ final class Poller {
                     reqTargetIp = false;
                     targetOffset = false;
                 }
+                if (dcf.getCheckOnlyMessageId())
+                	checkOnlyMessageId = true;
                 if (log.isDebugEnabled()) {
-                    log.debug("REQUEST query options are: reqTargetIp = " + reqTargetIp + ", targetOffset = " + targetOffset);
+                    log.debug("REQUEST query options are: reqTargetIp = " + reqTargetIp + ", targetOffset = " + targetOffset + ", checkOnlyMessageId = " + checkOnlyMessageId);
                 }
             }
             paramsChecked = true;
@@ -426,7 +430,7 @@ final class Poller {
                                 log.debug("isServer: got a DHCP response from host " + resp.getAddress().getHostAddress() + " with Xid: " + resp.getMessage().getXid());
                             }
 
-                            if (host.equals(resp.getAddress()) && ping.getMessage().getXid() == resp.getMessage().getXid()) {
+                            if (ping.getMessage().getXid() == resp.getMessage().getXid() && (host.equals(resp.getAddress()) || checkOnlyMessageId == true)) {
                                 // Inspect response message to see if it is a valid DHCP response
                                 byte[] type = resp.getMessage().getOption(MESSAGE_TYPE);
                                 if (log.isDebugEnabled()) {

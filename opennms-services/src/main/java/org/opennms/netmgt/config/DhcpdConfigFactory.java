@@ -201,4 +201,12 @@ public final class DhcpdConfigFactory {
     public synchronized String getExtendedMode() {
         return m_config.getExtendedMode();
     }
+    
+    /**
+     * Return if the checkOnlyMessageId is true or false
+     */
+    
+    public synchronized boolean getCheckOnlyMessageId() {
+    	return m_config.getCheckOnlyMessageId();
+    }
 }

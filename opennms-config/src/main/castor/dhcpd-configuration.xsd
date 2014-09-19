@@ -96,6 +96,17 @@
           should be reliable.</documentation>
         </annotation>
       </attribute>
+      
+            <attribute name="checkOnlyMessageId" type="boolean" use="optional" default="false">
+        <annotation>
+          <documentation>This checks only that the messageId of the response is the same 
+          of the DHCP request. This is useful when you got response from dhcp multihomed 
+          servers. With this option you will have to consider as a good response
+          also if the DHCP response packet has a source ip address that is different from
+          the destination packet used in the request.</documentation>
+        </annotation>
+      </attribute>
+      
     </complexType>
   </element>
 </schema>
