@@ -411,34 +411,41 @@ abstract public class RancidAdapterConfigManager implements RancidAdapterConfig 
             log().debug("getType: sysdescription: " + sysdescr);
         }
 
+        String type=getConfiguration().getDefaultType();
+        boolean notMatched = true;
         if (sysoid != null && sysdescr != null) {
             for (Mapping map: mappings()) {
                 if (log().isDebugEnabled())
-                	log().debug("getType: match oid and descr: parsing map with SysoidMaSk/SysdescrMatch: " + map.getSysoidMask()+"/"+map.getSysdescrMatch());
-            	if (map.getSysdescrMatch() == null )
-            		continue;
-                if (sysoid.startsWith(map.getSysoidMask()) && sysdescr.matches(map.getSysdescrMatch())) {
-                    if (log().isDebugEnabled())
-                    	log().debug("getType: matched type: " + map.getType());
-                	return map.getType();
+                	log().debug("getType: parsing map with SysoidMaSk/SysdescrMatch: " + map.getSysoidMask()+"/"+map.getSysdescrMatch());
+                if (sysoid.startsWith(map.getSysoidMask())) {
+                	if (map.getSysdescrMatch() != null && sysdescr.matches(map.getSysdescrMatch())) {
+                        if (log().isDebugEnabled())
+                        	log().debug("getType: matched type: " + map.getType());
+                    	return map.getType();
+                	}
+                	if (map.getSysdescrMatch() == null && notMatched) {
+                        if (log().isDebugEnabled())
+                        	log().debug("getType: null sysdescrmatch: temporary matched type: " + map.getType());
+                    	type = map.getType();
+                    	notMatched = false;
+                	} 
                 }
             }
-        } 
-        
-        if (sysoid != null ) {
+        } else if (sysoid != null) {
             for (Mapping map: mappings()) {
                 if (log().isDebugEnabled())
-                	log().debug("getType: match only oid: parsing map with SysoidMaSk/SysdescrMatch: " + map.getSysoidMask()+"/"+map.getSysdescrMatch());
-            	if (map.getSysdescrMatch() != null )
-            		continue;
+                	log().debug("getType: sysdescr is null: parsing map with SysoidMaSk: " + map.getSysoidMask());
                 if (sysoid.startsWith(map.getSysoidMask())) {
-                    if (log().isDebugEnabled())
-                    	log().debug("getType: matched type: " + map.getType());
+                	if (log().isDebugEnabled())
+                		log().debug("getType: matched type: " + map.getType());
                 	return map.getType();
                 }
             }
+        	
         }
-        return getConfiguration().getDefaultType();
+        if (log().isDebugEnabled())
+        	log().debug("getType: matched type: " + type);
+        return type;
     }
     
 
