@@ -413,7 +413,9 @@ abstract public class RancidAdapterConfigManager implements RancidAdapterConfig 
                 if (sysoid.startsWith(map.getSysoidMask()) &&  sysdescr.matches(map.getSysdescrMatch()))
                 	return map.getType();
             }
-        } else if (sysoid != null ) {
+        } 
+        
+        if (sysoid != null ) {
             for (Mapping map: mappings()) {
             	if (map.getSysdescrMatch() != null )
             		continue;
