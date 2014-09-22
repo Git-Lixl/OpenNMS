@@ -589,7 +589,7 @@ public class RancidProvisioningAdapter extends SimpleQueuedProvisioningAdapter i
     
     private String getTypeFromSysObjectId(String sysoid, String sysdescr) {
         String rancidType = m_rancidAdapterConfig.getType(sysoid, sysdescr);
-        log().debug("getTypeFromSysObjectId: Rancid devicetype found: " + rancidType + " for sysOid: " + sysoid);
+        log().debug("getTypeFromSysObjectId: Rancid devicetype found: " + rancidType + " for sysOid/sysDescr " + sysoid+"/"+sysdescr);
         return rancidType;
     }
     
