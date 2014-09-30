@@ -99,7 +99,7 @@
   	<tr>
   	  <td>
   	  	<h4>Requisition:</h4>
-  	  	<span style="font-size: smaller">Defines node, interfaces, and services for synchronization.</span>
+  	  	<span style="font-size: smaller">Defines nodes, interfaces, and services for synchronization.</span>
   	  </td>
   	  <td>
   	  	<a href="javascript:editRequisition(<js:quote value="${foreignSourceName}"/>)"><button>Edit</button></a>
