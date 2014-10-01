@@ -113,7 +113,7 @@ public class ServicePageTest extends OpenNMSSeleniumTestCase {
         clickAndWait("link=Manage Provisioning Requisitions");
         waitForPageToLoad();
 
-        selenium.type("css=form[name=takeAction] > input[name=groupName]", REQUISITION_NAME);
+        selenium.type("css=form[name=takeAction] > div > input[name=groupName]", REQUISITION_NAME);
         clickAndWait("css=input[type=submit]");
         clickAndWait("//a[contains(@href, 'editForeignSource(\""+ REQUISITION_NAME+"\")')]");
         clickAndWait("//input[@value='Add Detector']");

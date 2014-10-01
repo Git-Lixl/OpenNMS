@@ -2,7 +2,7 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2006-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2006-2014 The OpenNMS Group, Inc.
  * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
@@ -58,7 +58,7 @@
 </form>
 
 <br />
-<form action="${relativeRequestPath}" name="takeAction" method="post" onsubmit="checkGroupName()">
+<form action="${relativeRequestPath}" name="takeAction" method="post">
 <div>
 <input type="text" name="groupName" size="20" placeholder="New_Requisition"/>
 <input type="hidden" name="action" value="addGroup" />
