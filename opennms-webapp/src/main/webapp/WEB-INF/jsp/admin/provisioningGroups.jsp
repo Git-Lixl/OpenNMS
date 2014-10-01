@@ -102,7 +102,7 @@
   	  	<span style="font-size: smaller">Defines nodes, interfaces, and services for synchronization.</span>
   	  </td>
   	  <td>
-  	  	<a href="javascript:editRequisition(<js:quote value="${foreignSourceName}"/>)"><button>Edit</button></a>
+  	  	<a id="edit_req_anchor_${foreignSourceName}" href="javascript:editRequisition(<js:quote value="${foreignSourceName}"/>)"><button>Edit</button></a>
   	  	<br />
         <span style="font-size: smaller">
           <c:choose>
