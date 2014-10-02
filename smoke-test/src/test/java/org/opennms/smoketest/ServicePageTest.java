@@ -128,7 +128,7 @@ public class ServicePageTest extends OpenNMSSeleniumTestCase {
 
         clickAndWait("//input[@value='Done']");
         String rcOfEditAnchor = "id=edit_req_anchor_" + REQUISITION_NAME;
-        clickAndWait("rcOfEditAnchor");
+        clickAndWait(rcOfEditAnchor);
         clickAndWait("//input[@value='Add Node']");
         String nodeForNode = setTreeFieldsAndSave("nodeEditForm", type("nodeLabel", "localNode"));
         waitForPageToLoad();
