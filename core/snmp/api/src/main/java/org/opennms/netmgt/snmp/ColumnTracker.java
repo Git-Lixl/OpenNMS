@@ -151,4 +151,10 @@ public class ColumnTracker extends CollectionTracker {
             return null;
         }
     }
+
+	@Override
+	public ResponseProcessor buildPdu(PduBuilder pduBuilder) {
+		throw new UnsupportedOperationException();
+	}
+
 }

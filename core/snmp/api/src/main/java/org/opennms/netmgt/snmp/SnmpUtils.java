@@ -256,5 +256,9 @@ public class SnmpUtils {
         }
         return true;
     }
+    
+    public static SnmpGetter createGetter(SnmpAgentConfig agentConfig, String name, CollectionTracker tracker) {
+    	return getStrategy().createGetter(agentConfig, name, tracker);
+    }
 
 }

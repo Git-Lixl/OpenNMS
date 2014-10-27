@@ -47,6 +47,7 @@ import java.util.Map;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
+import org.opennms.netmgt.snmp.SnmpGetter;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpStrategy;
 import org.opennms.netmgt.snmp.SnmpTrapBuilder;
@@ -75,6 +76,10 @@ public class JoeSnmpStrategy implements SnmpStrategy {
     private static SnmpTrapSession s_trapSession;
     
     private JoeSnmpValueFactory m_valueFactory;
+
+    public SnmpGetter createGetter(SnmpAgentConfig snmpAgentConfig, String name, CollectionTracker tracker) {
+        return new JoeSnmpGetter(new JoeSnmpAgentConfig(snmpAgentConfig), name, tracker);
+    }
 
     public SnmpWalker createWalker(SnmpAgentConfig snmpAgentConfig, String name, CollectionTracker tracker) {
         return new JoeSnmpWalker(new JoeSnmpAgentConfig(snmpAgentConfig), name, tracker);

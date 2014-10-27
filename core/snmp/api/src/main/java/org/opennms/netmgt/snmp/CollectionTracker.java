@@ -95,6 +95,8 @@ public abstract class CollectionTracker implements Collectable {
 
     public abstract ResponseProcessor buildNextPdu(PduBuilder pduBuilder);
 
+    public abstract ResponseProcessor buildPdu(PduBuilder pduBuilder);
+
     protected void reportTooBigErr(String msg) {
         if (m_parent != null) {
             m_parent.reportTooBigErr(msg);

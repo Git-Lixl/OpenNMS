@@ -189,7 +189,9 @@ public class TableTracker extends CollectionTracker implements RowCallback, RowR
 
     }
 
+	@Override
+	public ResponseProcessor buildPdu(PduBuilder pduBuilder) {
+		throw new UnsupportedOperationException();
+	}
     
-    
-
 }

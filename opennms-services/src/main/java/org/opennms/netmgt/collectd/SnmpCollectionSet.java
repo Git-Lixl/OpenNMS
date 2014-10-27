@@ -47,6 +47,7 @@ import org.opennms.netmgt.snmp.AggregateTracker;
 import org.opennms.netmgt.snmp.Collectable;
 import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
+import org.opennms.netmgt.snmp.SnmpGetter;
 import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.SnmpUtils;
 import org.opennms.netmgt.snmp.SnmpWalker;
@@ -321,14 +322,25 @@ public class SnmpCollectionSet implements Collectable, CollectionSet {
         if (getSysUpTime() != null) {
             trackers.add(getSysUpTime());
         }
+        /* removing from collection
         if (getNodeCollector() != null) {
         	trackers.add(getNodeCollector());
         }
+		*/
         if (getIfCollector() != null) {
         	trackers.add(getIfCollector());
         }
-
         return new AggregateTracker(trackers);
+    }
+
+    /**
+     * <p>createWalker</p>
+     *
+     * @return a {@link org.opennms.netmgt.snmp.SnmpWalker} object.
+     */
+    protected SnmpGetter createGetter() {
+        CollectionAgent agent = getCollectionAgent();
+        return SnmpUtils.createGetter(getAgentConfig(), "SnmpCollectors for " + agent.getHostAddress(), getNodeCollector());
     }
 
     /**
@@ -339,6 +351,21 @@ public class SnmpCollectionSet implements Collectable, CollectionSet {
     protected SnmpWalker createWalker() {
         CollectionAgent agent = getCollectionAgent();
         return SnmpUtils.createWalker(getAgentConfig(), "SnmpCollectors for " + agent.getHostAddress(), getTracker());
+    }
+
+    private void logStartedGetter() {
+        if (log().isDebugEnabled()) {
+        	log().debug(
+        			"collect: successfully instantiated GET "
+        					+ "SnmpNodeCollector() for "
+        					+ getCollectionAgent().getHostAddress());
+        }
+    }
+
+    private void logFinishedGetter() {
+        log().info(
+        		"collect: node SNMP GET query for address "
+        				+ getCollectionAgent().getHostAddress() + " complete.");
     }
 
     private void logStartedWalker() {
@@ -356,6 +383,27 @@ public class SnmpCollectionSet implements Collectable, CollectionSet {
         				+ getCollectionAgent().getHostAddress() + " complete.");
     }
 
+    /**
+     * Log error and return COLLECTION_FAILED is there is a failure.
+     * 
+     * @param getter
+     * @throws CollectionWarning
+     */
+    void verifySuccessfulGet(SnmpGetter getter) throws CollectionException {
+        if (!getter.failed()) {
+            return;
+        }
+
+        if (getter.timedOut()) {
+            throw new CollectionTimedOut(getter.getErrorMessage());
+        }
+
+        String message = "collection failed for "
+            + getCollectionAgent().getHostAddress() 
+            + " due to: " + getter.getErrorMessage();
+        // Note: getErrorThrowable() return value can be null
+        throw new CollectionWarning(message, getter.getErrorThrowable());
+    }
     /**
      * Log error and return COLLECTION_FAILED is there is a failure.
      * 
@@ -381,6 +429,13 @@ public class SnmpCollectionSet implements Collectable, CollectionSet {
     void collect() throws CollectionException {
         // XXX Should we have a call to hasDataToCollect here?
         try {
+            // now collect the data
+        	SnmpGetter getter = createGetter();
+        	getter.start();
+            logStartedGetter();
+        	getter.waitFor();
+            logFinishedGetter();
+            verifySuccessfulGet(getter);
             // now collect the data
             SnmpWalker walker = createWalker();
             walker.start();

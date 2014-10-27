@@ -39,6 +39,8 @@ public interface SnmpStrategy {
 
     SnmpWalker createWalker(SnmpAgentConfig agentConfig, String name, CollectionTracker tracker);
 
+    SnmpGetter createGetter(SnmpAgentConfig agentConfig, String name, CollectionTracker tracker);
+
     SnmpValue set(SnmpAgentConfig agentConfig, SnmpObjId oid, SnmpValue value);
 
     SnmpValue[] set(SnmpAgentConfig agentConfig, SnmpObjId oid[], SnmpValue value[]);

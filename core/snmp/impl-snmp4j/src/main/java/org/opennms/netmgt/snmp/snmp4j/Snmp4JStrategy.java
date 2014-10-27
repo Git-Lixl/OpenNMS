@@ -57,6 +57,7 @@ import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpConfiguration;
+import org.opennms.netmgt.snmp.SnmpGetter;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpStrategy;
 import org.opennms.netmgt.snmp.SnmpTrapBuilder;
@@ -144,7 +145,11 @@ public class Snmp4JStrategy implements SnmpStrategy {
     public SnmpWalker createWalker(SnmpAgentConfig snmpAgentConfig, String name, CollectionTracker tracker) {
         return new Snmp4JWalker(new Snmp4JAgentConfig(snmpAgentConfig), name, tracker);
     }
-    
+
+    public SnmpGetter createGetter(SnmpAgentConfig snmpAgentConfig, String name, CollectionTracker tracker) {
+        return new Snmp4JGetter(new Snmp4JAgentConfig(snmpAgentConfig), name, tracker);
+    }
+
     /**
      * Not yet implemented.  Use a walker.
      */

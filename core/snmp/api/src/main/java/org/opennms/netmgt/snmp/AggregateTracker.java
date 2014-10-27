@@ -36,6 +36,7 @@
 package org.opennms.netmgt.snmp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -318,4 +319,50 @@ public class AggregateTracker extends CollectionTracker {
         // for the child trackers
         return new ChildTrackerResponseProcessor(parentBuilder, builders, nonRepeaters, repeaters);
     }
+    
+    
+    public ResponseProcessor buildPdu(final PduBuilder parentBuilder) {
+        
+        // first process the child trackers that aren't finished up to maxVars 
+        int count = 0;
+        int maxVars = parentBuilder.getMaxVarsPerPdu();
+        final List<ChildTrackerPduBuilder> builders = new ArrayList<ChildTrackerPduBuilder>(m_children.length);
+        for (int i = 0; i < m_children.length && count < maxVars; i++) {
+            CollectionTracker childTracker = m_children[i];
+            if (!childTracker.isFinished()) {
+                ChildTrackerPduBuilder childBuilder = new ChildTrackerPduBuilder(maxVars-count);
+                ResponseProcessor rp = childTracker.buildPdu(childBuilder);
+                childBuilder.setResponseProcessor(rp);
+                builders.add(childBuilder);
+                count += childBuilder.size();
+            }
+        }
+        
+        // set the nonRepeaters in the passed in pduBuilder and store indices in the childTrackers
+        int nonRepeaters = 0;
+        for (ChildTrackerPduBuilder childBuilder : builders) {
+            childBuilder.setNonRepeaterStartIndex(nonRepeaters);
+            childBuilder.addNonRepeaters(parentBuilder);
+            nonRepeaters += childBuilder.getNonRepeaters();
+        }
+        
+        // set the repeaters in the passed in pduBuilder and store indices in the childTrackers
+        int maxRepititions = Integer.MAX_VALUE;
+        int repeaters = 0;
+        for (ChildTrackerPduBuilder childBuilder : builders) {
+            childBuilder.setRepeaterStartIndex(nonRepeaters+repeaters);
+            childBuilder.addRepeaters(parentBuilder);
+            maxRepititions = Math.min(maxRepititions, childBuilder.getMaxRepititions());
+            repeaters += childBuilder.getRepeaters();
+        }
+        
+        // set the non repeaters and max repetitions
+        parentBuilder.setNonRepeaters(nonRepeaters);
+        parentBuilder.setMaxRepetitions(maxRepititions == Integer.MAX_VALUE ? 1 : maxRepititions);
+        
+        // construct a response processor that tracks the changes and informs the response processors
+        // for the child trackers
+        return new ChildTrackerResponseProcessor(parentBuilder, builders, nonRepeaters, repeaters);
+    }
+
 }

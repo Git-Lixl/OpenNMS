@@ -109,6 +109,55 @@ public class SingleInstanceTracker extends CollectionTracker {
 
     }
 
+    public ResponseProcessor buildPdu(PduBuilder pduBuilder) {
+        if (pduBuilder.getMaxVarsPerPdu() < 1) {
+            throw new IllegalArgumentException("maxVarsPerPdu < 1");
+        }
+        
+        log().debug("Requesting oid: "+m_oid);
+        pduBuilder.addOid(m_oid);
+        pduBuilder.setNonRepeaters(1);
+        pduBuilder.setMaxRepetitions(1);
+        
+        ResponseProcessor rp = new ResponseProcessor() {
+
+            public void processResponse(SnmpObjId responseObjId, SnmpValue val) {
+                log().debug("Processing varBind: "+responseObjId+" = "+val);
+                
+                if (val.isEndOfMib()) {
+                    receivedEndOfMib();
+                }
+
+                if (m_oid.equals(responseObjId)) {
+                    storeResult(new SnmpResult(m_base, m_inst, val));
+                }
+                
+                setFinished(true);
+            }
+
+            public boolean processErrors(int errorStatus, int errorIndex) {
+                if (errorStatus == NO_ERR) {
+                    return false;
+                } else if (errorStatus == TOO_BIG_ERR) {
+                    throw new IllegalArgumentException("Unable to handle tooBigError for oid request "+m_oid.decrement());
+                } else if (errorStatus == GEN_ERR) {
+                    reportGenErr("Received genErr reqeusting oid "+m_oid.decrement()+". Marking column is finished.");
+                    errorOccurred();
+                    return true;
+                } else if (errorStatus == NO_SUCH_NAME_ERR) {
+                    reportNoSuchNameErr("Received noSuchName reqeusting oid "+m_oid.decrement()+". Marking column is finished.");
+                    errorOccurred();
+                    return true;
+                } else {
+                    throw new IllegalArgumentException("Unexpected error processing oid "+m_oid.decrement()+". Aborting!");
+                }
+            }
+        };
+        
+        return rp;
+
+    }
+
     protected ThreadCategory log() {
         return ThreadCategory.getInstance(getClass());
     }
