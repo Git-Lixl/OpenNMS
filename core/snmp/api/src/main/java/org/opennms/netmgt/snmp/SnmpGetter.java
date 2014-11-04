@@ -59,13 +59,18 @@ public abstract class SnmpGetter {
         m_name = name;
         m_maxVarsPerPdu = maxVarPerDpu;
         m_tracker = tracker;
-        m_tracker.setMaxRepetitions(maxRepititions);
+        if (m_tracker != null)
+        	m_tracker.setMaxRepetitions(maxRepititions);
         
     }
 
     protected abstract PduBuilder createPduBuilder(int maxvarperpdu);
     
     public void start() {
+    	if (m_tracker == null) {
+    		finish();
+    		return;
+    	}
         try {
             buildAndSendPdu();
         } catch (Throwable e) {
