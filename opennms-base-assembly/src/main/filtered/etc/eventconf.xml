@@ -2033,6 +2033,7 @@
   <event-file>events/APC.Best.events.xml</event-file>
   <event-file>events/APC.Exide.events.xml</event-file>
   <event-file>events/ApacheHTTPD.syslog.events.xml</event-file>
+  <event-file>events/Arista.events.xml</event-file>
   <event-file>events/Aruba.AP.events.xml</event-file>
   <event-file>events/Aruba.Switch.events.xml</event-file>
   <event-file>events/Aruba.events.xml</event-file>

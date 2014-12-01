@@ -1,0 +1,276 @@
+<events xmlns="http://xmlns.opennms.org/xsd/eventconf">
+<!-- Start events from ARISTA-BGP4V2-MIB -->
+   <event>
+      <mask>
+         <maskelement>
+            <mename>id</mename>
+            <mevalue>.1.3.6.1.4.1.30065.4.1</mevalue>
+         </maskelement>
+         <maskelement>
+            <mename>generic</mename>
+            <mevalue>6</mevalue>
+         </maskelement>
+         <maskelement>
+            <mename>specific</mename>
+            <mevalue>1</mevalue>
+         </maskelement>
+      </mask>
+      <uei>uei.opennms.org/traps/ARISTA-BGP4V2-MIB/aristaBgp4V2EstablishedNotification</uei>
+      <event-label>ARISTA-BGP4V2-MIB defined trap event: aristaBgp4V2EstablishedNotification</event-label>
+      <descr>
+&lt;p>The BGP Established event is generated when
+             the BGP FSM enters the established state.&lt;/p>&lt;table>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaBgp4V2PeerState&lt;/b>&lt;/td>&lt;td>
+	%parm[#1]%;&lt;/td>&lt;td>&lt;p>
+		idle(1)
+		connect(2)
+		active(3)
+		opensent(4)
+		openconfirm(5)
+		established(6)
+	&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaBgp4V2PeerLocalPort&lt;/b>&lt;/td>&lt;td>
+	%parm[#2]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaBgp4V2PeerRemotePort&lt;/b>&lt;/td>&lt;td>
+	%parm[#3]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>&lt;/table>
+	</descr>
+      <logmsg dest="logndisplay">&lt;p>
+	aristaBgp4V2EstablishedNotification trap received
+	aristaBgp4V2PeerState=%parm[#1]%
+	aristaBgp4V2PeerLocalPort=%parm[#2]%
+	aristaBgp4V2PeerRemotePort=%parm[#3]%&lt;/p>
+	</logmsg>
+      <severity>Normal</severity>
+      <alarm-data reduction-key="%uei%:%dpname%:%nodeid%:%parm[#2]%:%parm[#3]%" alarm-type="2" auto-clean="true" clear-key="uei.opennms.org/traps/ARISTA-BGP4V2-MIB/aristaBgp4V2BackwardTransitionNotification:%dpname%:%nodeid%:%parm[#2]%:%parm[#3]%" />
+      <varbindsdecode>
+         <parmid>parm[#1]</parmid>
+         <decode varbindvalue="1" varbinddecodedstring="idle"/>
+         <decode varbindvalue="2" varbinddecodedstring="connect"/>
+         <decode varbindvalue="3" varbinddecodedstring="active"/>
+         <decode varbindvalue="4" varbinddecodedstring="opensent"/>
+         <decode varbindvalue="5" varbinddecodedstring="openconfirm"/>
+         <decode varbindvalue="6" varbinddecodedstring="established"/>
+      </varbindsdecode>
+   </event>
+   <event>
+      <mask>
+         <maskelement>
+            <mename>id</mename>
+            <mevalue>.1.3.6.1.4.1.30065.4.1</mevalue>
+         </maskelement>
+         <maskelement>
+            <mename>generic</mename>
+            <mevalue>6</mevalue>
+         </maskelement>
+         <maskelement>
+            <mename>specific</mename>
+            <mevalue>2</mevalue>
+         </maskelement>
+      </mask>
+      <uei>uei.opennms.org/traps/ARISTA-BGP4V2-MIB/aristaBgp4V2BackwardTransitionNotification</uei>
+      <event-label>ARISTA-BGP4V2-MIB defined trap event: aristaBgp4V2BackwardTransitionNotification</event-label>
+      <descr>
+&lt;p>The BGPBackwardTransition Event is generated
+             when the BGP FSM moves from a higher numbered
+             state to a lower numbered state.
+
+             Due to the nature of the BGP state machine, an
+             implementation MAY rate limit the generation of this event.
+             An implementation MAY also generate this notification ONLY
+             when the state machine moves out of the established state.
+             An implementation should document its specific behavior.&lt;/p>&lt;table>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaBgp4V2PeerState&lt;/b>&lt;/td>&lt;td>
+	%parm[#1]%;&lt;/td>&lt;td>&lt;p>
+		idle(1)
+		connect(2)
+		active(3)
+		opensent(4)
+		openconfirm(5)
+		established(6)
+	&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaBgp4V2PeerLocalPort&lt;/b>&lt;/td>&lt;td>
+	%parm[#2]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaBgp4V2PeerRemotePort&lt;/b>&lt;/td>&lt;td>
+	%parm[#3]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaBgp4V2PeerLastErrorCodeReceived&lt;/b>&lt;/td>&lt;td>
+	%parm[#4]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaBgp4V2PeerLastErrorSubCodeReceived&lt;/b>&lt;/td>&lt;td>
+	%parm[#5]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaBgp4V2PeerLastErrorReceivedText&lt;/b>&lt;/td>&lt;td>
+	%parm[#6]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>&lt;/table>
+	</descr>
+      <logmsg dest="logndisplay">&lt;p>
+	aristaBgp4V2BackwardTransitionNotification trap received
+	aristaBgp4V2PeerState=%parm[#1]%
+	aristaBgp4V2PeerLocalPort=%parm[#2]%
+	aristaBgp4V2PeerRemotePort=%parm[#3]%
+	aristaBgp4V2PeerLastErrorCodeReceived=%parm[#4]%
+	aristaBgp4V2PeerLastErrorSubCodeReceived=%parm[#5]%
+	aristaBgp4V2PeerLastErrorReceivedText=%parm[#6]%&lt;/p>
+	</logmsg>
+      <severity>Warning</severity>
+      <alarm-data reduction-key="%uei%:%dpname%:%nodeid%:%parm[#2]%:%parm[#3]%" alarm-type="1" auto-clean="true" />
+      <varbindsdecode>
+         <parmid>parm[#1]</parmid>
+         <decode varbindvalue="1" varbinddecodedstring="idle"/>
+         <decode varbindvalue="2" varbinddecodedstring="connect"/>
+         <decode varbindvalue="3" varbinddecodedstring="active"/>
+         <decode varbindvalue="4" varbinddecodedstring="opensent"/>
+         <decode varbindvalue="5" varbinddecodedstring="openconfirm"/>
+         <decode varbindvalue="6" varbinddecodedstring="established"/>
+      </varbindsdecode>
+   </event>
+<!-- End events from ARISTA-BGP4V2-MIB -->
+<!-- Start events from ARISTA-CONFIG-MAN-MIB -->
+   <event>
+      <mask>
+         <maskelement>
+            <mename>id</mename>
+            <mevalue>.1.3.6.1.4.1.30065.3.9.3</mevalue>
+         </maskelement>
+         <maskelement>
+            <mename>generic</mename>
+            <mevalue>6</mevalue>
+         </maskelement>
+         <maskelement>
+            <mename>specific</mename>
+            <mevalue>1</mevalue>
+         </maskelement>
+      </mask>
+      <uei>uei.opennms.org/traps/ARISTA-CONFIG-MAN-MIB/aristaConfigManEvent</uei>
+      <event-label>ARISTA-CONFIG-MAN-MIB defined trap event: aristaConfigManEvent</event-label>
+      <descr>
+&lt;p>Notification of a configuration management event as
+            recorded in aristaCmdHistoryEventTable.&lt;/p>&lt;table>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaCmdHistoryEventCommandSource&lt;/b>&lt;/td>&lt;td>
+	%parm[#1]%;&lt;/td>&lt;td>&lt;p>
+		commandLine(0)
+		snmp(1)
+	&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaCmdHistoryEventConfigSource&lt;/b>&lt;/td>&lt;td>
+	%parm[#2]%;&lt;/td>&lt;td>&lt;p>
+		none(0)
+		erase(1)
+		commandSource(2)
+		running(3)
+		startup(4)
+		url(5)
+	&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaCmdHistoryEventConfigDestination&lt;/b>&lt;/td>&lt;td>
+	%parm[#3]%;&lt;/td>&lt;td>&lt;p>
+		none(0)
+		erase(1)
+		commandSource(2)
+		running(3)
+		startup(4)
+		url(5)
+	&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaCmdHistoryEventConfigSourceURLScheme&lt;/b>&lt;/td>&lt;td>
+	%parm[#4]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaCmdHistoryEventConfigDestURLScheme&lt;/b>&lt;/td>&lt;td>
+	%parm[#5]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>&lt;/table>
+	</descr>
+      <logmsg dest="logndisplay">&lt;p>
+	aristaConfigManEvent trap received
+	aristaCmdHistoryEventCommandSource=%parm[#1]%
+	aristaCmdHistoryEventConfigSource=%parm[#2]%
+	aristaCmdHistoryEventConfigDestination=%parm[#3]%
+	aristaCmdHistoryEventConfigSourceURLScheme=%parm[#4]%
+	aristaCmdHistoryEventConfigDestURLScheme=%parm[#5]%&lt;/p>
+	</logmsg>
+      <severity>Warning</severity>
+      <alarm-data reduction-key="%uei%:%dpname%:%nodeid%:%parm[#1]%:%parm[#2]%:%parm[#3]%" alarm-type="1" auto-clean="false" />
+      <varbindsdecode>
+         <parmid>parm[#1]</parmid>
+         <decode varbindvalue="0" varbinddecodedstring="commandLine"/>
+         <decode varbindvalue="1" varbinddecodedstring="snmp"/>
+      </varbindsdecode>
+      <varbindsdecode>
+         <parmid>parm[#2]</parmid>
+         <decode varbindvalue="0" varbinddecodedstring="none"/>
+         <decode varbindvalue="1" varbinddecodedstring="erase"/>
+         <decode varbindvalue="2" varbinddecodedstring="commandSource"/>
+         <decode varbindvalue="3" varbinddecodedstring="running"/>
+         <decode varbindvalue="4" varbinddecodedstring="startup"/>
+         <decode varbindvalue="5" varbinddecodedstring="url"/>
+      </varbindsdecode>
+      <varbindsdecode>
+         <parmid>parm[#3]</parmid>
+         <decode varbindvalue="0" varbinddecodedstring="none"/>
+         <decode varbindvalue="1" varbinddecodedstring="erase"/>
+         <decode varbindvalue="2" varbinddecodedstring="commandSource"/>
+         <decode varbindvalue="3" varbinddecodedstring="running"/>
+         <decode varbindvalue="4" varbinddecodedstring="startup"/>
+         <decode varbindvalue="5" varbinddecodedstring="url"/>
+      </varbindsdecode>
+   </event>
+<!-- End events from ARISTA-CONFIG-MAN-MIB -->
+<!-- Start events from ARISTA-REDUNDANCY-MIB -->
+   <event>
+      <mask>
+         <maskelement>
+            <mename>id</mename>
+            <mevalue>.1.3.6.1.4.1.30065.3.8.1</mevalue>
+         </maskelement>
+         <maskelement>
+            <mename>generic</mename>
+            <mevalue>6</mevalue>
+         </maskelement>
+         <maskelement>
+            <mename>specific</mename>
+            <mevalue>1</mevalue>
+         </maskelement>
+      </mask>
+      <uei>uei.opennms.org/traps/ARISTA-REDUNDANCY-MIB/aristaRedundancySwitchOverNotif</uei>
+      <event-label>ARISTA-REDUNDANCY-MIB defined trap event: aristaRedundancySwitchOverNotif</event-label>
+      <descr>
+&lt;p>A switchover notification is generated whenever a unit
+         becomes active and it has taken over the control
+         plane duties.&lt;/p>&lt;table>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaRedundancyUnitStateEntryTime&lt;/b>&lt;/td>&lt;td>
+	%parm[#1]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>
+	&lt;tr>&lt;td>&lt;b>
+
+	aristaRedundancyLastSwOverReason&lt;/b>&lt;/td>&lt;td>
+	%parm[#2]%;&lt;/td>&lt;td>&lt;p>&lt;/p>&lt;/td>&lt;/tr>&lt;/table>
+	</descr>
+      <logmsg dest="logndisplay">&lt;p>
+	aristaRedundancySwitchOverNotif trap received
+	aristaRedundancyUnitStateEntryTime=%parm[#1]%
+	aristaRedundancyLastSwOverReason=%parm[#2]%&lt;/p>
+	</logmsg>
+      <severity>Warning</severity>
+      <alarm-data reduction-key="%uei%:%dpname%:%nodeid%" alarm-type="1" auto-clean="false" />
+   </event>
+<!-- End events from ARISTA-REDUNDANCY-MIB -->
+</events>
