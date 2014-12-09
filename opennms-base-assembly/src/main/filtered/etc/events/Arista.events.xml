@@ -47,7 +47,6 @@
 	aristaBgp4V2PeerRemotePort=%parm[#3]%&lt;/p>
 	</logmsg>
       <severity>Normal</severity>
-      <alarm-data reduction-key="%uei%:%dpname%:%nodeid%:%parm[#2]%:%parm[#3]%" alarm-type="2" auto-clean="true" clear-key="uei.opennms.org/traps/ARISTA-BGP4V2-MIB/aristaBgp4V2BackwardTransitionNotification:%dpname%:%nodeid%:%parm[#2]%:%parm[#3]%" />
       <varbindsdecode>
          <parmid>parm[#1]</parmid>
          <decode varbindvalue="1" varbinddecodedstring="idle"/>
@@ -57,6 +56,7 @@
          <decode varbindvalue="5" varbinddecodedstring="openconfirm"/>
          <decode varbindvalue="6" varbinddecodedstring="established"/>
       </varbindsdecode>
+      <alarm-data reduction-key="%uei%:%dpname%:%nodeid%:%parm[#2]%:%parm[#3]%" alarm-type="2" auto-clean="true" clear-key="uei.opennms.org/traps/ARISTA-BGP4V2-MIB/aristaBgp4V2BackwardTransitionNotification:%dpname%:%nodeid%:%parm[#2]%:%parm[#3]%" />
    </event>
    <event>
       <mask>
@@ -127,7 +127,6 @@
 	aristaBgp4V2PeerLastErrorReceivedText=%parm[#6]%&lt;/p>
 	</logmsg>
       <severity>Warning</severity>
-      <alarm-data reduction-key="%uei%:%dpname%:%nodeid%:%parm[#2]%:%parm[#3]%" alarm-type="1" auto-clean="true" />
       <varbindsdecode>
          <parmid>parm[#1]</parmid>
          <decode varbindvalue="1" varbinddecodedstring="idle"/>
@@ -137,6 +136,7 @@
          <decode varbindvalue="5" varbinddecodedstring="openconfirm"/>
          <decode varbindvalue="6" varbinddecodedstring="established"/>
       </varbindsdecode>
+      <alarm-data reduction-key="%uei%:%dpname%:%nodeid%:%parm[#2]%:%parm[#3]%" alarm-type="1" auto-clean="true" />
    </event>
 <!-- End events from ARISTA-BGP4V2-MIB -->
 <!-- Start events from ARISTA-CONFIG-MAN-MIB -->
@@ -207,7 +207,6 @@
 	aristaCmdHistoryEventConfigDestURLScheme=%parm[#5]%&lt;/p>
 	</logmsg>
       <severity>Warning</severity>
-      <alarm-data reduction-key="%uei%:%dpname%:%nodeid%:%parm[#1]%:%parm[#2]%:%parm[#3]%" alarm-type="1" auto-clean="false" />
       <varbindsdecode>
          <parmid>parm[#1]</parmid>
          <decode varbindvalue="0" varbinddecodedstring="commandLine"/>
@@ -231,6 +230,7 @@
          <decode varbindvalue="4" varbinddecodedstring="startup"/>
          <decode varbindvalue="5" varbinddecodedstring="url"/>
       </varbindsdecode>
+      <alarm-data reduction-key="%uei%:%dpname%:%nodeid%:%parm[#1]%:%parm[#2]%:%parm[#3]%" alarm-type="1" auto-clean="false" />
    </event>
 <!-- End events from ARISTA-CONFIG-MAN-MIB -->
 <!-- Start events from ARISTA-REDUNDANCY-MIB -->

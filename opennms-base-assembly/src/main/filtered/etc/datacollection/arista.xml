@@ -9,6 +9,8 @@
         <collect>
           <includeGroup>mib2-X-interfaces</includeGroup>
           <includeGroup>mib2-X-interfaces-pkts</includeGroup>
+          <includeGroup>mib2-host-resources-storage</includeGroup>
+          <includeGroup>mib2-host-resources-processor</includeGroup>
         </collect>
       </systemDef>
 
