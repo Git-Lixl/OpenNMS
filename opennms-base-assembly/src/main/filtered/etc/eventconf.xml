@@ -2145,6 +2145,7 @@
   <event-file>events/McAfee.events.xml</event-file>
   <event-file>events/MGE-UPS.events.xml</event-file>
   <event-file>events/Microsoft.events.xml</event-file>
+  <event-file>events/MikrotikRouterOS.events.xml</event-file>
   <event-file>events/Multicast.standard.events.xml</event-file>
   <event-file>events/MPLS.events.xml</event-file>
   <event-file>events/MRV.events.xml</event-file>
@@ -2185,6 +2186,7 @@
   <event-file>events/RMON.events.xml</event-file>
   <event-file>events/Sensaphone.events.xml</event-file>
   <event-file>events/Sentry.events.xml</event-file>
+  <event-file>events/Siemens-HiPath4000.events.xml</event-file>
   <event-file>events/SNA-NAU.events.xml</event-file>
   <event-file>events/SNMP-REPEATER.events.xml</event-file>
   <event-file>events/Snort.events.xml</event-file>
@@ -2202,6 +2204,7 @@
   <event-file>events/TUT.events.xml</event-file>
   <event-file>events/UPS-MIB.events.xml</event-file>
   <event-file>events/Uptime.events.xml</event-file>
+  <event-file>events/Veeam_Backup-Replication.events.xml</event-file>
   <event-file>events/Veraz.events.xml</event-file>
   <event-file>events/VMWare.env.events.xml</event-file>
   <event-file>events/VMWare.vc.events.xml</event-file>
