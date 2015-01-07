@@ -50,14 +50,18 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
 import org.opennms.core.utils.ParameterMap;
+import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.Distributable;
+import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.utils.RelaxedX509TrustManager;
 
 /**
@@ -90,11 +94,30 @@ final public class HttpsMonitor extends HttpMonitor {
     /**
      * Default HTTPS ports.
      */
+    Map<String, Object> m_parameters;
     private static final int[] DEFAULT_PORTS = { 443 };
+
+    public Map<String, Object> getParameters() {
+        return m_parameters;
+    }
 
     /** {@inheritDoc} */
     protected int[] determinePorts(Map<String, Object> parameters) {
         return ParameterMap.getKeyedIntegerArray(parameters, "port", DEFAULT_PORTS);
+    }
+
+    protected String[] determineEnabledProtocols(Map<String, Object> parameters) {
+    	String enabledProtocols = ParameterMap.getKeyedString(parameters, "enabledProtocols", null);
+    	if ( enabledProtocols != null )
+    		return enabledProtocols.split(",");
+    	return null;
+    }
+
+    protected String[] determineEnabledCipherSuites(Map<String, Object> parameters) {
+    	String enabledCipherSuites = ParameterMap.getKeyedString(parameters, "enabledCipherSuites", null);
+    	if ( enabledCipherSuites != null )
+    		return enabledCipherSuites.split(",");
+    	return null;
     }
 
     /** {@inheritDoc} */
@@ -113,12 +136,26 @@ final public class HttpsMonitor extends HttpMonitor {
             throw new IllegalStateException("Key management exception in SSLSocketFactory: "+e);
         }
         sslSF = sslContext.getSocketFactory();
-        Socket wrappedSocket;
+        SSLSocket wrappedSocket;
         InetAddress inetAddress = socket.getInetAddress();
         String hostAddress = inetAddress.getHostAddress();
         int port = socket.getPort();
-        wrappedSocket = sslSF.createSocket(socket, hostAddress, port, true);
+        wrappedSocket = (SSLSocket) sslSF.createSocket(socket, hostAddress, port, true);
+        if (determineEnabledProtocols(getParameters()) != null)
+        	wrappedSocket.setEnabledProtocols(determineEnabledProtocols(getParameters()));
+        if (determineEnabledCipherSuites(getParameters()) != null)
+        	wrappedSocket.setEnabledCipherSuites(determineEnabledCipherSuites(getParameters()));
+        log().debug("wrapSocket: Supported Protocols: " + Arrays.toString(wrappedSocket.getSupportedProtocols()));
+        log().debug("wrapSocket: Enabled Protocols: " + Arrays.toString(wrappedSocket.getEnabledProtocols()));
+        log().debug("wrapSocket: Supported Cipher Suites: " + Arrays.toString(wrappedSocket.getSupportedCipherSuites()));
+        log().debug("wrapSocket: Enabled Cipher Suites: " + Arrays.toString(wrappedSocket.getEnabledCipherSuites()));
         return wrappedSocket;
+    }
+    
+    /** {@inheritDoc} */
+    public PollStatus poll(MonitoredService svc, Map<String, Object> parameters) {
+    	m_parameters = parameters;
+    	return super.poll(svc, parameters);
     }
 
 }
