@@ -245,11 +245,19 @@ public class PollableNode extends PollableContainer {
     
     /** {@inheritDoc} */
     public Event createDownEvent(Date date) {
+    	if (getMemberCount() == 1 ) {
+    		PollableInterface iface = (PollableInterface)getMembers().iterator().next();
+            return getContext().createEvent(EventConstants.NODE_DOWN_EVENT_UEI, getNodeId(), iface.getAddress(), null, date, getStatus().getReason());
+    	}
         return getContext().createEvent(EventConstants.NODE_DOWN_EVENT_UEI, getNodeId(), null, null, date, getStatus().getReason());
     }
     
     /** {@inheritDoc} */
     public Event createUpEvent(Date date) {
+    	if (getMemberCount() == 1 ) {
+    		PollableInterface iface = (PollableInterface)getMembers().iterator().next();
+            return getContext().createEvent(EventConstants.NODE_UP_EVENT_UEI, getNodeId(), iface.getAddress(), null, date, getStatus().getReason());
+    	}
         return getContext().createEvent(EventConstants.NODE_UP_EVENT_UEI, getNodeId(), null, null, date, getStatus().getReason());
     }
     
