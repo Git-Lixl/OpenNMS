@@ -36,7 +36,7 @@ import org.opennms.netmgt.model.ncs.NCSComponentRepository;
 
 public class MockNCSComponentRepository implements NCSComponentRepository {
     @Override
-    public void lock() {}
+    public boolean lock() { return false; }
     @Override
     public void initialize(Object obj) {}
     @Override
@@ -52,7 +52,7 @@ public class MockNCSComponentRepository implements NCSComponentRepository {
     }
 
     @Override
-    public int countAll() {
+    public long countAll() {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -76,7 +76,7 @@ public class MockNCSComponentRepository implements NCSComponentRepository {
     }
 
     @Override
-    public int countMatching(OnmsCriteria onmsCrit) {
+    public long countMatching(OnmsCriteria onmsCrit) {
         // TODO Auto-generated method stub
         return 0;
     }

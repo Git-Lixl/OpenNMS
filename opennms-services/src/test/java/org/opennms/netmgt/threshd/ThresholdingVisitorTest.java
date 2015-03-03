@@ -59,6 +59,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.db.DataSourceFactory;
+import org.opennms.core.db.XADataSourceFactory;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.db.MockDatabase;
 import org.opennms.core.utils.InetAddressUtils;
@@ -560,6 +561,7 @@ public class ThresholdingVisitorTest {
             db.update("insert into category_node values (?, ?)", 11, i);
         }
         DataSourceFactory.setInstance(db);
+        XADataSourceFactory.setInstance(db);
 
         // Initialize Filter DAO
         System.setProperty("opennms.home", "src/test/resources");
@@ -1152,6 +1154,7 @@ public class ThresholdingVisitorTest {
             db.update("insert into category_node values (?, ?)", 11, i);
         }
         DataSourceFactory.setInstance(db);
+        XADataSourceFactory.setInstance(db);
 
         // Initialize Filter DAO
 
@@ -1993,6 +1996,7 @@ public class ThresholdingVisitorTest {
         if (ifName != null)
             db.update("update snmpinterface set snmpifname=?, snmpifdescr=? where id=?", ifName, ifName, 1);
         DataSourceFactory.setInstance(db);
+        XADataSourceFactory.setInstance(db);
     }
 
     private boolean deleteDirectory(File path) {

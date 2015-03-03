@@ -223,7 +223,7 @@ public class DaoWebNotificationRepository implements WebNotificationRepository, 
     /** {@inheritDoc} */
     @Transactional
     @Override
-    public int countMatchingNotifications(NotificationCriteria criteria) {
+    public long countMatchingNotifications(NotificationCriteria criteria) {
         return m_notificationDao.countMatching(getOnmsCriteria(criteria));
     }
 
@@ -247,4 +247,9 @@ public class DaoWebNotificationRepository implements WebNotificationRepository, 
     public Notification getNotification(int noticeId) {
         return mapOnmsNotificationToNotification(m_notificationDao.get(noticeId));
     }
+    
+    private long queryForInt(OnmsCriteria onmsCriteria) {
+        return m_notificationDao.countMatching(onmsCriteria);
+    }
+
 }

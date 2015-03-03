@@ -28,14 +28,13 @@
 
 package org.opennms.netmgt.dao.hibernate;
 
-import java.sql.SQLException;
 import java.util.Collection;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.opennms.netmgt.dao.api.LinkStateDao;
 import org.opennms.netmgt.model.OnmsLinkState;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 
 /**
  * <p>LinkStateDaoHibernate class.</p>
@@ -58,7 +57,7 @@ public class LinkStateDaoHibernate extends AbstractDaoHibernate<OnmsLinkState, I
         return getHibernateTemplate().execute(new HibernateCallback<Collection<OnmsLinkState>>() {
 
             @Override
-            public Collection<OnmsLinkState> doInHibernate(Session session) throws HibernateException, SQLException {
+            public Collection<OnmsLinkState> doInHibernate(Session session) throws HibernateException {
                 return session.createCriteria(OnmsLinkState.class)
                 .setFirstResult(offset)
                 .setMaxResults(limit)

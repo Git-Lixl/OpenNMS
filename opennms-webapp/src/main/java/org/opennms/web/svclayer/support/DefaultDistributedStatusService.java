@@ -197,7 +197,7 @@ public class DefaultDistributedStatusService implements DistributedStatusService
      * @return a int.
      */
     @Override
-    public int getApplicationCount() {
+    public long getApplicationCount() {
         return m_applicationDao.countAll();
     }
 

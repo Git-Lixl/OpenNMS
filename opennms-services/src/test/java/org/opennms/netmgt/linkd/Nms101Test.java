@@ -28,6 +28,8 @@
 
 package org.opennms.netmgt.linkd;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.CISCO1700B_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.CISCO1700B_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.CISCO1700B_SNMP_RESOURCE;
@@ -53,24 +55,21 @@ import static org.opennms.netmgt.nb.TestNetworkBuilder.LAPTOP_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.LAPTOP_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.LAPTOP_SNMP_RESOURCE;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
 import org.opennms.netmgt.config.linkd.Package;
 import org.opennms.netmgt.model.DataLinkInterface;
 import org.opennms.netmgt.model.DataLinkInterface.DiscoveryProtocol;
+import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.topology.CdpInterface;
 import org.opennms.netmgt.model.topology.LinkableNode;
 import org.opennms.netmgt.model.topology.RouterInterface;
-import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.nb.Nms101NetworkBuilder;
 
 public class Nms101Test extends LinkdTestBuilder {
@@ -93,6 +92,7 @@ public class Nms101Test extends LinkdTestBuilder {
      * 
      */
 	@Test
+	@JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
         @JUnitSnmpAgent(host=CISCO1700B_IP, port=161, resource=CISCO1700B_SNMP_RESOURCE),
         @JUnitSnmpAgent(host=CISCO1700_IP, port=161, resource=CISCO1700_SNMP_RESOURCE)
@@ -147,6 +147,7 @@ public class Nms101Test extends LinkdTestBuilder {
      *                  cisco3700  (3) --- (1)  cisco3600      
      */	
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
         @JUnitSnmpAgent(host=CISCO7200A_IP, port=161, resource=CISCO7200A_SNMP_RESOURCE),
         @JUnitSnmpAgent(host=CISCO7200B_IP, port=161, resource=CISCO7200B_SNMP_RESOURCE)
@@ -192,6 +193,7 @@ public class Nms101Test extends LinkdTestBuilder {
      *                  cisco3700  (3) --- (1)  cisco3600      
      */	
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
         @JUnitSnmpAgent(host=CISCO7200A_IP, port=161, resource=CISCO7200A_SNMP_RESOURCE),
         @JUnitSnmpAgent(host=LAPTOP_IP, port=161, resource=LAPTOP_SNMP_RESOURCE)
@@ -234,6 +236,7 @@ public class Nms101Test extends LinkdTestBuilder {
      *                  cisco3700  (3) --- (1)  cisco3600      
      */	
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=CISCO3700_IP, port=161, resource=CISCO3700_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=CISCO3600_IP, port=161, resource=CISCO3600_SNMP_RESOURCE)
@@ -280,6 +283,7 @@ public class Nms101Test extends LinkdTestBuilder {
      *                  cisco3700  (3) --- (1)  cisco3600      
      */	
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
         @JUnitSnmpAgent(host=CISCO7200A_IP, port=161, resource=CISCO7200A_SNMP_RESOURCE),
         @JUnitSnmpAgent(host=LAPTOP_IP, port=161, resource=LAPTOP_SNMP_RESOURCE),
@@ -390,6 +394,7 @@ public class Nms101Test extends LinkdTestBuilder {
      *                  cisco3700  (3) --- (1)  cisco3600      
      */	
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
         @JUnitSnmpAgent(host=CISCO7200A_IP, port=161, resource=CISCO7200A_SNMP_RESOURCE),
         @JUnitSnmpAgent(host=CISCO7200B_IP, port=161, resource=CISCO7200B_SNMP_RESOURCE)

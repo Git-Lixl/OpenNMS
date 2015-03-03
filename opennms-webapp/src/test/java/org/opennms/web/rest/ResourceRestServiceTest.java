@@ -73,7 +73,6 @@ import org.springframework.transaction.annotation.Transactional;
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase
-@Transactional
 public class ResourceRestServiceTest extends AbstractSpringJerseyRestTestCase {
 
     @Autowired

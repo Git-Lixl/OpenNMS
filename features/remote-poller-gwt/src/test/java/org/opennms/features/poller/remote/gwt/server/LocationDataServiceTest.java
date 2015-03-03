@@ -42,8 +42,6 @@ import org.junit.runner.RunWith;
 import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
-import org.opennms.core.test.db.TemporaryDatabase;
-import org.opennms.core.test.db.TemporaryDatabaseAware;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.features.poller.remote.gwt.client.ApplicationDetails;
 import org.opennms.features.poller.remote.gwt.client.ApplicationInfo;
@@ -57,11 +55,10 @@ import org.opennms.features.poller.remote.gwt.client.utils.IntervalUtils;
 import org.opennms.netmgt.dao.api.ApplicationDao;
 import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
+import org.opennms.netmgt.dao.api.LocationMonitorDao;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.ServiceTypeDao;
-import org.opennms.netmgt.dao.hibernate.LocationMonitorDaoHibernate;
-import org.opennms.netmgt.filter.FilterDaoFactory;
 import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsDistPoller;
 import org.opennms.netmgt.model.OnmsIpInterface;
@@ -97,12 +94,12 @@ import org.springframework.transaction.annotation.Transactional;
 })
 @JUnitTemporaryDatabase
 @Transactional
-public class LocationDataServiceTest implements TemporaryDatabaseAware<TemporaryDatabase>, InitializingBean {
+public class LocationDataServiceTest implements InitializingBean {
     @Autowired
     private LocationDataService m_locationDataService;
 
     @Autowired
-    private LocationMonitorDaoHibernate m_locationMonitorDao;
+    private LocationMonitorDao m_locationMonitorDao;
 
     @Autowired
     private ApplicationDao m_applicationDao;
@@ -463,10 +460,5 @@ public class LocationDataServiceTest implements TemporaryDatabaseAware<Temporary
         final PollStatus ps = PollStatus.available();
         ps.setTimestamp(date);
         return ps;
-    }
-
-    @Override
-    public void setTemporaryDatabase(TemporaryDatabase database) {
-        FilterDaoFactory.setInstance(null);
     }
 }

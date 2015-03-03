@@ -122,6 +122,7 @@ public class EventUtilHibernateTest {
         hwEntity.setEntPhysicalName("Chassis");
         hwEntity.setEntPhysicalDescr("some-physical-d3scr");
         m_hwEntityDao.save(hwEntity);
+        m_hwEntityDao.flush();
 
         // Access the field by index
         String hwfield = eventUtilDaoImpl.getHardwareFieldValue("hardware[0:entPhysicalDescr]", node1.getId());

@@ -51,5 +51,5 @@ public interface LegacyOnmsDao<T, K extends Serializable> extends OnmsDao<T,K> {
     /**
      * @deprecated use {@link #countMatching(Criteria)} instead.
      */
-    int countMatching(final OnmsCriteria onmsCrit);
+    long countMatching(final OnmsCriteria onmsCrit);
 }

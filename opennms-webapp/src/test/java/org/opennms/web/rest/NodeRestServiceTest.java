@@ -134,8 +134,8 @@ public class NodeRestServiceTest extends AbstractSpringJerseyRestTestCase {
         xml = sendRequest(GET, url, parseParamData("limit=3&offset=0&orderBy=label"), 200);
         list = JaxbUtils.unmarshal(OnmsNodeList.class, xml);
         assertEquals(3, list.size());
-        assertEquals(Integer.valueOf(3), list.getCount());
-        assertEquals(Integer.valueOf(5), list.getTotalCount());
+        assertEquals(Long.valueOf(3), list.getCount());
+        assertEquals(Long.valueOf(5), list.getTotalCount());
         assertEquals("TestMachine0", list.get(0).getLabel());
         assertEquals("TestMachine1", list.get(1).getLabel());
         assertEquals("TestMachine2", list.get(2).getLabel());
@@ -144,15 +144,15 @@ public class NodeRestServiceTest extends AbstractSpringJerseyRestTestCase {
         xml = sendRequest(GET, url, parseParamData("comparator=like&label=%25Test%25"), 200);
         LOG.info(xml);
         list = JaxbUtils.unmarshal(OnmsNodeList.class, xml);
-        assertEquals(Integer.valueOf(5), list.getCount());
-        assertEquals(Integer.valueOf(5), list.getTotalCount());
+        assertEquals(Long.valueOf(5), list.getCount());
+        assertEquals(Long.valueOf(5), list.getTotalCount());
 
         // This filter should fail (return 0 results)
         xml = sendRequest(GET, url, parseParamData("comparator=like&label=%25DOES_NOT_MATCH%25"), 200);
         LOG.info(xml);
         list = JaxbUtils.unmarshal(OnmsNodeList.class, xml);
         assertEquals(null, list.getCount());
-        assertEquals(Integer.valueOf(0), list.getTotalCount());
+        assertEquals(Long.valueOf(0), list.getTotalCount());
 
         // Testing PUT
         url += "/1";
@@ -243,9 +243,9 @@ public class NodeRestServiceTest extends AbstractSpringJerseyRestTestCase {
 
         // Validate object by unmarshalling
         OnmsNodeList list = (OnmsNodeList)unmarshaller.unmarshal(new StringReader(xml));
-        assertEquals(Integer.valueOf(10), list.getCount());
+        assertEquals(Long.valueOf(10), list.getCount());
         assertEquals(10, list.size());
-        assertEquals(Integer.valueOf(20), list.getTotalCount());
+        assertEquals(Long.valueOf(20), list.getTotalCount());
         int i = 0;
         Set<OnmsNode> sortedNodes = new TreeSet<OnmsNode>(new Comparator<OnmsNode>() {
             @Override

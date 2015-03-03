@@ -505,8 +505,7 @@ public class Collectd extends AbstractServiceDaemon implements
                     m_ifaceDao, 
                     spec, 
                     getScheduler(),
-                    m_schedulingCompletedFlag,
-                    m_transTemplate.getTransactionManager()
+                    m_schedulingCompletedFlag
                 );
 
                 // Add new collectable service to the collectable service list.

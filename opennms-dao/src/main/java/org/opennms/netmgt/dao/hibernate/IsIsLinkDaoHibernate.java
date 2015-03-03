@@ -28,7 +28,6 @@
 
 package org.opennms.netmgt.dao.hibernate;
 
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
@@ -37,7 +36,7 @@ import org.hibernate.Session;
 import org.opennms.netmgt.dao.api.IsIsLinkDao;
 import org.opennms.netmgt.model.IsIsLink;
 import org.opennms.netmgt.model.OnmsNode;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 import org.springframework.util.Assert;
 
 /**
@@ -104,7 +103,7 @@ public class IsIsLinkDaoHibernate extends AbstractDaoHibernate<IsIsLink, Integer
         return getHibernateTemplate().execute(new HibernateCallback<List<Object[]>>() {
 
             @Override
-            public List<Object[]> doInHibernate(Session session) throws HibernateException, SQLException {
+            public List<Object[]> doInHibernate(Session session) throws HibernateException {
                 List<Object[]> list = session.createSQLQuery("select distinct on (distinct_id) " +
                         "least(l1.id, l2.id) as distinct_id, " +
                         "l1.id as source_id, " +

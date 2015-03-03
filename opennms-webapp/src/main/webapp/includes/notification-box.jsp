@@ -76,7 +76,7 @@
 			You have 
 			<a href="notification/browse?acktype=unack&amp;filter=<%= java.net.URLEncoder.encode("user="+request.getRemoteUser()) %>">
 			<%
-				int count = repository.countMatchingNotifications(
+				long count = repository.countMatchingNotifications(
 					new NotificationCriteria(
 						AcknowledgeType.UNACKNOWLEDGED, 
 						new Filter[] { 
@@ -85,7 +85,7 @@
 					)
 				);
 				String format = formatter.format( count );
-				out.println( java.text.MessageFormat.format( format, new Object[] { new Integer(count) } ));
+				out.println( java.text.MessageFormat.format( format, new Object[] { new Long(count) } ));
 			%>
 			</a>
 			</li>
@@ -101,7 +101,7 @@
 					)
 				);
 				format = formatter.format( count );
-				out.println( java.text.MessageFormat.format( format, new Object[] { new Integer(count) } ));
+				out.println( java.text.MessageFormat.format( format, new Object[] { new Long(count) } ));
 			%>
 			</a>
 			</li>

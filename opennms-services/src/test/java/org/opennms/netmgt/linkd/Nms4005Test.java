@@ -104,7 +104,7 @@ public class Nms4005Test extends LinkdTestBuilder {
             printLink(link);
         }
         assertEquals("we should have found 4 data links", 4, ifaces.size());
-        //Rerun collectionand discovery must be all the same...
+        //Rerun collection and discovery must be all the same...
         assertTrue(m_linkd.runSingleSnmpCollection(cisco1.getId()));
         assertTrue(m_linkd.runSingleSnmpCollection(cisco2.getId()));
         assertTrue(m_linkd.runSingleSnmpCollection(cisco3.getId()));

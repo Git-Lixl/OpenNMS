@@ -29,6 +29,8 @@
 package org.opennms.netmgt.dao.support;
 
 import org.opennms.netmgt.dao.api.OnmsDao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -123,7 +125,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 public abstract class UpsertTemplate<T, D extends OnmsDao<T, ?>> {
     protected final PlatformTransactionManager m_transactionManager;
     protected final D m_dao;
-    
+
+    private static final Logger LOG = LoggerFactory.getLogger(UpsertTemplate.class);
 
     /**
      * Create an UpsertTemplate using the PlatformTransactionManager for creating
@@ -139,7 +142,9 @@ public abstract class UpsertTemplate<T, D extends OnmsDao<T, ?>> {
      */
     public T execute() {
         TransactionTemplate template = new TransactionTemplate(m_transactionManager);
-        template.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        // Make sure that the upsert operation takes place in a new 
+        // transaction, even if one is currently in progress
+        template.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         return template.execute(new TransactionCallback<T>() {
 
             @Override
@@ -161,7 +166,9 @@ public abstract class UpsertTemplate<T, D extends OnmsDao<T, ?>> {
         }
 
         // lock the table since we are about to insert and don't want it inserted 
-        m_dao.lock();
+        if (!m_dao.lock()) {
+            LOG.warn("Unable to acquire lock for table: {}", m_dao.getLockName());
+        }
 
         // make sure it wasn't inserted while we waited for the lock
         dbObj = query();
@@ -170,7 +177,7 @@ public abstract class UpsertTemplate<T, D extends OnmsDao<T, ?>> {
             return update(dbObj);
         }
         
-        // now it is save to insert it
+        // now it is safe to insert it
         return insert();
     }
 

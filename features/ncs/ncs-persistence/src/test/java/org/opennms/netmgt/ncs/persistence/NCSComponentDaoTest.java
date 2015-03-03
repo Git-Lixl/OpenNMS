@@ -43,6 +43,7 @@ import org.opennms.netmgt.model.ncs.NCSBuilder;
 import org.opennms.netmgt.model.ncs.NCSComponent;
 import org.opennms.netmgt.model.ncs.NCSComponent.DependencyRequirements;
 import org.opennms.netmgt.model.ncs.NCSComponentRepository;
+import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -50,12 +51,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations={
+		"classpath:META-INF/opennms/applicationContext-commonConfigs.xml",
+		"classpath:META-INF/opennms/applicationContext-dao.xml",
 		"classpath:META-INF/opennms/applicationContext-soa.xml",
-		"classpath:META-INF/opennms/applicationContext-datasource.xml",
 		"classpath*:/META-INF/opennms/applicationContext-daemon.xml",
-		"classpath:META-INF/opennms/applicationContext-testDao.xml",
 		"file:target/classes/META-INF/opennms/component-dao.xml"
 })
+@JUnitConfigurationEnvironment
 @Transactional
 public class NCSComponentDaoTest {
 	

@@ -28,6 +28,9 @@
 
 package org.opennms.netmgt.linkd;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.ROUTER1_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.ROUTER1_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.ROUTER1_SNMP_RESOURCE;
@@ -56,20 +59,18 @@ import static org.opennms.netmgt.nb.TestNetworkBuilder.SWITCH5_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.SWITCH5_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.SWITCH5_SNMP_RESOURCE;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.Collection;
 import java.util.List;
+
 import org.junit.Test;
+import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
 import org.opennms.netmgt.config.linkd.Package;
 import org.opennms.netmgt.model.DataLinkInterface;
 import org.opennms.netmgt.model.DataLinkInterface.DiscoveryProtocol;
-import org.opennms.netmgt.model.topology.LinkableNode;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.topology.LinkableNode;
 import org.opennms.netmgt.nb.Nms17216NetworkBuilder;
 
 public class Nms17216Test extends LinkdTestBuilder {
@@ -144,6 +145,7 @@ public class Nms17216Test extends LinkdTestBuilder {
             @JUnitSnmpAgent(host=ROUTER3_IP, port=161, resource=ROUTER3_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=ROUTER4_IP, port=161, resource=ROUTER4_SNMP_RESOURCE)
     })
+    @JUnitTemporaryDatabase
     public void testNetwork17216Links() throws Exception {
 
         m_nodeDao.save(builder.getSwitch1());
@@ -362,6 +364,7 @@ public class Nms17216Test extends LinkdTestBuilder {
             @JUnitSnmpAgent(host=SWITCH2_IP, port=161, resource=SWITCH2_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=SWITCH3_IP, port=161, resource=SWITCH3_SNMP_RESOURCE)
     })
+    @JUnitTemporaryDatabase
     public void testNetwork17216LldpLinks() throws Exception {
         m_nodeDao.save(builder.getSwitch1());
         m_nodeDao.save(builder.getSwitch2());
@@ -434,6 +437,7 @@ public class Nms17216Test extends LinkdTestBuilder {
             @JUnitSnmpAgent(host=SWITCH4_IP, port=161, resource=SWITCH4_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=ROUTER3_IP, port=161, resource=ROUTER3_SNMP_RESOURCE)
     })
+    @JUnitTemporaryDatabase
     public void testNetwork17216Switch4Router4CdpLinks() throws Exception {
 
         m_nodeDao.save(builder.getSwitch4());

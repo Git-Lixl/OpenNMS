@@ -46,21 +46,23 @@ import static org.opennms.netmgt.nb.TestNetworkBuilder.SIEGFRIE_SNMP_RESOURCE;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
 import org.junit.Test;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
-import org.opennms.netmgt.config.linkd.Package;
 import org.opennms.netmgt.model.DataLinkInterface;
 import org.opennms.netmgt.model.OnmsArpInterface.StatusType;
-import org.opennms.netmgt.model.topology.LinkableNode;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.topology.LinkableNode;
 import org.opennms.netmgt.nb.Nms0001NetworkBuilder;
+import org.springframework.transaction.annotation.Transactional;
 
 public class Nms0001Test extends LinkdTestBuilder {
 
 	Nms0001NetworkBuilder builder = new Nms0001NetworkBuilder();
 
     @Test
+    @Transactional
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host = FROH_IP, port = 161, resource = FROH_SNMP_RESOURCE),
             @JUnitSnmpAgent(host = OEDIPUS_IP, port = 161, resource = OEDIPUS_SNMP_RESOURCE),
@@ -73,7 +75,7 @@ public class Nms0001Test extends LinkdTestBuilder {
         m_nodeDao.save(builder.getSiegFrie());
         m_nodeDao.flush();
 
-        Package example1 = m_linkdConfig.getPackage("example1");
+        org.opennms.netmgt.config.linkd.Package example1 = m_linkdConfig.getPackage("example1");
         example1.setUseBridgeDiscovery(false);
         example1.setUseIpRouteDiscovery(false);
         example1.setEnableVlanDiscovery(false);

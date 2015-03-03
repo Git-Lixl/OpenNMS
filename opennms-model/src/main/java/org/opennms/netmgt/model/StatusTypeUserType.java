@@ -34,6 +34,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.CharacterType;
 import org.hibernate.usertype.UserType;
 import org.opennms.netmgt.model.OnmsArpInterface.StatusType;
@@ -93,21 +94,21 @@ public class StatusTypeUserType implements UserType {
     }
 
     @Override
-    public Object nullSafeGet(final ResultSet rs, final String[] names, final Object owner) throws HibernateException, SQLException {
-        return StatusType.get(CharacterType.INSTANCE.nullSafeGet(rs, names[0]).toString());
+    public Object nullSafeGet(final ResultSet rs, final String[] names, final SessionImplementor session, final Object owner) throws HibernateException, SQLException {
+        return StatusType.get(CharacterType.INSTANCE.nullSafeGet(rs, names[0], session).toString());
     }
 
     @Override
-    public void nullSafeSet(final PreparedStatement st, final Object value, final int index) throws HibernateException, SQLException {
+    public void nullSafeSet(final PreparedStatement st, final Object value, final int index, final SessionImplementor session) throws HibernateException, SQLException {
         if (value == null) {
-            CharacterType.INSTANCE.nullSafeSet(st, null, index);
+            CharacterType.INSTANCE.set(st, null, index, session);
         } else if (value instanceof StatusType){
-            CharacterType.INSTANCE.nullSafeSet(st, new Character(((StatusType) value).getCharCode()), index);
+            CharacterType.INSTANCE.set(st, new Character(((StatusType) value).getCharCode()), index, session);
         } else if (value instanceof String){
             try {
-                CharacterType.INSTANCE.nullSafeSet(st, new Character(StatusType.get((String)value).getCharCode()), index);
+                CharacterType.INSTANCE.set(st, new Character(StatusType.get((String)value).getCharCode()), index, session);
             } catch (final IllegalArgumentException e) {
-                CharacterType.INSTANCE.nullSafeSet(st, new Character(((String)value).charAt(0)), index);
+                CharacterType.INSTANCE.set(st, new Character(((String)value).charAt(0)), index, session);
             }
         }
     }

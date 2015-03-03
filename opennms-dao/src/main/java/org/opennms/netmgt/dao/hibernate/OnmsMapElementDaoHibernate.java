@@ -28,7 +28,6 @@
 
 package org.opennms.netmgt.dao.hibernate;
 
-import java.sql.SQLException;
 import java.util.Collection;
 
 import org.hibernate.HibernateException;
@@ -37,7 +36,7 @@ import org.hibernate.Session;
 import org.opennms.netmgt.dao.api.OnmsMapElementDao;
 import org.opennms.netmgt.model.OnmsMap;
 import org.opennms.netmgt.model.OnmsMapElement;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 
 public class OnmsMapElementDaoHibernate extends AbstractDaoHibernate<OnmsMapElement, Integer> implements OnmsMapElementDao {
     /**
@@ -54,7 +53,7 @@ public class OnmsMapElementDaoHibernate extends AbstractDaoHibernate<OnmsMapElem
         return getHibernateTemplate().execute(new HibernateCallback<Collection<OnmsMapElement>>() {
 
             @Override
-            public Collection<OnmsMapElement> doInHibernate(Session session) throws HibernateException, SQLException {
+            public Collection<OnmsMapElement> doInHibernate(Session session) throws HibernateException {
                 return session.createCriteria(OnmsMap.class)
                 .setFirstResult(offset)
                 .setMaxResults(limit)
@@ -88,7 +87,7 @@ public class OnmsMapElementDaoHibernate extends AbstractDaoHibernate<OnmsMapElem
     public void deleteElementsByMapId(final OnmsMap map) {
         getHibernateTemplate().execute(new HibernateCallback<Void>() {
             @Override
-            public Void doInHibernate(Session session) throws HibernateException, SQLException {
+            public Void doInHibernate(Session session) throws HibernateException {
                 
              String hql = "delete from OnmsMapElement as element where element.map.id = :mapId";
              Query query = session.createQuery(hql);
@@ -104,7 +103,7 @@ public class OnmsMapElementDaoHibernate extends AbstractDaoHibernate<OnmsMapElem
     public void deleteElementsByNodeid(final int nodeid) {
       getHibernateTemplate().execute(new HibernateCallback<Void>() {
           @Override
-          public Void doInHibernate(Session session) throws HibernateException, SQLException {
+          public Void doInHibernate(Session session) throws HibernateException {
               
            String hql = "delete from OnmsMapElement as element where element.elementId = :nodeId and" +
            		" ( element.type = :typenode or element.type = :typemap )";
@@ -123,7 +122,7 @@ public class OnmsMapElementDaoHibernate extends AbstractDaoHibernate<OnmsMapElem
     public void deleteElementsByType(final String type) {
         getHibernateTemplate().execute(new HibernateCallback<Void>() {
             @Override
-            public Void doInHibernate(Session session) throws HibernateException, SQLException {
+            public Void doInHibernate(Session session) throws HibernateException {
                 
              String hql = "delete from OnmsMapElement as element where element.type = :type";
              Query query = session.createQuery(hql);
@@ -140,7 +139,7 @@ public class OnmsMapElementDaoHibernate extends AbstractDaoHibernate<OnmsMapElem
     public void deleteElementsByElementIdAndType(final int id,final String type) {
         getHibernateTemplate().execute(new HibernateCallback<Void>() {
             @Override
-            public Void doInHibernate(Session session) throws HibernateException, SQLException {
+            public Void doInHibernate(Session session) throws HibernateException {
                 
              String hql = "delete from OnmsMapElement as element where element.elementId = :id and element.type = :type";
              Query query = session.createQuery(hql);
@@ -180,7 +179,7 @@ public class OnmsMapElementDaoHibernate extends AbstractDaoHibernate<OnmsMapElem
     public void deleteElementsByMapType(final String mapType) {
         getHibernateTemplate().execute(new HibernateCallback<Void>() {
             @Override
-            public Void doInHibernate(Session session) throws HibernateException, SQLException {
+            public Void doInHibernate(Session session) throws HibernateException {
                 
              String hql = "delete from OnmsMapElement as element where element.id in ( select el.id from OnmsMapElement as el where el.map.type = ?)";
              Query query = session.createQuery(hql);
@@ -218,7 +217,7 @@ public class OnmsMapElementDaoHibernate extends AbstractDaoHibernate<OnmsMapElem
     public int countElementsOnMap(final int mapid) {
         Number nu = getHibernateTemplate().execute(new HibernateCallback<Number>() {
               @Override
-              public Number doInHibernate(Session session) throws HibernateException, SQLException {
+              public Number doInHibernate(Session session) throws HibernateException {
                   
                String hql = "select count(*) from OnmsMapElement as element where element.map.id = ?)";
                Query query = session.createQuery(hql);

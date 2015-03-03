@@ -84,7 +84,7 @@ public interface AvailabilityService {
      * @return the service count for the nodeid in the context of the passed
      *         category
      */
-    int getServiceCount(int nodeid, RTCCategory category);
+    long getServiceCount(int nodeid, RTCCategory category);
 
     /**
      * Get the service down count for the nodeid in the context of the passed

@@ -114,7 +114,7 @@ public class EventRestService extends OnmsRestService {
     public String getCount() {
         readLock();
         try {
-            return Integer.toString(m_eventDao.countAll());
+            return Long.toString(m_eventDao.countAll());
         } finally {
             readUnlock();
         }

@@ -28,7 +28,6 @@
 
 package org.opennms.netmgt.dao.hibernate;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,7 +37,7 @@ import org.hibernate.Session;
 import org.opennms.netmgt.dao.api.BridgeMacLinkDao;
 import org.opennms.netmgt.model.BridgeMacLink;
 import org.opennms.netmgt.model.topology.BridgeMacTopologyLink;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 
 
 public class BridgeMacLinkDaoHibernate extends AbstractDaoHibernate<BridgeMacLink, Integer> implements BridgeMacLinkDao {
@@ -82,7 +81,7 @@ public class BridgeMacLinkDaoHibernate extends AbstractDaoHibernate<BridgeMacLin
     public List<BridgeMacTopologyLink> getAllBridgeLinksToIpAddrToNodes(){
         List<Object[]> links =  getHibernateTemplate().execute(new HibernateCallback<List<Object[]>>() {
             @Override
-            public List<Object[]> doInHibernate(Session session) throws HibernateException, SQLException {
+            public List<Object[]> doInHibernate(Session session) throws HibernateException {
                 return session.createSQLQuery("select mlink.*," +
                         "ntm.netaddress, " +
                         "ip.ipaddr, " +

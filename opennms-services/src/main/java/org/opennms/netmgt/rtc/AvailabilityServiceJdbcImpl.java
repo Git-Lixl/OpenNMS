@@ -147,7 +147,7 @@ public class AvailabilityServiceJdbcImpl implements AvailabilityService {
 	 *         category
 	 */
 	@Override
-	public int getServiceCount(int nodeid, RTCCategory category) {
+	public long getServiceCount(int nodeid, RTCCategory category) {
 		Criteria criteria = createServiceCriteriaForNodeInCategory(nodeid, category);
 		return m_monitoredServiceDao.countMatching(criteria);
 	}

@@ -88,7 +88,12 @@ public abstract class AbstractMockDao<T, K extends Serializable> implements Lega
     }
 
     @Override
-    public void lock() {
+    public boolean lock() {
+        return true;
+    }
+
+    public String getLockName() {
+        return getClass().getSimpleName() + "_ACCESS";
     }
 
     @Override
@@ -109,7 +114,7 @@ public abstract class AbstractMockDao<T, K extends Serializable> implements Lega
     }
 
     @Override
-    public int countAll() {
+    public long countAll() {
         //LOG.debug("countAll()");
         return findAll().size();
     }
@@ -147,14 +152,14 @@ public abstract class AbstractMockDao<T, K extends Serializable> implements Lega
     }
 
     @Override
-    public int countMatching(final Criteria onmsCrit) {
+    public long countMatching(final Criteria onmsCrit) {
         LOG.debug("countMatching({})", onmsCrit);
         final List<T> matched = findMatching(onmsCrit);
         return matched == null? 0 : matched.size();
     }
 
     @Override
-    public int countMatching(final OnmsCriteria onmsCrit) {
+    public long countMatching(final OnmsCriteria onmsCrit) {
         LOG.debug("countMatching({})", onmsCrit);
         final List<T> matched = findMatching(onmsCrit);
         return matched == null? 0 : matched.size();

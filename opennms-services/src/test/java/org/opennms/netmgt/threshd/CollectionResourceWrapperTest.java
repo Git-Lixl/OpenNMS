@@ -42,6 +42,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.db.DataSourceFactory;
+import org.opennms.core.db.XADataSourceFactory;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.db.MockDatabase;
 import org.opennms.netmgt.collectd.GenericIndexResource;
@@ -359,6 +360,7 @@ public class CollectionResourceWrapperTest {
         db.populate(network);
         db.update("update snmpinterface set snmpifindex=?, snmpifname=?, snmpifdescr=? where id=?", ifIndex, ifName, ifName, 1);
         DataSourceFactory.setInstance(db);
+        XADataSourceFactory.setInstance(db);
 
         // Create Mock Collection Agent
         SnmpCollectionAgent agent = createCollectionAgent();

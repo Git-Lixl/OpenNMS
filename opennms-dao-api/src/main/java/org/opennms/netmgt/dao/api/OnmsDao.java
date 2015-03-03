@@ -43,7 +43,12 @@ public interface OnmsDao<T, K extends Serializable> {
     /**
      * This is used to lock the table in order to implement upsert type operations
      */
-    void lock();
+    boolean lock();
+
+    /**
+     * Get the name of the access lock.
+     */
+    String getLockName();
 
     void initialize(Object obj);
 
@@ -51,7 +56,7 @@ public interface OnmsDao<T, K extends Serializable> {
 
     void clear();
 
-    int countAll();
+    long countAll();
 
     void delete(T entity);
 
@@ -61,7 +66,7 @@ public interface OnmsDao<T, K extends Serializable> {
     
     List<T> findMatching(Criteria criteria);
 
-    int countMatching(final Criteria onmsCrit);
+    long countMatching(final Criteria onmsCrit);
 
     T get(K id);
 

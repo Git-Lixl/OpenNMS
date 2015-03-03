@@ -66,10 +66,7 @@ import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
-import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * @author mhuot
@@ -109,9 +106,6 @@ public class OutageDaoTest implements InitializingBean {
     @Autowired
     private EventDao m_eventDao;
 
-    @Autowired
-    TransactionTemplate m_transTemplate;
-
     @Override
     public void afterPropertiesSet() throws Exception {
         BeanUtils.assertAutowiring(this);
@@ -119,13 +113,9 @@ public class OutageDaoTest implements InitializingBean {
 
     @Before
     public void setUp() throws Exception {
-        m_transTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            public void doInTransactionWithoutResult(TransactionStatus status) {
-                OnmsServiceType t = new OnmsServiceType("ICMP");
-                m_serviceTypeDao.save(t);
-            }
-        });
+        OnmsServiceType t = new OnmsServiceType("ICMP");
+        m_serviceTypeDao.save(t);
+        m_serviceTypeDao.flush();
     }
 
     @Test
@@ -156,62 +146,29 @@ public class OutageDaoTest implements InitializingBean {
     }
 
     @Test
-    @JUnitTemporaryDatabase
+    @Transactional
     public void testGetMatchingOutages() {
-        m_transTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            public void doInTransactionWithoutResult(TransactionStatus status) {
-                OnmsNode node = new OnmsNode(getLocalHostDistPoller());
-                node.setLabel("localhost");
-                m_nodeDao.save(node);
-                insertEntitiesAndOutage("172.16.1.1", "ICMP", node);
-            }
-        });
-
-        /*
-         * We need to flush and finish the transaction because JdbcFilterDao
-         * gets its own connection from the DataSource and won't see our data
-         * otherwise.
-         */
-
-        m_transTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            public void doInTransactionWithoutResult(TransactionStatus status) {
-                String[] svcs = new String[] { "ICMP" };
-                ServiceSelector selector = new ServiceSelector("ipAddr IPLIKE 172.16.1.1", Arrays.asList(svcs));
-                Collection<OnmsOutage> outages = m_outageDao.matchingCurrentOutages(selector);
-                assertEquals("outage count", 1, outages.size());
-            }
-        });
+        OnmsNode node = new OnmsNode(getLocalHostDistPoller());
+        node.setLabel("localhost");
+        m_nodeDao.save(node);
+        m_nodeDao.flush();
+        insertEntitiesAndOutage("172.16.1.1", "ICMP", node);
+        String[] svcs = new String[] { "ICMP" };
+        ServiceSelector selector = new ServiceSelector("ipAddr IPLIKE 172.16.1.1", Arrays.asList(svcs));
+        Collection<OnmsOutage> outages = m_outageDao.matchingCurrentOutages(selector);
+        assertEquals("outage count", 1, outages.size());
     }
 
     @Test
-    @JUnitTemporaryDatabase
+    @Transactional
     public void testGetMatchingOutagesWithEmptyServiceList() {
-        m_transTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            public void doInTransactionWithoutResult(TransactionStatus status) {
-                OnmsNode node = new OnmsNode(getLocalHostDistPoller());
-                node.setLabel("localhost");
-                m_nodeDao.save(node);
-                insertEntitiesAndOutage("172.16.1.1", "ICMP", node);
-            }
-        });
-
-        /*
-         * We need to flush and finish the transaction because JdbcFilterDao
-         * gets its own connection from the DataSource and won't see our data
-         * otherwise.
-         */
-
-        m_transTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            public void doInTransactionWithoutResult(TransactionStatus status) {
-                ServiceSelector selector = new ServiceSelector("ipAddr IPLIKE 172.16.1.1", new ArrayList<String>(0));
-                Collection<OnmsOutage> outages = m_outageDao.matchingCurrentOutages(selector);
-                assertEquals(1, outages.size());
-            }
-        });
+        OnmsNode node = new OnmsNode(getLocalHostDistPoller());
+        node.setLabel("localhost");
+        m_nodeDao.save(node);
+        insertEntitiesAndOutage("172.16.1.1", "ICMP", node);
+        ServiceSelector selector = new ServiceSelector("ipAddr IPLIKE 172.16.1.1", new ArrayList<String>(0));
+        Collection<OnmsOutage> outages = m_outageDao.matchingCurrentOutages(selector);
+        assertEquals(1, outages.size());
     }
 
     @Test
@@ -304,6 +261,7 @@ public class OutageDaoTest implements InitializingBean {
         OnmsOutage outage = new OnmsOutage(new Date(), monitoredService);
         outage.setServiceLostEvent(event);
         m_outageDao.save(outage);
+        m_outageDao.flush();
         return outage;
     }
 

@@ -29,7 +29,6 @@
 package org.opennms.netmgt.dao.hibernate;
 
 import java.net.InetAddress;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -46,7 +45,7 @@ import org.opennms.netmgt.model.ServiceSelector;
 import org.opennms.netmgt.model.outage.OutageSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 
 public class OutageDaoHibernate extends AbstractDaoHibernate<OnmsOutage, Integer> implements OutageDao {
 
@@ -100,7 +99,7 @@ public class OutageDaoHibernate extends AbstractDaoHibernate<OnmsOutage, Integer
 
             @SuppressWarnings("unchecked")
             @Override
-            public Collection<OnmsOutage> doInHibernate(final Session session) throws HibernateException, SQLException {
+            public Collection<OnmsOutage> doInHibernate(final Session session) throws HibernateException {
                 return session.createCriteria(OnmsOutage.class)
                 .setFirstResult(offset)
                 .setMaxResults(limit)

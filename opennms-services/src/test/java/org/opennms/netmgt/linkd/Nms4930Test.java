@@ -30,23 +30,27 @@ package org.opennms.netmgt.linkd;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
-import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
-import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
-import org.opennms.netmgt.config.linkd.Package;
-import org.opennms.netmgt.model.DataLinkInterface;
-import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.netmgt.model.DataLinkInterface.DiscoveryProtocol;
-import org.opennms.netmgt.nb.Nms4930NetworkBuilder;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK1_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK1_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK1_SNMP_RESOURCE;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK2_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK2_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK2_SNMP_RESOURCE;
+
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
+import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
+import org.opennms.netmgt.config.LinkdConfigFactory;
+import org.opennms.netmgt.config.linkd.Package;
+import org.opennms.netmgt.model.DataLinkInterface;
+import org.opennms.netmgt.model.DataLinkInterface.DiscoveryProtocol;
+import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.nb.Nms4930NetworkBuilder;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 public class Nms4930Test extends LinkdTestBuilder {
 
@@ -56,6 +60,12 @@ public class Nms4930Test extends LinkdTestBuilder {
     	builder.setNodeDao(m_nodeDao);
         builder.buildNetwork4930();
     }
+
+	@Before
+	public void setUpLinkdConfiguration() throws Exception {
+	    final Resource config = new ClassPathResource("etc/linkd-configuration.xml");
+	    m_linkdConfig = new LinkdConfigFactory(config.getInputStream());
+	}
 
     /*
      * The main fact is that this devices have only the Bridge MIb walk

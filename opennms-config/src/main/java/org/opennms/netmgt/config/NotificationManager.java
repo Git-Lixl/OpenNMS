@@ -146,9 +146,9 @@ public abstract class NotificationManager {
     public static final String PARAM_TUI_PIN = "-tuipin";
     /** Constant <code>PARAM_MICROBLOG_USERNAME="-ublog"</code> */
     public static final String PARAM_MICROBLOG_USERNAME = "-ublog";
-
-    NotifdConfigManager m_configManager;
-    private DataSource m_dataSource;
+    
+    private final NotifdConfigManager m_configManager;
+    private final DataSource m_dataSource;
 
     /**
      * A parameter expansion algorithm, designed to replace strings delimited by
@@ -409,6 +409,10 @@ public abstract class NotificationManager {
      */
     private Connection getConnection() throws SQLException {
         return m_dataSource.getConnection();
+    }
+
+    public DataSource getDataSource() {
+        return m_dataSource;
     }
 
     /**

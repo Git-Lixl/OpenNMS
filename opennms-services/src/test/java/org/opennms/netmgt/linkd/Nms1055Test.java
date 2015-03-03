@@ -28,6 +28,8 @@
 
 package org.opennms.netmgt.linkd;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.AUSTIN_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.AUSTIN_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.AUSTIN_SNMP_RESOURCE;
@@ -47,11 +49,10 @@ import static org.opennms.netmgt.nb.TestNetworkBuilder.SANJOSE_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.SANJOSE_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.SANJOSE_SNMP_RESOURCE;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
+
 import org.junit.Test;
+import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
 import org.opennms.core.utils.InetAddressUtils;
@@ -152,6 +153,7 @@ public class Nms1055Test extends LinkdTestBuilder {
             @JUnitSnmpAgent(host=SANJOSE_IP, port=161, resource=SANJOSE_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=RIOVISTA_IP, port=161, resource=RIOVISTA_SNMP_RESOURCE)
     })
+    @JUnitTemporaryDatabase
     public void testNetwork1055Links() throws Exception {
         m_nodeDao.save(builder.getPenrose());
         m_nodeDao.save(builder.getDelaware());
@@ -312,6 +314,7 @@ public class Nms1055Test extends LinkdTestBuilder {
            @JUnitSnmpAgent(host=PENROSE_IP, port=161, resource=PENROSE_SNMP_RESOURCE),
            @JUnitSnmpAgent(host=DELAWARE_IP, port=161, resource=DELAWARE_SNMP_RESOURCE)
    })
+   @JUnitTemporaryDatabase
    public void testNetwork1055StpLinks() throws Exception {
        m_nodeDao.save(builder.getPenrose());
        m_nodeDao.save(builder.getDelaware());
@@ -359,6 +362,7 @@ public class Nms1055Test extends LinkdTestBuilder {
             @JUnitSnmpAgent(host=SANJOSE_IP, port=161, resource=SANJOSE_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=RIOVISTA_IP, port=161, resource=RIOVISTA_SNMP_RESOURCE)
     })
+    @JUnitTemporaryDatabase
     public void testNetwork1055OspfLinks() throws Exception {
         m_nodeDao.save(builder.getPenrose());
         m_nodeDao.save(builder.getDelaware());

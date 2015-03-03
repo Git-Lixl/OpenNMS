@@ -38,7 +38,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.opennms.core.test.MockPlatformTransactionManager;
 import org.opennms.netmgt.collection.api.AttributeGroupType;
 import org.opennms.netmgt.collection.api.ServiceParameters;
 import org.opennms.netmgt.config.MibObject;
@@ -49,7 +48,6 @@ import org.opennms.netmgt.config.datacollection.Parameter;
 import org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy;
 import org.opennms.netmgt.config.datacollection.StorageStrategy;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
-import org.opennms.netmgt.dao.mock.MockDataCollectionConfigDao;
 import org.opennms.netmgt.model.NetworkBuilder;
 import org.opennms.netmgt.model.OnmsDistPoller;
 import org.opennms.netmgt.model.OnmsIpInterface;
@@ -61,7 +59,6 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * Test class for PersistRegexSelectorStrategy
@@ -105,9 +102,8 @@ public class PersistRegexSelectorStrategyTest {
         map.put("collection", "default");
         serviceParams = new ServiceParameters(map);
 
-        PlatformTransactionManager ptm = new MockPlatformTransactionManager();
-        SnmpCollectionAgent agent = DefaultCollectionAgent.create(1, ipInterfaceDao, ptm);
-        OnmsSnmpCollection snmpCollection = new OnmsSnmpCollection(agent, serviceParams, new MockDataCollectionConfigDao());
+        SnmpCollectionAgent agent = DefaultCollectionAgent.create(1, ipInterfaceDao);
+        OnmsSnmpCollection snmpCollection = new OnmsSnmpCollection(agent, serviceParams);
 
         org.opennms.netmgt.config.datacollection.ResourceType rt = new org.opennms.netmgt.config.datacollection.ResourceType();
         rt.setName("myResourceType");

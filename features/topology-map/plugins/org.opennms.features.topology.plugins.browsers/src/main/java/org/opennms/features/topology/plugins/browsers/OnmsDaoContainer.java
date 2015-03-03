@@ -241,7 +241,7 @@ public abstract class OnmsDaoContainer<T,K extends Serializable> implements Cont
         size = new Size(DEFAULT_SIZE_RELOAD_TIME, new SizeReloadStrategy() {
             @Override
             public int reload() {
-                return m_dao.countMatching(getCriteria(null, false));  // no paging!!!!
+                return (int)m_dao.countMatching(getCriteria(null, false));  // no paging!!!!
             }
         });
         page = new Page(DEFAULT_PAGE_SIZE, size);

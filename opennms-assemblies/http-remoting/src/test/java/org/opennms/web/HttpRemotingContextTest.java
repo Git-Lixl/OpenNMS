@@ -35,13 +35,14 @@ import javax.servlet.ServletException;
 import junit.framework.TestCase;
 
 import org.opennms.core.db.DataSourceFactory;
+import org.opennms.core.db.XADataSourceFactory;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.db.MockDatabase;
 import org.opennms.test.DaoTestConfigBean;
 import org.springframework.mock.web.MockFilterConfig;
 import org.springframework.mock.web.MockServletConfig;
 import org.springframework.mock.web.MockServletContext;
-import org.springframework.orm.hibernate3.support.OpenSessionInViewFilter;
+import org.springframework.orm.hibernate4.support.OpenSessionInViewFilter;
 import org.springframework.web.context.ContextLoaderListener;
 
 /**
@@ -72,6 +73,7 @@ public class HttpRemotingContextTest extends TestCase {
 
 		MockDatabase db = new MockDatabase(true);
 		DataSourceFactory.setInstance(db);
+		XADataSourceFactory.setInstance(db);
 
 		servletContext = new MockServletContext("file:src/main/webapp");
 

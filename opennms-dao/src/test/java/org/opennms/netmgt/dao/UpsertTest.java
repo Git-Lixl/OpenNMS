@@ -47,6 +47,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 
@@ -84,10 +85,10 @@ public class UpsertTest implements InitializingBean {
     
     @Autowired
     DatabasePopulator m_populator;
-    
+
     @Autowired
-    TransactionTemplate m_transTemplate;
-    
+    TransactionTemplate m_transactionTemplate;
+
     @Override
     public void afterPropertiesSet() throws Exception {
         BeanUtils.assertAutowiring(this);
@@ -97,14 +98,17 @@ public class UpsertTest implements InitializingBean {
     public void setUp() {
         m_populator.populateDatabase();
     }
-    
+
     @Test
     @JUnitTemporaryDatabase
+    @Transactional
     public void testInsert() {
         String newIfName = "newIf0";
+        assertEquals(1, countIfs(m_populator.getNode1().getId(), 1, "atm0"));
+        assertEquals(1, countIfs(m_populator.getNode1().getId(), 2, "eth0"));
         assertEquals(0, countIfs(m_populator.getNode1().getId(), 1001, newIfName));
 
-        // add non existent snmpiface
+        // add non-existent snmpiface
         OnmsSnmpInterface snmpIface = new OnmsSnmpInterface();
         snmpIface.setNode(m_populator.getNode1());
         snmpIface.setIfIndex(1001);
@@ -112,6 +116,8 @@ public class UpsertTest implements InitializingBean {
         
         m_upsertService.upsert(m_populator.getNode1().getId() /* nodeid */, snmpIface, 0);
         
+        assertEquals(1, countIfs(m_populator.getNode1().getId(), 1, "atm0"));
+        assertEquals(1, countIfs(m_populator.getNode1().getId(), 2, "eth0"));
         assertEquals(1, countIfs(m_populator.getNode1().getId(), 1001, newIfName));
     }
     
@@ -121,6 +127,7 @@ public class UpsertTest implements InitializingBean {
     
     @Test
     @JUnitTemporaryDatabase
+    @Transactional
     public void testUpdate() {
         String oldIfName = "eth0";
         String newIfName = "newIf0";
@@ -140,7 +147,10 @@ public class UpsertTest implements InitializingBean {
     
     @Test
     @JUnitTemporaryDatabase
+    @Transactional
     public void testConcurrentInsert() throws InterruptedException {
+        assertEquals(1, countIfs(m_populator.getNode1().getId(), 1, "atm0"));
+        assertEquals(1, countIfs(m_populator.getNode1().getId(), 2, "eth0"));
         Inserter one = new Inserter(m_upsertService, m_populator.getNode1().getId(), 1001, "ifName1");
         Inserter two = new Inserter(m_upsertService, m_populator.getNode1().getId(), 1001, "ifName2");
         

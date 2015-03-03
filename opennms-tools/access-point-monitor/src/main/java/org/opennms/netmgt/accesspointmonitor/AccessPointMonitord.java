@@ -85,6 +85,7 @@ public class AccessPointMonitord extends AbstractServiceDaemon implements ReadyR
     private AccessPointDao m_accessPointDao;
     private NodeDao m_nodeDao;
     private IpInterfaceDao m_ipInterfaceDao;
+    private TransactionTemplate transactionTemplate;
     private volatile Map<String, PollingContext> m_activePollers = new HashMap<String, PollingContext>();
     public PollingContextFactory m_pollingContextFactory;
 
@@ -104,6 +105,20 @@ public class AccessPointMonitord extends AbstractServiceDaemon implements ReadyR
 
     public void setPollingContextFactory(PollingContextFactory pollerContextFactory) {
         this.m_pollingContextFactory = pollerContextFactory;
+    }
+
+    /**
+     * @return the transactionTemplate
+     */
+    public TransactionTemplate getTransactionTemplate() {
+        return transactionTemplate;
+    }
+
+    /**
+     * @param transactionTemplate the transactionTemplate to set
+     */
+    public void setTransactionTemplate(TransactionTemplate transactionTemplate) {
+        this.transactionTemplate = transactionTemplate;
     }
 
     /**
@@ -404,19 +419,24 @@ public class AccessPointMonitord extends AbstractServiceDaemon implements ReadyR
         LOG.debug("scheduleDynamicPackages() was triggered");
 
         // Build the current list of dynamic packages
-        Map<String, Package> dynamicPackages = new HashMap<String, Package>();
+        final Map<String, Package> dynamicPackages = new HashMap<String, Package>();
 
-        for (Package pkg : m_pollerConfig.getPackages()) {
+        for (final Package pkg : m_pollerConfig.getPackages()) {
             if (!pkg.nameHasWildcard()) {
                 continue;
             }
 
-            for (String pkgName : m_accessPointDao.findDistinctPackagesLike(pkg.getName())) {
-                Package newPkg = new Package(pkg);
-                newPkg.setName(pkgName);
-                newPkg.setIsDynamic(true);
-                dynamicPackages.put(pkgName, newPkg);
-            }
+            transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+                @Override
+                public void doInTransactionWithoutResult(TransactionStatus status) {
+                    for (String pkgName : m_accessPointDao.findDistinctPackagesLike(pkg.getName())) {
+                        Package newPkg = new Package(pkg);
+                        newPkg.setName(pkgName);
+                        newPkg.setIsDynamic(true);
+                        dynamicPackages.put(pkgName, newPkg);
+                    }
+                }
+            });
         }
 
         for (Package pkg : dynamicPackages.values()) {

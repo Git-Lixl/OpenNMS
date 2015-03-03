@@ -115,7 +115,7 @@ public class AcknowledgmentRestService extends OnmsRestService {
     public String getCount() {
         readLock();
         try {
-            return Integer.toString(m_ackDao.countAll());
+            return Long.toString(m_ackDao.countAll());
         } finally {
             readUnlock();
         }

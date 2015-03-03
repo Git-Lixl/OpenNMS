@@ -38,6 +38,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.db.DataSourceFactory;
+import org.opennms.core.db.XADataSourceFactory;
 import org.opennms.core.test.ConfigurationTestUtils;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.db.MockDatabase;
@@ -68,8 +69,6 @@ import org.opennms.test.mock.MockUtil;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * @deprecated Please develop new unit tests by using the Spring unit test
@@ -134,8 +133,6 @@ public class OpenNMSTestCase {
 
     private EventProxy m_eventProxy;
 
-    protected PlatformTransactionManager m_transMgr;
-    
     public void setVersion(int version) {
         m_version = version;
     }
@@ -152,6 +149,7 @@ public class OpenNMSTestCase {
             populateDatabase();
             
             DataSourceFactory.setInstance(m_db);
+            XADataSourceFactory.setInstance(m_db);
 
             SnmpPeerFactory.setInstance(new SnmpPeerFactory(new ByteArrayResource(getSnmpConfig().getBytes())));
             
@@ -233,9 +231,6 @@ public class OpenNMSTestCase {
             }
         
         }
-        
-        m_transMgr = new DataSourceTransactionManager(DataSourceFactory.getInstance());
-
     }
 
     protected void populateDatabase() throws Exception {

@@ -28,6 +28,8 @@
 
 package org.opennms.netmgt.linkd;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.BAGMANE_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.BAGMANE_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.BAGMANE_SNMP_RESOURCE;
@@ -64,10 +66,9 @@ import static org.opennms.netmgt.nb.TestNetworkBuilder.SRX_100_SNMP_RESOURCE;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.SSG550_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.SSG550_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.SSG550_SNMP_RESOURCE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+
 import org.junit.Test;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;

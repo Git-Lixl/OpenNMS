@@ -119,6 +119,7 @@ public class WebNotificationRepositoryFilterTest implements InitializingBean {
     
     @Test
     @JUnitTemporaryDatabase // Relies on specific IDs so we need a fresh database
+    @Transactional
     public void testNodeFilter(){
         
         NodeFilter filter = new NodeFilter(1);
@@ -128,6 +129,7 @@ public class WebNotificationRepositoryFilterTest implements InitializingBean {
     
     @Test
     @JUnitTemporaryDatabase // Relies on specific IDs so we need a fresh database
+    @Transactional
     public void testNotificationIdFilter(){
         NotificationIdFilter filter = new NotificationIdFilter(1);
         
@@ -136,6 +138,7 @@ public class WebNotificationRepositoryFilterTest implements InitializingBean {
     
     @Test
     @JUnitTemporaryDatabase // Relies on specific IDs so we need a fresh database
+    @Transactional
     public void testNotificationIdListFilter(){
         int[] ids = {1};
         NotificationIdListFilter filter = new NotificationIdListFilter(ids);
@@ -154,6 +157,7 @@ public class WebNotificationRepositoryFilterTest implements InitializingBean {
     
     @Test
     @JUnitTemporaryDatabase // Relies on specific IDs so we need a fresh database
+    @Transactional
     public void testServiceFilter(){
         Notification[] notifs = m_daoNotificationRepo.getMatchingNotifications(new NotificationCriteria());
         System.out.println(notifs[0].getServiceId());

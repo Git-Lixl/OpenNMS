@@ -50,7 +50,7 @@ public class OnmsDaoContainerTest {
         alarmList.add(alarm);
 
         final AlarmDao alarmDaoMock = EasyMock.createNiceMock(AlarmDao.class);
-        EasyMock.expect(alarmDaoMock.countMatching((Criteria)EasyMock.anyObject())).andReturn(1);
+        EasyMock.expect(alarmDaoMock.countMatching((Criteria)EasyMock.anyObject())).andReturn(1L);
         EasyMock.expect(alarmDaoMock.findMatching((Criteria)EasyMock.anyObject())).andReturn(alarmList);
         EasyMock.replay(alarmDaoMock);
 

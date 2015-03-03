@@ -67,6 +67,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.util.Assert;
 
@@ -109,6 +110,7 @@ public class SnmpAssetProvisioningAdapter extends SimplerQueuedProvisioningAdapt
 	}
 
 	@Override
+	@Transactional
 	public boolean isNodeReady(AdapterOperation op) {
 		boolean readyState = false;
 		OnmsNode node = m_nodeDao.get(op.getNodeId());

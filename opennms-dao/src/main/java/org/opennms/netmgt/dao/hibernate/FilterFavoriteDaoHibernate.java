@@ -28,16 +28,14 @@
 
 package org.opennms.netmgt.dao.hibernate;
 
+import java.util.List;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.opennms.netmgt.dao.api.FilterFavoriteDao;
-import org.opennms.netmgt.dao.hibernate.AbstractDaoHibernate;
 import org.opennms.netmgt.model.OnmsFilterFavorite;
-import org.springframework.orm.hibernate3.HibernateCallback;
-
-import java.sql.SQLException;
-import java.util.List;
+import org.springframework.orm.hibernate4.HibernateCallback;
 
 public class FilterFavoriteDaoHibernate extends AbstractDaoHibernate<OnmsFilterFavorite, Integer> implements FilterFavoriteDao {
 
@@ -49,7 +47,7 @@ public class FilterFavoriteDaoHibernate extends AbstractDaoHibernate<OnmsFilterF
     public OnmsFilterFavorite findBy(final String userName, final String filterName) {
         return getHibernateTemplate().execute(new HibernateCallback<OnmsFilterFavorite>() {
             @Override
-            public OnmsFilterFavorite doInHibernate(Session session) throws HibernateException, SQLException {
+            public OnmsFilterFavorite doInHibernate(Session session) throws HibernateException {
                 Query query = session.createQuery("from OnmsFilterFavorite f where f.username = :userName and f.name = :filterName order by f.name");
                 query.setParameter("filterName", filterName);
                 query.setParameter("userName", userName);
@@ -64,7 +62,7 @@ public class FilterFavoriteDaoHibernate extends AbstractDaoHibernate<OnmsFilterF
     public List<OnmsFilterFavorite> findBy(final String userName, final OnmsFilterFavorite.Page page) {
         return getHibernateTemplate().execute(new HibernateCallback<List<OnmsFilterFavorite>>() {
             @Override
-            public List<OnmsFilterFavorite> doInHibernate(Session session) throws HibernateException, SQLException {
+            public List<OnmsFilterFavorite> doInHibernate(Session session) throws HibernateException {
                 Query query = session.createQuery("from OnmsFilterFavorite f where f.username = :userName and f.page = :page order by f.name");
                 query.setParameter("userName", userName);
                 query.setParameter("page", page);
@@ -78,7 +76,7 @@ public class FilterFavoriteDaoHibernate extends AbstractDaoHibernate<OnmsFilterF
     public boolean existsFilter(final String userName, final String filterName, final OnmsFilterFavorite.Page page) {
         List<OnmsFilterFavorite> favorites = getHibernateTemplate().execute(new HibernateCallback<List<OnmsFilterFavorite>>() {
             @Override
-            public List<OnmsFilterFavorite> doInHibernate(Session session) throws HibernateException, SQLException {
+            public List<OnmsFilterFavorite> doInHibernate(Session session) throws HibernateException {
                 Query query = session.createQuery("from OnmsFilterFavorite f where f.username = :userName and f.page = :page and f.name = :filterName order by f.name");
                 query.setParameter("userName", userName);
                 query.setParameter("page", page);

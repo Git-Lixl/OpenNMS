@@ -95,7 +95,7 @@ public class DemandPollServiceTest extends TestCase {
 		}
 
                 @Override
-		public int countAll() {
+		public long countAll() {
 			return (m_demandPoll == null ? 0 : 1);
 		}
 
@@ -163,8 +163,14 @@ public class DemandPollServiceTest extends TestCase {
 		}
 
                 @Override
-                public void lock() {
+                public boolean lock() {
+                    return false;
 		}
+
+        @Override
+        public String getLockName() {
+            return this.getClass().getSimpleName();
+        }
 
                 @Override
         public List<DemandPoll> findMatching(Criteria criteria) {
@@ -172,7 +178,7 @@ public class DemandPollServiceTest extends TestCase {
         }
 
                 @Override
-        public int countMatching(Criteria criteria) {
+        public long countMatching(Criteria criteria) {
             throw new UnsupportedOperationException("not yet implemented");
         }
 	}

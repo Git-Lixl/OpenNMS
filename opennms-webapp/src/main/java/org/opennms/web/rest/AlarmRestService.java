@@ -117,7 +117,7 @@ public class AlarmRestService extends AlarmRestServiceBase {
     public String getCount() {
         readLock();
         try {
-            return Integer.toString(m_alarmDao.countAll());
+            return Long.toString(m_alarmDao.countAll());
         } finally {
             readUnlock();
         }

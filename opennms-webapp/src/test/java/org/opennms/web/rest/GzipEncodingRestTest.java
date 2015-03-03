@@ -105,7 +105,6 @@ public class GzipEncodingRestTest extends AbstractSpringJerseyRestTestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        populator.resetDatabase();
     }
 
     @Test

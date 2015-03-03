@@ -66,7 +66,7 @@ import org.opennms.web.rest.support.TimeChunker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockFilterConfig;
 import org.springframework.mock.web.MockServletConfig;
-import org.springframework.orm.hibernate3.support.OpenSessionInViewFilter;
+import org.springframework.orm.hibernate4.support.OpenSessionInViewFilter;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.TransactionStatus;

@@ -69,7 +69,7 @@ public class JaxbListWrapper<T> implements Serializable, Iterable<T> {
     private static final long serialVersionUID = 1L;
 
     private List<T> m_objects = new ArrayList<T>();
-    private Integer m_totalCount;
+    private Long m_totalCount;
 
     public List<T> getObjects() {
         return m_objects;
@@ -98,25 +98,25 @@ public class JaxbListWrapper<T> implements Serializable, Iterable<T> {
     }
 
     @XmlAttribute(name="count")
-    public Integer getCount() {
+    public Long getCount() {
         if (m_objects.size() == 0) {
             return null;
         } else {
-            return m_objects.size();
+            return (long)m_objects.size();
         }
     }
     public void setCount(final Integer count) {
         // dummy to make JAXB happy
     }
-    public int size() {
+    public long size() {
         return m_objects.size();
     }
     
     @XmlAttribute(name="totalCount")
-    public Integer getTotalCount() {
+    public Long getTotalCount() {
         return m_totalCount == null? getCount() : m_totalCount;
     }
-    public void setTotalCount(final Integer totalCount) {
+    public void setTotalCount(final Long totalCount) {
         m_totalCount = totalCount;
     }
     @Override

@@ -33,7 +33,7 @@ import org.hibernate.Session;
 import org.opennms.netmgt.dao.api.EventDao;
 import org.opennms.netmgt.model.OnmsEvent;
 import org.springframework.dao.DataAccessException;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 
 import java.sql.SQLException;
 import java.util.Date;
@@ -57,9 +57,9 @@ public class EventDaoHibernate extends AbstractDaoHibernate<OnmsEvent, Integer> 
     public List<OnmsEvent> getEventsAfterDate(final List<String> ueiList, final Date date) {
         final String hql = "From OnmsEvent e where e.eventUei in (:eventUei) and e.eventTime > :eventTime order by e.eventTime desc";
 
-        return (List<OnmsEvent>)getHibernateTemplate().executeFind(new HibernateCallback<List<OnmsEvent>>() {
+        return (List<OnmsEvent>)getHibernateTemplate().execute(new HibernateCallback<List<OnmsEvent>>() {
             @Override
-            public List<OnmsEvent> doInHibernate(Session session) throws HibernateException, SQLException {
+            public List<OnmsEvent> doInHibernate(Session session) throws HibernateException {
                 return session.createQuery(hql)
                         .setParameterList("eventUei", ueiList)
                         .setParameter("eventTime", date)

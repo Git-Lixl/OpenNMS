@@ -46,9 +46,13 @@ import org.opennms.netmgt.model.SurveillanceStatus;
 public class MockNodeDao implements NodeDao {
 
     @Override
-    public void lock() {
-        // TODO Auto-generated method stub
+    public boolean lock() {
+        return false;
+    }
 
+    @Override
+    public String getLockName() {
+        return this.getClass().getSimpleName();
     }
 
     @Override
@@ -70,7 +74,7 @@ public class MockNodeDao implements NodeDao {
     }
 
     @Override
-    public int countAll() {
+    public long countAll() {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -100,13 +104,13 @@ public class MockNodeDao implements NodeDao {
     }
 
     @Override
-    public int countMatching(Criteria onmsCrit) {
+    public long countMatching(Criteria onmsCrit) {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public int countMatching(OnmsCriteria onmsCrit) {
+    public long countMatching(OnmsCriteria onmsCrit) {
         // TODO Auto-generated method stub
         return 0;
     }

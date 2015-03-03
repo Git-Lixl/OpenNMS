@@ -87,8 +87,8 @@ import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.netmgt.model.OnmsGeolocation;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.netmgt.model.OnmsNode.NodeLabelSource;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
+import org.opennms.netmgt.model.OnmsNode.NodeLabelSource;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.provision.detector.snmp.SnmpDetector;
 import org.opennms.netmgt.provision.persist.ForeignSourceRepository;
@@ -119,6 +119,7 @@ import org.springframework.core.style.ToStringCreator;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Unit test for ModelImport application.
@@ -138,6 +139,7 @@ import org.springframework.test.context.ContextConfiguration;
 })
 @JUnitConfigurationEnvironment(systemProperties="org.opennms.provisiond.enableDiscovery=false")
 @DirtiesContext(classMode=ClassMode.AFTER_EACH_TEST_METHOD)
+@Transactional
 public class ProvisionerTest extends ProvisioningTestCase implements InitializingBean, MockSnmpDataProviderAware {
     private static final Logger LOG = LoggerFactory.getLogger(ProvisionerTest.class);
 
@@ -1250,7 +1252,7 @@ public class ProvisionerTest extends ProvisioningTestCase implements Initializin
         getScanExecutor().pause();
         m_provisioner.scheduleRescanForExistingNodes();
         final List<NodeScanSchedule> schedulesForNode = m_provisionService.getScheduleForNodes();
-        final int nodeCount = getNodeDao().countAll();
+        final long nodeCount = getNodeDao().countAll();
         LOG.debug("NodeCount: {}", nodeCount);
 
         assertEquals(nodeCount, schedulesForNode.size());

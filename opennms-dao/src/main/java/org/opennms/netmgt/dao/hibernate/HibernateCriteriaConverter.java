@@ -41,6 +41,7 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Junction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.sql.JoinType;
 import org.hibernate.type.StringType;
 import org.opennms.core.criteria.AbstractCriteriaVisitor;
 import org.opennms.core.criteria.Alias;
@@ -130,7 +131,8 @@ public class HibernateCriteriaConverter implements CriteriaConverter<DetachedCri
         private Integer m_offset;
 
         public org.hibernate.Criteria getCriteria(final Session session) {
-            final org.hibernate.Criteria hibernateCriteria = getCriteria().getExecutableCriteria(session);
+            // Get the concrete session instead of a proxy with session.getSessionFactory().getCurrentSession()
+            final org.hibernate.Criteria hibernateCriteria = getCriteria().getExecutableCriteria(session.getSessionFactory().getCurrentSession());
             if (m_limit != null)
                 hibernateCriteria.setMaxResults(m_limit);
             if (m_offset != null)
@@ -183,16 +185,16 @@ public class HibernateCriteriaConverter implements CriteriaConverter<DetachedCri
             int aliasType = 0;
             switch (alias.getType()) {
             case FULL_JOIN:
-                aliasType = org.hibernate.Criteria.FULL_JOIN;
+                aliasType = JoinType.FULL_JOIN.getJoinTypeValue();
                 break;
             case LEFT_JOIN:
-                aliasType = org.hibernate.Criteria.LEFT_JOIN;
+                aliasType = JoinType.LEFT_OUTER_JOIN.getJoinTypeValue();
                 break;
             case INNER_JOIN:
-                aliasType = org.hibernate.Criteria.INNER_JOIN;
+                aliasType = JoinType.INNER_JOIN.getJoinTypeValue();
                 break;
             default:
-                aliasType = org.hibernate.Criteria.INNER_JOIN;
+                aliasType = JoinType.INNER_JOIN.getJoinTypeValue();
                 break;
             }
             if (alias.hasJoinCondition()) { // an additional condition for the join

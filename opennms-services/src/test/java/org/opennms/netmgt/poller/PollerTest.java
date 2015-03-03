@@ -52,6 +52,7 @@ import org.junit.runner.RunWith;
 import org.opennms.core.criteria.Criteria;
 import org.opennms.core.criteria.CriteriaBuilder;
 import org.opennms.core.db.DataSourceFactory;
+import org.opennms.core.db.XADataSourceFactory;
 import org.opennms.core.test.ConfigurationTestUtils;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
@@ -197,6 +198,7 @@ public class PollerTest implements TemporaryDatabaseAware<MockDatabase> {
 
         m_db.populate(m_network);
         DataSourceFactory.setInstance(m_db);
+        XADataSourceFactory.setInstance(m_db);
 
         m_pollerConfig = new MockPollerConfig(m_network);
         m_pollerConfig.setNextOutageIdSql(m_db.getNextOutageIdStatement());

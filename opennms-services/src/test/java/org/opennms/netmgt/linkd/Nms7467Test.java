@@ -28,11 +28,10 @@
 
 package org.opennms.netmgt.linkd;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.ACCESSPOINT_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.ACCESSPOINT_NAME;
-import static org.opennms.netmgt.nb.TestNetworkBuilder.WORKSTATION_IP;
-import static org.opennms.netmgt.nb.TestNetworkBuilder.WORKSTATION_MAC;
-import static org.opennms.netmgt.nb.TestNetworkBuilder.WORKSTATION_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.CISCO_C870_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.CISCO_C870_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.CISCO_C870_SNMP_RESOURCE;
@@ -48,15 +47,16 @@ import static org.opennms.netmgt.nb.TestNetworkBuilder.LINUX_UBUNTU_SNMP_RESOURC
 import static org.opennms.netmgt.nb.TestNetworkBuilder.NETGEAR_SW_108_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.NETGEAR_SW_108_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.NETGEAR_SW_108_SNMP_RESOURCE;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.opennms.netmgt.nb.TestNetworkBuilder.WORKSTATION_IP;
+import static org.opennms.netmgt.nb.TestNetworkBuilder.WORKSTATION_MAC;
+import static org.opennms.netmgt.nb.TestNetworkBuilder.WORKSTATION_NAME;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
+import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
 import org.opennms.core.utils.InetAddressUtils;
@@ -72,6 +72,7 @@ public class Nms7467Test extends LinkdTestBuilder {
 
 	Nms7467NetworkBuilder builder = new Nms7467NetworkBuilder();
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=CISCO_WS_C2948_IP, port=161, resource=CISCO_WS_C2948_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=CISCO_C870_IP, port=161, resource=CISCO_C870_SNMP_RESOURCE),
@@ -111,7 +112,6 @@ public class Nms7467Test extends LinkdTestBuilder {
         m_nodeDao.save(builder.getNodeWithoutSnmp(WORKSTATION_NAME, WORKSTATION_IP));
 
         m_nodeDao.flush();
-
 
         final OnmsNode ciscorouter = m_nodeDao.findByForeignId("linkd", CISCO_C870_NAME);
         final OnmsNode ciscows = m_nodeDao.findByForeignId("linkd", CISCO_WS_C2948_NAME);
@@ -216,6 +216,7 @@ public class Nms7467Test extends LinkdTestBuilder {
     // mrmakay:172.20.2.1:12      -------- ciscoswitch:172.20.1.7:52 ---bridge 
     // the point is that all three interface share the same mac address "001f6cd034e7"
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=CISCO_WS_C2948_IP, port=161, resource=CISCO_WS_C2948_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=CISCO_C870_IP, port=161, resource=CISCO_C870_SNMP_RESOURCE)
@@ -265,6 +266,7 @@ public class Nms7467Test extends LinkdTestBuilder {
      *  DARWIN_10_8:port4   ------> port 1 :NETGEAR_SW_108
      */
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=DARWIN_10_8_IP, port=161, resource=DARWIN_10_8_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=NETGEAR_SW_108_IP, port=161, resource=NETGEAR_SW_108_SNMP_RESOURCE)
@@ -310,6 +312,7 @@ public class Nms7467Test extends LinkdTestBuilder {
      *  NETGEAR_SW_108:port8------> port 2/1 (ifindex 9):CISCO_WS_C2948_IP
      */
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=CISCO_WS_C2948_IP, port=161, resource=CISCO_WS_C2948_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=NETGEAR_SW_108_IP, port=161, resource=NETGEAR_SW_108_SNMP_RESOURCE)
@@ -361,6 +364,7 @@ public class Nms7467Test extends LinkdTestBuilder {
      * LINUX_UBUNTU:port4  ------> port 2/3 (ifindex 11):CISCO_WS_C2948_IP
      */
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=CISCO_WS_C2948_IP, port=161, resource=CISCO_WS_C2948_SNMP_RESOURCE),
             @JUnitSnmpAgent(host=LINUX_UBUNTU_IP, port=161, resource=LINUX_UBUNTU_SNMP_RESOURCE)
@@ -407,6 +411,7 @@ public class Nms7467Test extends LinkdTestBuilder {
      * 
      */
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=CISCO_WS_C2948_IP, port=161, resource=CISCO_WS_C2948_SNMP_RESOURCE)
     })

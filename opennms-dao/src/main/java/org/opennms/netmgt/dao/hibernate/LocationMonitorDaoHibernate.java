@@ -32,7 +32,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -57,7 +56,7 @@ import org.opennms.netmgt.model.OnmsLocationSpecificStatus;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsMonitoringLocationDefinition;
 import org.springframework.core.io.Resource;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 
 /**
  * <p>LocationMonitorDaoHibernate class.</p>
@@ -284,7 +283,7 @@ public class LocationMonitorDaoHibernate extends AbstractDaoHibernate<OnmsLocati
     	final HibernateCallback<OnmsLocationSpecificStatus> callback = new HibernateCallback<OnmsLocationSpecificStatus>() {
 
             @Override
-            public OnmsLocationSpecificStatus doInHibernate(final Session session) throws HibernateException, SQLException {
+            public OnmsLocationSpecificStatus doInHibernate(final Session session) throws HibernateException {
                 return (OnmsLocationSpecificStatus)session.createQuery("from OnmsLocationSpecificStatus status where status.locationMonitor = :locationMonitor and status.monitoredService = :monitoredService order by status.pollResult.timestamp desc")
                     .setEntity("locationMonitor", locationMonitor)
                     .setEntity("monitoredService", monSvc)
@@ -450,7 +449,7 @@ public class LocationMonitorDaoHibernate extends AbstractDaoHibernate<OnmsLocati
 
             @SuppressWarnings("unchecked")
             @Override
-            public List<OnmsLocationSpecificStatus> doInHibernate(Session session) throws HibernateException, SQLException {
+            public List<OnmsLocationSpecificStatus> doInHibernate(Session session) throws HibernateException {
                 
                 return (List<OnmsLocationSpecificStatus>)session.createQuery(
                         "select distinct status from OnmsLocationSpecificStatus as status " +

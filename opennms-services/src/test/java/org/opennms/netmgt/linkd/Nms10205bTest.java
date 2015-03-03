@@ -27,6 +27,8 @@
  *******************************************************************************/
 
 package org.opennms.netmgt.linkd;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.BAGMANE_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.BAGMANE_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.BAGMANE_SNMP_RESOURCE_B;
@@ -54,11 +56,11 @@ import static org.opennms.netmgt.nb.TestNetworkBuilder.SPACE_EX_SW2_SNMP_RESOURC
 import static org.opennms.netmgt.nb.TestNetworkBuilder.SRX_100_IP;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.SRX_100_NAME;
 import static org.opennms.netmgt.nb.TestNetworkBuilder.SRX_100_SNMP_RESOURCE_B;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+
 import org.junit.Test;
+import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
 import org.opennms.netmgt.config.linkd.Package;
@@ -150,6 +152,7 @@ Address          Interface              State     ID               Pri  Dead
 
 */
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=MUMBAI_IP, port=161, resource=MUMBAI_SNMP_RESOURCE_B),
             @JUnitSnmpAgent(host=DELHI_IP, port=161, resource=DELHI_SNMP_RESOURCE_B),
@@ -403,6 +406,7 @@ it has a link to Mysore that does not support LLDP
  
      */
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=MUMBAI_IP, port=161, resource=MUMBAI_SNMP_RESOURCE_B),
             @JUnitSnmpAgent(host=DELHI_IP, port=161, resource=DELHI_SNMP_RESOURCE_B),
@@ -561,6 +565,7 @@ Address          Interface              State     ID               Pri  Dead
 
 */
     @Test
+    @JUnitTemporaryDatabase
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=MUMBAI_IP, port=161, resource=MUMBAI_SNMP_RESOURCE_B),
             @JUnitSnmpAgent(host=DELHI_IP, port=161, resource=DELHI_SNMP_RESOURCE_B),

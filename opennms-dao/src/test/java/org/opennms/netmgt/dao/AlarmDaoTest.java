@@ -190,6 +190,7 @@ public class AlarmDaoTest implements InitializingBean {
         alarm.setDistPoller(m_distPollerDao.load("localhost"));
         
         m_alarmDao.save(alarm);
+        m_alarmDao.flush();
         // It works we're so smart! hehe
         
         OnmsAlarm newAlarm = m_alarmDao.load(alarm.getId());
@@ -271,6 +272,7 @@ public class AlarmDaoTest implements InitializingBean {
 	    alarm.setDistPoller(m_distPollerDao.load("localhost"));
 
 	    m_alarmDao.save(alarm);
+	    m_alarmDao.flush();
 
 	    List<AlarmSummary> summary = m_alarmDao.getNodeAlarmSummaries();
 	    Assert.assertNotNull(summary);
@@ -304,6 +306,7 @@ public class AlarmDaoTest implements InitializingBean {
             alarm.setDistPoller(m_distPollerDao.load("localhost"));
 
             m_alarmDao.save(alarm);
+            m_alarmDao.flush();
 
             List<AlarmSummary> summary = m_alarmDao.getNodeAlarmSummaries();
             Assert.assertNotNull(summary);

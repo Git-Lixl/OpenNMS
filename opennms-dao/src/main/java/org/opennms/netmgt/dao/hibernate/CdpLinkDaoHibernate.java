@@ -28,7 +28,6 @@
 
 package org.opennms.netmgt.dao.hibernate;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -39,7 +38,7 @@ import org.opennms.netmgt.dao.api.CdpLinkDao;
 import org.opennms.netmgt.model.CdpLink;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.topology.CdpTopologyLink;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 import org.springframework.util.Assert;
 
 /**
@@ -81,7 +80,7 @@ public class CdpLinkDaoHibernate extends AbstractDaoHibernate<CdpLink, Integer> 
     public List<CdpTopologyLink> findLinksForTopology() {
         return getHibernateTemplate().execute(new HibernateCallback<List<CdpTopologyLink>>() {
             @Override
-            public List<CdpTopologyLink> doInHibernate(Session session) throws HibernateException, SQLException {
+            public List<CdpTopologyLink> doInHibernate(Session session) throws HibernateException {
                 List<Object[]> list = session.createSQLQuery("select l.id as sourceid, " +
                         "l.nodeid as sourcenodeid, " +
                         "l.cdpcacheifindex as sourceifindex, " +
@@ -113,7 +112,7 @@ public class CdpLinkDaoHibernate extends AbstractDaoHibernate<CdpLink, Integer> 
     public List<CdpTopologyLink> findLinksForTopologyByIds(final Integer... ids) {
         return getHibernateTemplate().execute(new HibernateCallback<List<CdpTopologyLink>>() {
             @Override
-            public List<CdpTopologyLink> doInHibernate(Session session) throws HibernateException, SQLException {
+            public List<CdpTopologyLink> doInHibernate(Session session) throws HibernateException {
 
                 StringBuffer idList = new StringBuffer();
                 String conditional = "";

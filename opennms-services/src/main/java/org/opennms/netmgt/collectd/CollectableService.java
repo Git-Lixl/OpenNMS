@@ -56,7 +56,6 @@ import org.opennms.netmgt.scheduler.Scheduler;
 import org.opennms.netmgt.threshd.ThresholdingVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * <P>
@@ -111,8 +110,6 @@ final class CollectableService implements ReadyRunnable {
 
 	private volatile CollectionAgent m_agent;
 
-	private final PlatformTransactionManager m_transMgr;
-
     private final IpInterfaceDao m_ifaceDao;
 
     private final ServiceParameters m_params;
@@ -128,15 +125,13 @@ final class CollectableService implements ReadyRunnable {
      * @param ifaceDao a {@link org.opennms.netmgt.dao.api.IpInterfaceDao} object.
      * @param scheduler a {@link org.opennms.netmgt.scheduler.Scheduler} object.
      * @param schedulingCompletedFlag a {@link org.opennms.netmgt.collectd.Collectd.SchedulingCompletedFlag} object.
-     * @param transMgr a {@link org.springframework.transaction.PlatformTransactionManager} object.
      */
-    protected CollectableService(OnmsIpInterface iface, IpInterfaceDao ifaceDao, CollectionSpecification spec, Scheduler scheduler, SchedulingCompletedFlag schedulingCompletedFlag, PlatformTransactionManager transMgr) throws CollectionInitializationException {
-        m_agent = DefaultCollectionAgent.create(iface.getId(), ifaceDao, transMgr);
+    protected CollectableService(OnmsIpInterface iface, IpInterfaceDao ifaceDao, CollectionSpecification spec, Scheduler scheduler, SchedulingCompletedFlag schedulingCompletedFlag) throws CollectionInitializationException {
+        m_agent = DefaultCollectionAgent.create(iface.getId(), ifaceDao);
         m_spec = spec;
         m_scheduler = scheduler;
         m_schedulingCompletedFlag = schedulingCompletedFlag;
         m_ifaceDao = ifaceDao;
-        m_transMgr = transMgr;
 
         m_nodeId = iface.getNode().getId().intValue();
         m_status = ServiceCollector.COLLECTION_SUCCEEDED;
@@ -580,8 +575,7 @@ final class CollectableService implements ReadyRunnable {
     
     private void reinitialize(OnmsIpInterface newIface) throws CollectionInitializationException {
         m_spec.release(m_agent);
-        m_agent = DefaultCollectionAgent.create(newIface.getId(), m_ifaceDao,
-                                                m_transMgr);
+        m_agent = DefaultCollectionAgent.create(newIface.getId(), m_ifaceDao);
         m_spec.initialize(m_agent);
     }
 

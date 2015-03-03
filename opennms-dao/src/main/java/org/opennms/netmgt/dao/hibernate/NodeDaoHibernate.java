@@ -29,7 +29,6 @@
 package org.opennms.netmgt.dao.hibernate;
 
 import java.net.InetAddress;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,7 +55,7 @@ import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.SurveillanceStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 import org.springframework.util.StringUtils;
 
 /**
@@ -212,7 +211,7 @@ public class NodeDaoHibernate extends AbstractDaoHibernate<OnmsNode, Integer> im
 
             @SuppressWarnings("unchecked")
             @Override
-            public List<OnmsNode> doInHibernate(Session session) throws HibernateException, SQLException {
+            public List<OnmsNode> doInHibernate(Session session) throws HibernateException {
 
                 return (List<OnmsNode>)session.createQuery("select distinct n from OnmsNode as n "
                         + "join n.categories c1 "
@@ -280,7 +279,7 @@ public class NodeDaoHibernate extends AbstractDaoHibernate<OnmsNode, Integer> im
         return getHibernateTemplate().execute(new HibernateCallback<SurveillanceStatus>() {
 
             @Override
-            public SurveillanceStatus doInHibernate(Session session) throws HibernateException, SQLException {
+            public SurveillanceStatus doInHibernate(Session session) throws HibernateException {
                 return (SimpleSurveillanceStatus)session.createSQLQuery("select" +
                         " count(distinct case when outages.outageid is not null and monSvc.status = 'A' then monSvc.id else null end) as svcCount," +
                         " count(distinct case when outages.outageid is null and monSvc.status = 'A' then node.nodeid else null end) as upNodeCount," +

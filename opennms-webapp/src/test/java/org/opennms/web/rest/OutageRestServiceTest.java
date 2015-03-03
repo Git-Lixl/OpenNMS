@@ -118,7 +118,6 @@ public class OutageRestServiceTest extends AbstractSpringJerseyRestTestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        populator.resetDatabase();
     }
 
     @Test

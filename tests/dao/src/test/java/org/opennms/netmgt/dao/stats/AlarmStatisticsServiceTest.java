@@ -33,8 +33,8 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.opennms.core.criteria.Alias.JoinType;
 import org.opennms.core.criteria.CriteriaBuilder;
+import org.opennms.core.criteria.Alias.JoinType;
 import org.opennms.core.criteria.Fetch.FetchType;
 import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
@@ -45,6 +45,7 @@ import org.opennms.netmgt.model.OnmsSeverity;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
@@ -76,6 +77,7 @@ public class AlarmStatisticsServiceTest implements InitializingBean {
     }
     
     @Test
+    @Rollback(false)
     public void testCount() {
     	final CriteriaBuilder cb = new CriteriaBuilder(OnmsAlarm.class);
 
@@ -88,11 +90,12 @@ public class AlarmStatisticsServiceTest implements InitializingBean {
 
         cb.distinct();
 
-        final int count = m_statisticsService.getTotalCount(cb.toCriteria());
+        final long count = m_statisticsService.getTotalCount(cb.toCriteria());
         assertEquals(1, count);
     }
 
     @Test
+    @Rollback(false)
     public void testCountBySeverity() {
     	final CriteriaBuilder cb = new CriteriaBuilder(OnmsAlarm.class);
     	cb.ge("severity", OnmsSeverity.NORMAL);
@@ -106,7 +109,7 @@ public class AlarmStatisticsServiceTest implements InitializingBean {
 
         cb.distinct();
 
-        final int count = m_statisticsService.getTotalCount(cb.toCriteria());
+        final long count = m_statisticsService.getTotalCount(cb.toCriteria());
         assertEquals(1, count);
     }
 }

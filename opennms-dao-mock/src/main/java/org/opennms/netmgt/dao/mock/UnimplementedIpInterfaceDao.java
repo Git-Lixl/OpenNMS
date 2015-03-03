@@ -45,12 +45,12 @@ public abstract class UnimplementedIpInterfaceDao implements IpInterfaceDao {
     }
 
     @Override
-    public int countMatching(OnmsCriteria onmsCrit) {
+    public long countMatching(OnmsCriteria onmsCrit) {
         throw new UnsupportedOperationException("Not yet implemented!");
     }
 
     @Override
-    public void lock() {
+    public boolean lock() {
         throw new UnsupportedOperationException("Not yet implemented!");
     }
 
@@ -70,7 +70,7 @@ public abstract class UnimplementedIpInterfaceDao implements IpInterfaceDao {
     }
 
     @Override
-    public int countAll() {
+    public long countAll() {
         throw new UnsupportedOperationException("Not yet implemented!");
     }
 
@@ -95,7 +95,7 @@ public abstract class UnimplementedIpInterfaceDao implements IpInterfaceDao {
     }
 
     @Override
-    public int countMatching(Criteria onmsCrit) {
+    public long countMatching(Criteria onmsCrit) {
         throw new UnsupportedOperationException("Not yet implemented!");
     }
 

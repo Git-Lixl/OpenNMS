@@ -90,7 +90,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 @JUnitTemporaryDatabase
 public class AlarmRestServiceTest extends AbstractSpringJerseyRestTestCase {
 	@Autowired
-	TransactionTemplate m_template;
+	private TransactionTemplate m_template;
 
 	private DatabasePopulator m_databasePopulator;
 

@@ -31,12 +31,12 @@ package org.opennms.netmgt.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,13 +45,13 @@ import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.netmgt.dao.api.AlarmDao;
 import org.opennms.netmgt.dao.api.CategoryDao;
-import org.opennms.netmgt.dao.hibernate.AlarmDaoHibernate;
 import org.opennms.netmgt.model.OnmsAlarm;
 import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
@@ -69,6 +69,7 @@ import org.springframework.transaction.annotation.Transactional;
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase
+@Transactional
 public class AuthorizationTest implements InitializingBean {
 
     @Autowired
@@ -79,6 +80,9 @@ public class AuthorizationTest implements InitializingBean {
 
     @Autowired
     DatabasePopulator m_populator;
+
+    @Autowired
+    SessionFactory m_sessionFactory;
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -92,7 +96,7 @@ public class AuthorizationTest implements InitializingBean {
 
     @AfterTransaction
     public void tearDown() {
-        m_populator.resetDatabase();
+        //m_populator.resetDatabase();
     }
 
     @Test
@@ -145,14 +149,14 @@ public class AuthorizationTest implements InitializingBean {
         HibernateCallback<Object> cb = new HibernateCallback<Object>() {
 
             @Override
-            public Object doInHibernate(Session session) throws HibernateException, SQLException {
+            public Object doInHibernate(Session session) throws HibernateException {
                 session.enableFilter("authorizedOnly").setParameterList("userGroups", groupNames);
                 return null;
             }
 
         };
 
-        ((AlarmDaoHibernate)m_alarmDao).getHibernateTemplate().execute(cb);
+        new HibernateTemplate(m_sessionFactory).execute(cb);
     }
 
     public void disableAuthorizationFilter() {
@@ -160,13 +164,13 @@ public class AuthorizationTest implements InitializingBean {
         HibernateCallback<Object> cb = new HibernateCallback<Object>() {
 
             @Override
-            public Object doInHibernate(Session session) throws HibernateException, SQLException {
+            public Object doInHibernate(Session session) throws HibernateException {
                 session.disableFilter("authorizedOnly");
                 return null;
             }
 
         };
 
-        ((AlarmDaoHibernate)m_alarmDao).getHibernateTemplate().execute(cb);
+        new HibernateTemplate(m_sessionFactory).execute(cb);
     }
 }
