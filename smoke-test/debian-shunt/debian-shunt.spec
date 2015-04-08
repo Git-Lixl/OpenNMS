@@ -17,6 +17,7 @@ Provides: jrrd = 1.0.5
 Provides: jicmp = 1.4.1
 Provides: jicmp6 = 1.2.1
 Provides: postgresql-server = 9.3
+Provides: jdk = 2000:1.8.0
 
 %description
 This is a placeholder wrapper package to provide the dependencies necessary

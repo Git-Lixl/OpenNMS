@@ -104,7 +104,9 @@ reset_opennms() {
 
 	do_log "opennms stop"
 	"$OPENNMS_HOME"/bin/opennms stop
-	ps auxwww | grep opennms_bootstrap | awk '{ print $2 }' | xargs kill -9
+
+	do_log "opennms kill"
+	"$OPENNMS_HOME"/bin/opennms kill
 
 	do_log "clean_yum"
 	clean_yum || die "Unable to clean up old RPM files."
@@ -116,8 +118,8 @@ reset_opennms() {
 	rm -rf "$OPENNMS_HOME"/* /var/log/opennms /var/opennms
 
 	if [ `ls "$ME"/../../rpms/*.rpm | wc -l` -gt 0 ]; then
-		do_log yum localinstall "$ME"/../../rpms/*.rpm
-		yum localinstall "$ME"/../../rpms/*.rpm
+		do_log yum -y localinstall "$ME"/../../rpms/*.rpm
+		yum -y localinstall "$ME"/../../rpms/*.rpm
 	else
 		echo "Unable to locate RPMs for installing!"
 		exit 1
