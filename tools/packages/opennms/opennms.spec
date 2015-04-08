@@ -864,7 +864,7 @@ rm -rf $RPM_BUILD_ROOT
 %{instprefix}/lib/opennms-vtdxml-collector-handler-*.jar
 %{instprefix}/lib/vtd-xml-*.jar
 
-%post docs
+%post -p /bin/bash docs
 printf -- "- making symlink for $RPM_INSTALL_PREFIX0/docs... "
 if [ -e "$RPM_INSTALL_PREFIX0/docs" ] && [ ! -L "$RPM_INSTALL_PREFIX0/docs" ]; then
 	echo "failed: $RPM_INSTALL_PREFIX0/docs is a real directory, but it should be a symlink to %{_docdir}/%{name}-%{version}."
@@ -874,14 +874,14 @@ else
 	echo "done"
 fi
 
-%postun docs
+%postun -p /bin/bash docs
 if [ "$1" = 0 ]; then
 	if [ -L "$RPM_INSTALL_PREFIX0/docs" ]; then
 		rm -f "$RPM_INSTALL_PREFIX0/docs"
 	fi
 fi
 
-%post core
+%post -p /bin/bash core
 
 if [ -n "$DEBUG" ]; then
 	env | grep RPM_INSTALL_PREFIX | sort -u
@@ -977,7 +977,7 @@ echo " *** http://www.opennms.org/wiki/Installation:RPM and the"
 echo " *** release notes for details."
 echo ""
 
-%postun core
+%postun -p /bin/bash core
 
 if [ "$1" = 0 ]; then
 	for dir in logs share; do
