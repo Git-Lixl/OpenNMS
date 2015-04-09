@@ -1155,6 +1155,7 @@
     <aspectjVersion>1.7.4</aspectjVersion>
     <springWebFlowVersion>2.3.4.RELEASE</springWebFlowVersion>
     <springSecurityVersion>3.2.5.RELEASE</springSecurityVersion>
+    <springSecurityKerberosVersion>1.0.0.RC2</springSecurityKerberosVersion>
     <springLdapVersion>${springSecurityVersion}</springLdapVersion>
 
     <!-- moved here from topology features -->
