@@ -112,7 +112,7 @@ reset_opennms() {
 	clean_yum || die "Unable to clean up old RPM files."
 
 	do_log "removing existing RPMs"
-	rpm -qa --queryformat='%{name}\n' | grep -E "^(opennms|${PACKAGE_NAME}|meridian)" | grep -v -E '^opennms-repo-' | grep -v -E '^opennms-rrdtool-' | xargs yum -y remove
+	rpm -qa --queryformat='%{name}\n' | grep -E "^(opennms|${PACKAGE_NAME}|meridian)" | grep -v -E '^opennms-repo-' | xargs yum -y remove
 
 	do_log "wiping out \$OPENNMS_HOME"
 	rm -rf "$OPENNMS_HOME"/* /var/log/opennms /var/opennms
