@@ -46,67 +46,48 @@ import org.springframework.web.context.ContextLoaderListener;
 
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 import com.sun.jersey.spi.spring.container.servlet.SpringServlet;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
+import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
+import org.opennms.test.JUnitConfigurationEnvironment;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.web.context.WebApplicationContext;
 
 /**
  * 
  * @author <a href="mailto:brozow@opennms.org">Mathew Brozowski</a>
  *
  */
-public class SpringWebflowContextTest extends TestCase {
+@RunWith(OpenNMSJUnit4ClassRunner.class)
+@WebAppConfiguration
+@ContextConfiguration(locations={
+        "classpath:/META-INF/opennms/applicationContext-soa.xml",
+        "classpath:/META-INF/opennms/applicationContext-commonConfigs.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml",
+        "classpath:/META-INF/opennms/applicationContext-dao.xml",
+        "classpath*:/META-INF/opennms/component-service.xml",
+        "classpath*:/META-INF/opennms/component-dao.xml",
+        "classpath:/META-INF/opennms/applicationContext-databasePopulator.xml",
+        "classpath:/META-INF/opennms/applicationContext-mockEventProxy.xml",
+        "classpath:/META-INF/opennms/applicationContext-reportingCore.xml",
+        "classpath:/org/opennms/web/svclayer/applicationContext-svclayer.xml",
+        "classpath:/META-INF/opennms/applicationContext-reporting.xml",
+        "file:src/main/webapp/WEB-INF/applicationContext-spring-security.xml",
+        "file:src/main/webapp/WEB-INF/applicationContext-spring-webflow.xml"
+})
+@JUnitConfigurationEnvironment
+@JUnitTemporaryDatabase
+public class SpringWebflowContextTest {
 
-    private String contextPath = "/opennms/rest";
+    @Autowired
+    private WebApplicationContext servletContext;
 
-    private ServletContainer dispatcher;
-    private MockServletConfig servletConfig;
-    private MockServletContext servletContext;
-    private ContextLoaderListener contextListener;
-    private Filter filter;
-
+    @Test
     public void testLoadContext() throws Throwable {
-
-        DaoTestConfigBean bean = new DaoTestConfigBean();
-        bean.afterPropertiesSet();
-
-        MockDatabase db = new MockDatabase(true);
-        DataSourceFactory.setInstance(db);
-        XADataSourceFactory.setInstance(db);
-
-        servletContext = new MockServletContext("file:src/main/webapp");
-
-        servletContext.addInitParameter("contextConfigLocation", 
-                                        "classpath:/org/opennms/web/rest/applicationContext-test.xml " +
-                                        "classpath:/META-INF/opennms/applicationContext-commonConfigs.xml " +
-                                        "classpath*:/META-INF/opennms/component-service.xml " +
-                                        "classpath*:/META-INF/opennms/component-dao.xml " +
-                                        "classpath:/META-INF/opennms/applicationContext-reportingCore.xml " +
-                                        "classpath:/org/opennms/web/svclayer/applicationContext-svclayer.xml " +
-                                        "classpath:/META-INF/opennms/applicationContext-reporting.xml " +
-                                        "/WEB-INF/applicationContext-spring-security.xml " +
-                                        "/WEB-INF/applicationContext-spring-webflow.xml"
-        );
-
-        servletContext.addInitParameter("parentContextKey", "daoContext");
-
-        ServletContextEvent e = new ServletContextEvent(servletContext);
-        contextListener = new ContextLoaderListener();
-        contextListener.contextInitialized(e);
-
-        servletContext.setContextPath(contextPath);
-        servletConfig = new MockServletConfig(servletContext, "dispatcher");    
-        servletConfig.addInitParameter("com.sun.jersey.config.property.resourceConfigClass", "com.sun.jersey.api.core.PackagesResourceConfig");
-        servletConfig.addInitParameter("com.sun.jersey.config.property.packages", "org.opennms.web.rest");
-
-        try {
-
-            MockFilterConfig filterConfig = new MockFilterConfig(servletContext, "openSessionInViewFilter");
-            filter = new OpenSessionInViewFilter();        
-            filter.init(filterConfig);
-
-            dispatcher = new SpringServlet();
-            dispatcher.init(servletConfig);
-
-        } catch (ServletException se) {
-            throw se.getRootCause();
-        }
+        servletContext.getBean("flowExecutor");
+        servletContext.getBean("flowRegistry");
     }
 }

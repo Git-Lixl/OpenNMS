@@ -61,7 +61,7 @@ import org.opennms.netmgt.collectd.SnmpIfData;
 import org.opennms.netmgt.collection.api.AttributeGroupType;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
 import org.opennms.netmgt.collection.api.ServiceParameters;
-import org.opennms.netmgt.config.MibObject;
+import org.opennms.netmgt.config.datacollection.MibObject;
 import org.opennms.netmgt.config.datacollection.Parameter;
 import org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy;
 import org.opennms.netmgt.config.datacollection.ResourceType;
@@ -353,12 +353,12 @@ public class CollectionResourceWrapperTest {
         network.addNode(1, "testNode");
         network.addInterface(ipAddress);
         network.setIfAlias(ifName);
+        network.setIfIndex(ifIndex);
         network.addService("ICMP");
         network.addService("SNMP");
         network.addService("HTTP");
         MockDatabase db = new MockDatabase();
         db.populate(network);
-        db.update("update snmpinterface set snmpifindex=?, snmpifname=?, snmpifdescr=? where id=?", ifIndex, ifName, ifName, 1);
         DataSourceFactory.setInstance(db);
         XADataSourceFactory.setInstance(db);
 
@@ -423,7 +423,7 @@ public class CollectionResourceWrapperTest {
         strategy.addParameter(new Parameter("replace-all", "s/^-//"));
         rt.setStorageStrategy(strategy);
         PersistenceSelectorStrategy pstrategy = new PersistenceSelectorStrategy();
-        pstrategy.setClazz("org.opennms.netmgt.collectd.PersistAllSelectorStrategy");
+        pstrategy.setClazz("org.opennms.netmgt.collection.support.PersistAllSelectorStrategy");
         rt.setPersistenceSelectorStrategy(pstrategy);
 
         GenericIndexResourceType resourceType = new GenericIndexResourceType(agent, collection, rt);
@@ -456,7 +456,7 @@ public class CollectionResourceWrapperTest {
         strategy.addParameter(new Parameter("replace-all","s/:\\\\.*//"));
         rt.setStorageStrategy(strategy);
         PersistenceSelectorStrategy pstrategy = new PersistenceSelectorStrategy();
-        pstrategy.setClazz("org.opennms.netmgt.collectd.PersistAllSelectorStrategy");
+        pstrategy.setClazz("org.opennms.netmgt.collection.support.PersistAllSelectorStrategy");
         rt.setPersistenceSelectorStrategy(pstrategy);
 
         GenericIndexResourceType resourceType = new GenericIndexResourceType(agent, collection, rt);

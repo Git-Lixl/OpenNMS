@@ -9,7 +9,7 @@
   <artifactId>smoke-test</artifactId>
   <name>OpenNMS Smoke Test</name>
   <properties>
-    <seleniumVersion>2.44.0</seleniumVersion>
+    <seleniumVersion>2.45.0</seleniumVersion>
   </properties>
   <dependencies>
     <dependency>
@@ -85,7 +85,6 @@
     <dependency>
       <groupId>org.eclipse.jetty.orbit</groupId>
       <artifactId>javax.servlet</artifactId>
-      <version>3.0.0.v201112011016</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

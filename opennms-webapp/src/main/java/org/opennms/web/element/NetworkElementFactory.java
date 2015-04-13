@@ -84,7 +84,7 @@ import org.opennms.netmgt.model.OnmsStpInterface;
 import org.opennms.netmgt.model.OnmsStpNode;
 import org.opennms.netmgt.model.OnmsVlan;
 import org.opennms.netmgt.model.PrimaryType;
-import org.opennms.web.svclayer.AggregateStatus;
+import org.opennms.web.svclayer.model.AggregateStatus;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -1244,12 +1244,18 @@ public class NetworkElementFactory implements InitializingBean, NetworkElementFa
         return nodes.toArray(new StpNode[nodes.size()]);
     }
 
-    private Integer getStpNodeFromStpRootIdentifier(String baseaddress) {
+    private Integer getStpNodeFromStpRootIdentifier(String rootaddress) {
 
-        if(!baseaddress.equals("")){
+        String baseaddress =null;
+        
+        if(rootaddress.length() == 16){
+            baseaddress = rootaddress.substring(5,16);
+        } else if (rootaddress.length() == 12) {
+            baseaddress = rootaddress;
+        }
+        if (baseaddress != null) {
             final OnmsCriteria criteria = new OnmsCriteria(OnmsStpNode.class);
-            criteria.add(Restrictions.eq("baseBridgeAddress", baseaddress.substring(5,16)));
-
+            criteria.add(Restrictions.eq("baseBridgeAddress", baseaddress));
             List<OnmsStpNode> stpnodes = m_stpNodeDao.findMatching(criteria);
             if (stpnodes.size() == 1)
                 return stpnodes.get(0).getId();

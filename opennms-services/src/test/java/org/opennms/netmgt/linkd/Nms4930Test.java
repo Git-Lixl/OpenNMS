@@ -30,12 +30,13 @@ package org.opennms.netmgt.linkd;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK1_IP;
-import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK1_NAME;
-import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK1_SNMP_RESOURCE;
-import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK2_IP;
-import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK2_NAME;
-import static org.opennms.netmgt.nb.TestNetworkBuilder.DLINK2_SNMP_RESOURCE;
+import static org.opennms.netmgt.model.DataLinkInterface.DiscoveryProtocol.bridge;
+import static org.opennms.netmgt.nb.NmsNetworkBuilder.DLINK1_IP;
+import static org.opennms.netmgt.nb.NmsNetworkBuilder.DLINK1_NAME;
+import static org.opennms.netmgt.nb.NmsNetworkBuilder.DLINK1_SNMP_RESOURCE;
+import static org.opennms.netmgt.nb.NmsNetworkBuilder.DLINK2_IP;
+import static org.opennms.netmgt.nb.NmsNetworkBuilder.DLINK2_NAME;
+import static org.opennms.netmgt.nb.NmsNetworkBuilder.DLINK2_SNMP_RESOURCE;
 
 import java.util.List;
 
@@ -103,14 +104,11 @@ public class Nms4930Test extends LinkdTestBuilder {
         assertTrue(m_linkd.runSingleLinkDiscovery("example1"));
 
         final List<DataLinkInterface> ifaces = m_dataLinkInterfaceDao.findAll();
-        
         assertEquals("we should have found 1 link", 1, ifaces.size());
-        for (final DataLinkInterface link: ifaces) {
-            checkLink(dlink1, dlink2, 24, 10, link);
-            assertEquals(DiscoveryProtocol.bridge, link.getProtocol());
-        }
+
+        checkLinks(ifaces, new DataLinkTestMatcher(dlink1, dlink2, 24, 10, bridge));
     }
-    
+
     @Test
     @JUnitSnmpAgents(value={
             @JUnitSnmpAgent(host=DLINK1_IP, port=161, resource=DLINK1_SNMP_RESOURCE),
@@ -142,11 +140,7 @@ public class Nms4930Test extends LinkdTestBuilder {
 
         final List<DataLinkInterface> ifaces = m_dataLinkInterfaceDao.findAll();
         assertEquals("we should have found one link", 1, ifaces.size());
-        for (final DataLinkInterface link: ifaces) {
-            checkLink(dlink1,dlink2 , 24, 10, link);
-            assertEquals(DiscoveryProtocol.bridge, link.getProtocol());
-        }
-
+        checkLinks(ifaces, new DataLinkTestMatcher(dlink1, dlink2, 24, 10, bridge));
     }
 
 }

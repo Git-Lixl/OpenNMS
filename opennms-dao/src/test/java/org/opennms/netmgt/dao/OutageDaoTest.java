@@ -79,8 +79,8 @@ import org.springframework.transaction.annotation.Transactional;
         "classpath:/META-INF/opennms/applicationContext-databasePopulator.xml",
         "classpath:/META-INF/opennms/applicationContext-setupIpLike-enabled.xml",
         "classpath*:/META-INF/opennms/component-dao.xml",
-        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml",
-        "classpath:/META-INF/opennms/applicationContext-commonConfigs.xml"
+        "classpath:/META-INF/opennms/applicationContext-commonConfigs.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase
@@ -181,7 +181,7 @@ public class OutageDaoTest implements InitializingBean {
         node.setLabel("shoes");
         m_nodeDao.save(node);
         insertEntitiesAndOutage("172.16.1.1", "ICMP", node);
-        insertEntitiesAndOutage("172.20.1.1", "ICMP", node);
+        insertEntitiesAndOutage("192.0.2.1", "ICMP", node);
         
         node = new OnmsNode(getLocalHostDistPoller());
         node.setLabel("megaphone");
@@ -210,7 +210,7 @@ public class OutageDaoTest implements InitializingBean {
         node.setLabel("shoes");
         m_nodeDao.save(node);
         insertEntitiesAndOutage("172.16.1.1", "ICMP", node);
-        insertEntitiesAndOutage("172.20.1.1", "ICMP", node);
+        insertEntitiesAndOutage("192.0.2.1", "ICMP", node);
         
         node = new OnmsNode(getLocalHostDistPoller());
         node.setLabel("megaphone");
