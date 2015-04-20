@@ -20,6 +20,7 @@
     <module>csv-address</module>
     <module>phonebook</module>
     <module>sms-reflector</module>
+    <module>password-salter</module>
   </modules>
   <profiles>
     <profile>
