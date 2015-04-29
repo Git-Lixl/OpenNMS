@@ -28,8 +28,7 @@
 
 package org.opennms.reporting.jasperreports.svclayer;
 
-import java.io.File;
-import java.io.OutputStream;
+import java.io.*;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,18 +39,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.jasperreports.engine.JREmptyDataSource;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExporterParameter;
-import net.sf.jasperreports.engine.JRParameter;
-import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.export.JRCsvExporter;
 import net.sf.jasperreports.engine.fill.JRParameterDefaultValuesEvaluator;
+import net.sf.jasperreports.engine.util.JRElementsVisitor;
 import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.engine.util.JRVisitorSupport;
 import net.sf.jasperreports.engine.xml.JRPrintXmlLoader;
 
 import org.opennms.api.reporting.ReportException;
@@ -66,6 +59,7 @@ import org.opennms.api.reporting.parameter.ReportStringParm;
 import org.opennms.core.db.DataSourceFactory;
 import org.opennms.core.logging.Logging;
 import org.opennms.core.utils.DBUtils;
+import org.opennms.features.reporting.model.Report;
 import org.opennms.features.reporting.repository.global.GlobalReportRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,7 +116,12 @@ public class JasperReportService implements ReportService {
                     Map<String, Object> defaultValues = null;
 
                     try {
+                        //Add compililation of all SubReports here.
                         jasperReport = JasperCompileManager.compileReport(m_globalReportRepository.getTemplateStream(reportId));
+                        if(reportId.startsWith("local_")){
+                            compileSubreports(jasperReport);
+                        }
+
                         defaultValues = JRParameterDefaultValuesEvaluator.evaluateParameterDefaultValues(jasperReport, new HashMap<String, Object>());
                     } catch (final JRException e) {
                         LOG.error("unable to compile jasper report", e);
@@ -307,6 +306,59 @@ public class JasperReportService implements ReportService {
         }
     }
 
+    private void compileSubreports(final JasperReport mainReport) {
+        JRElementsVisitor.visitReport(mainReport, new JRVisitorSupport() {
+
+            @Override
+            public void visitSubreport(JRSubreport subreport) {
+                String expression = subreport.getExpression().getText();
+                String reportFilename = getSubreportFilename(expression);
+                String reportDir = "";
+                String subreportDir = "";
+
+                JRParameter[] parameters = mainReport.getParameters();
+                for (JRParameter parameter : parameters) {
+                    if (parameter.getName().toUpperCase().equals("SUBREPORT_DIR")) {
+                        String[] temp = parameter.getDefaultValueExpression().getText().split("\"");
+                        subreportDir = temp[temp.length - 1];
+                    }
+                    if (parameter.getName().toUpperCase().equals("ONMS_REPORT_DIR")) {
+                        reportDir = parameter.getDefaultValueExpression().getText().replaceAll("\"", "");
+                    }
+                }
+
+                String sourceJRXML = reportDir + subreportDir + reportFilename.replaceAll(".jasper", ".jrxml");
+
+                try {
+                    JasperReport report = JasperCompileManager.compileReport(sourceJRXML);
+                    //FileInputStream inputFile = new FileInputStream(sourceJRXML);
+
+                    //File outputFile = new File(outputJasper);
+                    //FileOutputStream outputStream = new FileOutputStream(outputFile);
+                    JasperCompileManager.compileReportToFile(sourceJRXML);
+                    //JasperCompileManager.compileReportToStream(inputFile, outputStream);
+
+                    compileSubreports(report);
+                } catch (JRException e) {
+                    LOG.error("unable to compile jasper report", e);
+                } catch (Exception e) {
+                    LOG.error("unable to compile jasper report", e);
+                }
+
+            }
+        });
+    }
+
+    private String getSubreportFilename(String expression) {
+        String[] splitExpression = expression.split("\"");
+        for (String expressionElement : splitExpression) {
+            if (expressionElement.contains(".jasper")) {
+                return expressionElement;
+            }
+        }
+        return null;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -370,6 +422,9 @@ public class JasperReportService implements ReportService {
 
                     try {
                         jasperReport = JasperCompileManager.compileReport(m_globalReportRepository.getTemplateStream(reportId));
+                        if (reportId.startsWith("local_")) {
+                            compileSubreports(jasperReport);
+                        }
                     } catch (JRException e) {
                         LOG.error("Unable to compile jasper report {}", reportId, e);
                         throw new ReportException("Unable to compile jasperReport " + reportId, e);
@@ -461,6 +516,9 @@ public class JasperReportService implements ReportService {
 
                     try {
                         jasperReport = JasperCompileManager.compileReport(m_globalReportRepository.getTemplateStream(reportId));
+                        if (reportId.startsWith("local_")) {
+                            compileSubreports(jasperReport);
+                        }
                     } catch (final JRException e) {
                         LOG.error("unable to compile jasper report", e);
                         throw new ReportException("unable to compile jasperReport", e);
