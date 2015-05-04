@@ -37,6 +37,7 @@ import static org.opennms.core.utils.InetAddressUtils.addr;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -82,12 +83,14 @@ import org.opennms.netmgt.mock.MockElement;
 import org.opennms.netmgt.mock.MockNetwork;
 import org.opennms.netmgt.mock.MockNode;
 import org.opennms.netmgt.mock.MockVisitorAdapter;
+import org.opennms.netmgt.model.NetworkBuilder;
 import org.opennms.netmgt.model.OnmsAssetRecord;
 import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.netmgt.model.OnmsGeolocation;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsNode.NodeLabelSource;
+import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.provision.detector.snmp.SnmpDetector;
@@ -827,6 +830,50 @@ public class ProvisionerTest extends ProvisioningTestCase implements Initializin
 
         //Verify node count
         assertEquals(0, getNodeDao().countAll());
+    }
+
+    // fail if we take more than five minutes
+    @Test(timeout=300000)
+    @JUnitSnmpAgent(host="198.51.100.201", port=161, resource="classpath:snmpTestData3.properties")
+    public void testIfIndexChangeNms6567() throws Exception {
+        importFromResource("classpath:/requisition_then_scan2.xml", Boolean.TRUE.toString());
+
+        final List<OnmsNode> nodes = getNodeDao().findAll();
+        final OnmsNode node = nodes.get(0);
+
+        final NodeScan scan = m_provisioner.createNodeScan(node.getId(), node.getForeignSource(), node.getForeignId());
+        runScan(scan);
+
+        m_nodeDao.flush();
+
+        assertEquals(2, getInterfaceDao().countAll());
+
+        // Verify the initial state of the ifIndex values
+        assertEquals(5, getInterfaceDao().get(node, "198.51.100.201").getIfIndex().intValue());
+        assertEquals(5, getInterfaceDao().get(node, "198.51.100.201").getSnmpInterface().getIfIndex().intValue());
+        assertEquals(4, getInterfaceDao().get(node, "198.51.100.204").getIfIndex().intValue());
+        assertEquals(4, getInterfaceDao().get(node, "198.51.100.204").getSnmpInterface().getIfIndex().intValue());
+
+        // This is a pretty pedantic check :)
+        assertEquals(4, getSnmpInterfaceDao().findByNodeIdAndIfIndex(node.getId(), 4).getIfIndex().intValue());
+        assertEquals(5, getSnmpInterfaceDao().findByNodeIdAndIfIndex(node.getId(), 5).getIfIndex().intValue());
+
+        // Swap the ifIndex values for the two interfaces
+        m_mockSnmpDataProvider.updateIntValue(new SnmpAgentAddress(InetAddressUtils.addr("198.51.100.201"), 161), ".1.3.6.1.2.1.4.20.1.2.198.51.100.201", 4);
+        m_mockSnmpDataProvider.updateIntValue(new SnmpAgentAddress(InetAddressUtils.addr("198.51.100.201"), 161), ".1.3.6.1.2.1.4.20.1.2.198.51.100.204", 5);
+
+        // Rescan
+        runScan(scan);
+
+        m_nodeDao.flush();
+
+        assertEquals(2, getInterfaceDao().countAll());
+
+        // Verify that the ifIndex fields on the interfaces have been updated
+        assertEquals(4, getInterfaceDao().get(node, "198.51.100.201").getIfIndex().intValue());
+        assertEquals(4, getInterfaceDao().get(node, "198.51.100.201").getSnmpInterface().getIfIndex().intValue());
+        assertEquals(5, getInterfaceDao().get(node, "198.51.100.204").getIfIndex().intValue());
+        assertEquals(5, getInterfaceDao().get(node, "198.51.100.204").getSnmpInterface().getIfIndex().intValue());
     }
 
     @Test
@@ -1701,6 +1748,50 @@ public class ProvisionerTest extends ProvisioningTestCase implements Initializin
 
         assertEquals(1, n.getCategories().size());
         assertTrue(n.hasCategory("ThisIsAlsoMadeUp"));
+    }
+
+    /**
+     * Test for NMS-7636
+     */
+    @Test(timeout=300000)
+    public void resourcesAreNotDeletedWhenNodeScanIsAborted() throws InterruptedException, ExecutionException, UnknownHostException {
+        // Setup a node with a single interface and service
+        NetworkBuilder builder = new NetworkBuilder();
+        builder.addNode("node1");
+
+        builder.addInterface("192.168.0.1")
+            .getInterface()
+            // Pretend this was discovered an hour ago
+            .setIpLastCapsdPoll(new Date(new Date().getTime() - 60*60*1000));
+
+        builder.addService(new OnmsServiceType());
+
+        OnmsNode node = builder.getCurrentNode();
+        getNodeDao().save(node);
+
+        // Preliminary check
+        assertEquals(1, node.getIpInterfaces().size());
+
+        // Issue a scan without setting up the requisition
+        // Expect a nodeScanAborted event
+        m_eventAnticipator.anticipateEvent(nodeScanAborted(node.getId()));
+        m_eventAnticipator.setDiscardUnanticipated(true);
+
+        final NodeScan scan = m_provisioner.createNodeScan(node.getId(), "should_not_exist", "1");
+        runScan(scan);
+
+        m_eventAnticipator.verifyAnticipated();
+        m_eventAnticipator.reset();
+
+        // The interface should remain
+        assertEquals(1, node.getIpInterfaces().size());
+    }
+
+    private Event nodeScanAborted(final int nodeId) {
+        final EventBuilder eb = new EventBuilder(EventConstants.PROVISION_SCAN_ABORTED_UEI, "Test");
+        eb.setNodeid(nodeId);
+        final Event event = eb.getEvent();
+        return event;
     }
 
     private Event nodeScanCompleted(final int nodeId) {
