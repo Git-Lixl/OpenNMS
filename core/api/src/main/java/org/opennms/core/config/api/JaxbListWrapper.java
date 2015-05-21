@@ -105,7 +105,7 @@ public class JaxbListWrapper<T> implements Serializable, Iterable<T> {
             return (long)m_objects.size();
         }
     }
-    public void setCount(final Integer count) {
+    public void setCount(final Long count) {
         // dummy to make JAXB happy
     }
     public long size() {
