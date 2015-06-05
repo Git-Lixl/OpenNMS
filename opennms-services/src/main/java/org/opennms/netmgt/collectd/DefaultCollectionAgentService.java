@@ -186,11 +186,13 @@ public class DefaultCollectionAgentService implements CollectionAgentService {
     @Override
     public File getStorageDir() {
         File dir = new File(String.valueOf(getNodeId()));
-        if(isStoreByForeignSource() && !(getForeignSource() == null) && !(getForeignId() == null)) {
-               File fsDir = new File(ResourceTypeUtils.FOREIGN_SOURCE_DIRECTORY, getForeignSource());
-            dir = new File(fsDir, getForeignId());
+        final String foreignSource = getForeignSource();
+        final String foreignId = getForeignId();
+        if(isStoreByForeignSource() && foreignSource != null && foreignId != null) {
+            File fsDir = new File(ResourceTypeUtils.FOREIGN_SOURCE_DIRECTORY, foreignSource);
+            dir = new File(fsDir, foreignId);
         }
-        LOG.debug("getStorageDir: isStoreByForeignSource = {}, foreignSource = {}, foreignId = {}, dir = {}", isStoreByForeignSource(), getForeignSource(), getForeignId(), dir);
+        LOG.debug("getStorageDir: isStoreByForeignSource = {}, foreignSource = {}, foreignId = {}, dir = {}", isStoreByForeignSource(), foreignSource, foreignId, dir);
         return dir;
     }
     
