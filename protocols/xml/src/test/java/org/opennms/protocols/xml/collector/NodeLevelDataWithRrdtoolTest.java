@@ -89,7 +89,7 @@ public class NodeLevelDataWithRrdtoolTest extends AbstractXmlCollectorTest {
         RRDv3 rrd = RrdConvertUtils.dumpRrd(file);
         Assert.assertEquals(dsnames.length, rrd.getDataSources().size());
         for (int i = 0; i < dsnames.length; i++) {
-            Assert.assertEquals(dsvalues[i], Double.valueOf(rrd.getDataSource(i).getLastDs()));
+            Assert.assertEquals(dsvalues[i], rrd.getDataSource(i).getLastDs());
             List<Row> rows = rrd.getRras().get(0).getRows();
             Assert.assertFalse(rows.get(rows.size() - 1).isNan()); // All the last values stored on the RRA must be valid numbers
         }
@@ -148,7 +148,7 @@ public class NodeLevelDataWithRrdtoolTest extends AbstractXmlCollectorTest {
     @Test
     @Ignore // Ignoring the test because it relies on the RRDtool binary and JRRD
     public void testDefaultXmlCollector() throws Exception {
-        Map<String, Object> parameters = new HashMap<String, Object>();
+        Map<String, Object> parameters = new HashMap<>();
         parameters.put("collection", "NodeLevel");
         parameters.put("handler-class", "org.opennms.protocols.xml.collector.MockDefaultXmlCollectionHandler");
         for (int i = 0; i < 4; i++) {

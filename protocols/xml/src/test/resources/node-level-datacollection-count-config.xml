@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<xml-datacollection-config rrdRepository="target/snmp/" xmlns="http://xmlns.opennms.org/xsd/config/xml-datacollection">
+    <xml-collection name="NodeLevel">
+        <rrd step="1">
+            <rra>RRA:AVERAGE:0.5:1:100</rra>
+        </rrd>
+        <xml-source url="http://{ipaddr}/node-level">
+            <xml-group name="pris-stats" resource-type="node" resource-xpath="/model-import">
+                <xml-object name="count" type="GAUGE" xpath="count(//@node-label)" />
+            </xml-group>
+        </xml-source>
+    </xml-collection>
+ </xml-datacollection-config>

@@ -126,7 +126,7 @@ public class NodeLevelDataOnMultipleNodesTest {
      */
     @Test
     public void testMultipleNodes() throws Exception {
-        Map<String, Object> parameters = new HashMap<String, Object>();
+        Map<String, Object> parameters = new HashMap<>();
         parameters.put("collection", "NodeLevel");
         parameters.put("handler-class", "org.opennms.protocols.xml.collector.MockDefaultXmlCollectionHandler");
 
@@ -202,7 +202,7 @@ public class NodeLevelDataOnMultipleNodesTest {
         m_collector.release(collectionAgent);
         Assert.assertEquals(ServiceCollector.COLLECTION_SUCCEEDED, collectionSet.getStatus());
 
-        ServiceParameters serviceParams = new ServiceParameters(new HashMap<String,Object>());
+        ServiceParameters serviceParams = new ServiceParameters(new HashMap<>());
         BasePersister persister =  new GroupPersister(serviceParams, createRrdRepository((String)parameters.get("collection")), m_rrdStrategy); // storeByGroup=true;
         collectionSet.visit(persister);
 

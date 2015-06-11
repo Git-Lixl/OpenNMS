@@ -39,14 +39,14 @@ import org.junit.Test;
  * 
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a>
  */
-public class XmlCollectorNodeLevelTest extends AbstractXmlCollectorTest {
+public class XmlCollectorNodeLevelCountTest extends AbstractXmlCollectorTest {
 
     /* (non-Javadoc)
      * @see org.opennms.protocols.xml.collector.AbcstractXmlCollectorTest#getXmlConfigFileName()
      */
     @Override
     public String getXmlConfigFileName() {
-        return "src/test/resources/node-level-datacollection-config.xml";
+        return "src/test/resources/node-level-datacollection-count-config.xml";
     }
     
     /* (non-Javadoc)
@@ -54,7 +54,7 @@ public class XmlCollectorNodeLevelTest extends AbstractXmlCollectorTest {
      */
     @Override
     public String getXmlSampleFileName() {
-        return "src/test/resources/node-level.xml";
+        return "src/test/resources/pris-requisition.xml";
     }
 
     /**
@@ -68,9 +68,9 @@ public class XmlCollectorNodeLevelTest extends AbstractXmlCollectorTest {
         parameters.put("collection", "NodeLevel");
         parameters.put("handler-class", "org.opennms.protocols.xml.collector.MockDefaultXmlCollectionHandler");
         executeCollectorTest(parameters, 1);
-        File file = new File("target/snmp/1/node-level-stats.jrb");
-        String[] dsnames = new String[] { "v1", "v2", "v3", "v4", "v5", "v6" };
-        Double[] dsvalues = new Double[] { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0 };
+        File file = new File("target/snmp/1/pris-stats.jrb");
+        String[] dsnames = new String[] { "count" };
+        Double[] dsvalues = new Double[] { 4.0 };
         validateJrb(file, dsnames, dsvalues);
     }
 
