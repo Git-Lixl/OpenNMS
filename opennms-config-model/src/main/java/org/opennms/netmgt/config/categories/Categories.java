@@ -58,6 +58,10 @@ public class Categories implements java.io.Serializable {
         return m_categories;
     }
 
+    public Category[] getCategory() {
+        return m_categories.toArray(new Category[0]);
+    }
+
     /**
      * 
      * 

@@ -29,6 +29,8 @@
 package org.opennms.netmgt.config.categories;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -272,6 +274,10 @@ public class Category implements java.io.Serializable {
      */
     public List<String> getServiceCollection() {
         return this.m_serviceList;
+    }
+
+    public Enumeration<String> enumerateService() {
+        return Collections.enumeration(m_serviceList);
     }
 
     /**
