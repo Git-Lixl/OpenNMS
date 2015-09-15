@@ -92,7 +92,7 @@ class GroovyPollerView implements InitializingBean {
 		            tableLayout(cellpadding:5) {
 		                tr {
 		                    td(colfill:true) {
-		                    	label(text:'Current monitoring locations: ')
+		                    	label(text:'Applications: ')
 		                    }
 		                    td {
                             def locations = getCurrentMonitoringLocations()
@@ -105,7 +105,7 @@ class GroovyPollerView implements InitializingBean {
 		                }
 		                tr {
 		                    td (colspan:2, align:"CENTER"){
-		    	    		  button(text:'Register', constraints:BorderLayout.SOUTH, actionPerformed:{ doRegistration() })
+		    	    		  button(text:'Test', constraints:BorderLayout.SOUTH, actionPerformed:{ doRegistration() })
 		                    }
 		                }
 		            }
