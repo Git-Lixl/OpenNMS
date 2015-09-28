@@ -28,153 +28,142 @@
 
 package org.opennms.netmgt.config.charts;
 
-  //---------------------------------/
- //- Imported classes and packages -/
-//---------------------------------/
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.exolab.castor.xml.Marshaller;
-import org.exolab.castor.xml.Unmarshaller;
 
 /**
  * Class BarChart.
  * 
  * @version $Revision$ $Date$
  */
-
 @XmlRootElement(name = "bar-chart")
 @XmlAccessorType(XmlAccessType.FIELD)
-@SuppressWarnings("all") public class BarChart implements java.io.Serializable {
+public class BarChart implements Serializable {
+    private static final long serialVersionUID = 7815041249463797695L;
 
-
-      //--------------------------/
-     //- Class/Member Variables -/
-    //--------------------------/
+    private static final boolean DEFAULT_DRAW_BAR_OUTLINE = true;
+    private static final boolean DEFAULT_SHOW_LEGEND = true;
+    private static final boolean DEFAULT_SHOW_TOOLTIPS = false;
+    private static final boolean DEFAULT_SHOW_URLS = false;
 
     /**
      * Field _name.
      */
-    private java.lang.String _name;
+    @XmlAttribute(name="name")
+    private String _name;
 
     /**
      * Field _domainAxisLabel.
      */
-    private java.lang.String _domainAxisLabel;
+    @XmlAttribute(name="domain-axis-label")
+    private String _domainAxisLabel;
 
     /**
      * Field _rangeAxisLabel.
      */
-    private java.lang.String _rangeAxisLabel;
+    @XmlAttribute(name="range-axis-label")
+    private String _rangeAxisLabel;
 
     /**
      * Field _subLabelClass.
      */
-    private java.lang.String _subLabelClass;
+    @XmlAttribute(name="sub-label-class")
+    private String _subLabelClass;
 
     /**
      * Field _seriesColorClass.
      */
-    private java.lang.String _seriesColorClass;
+    @XmlAttribute(name="series-color-class")
+    private String _seriesColorClass;
 
     /**
      * Field _drawBarOutline.
      */
-    private boolean _drawBarOutline = true;
-
-    /**
-     * keeps track of state for field: _drawBarOutline
-     */
-    private boolean _has_drawBarOutline;
+    @XmlAttribute(name="draw-bar-outline")
+    private Boolean _drawBarOutline;
 
     /**
      * Field _showLegend.
      */
-    private boolean _showLegend = true;
-
-    /**
-     * keeps track of state for field: _showLegend
-     */
-    private boolean _has_showLegend;
+    @XmlAttribute(name="show-legend")
+    private Boolean _showLegend;
 
     /**
      * Field _showToolTips.
      */
-    private boolean _showToolTips = false;
-
-    /**
-     * keeps track of state for field: _showToolTips
-     */
-    private boolean _has_showToolTips;
+    @XmlAttribute(name="show-tool-tips")
+    private Boolean _showToolTips;
 
     /**
      * Field _showUrls.
      */
-    private boolean _showUrls = false;
-
-    /**
-     * keeps track of state for field: _showUrls
-     */
-    private boolean _has_showUrls;
+    @XmlAttribute(name="show-urls")
+    private Boolean _showUrls = false;
 
     /**
      * Field _variation.
      */
-    private java.lang.String _variation;
+    @XmlAttribute(name="variation")
+    private String _variation;
 
     /**
      * Field _plotOrientation.
      */
-    private java.lang.String _plotOrientation;
+    @XmlAttribute(name="plot-orientation")
+    private String _plotOrientation;
 
     /**
      * Field _title.
      */
-    private org.opennms.netmgt.config.charts.Title _title;
+    @XmlElement(name="title")
+    private Title _title;
 
     /**
      * Field _imageSize.
      */
-    private org.opennms.netmgt.config.charts.ImageSize _imageSize;
+    @XmlElement(name="image-size")
+    private ImageSize _imageSize;
 
     /**
      * Field _subTitleList.
      */
-    private java.util.List<org.opennms.netmgt.config.charts.SubTitle> _subTitleList;
+    @XmlElement(name="sub-title")
+    private List<SubTitle> _subTitleList = new ArrayList<>();
 
     /**
      * Field _gridLines.
      */
-    private org.opennms.netmgt.config.charts.GridLines _gridLines;
+    @XmlElement(name="grid-lines")
+    private GridLines _gridLines;
 
     /**
      * Field _seriesDefList.
      */
-    private java.util.List<org.opennms.netmgt.config.charts.SeriesDef> _seriesDefList;
+    @XmlElement(name="series-def")
+    private List<SeriesDef> _seriesDefList = new ArrayList<>();
 
     /**
      * Field _plotBackgroundColor.
      */
-    private org.opennms.netmgt.config.charts.PlotBackgroundColor _plotBackgroundColor;
+    @XmlElement(name="plot-background-color")
+    private PlotBackgroundColor _plotBackgroundColor;
 
     /**
      * Field _chartBackgroundColor.
      */
-    private org.opennms.netmgt.config.charts.ChartBackgroundColor _chartBackgroundColor;
-
-
-      //----------------/
-     //- Constructors -/
-    //----------------/
-
-    public BarChart() {
-        super();
-        this._subTitleList = new java.util.ArrayList<org.opennms.netmgt.config.charts.SubTitle>();
-        this._seriesDefList = new java.util.ArrayList<org.opennms.netmgt.config.charts.SeriesDef>();
-    }
-
+    @XmlElement(name="chart-background-color")
+    private ChartBackgroundColor _chartBackgroundColor;
 
       //-----------/
      //- Methods -/
@@ -184,13 +173,13 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * 
      * @param vSeriesDef
-     * @throws java.lang.IndexOutOfBoundsException if the index
+     * @throws IndexOutOfBoundsException if the index
      * given is outside the bounds of the collection
      */
     public void addSeriesDef(
-            final org.opennms.netmgt.config.charts.SeriesDef vSeriesDef)
-    throws java.lang.IndexOutOfBoundsException {
-        this._seriesDefList.add(vSeriesDef);
+            final SeriesDef vSeriesDef)
+    throws IndexOutOfBoundsException {
+        _seriesDefList.add(vSeriesDef);
     }
 
     /**
@@ -198,27 +187,27 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @param index
      * @param vSeriesDef
-     * @throws java.lang.IndexOutOfBoundsException if the index
+     * @throws IndexOutOfBoundsException if the index
      * given is outside the bounds of the collection
      */
     public void addSeriesDef(
             final int index,
-            final org.opennms.netmgt.config.charts.SeriesDef vSeriesDef)
-    throws java.lang.IndexOutOfBoundsException {
-        this._seriesDefList.add(index, vSeriesDef);
+            final SeriesDef vSeriesDef)
+    throws IndexOutOfBoundsException {
+        _seriesDefList.add(index, vSeriesDef);
     }
 
     /**
      * 
      * 
      * @param vSubTitle
-     * @throws java.lang.IndexOutOfBoundsException if the index
+     * @throws IndexOutOfBoundsException if the index
      * given is outside the bounds of the collection
      */
     public void addSubTitle(
-            final org.opennms.netmgt.config.charts.SubTitle vSubTitle)
-    throws java.lang.IndexOutOfBoundsException {
-        this._subTitleList.add(vSubTitle);
+            final SubTitle vSubTitle)
+    throws IndexOutOfBoundsException {
+        _subTitleList.add(vSubTitle);
     }
 
     /**
@@ -226,42 +215,42 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @param index
      * @param vSubTitle
-     * @throws java.lang.IndexOutOfBoundsException if the index
+     * @throws IndexOutOfBoundsException if the index
      * given is outside the bounds of the collection
      */
     public void addSubTitle(
             final int index,
-            final org.opennms.netmgt.config.charts.SubTitle vSubTitle)
-    throws java.lang.IndexOutOfBoundsException {
-        this._subTitleList.add(index, vSubTitle);
+            final SubTitle vSubTitle)
+    throws IndexOutOfBoundsException {
+        _subTitleList.add(index, vSubTitle);
     }
 
     /**
      */
     public void deleteDrawBarOutline(
     ) {
-        this._has_drawBarOutline= false;
+        _drawBarOutline= null;
     }
 
     /**
      */
     public void deleteShowLegend(
     ) {
-        this._has_showLegend= false;
+        _showLegend= null;
     }
 
     /**
      */
     public void deleteShowToolTips(
     ) {
-        this._has_showToolTips= false;
+        _showToolTips= null;
     }
 
     /**
      */
     public void deleteShowUrls(
     ) {
-        this._has_showUrls= false;
+        _showUrls= null;
     }
 
     /**
@@ -270,9 +259,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * @return an Enumeration over all possible elements of this
      * collection
      */
-    public java.util.Enumeration<org.opennms.netmgt.config.charts.SeriesDef> enumerateSeriesDef(
+    public Enumeration<SeriesDef> enumerateSeriesDef(
     ) {
-        return java.util.Collections.enumeration(this._seriesDefList);
+        return Collections.enumeration(_seriesDefList);
     }
 
     /**
@@ -281,136 +270,128 @@ import org.exolab.castor.xml.Unmarshaller;
      * @return an Enumeration over all possible elements of this
      * collection
      */
-    public java.util.Enumeration<org.opennms.netmgt.config.charts.SubTitle> enumerateSubTitle(
+    public Enumeration<SubTitle> enumerateSubTitle(
     ) {
-        return java.util.Collections.enumeration(this._subTitleList);
+        return Collections.enumeration(_subTitleList);
     }
 
     /**
-     * Overrides the java.lang.Object.equals method.
+     * Overrides the Object.equals method.
      * 
      * @param obj
      * @return true if the objects are equal.
      */
     @Override()
     public boolean equals(
-            final java.lang.Object obj) {
+            final Object obj) {
         if ( this == obj )
             return true;
         
         if (obj instanceof BarChart) {
         
             BarChart temp = (BarChart)obj;
-            if (this._name != null) {
+            if (_name != null) {
                 if (temp._name == null) return false;
-                else if (!(this._name.equals(temp._name))) 
+                else if (!(_name.equals(temp._name))) 
                     return false;
             }
             else if (temp._name != null)
                 return false;
-            if (this._domainAxisLabel != null) {
+            if (_domainAxisLabel != null) {
                 if (temp._domainAxisLabel == null) return false;
-                else if (!(this._domainAxisLabel.equals(temp._domainAxisLabel))) 
+                else if (!(_domainAxisLabel.equals(temp._domainAxisLabel))) 
                     return false;
             }
             else if (temp._domainAxisLabel != null)
                 return false;
-            if (this._rangeAxisLabel != null) {
+            if (_rangeAxisLabel != null) {
                 if (temp._rangeAxisLabel == null) return false;
-                else if (!(this._rangeAxisLabel.equals(temp._rangeAxisLabel))) 
+                else if (!(_rangeAxisLabel.equals(temp._rangeAxisLabel))) 
                     return false;
             }
             else if (temp._rangeAxisLabel != null)
                 return false;
-            if (this._subLabelClass != null) {
+            if (_subLabelClass != null) {
                 if (temp._subLabelClass == null) return false;
-                else if (!(this._subLabelClass.equals(temp._subLabelClass))) 
+                else if (!(_subLabelClass.equals(temp._subLabelClass))) 
                     return false;
             }
             else if (temp._subLabelClass != null)
                 return false;
-            if (this._seriesColorClass != null) {
+            if (_seriesColorClass != null) {
                 if (temp._seriesColorClass == null) return false;
-                else if (!(this._seriesColorClass.equals(temp._seriesColorClass))) 
+                else if (!(_seriesColorClass.equals(temp._seriesColorClass))) 
                     return false;
             }
             else if (temp._seriesColorClass != null)
                 return false;
-            if (this._drawBarOutline != temp._drawBarOutline)
+            if (!Objects.equals(_drawBarOutline, temp._drawBarOutline))
                 return false;
-            if (this._has_drawBarOutline != temp._has_drawBarOutline)
+            if (!Objects.equals(_showLegend, temp._showLegend))
                 return false;
-            if (this._showLegend != temp._showLegend)
+            if (!Objects.equals(_showToolTips, temp._showToolTips))
                 return false;
-            if (this._has_showLegend != temp._has_showLegend)
+            if (!Objects.equals(_showUrls,  temp._showUrls))
                 return false;
-            if (this._showToolTips != temp._showToolTips)
-                return false;
-            if (this._has_showToolTips != temp._has_showToolTips)
-                return false;
-            if (this._showUrls != temp._showUrls)
-                return false;
-            if (this._has_showUrls != temp._has_showUrls)
-                return false;
-            if (this._variation != null) {
+            if (_variation != null) {
                 if (temp._variation == null) return false;
-                else if (!(this._variation.equals(temp._variation))) 
+                else if (!(_variation.equals(temp._variation))) 
                     return false;
             }
             else if (temp._variation != null)
                 return false;
-            if (this._plotOrientation != null) {
+            if (_plotOrientation != null) {
                 if (temp._plotOrientation == null) return false;
-                else if (!(this._plotOrientation.equals(temp._plotOrientation))) 
+                else if (!(_plotOrientation.equals(temp._plotOrientation))) 
                     return false;
             }
             else if (temp._plotOrientation != null)
                 return false;
-            if (this._title != null) {
+            if (_title != null) {
                 if (temp._title == null) return false;
-                else if (!(this._title.equals(temp._title))) 
+                else if (!(_title.equals(temp._title))) 
                     return false;
             }
             else if (temp._title != null)
                 return false;
-            if (this._imageSize != null) {
+            if (_imageSize != null) {
                 if (temp._imageSize == null) return false;
-                else if (!(this._imageSize.equals(temp._imageSize))) 
+                else if (!(_imageSize.equals(temp._imageSize))) 
                     return false;
             }
             else if (temp._imageSize != null)
                 return false;
-            if (this._subTitleList != null) {
+            if (_subTitleList != null) {
                 if (temp._subTitleList == null) return false;
-                else if (!(this._subTitleList.equals(temp._subTitleList))) 
+                else if (!(_subTitleList.equals(temp._subTitleList))) 
                     return false;
             }
             else if (temp._subTitleList != null)
                 return false;
-            if (this._gridLines != null) {
+            if (_gridLines != null) {
                 if (temp._gridLines == null) return false;
-                else if (!(this._gridLines.equals(temp._gridLines))) 
+                else if (!(_gridLines.equals(temp._gridLines))) 
                     return false;
             }
             else if (temp._gridLines != null)
                 return false;
-            if (this._seriesDefList != null) {
+            if (_seriesDefList != null) {
                 if (temp._seriesDefList == null) return false;
-                else if (!(this._seriesDefList.equals(temp._seriesDefList))) 
+                else if (!(_seriesDefList.equals(temp._seriesDefList))) 
                     return false;
             }
             else if (temp._seriesDefList != null)
                 return false;
-            if (this._plotBackgroundColor != null) {
+            if (_plotBackgroundColor != null) {
                 if (temp._plotBackgroundColor == null) return false;
-                else if (!(this._plotBackgroundColor.equals(temp._plotBackgroundColor))) 
+                else if (!(_plotBackgroundColor.equals(temp._plotBackgroundColor))) 
                     return false;
             }
             else if (temp._plotBackgroundColor != null)
                 return false;
-            if (this._chartBackgroundColor != null) {
+            if (_chartBackgroundColor != null) {
                 if (temp._chartBackgroundColor == null) return false;
-                else if (!(this._chartBackgroundColor.equals(temp._chartBackgroundColor))) 
+                else if (!(_chartBackgroundColor.equals(temp._chartBackgroundColor))) 
                     return false;
             }
             else if (temp._chartBackgroundColor != null)
@@ -425,9 +406,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'ChartBackgroundColor'.
      */
-    public org.opennms.netmgt.config.charts.ChartBackgroundColor getChartBackgroundColor(
+    public ChartBackgroundColor getChartBackgroundColor(
     ) {
-        return this._chartBackgroundColor;
+        return _chartBackgroundColor;
     }
 
     /**
@@ -435,9 +416,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'DomainAxisLabel'.
      */
-    public java.lang.String getDomainAxisLabel(
+    public String getDomainAxisLabel(
     ) {
-        return this._domainAxisLabel;
+        return _domainAxisLabel;
     }
 
     /**
@@ -447,7 +428,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean getDrawBarOutline(
     ) {
-        return this._drawBarOutline;
+        return _drawBarOutline;
     }
 
     /**
@@ -455,9 +436,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'GridLines'.
      */
-    public org.opennms.netmgt.config.charts.GridLines getGridLines(
+    public GridLines getGridLines(
     ) {
-        return this._gridLines;
+        return _gridLines;
     }
 
     /**
@@ -465,9 +446,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'ImageSize'.
      */
-    public org.opennms.netmgt.config.charts.ImageSize getImageSize(
+    public ImageSize getImageSize(
     ) {
-        return this._imageSize;
+        return _imageSize;
     }
 
     /**
@@ -475,9 +456,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Name'.
      */
-    public java.lang.String getName(
+    public String getName(
     ) {
-        return this._name;
+        return _name;
     }
 
     /**
@@ -485,9 +466,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'PlotBackgroundColor'.
      */
-    public org.opennms.netmgt.config.charts.PlotBackgroundColor getPlotBackgroundColor(
+    public PlotBackgroundColor getPlotBackgroundColor(
     ) {
-        return this._plotBackgroundColor;
+        return _plotBackgroundColor;
     }
 
     /**
@@ -495,9 +476,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'PlotOrientation'.
      */
-    public java.lang.String getPlotOrientation(
+    public String getPlotOrientation(
     ) {
-        return this._plotOrientation;
+        return _plotOrientation;
     }
 
     /**
@@ -505,9 +486,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'RangeAxisLabel'.
      */
-    public java.lang.String getRangeAxisLabel(
+    public String getRangeAxisLabel(
     ) {
-        return this._rangeAxisLabel;
+        return _rangeAxisLabel;
     }
 
     /**
@@ -515,29 +496,29 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'SeriesColorClass'.
      */
-    public java.lang.String getSeriesColorClass(
+    public String getSeriesColorClass(
     ) {
-        return this._seriesColorClass;
+        return _seriesColorClass;
     }
 
     /**
      * Method getSeriesDef.
      * 
      * @param index
-     * @throws java.lang.IndexOutOfBoundsException if the index
+     * @throws IndexOutOfBoundsException if the index
      * given is outside the bounds of the collection
      * @return the value of the
-     * org.opennms.netmgt.config.charts.SeriesDef at the given index
+     * SeriesDef at the given index
      */
-    public org.opennms.netmgt.config.charts.SeriesDef getSeriesDef(
+    public SeriesDef getSeriesDef(
             final int index)
-    throws java.lang.IndexOutOfBoundsException {
+    throws IndexOutOfBoundsException {
         // check bounds for index
-        if (index < 0 || index >= this._seriesDefList.size()) {
-            throw new IndexOutOfBoundsException("getSeriesDef: Index value '" + index + "' not in range [0.." + (this._seriesDefList.size() - 1) + "]");
+        if (index < 0 || index >= _seriesDefList.size()) {
+            throw new IndexOutOfBoundsException("getSeriesDef: Index value '" + index + "' not in range [0.." + (_seriesDefList.size() - 1) + "]");
         }
         
-        return (org.opennms.netmgt.config.charts.SeriesDef) _seriesDefList.get(index);
+        return (SeriesDef) _seriesDefList.get(index);
     }
 
     /**
@@ -549,10 +530,10 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return this collection as an Array
      */
-    public org.opennms.netmgt.config.charts.SeriesDef[] getSeriesDef(
+    public SeriesDef[] getSeriesDef(
     ) {
-        org.opennms.netmgt.config.charts.SeriesDef[] array = new org.opennms.netmgt.config.charts.SeriesDef[0];
-        return (org.opennms.netmgt.config.charts.SeriesDef[]) this._seriesDefList.toArray(array);
+        SeriesDef[] array = new SeriesDef[0];
+        return (SeriesDef[]) _seriesDefList.toArray(array);
     }
 
     /**
@@ -562,9 +543,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return a reference to the Vector backing this class
      */
-    public java.util.List<org.opennms.netmgt.config.charts.SeriesDef> getSeriesDefCollection(
+    public List<SeriesDef> getSeriesDefCollection(
     ) {
-        return this._seriesDefList;
+        return _seriesDefList;
     }
 
     /**
@@ -574,7 +555,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public int getSeriesDefCount(
     ) {
-        return this._seriesDefList.size();
+        return _seriesDefList.size();
     }
 
     /**
@@ -584,7 +565,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean getShowLegend(
     ) {
-        return this._showLegend;
+        return _showLegend;
     }
 
     /**
@@ -594,7 +575,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean getShowToolTips(
     ) {
-        return this._showToolTips;
+        return _showToolTips;
     }
 
     /**
@@ -604,7 +585,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean getShowUrls(
     ) {
-        return this._showUrls;
+        return _showUrls;
     }
 
     /**
@@ -612,29 +593,29 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'SubLabelClass'.
      */
-    public java.lang.String getSubLabelClass(
+    public String getSubLabelClass(
     ) {
-        return this._subLabelClass;
+        return _subLabelClass;
     }
 
     /**
      * Method getSubTitle.
      * 
      * @param index
-     * @throws java.lang.IndexOutOfBoundsException if the index
+     * @throws IndexOutOfBoundsException if the index
      * given is outside the bounds of the collection
      * @return the value of the
-     * org.opennms.netmgt.config.charts.SubTitle at the given index
+     * SubTitle at the given index
      */
-    public org.opennms.netmgt.config.charts.SubTitle getSubTitle(
+    public SubTitle getSubTitle(
             final int index)
-    throws java.lang.IndexOutOfBoundsException {
+    throws IndexOutOfBoundsException {
         // check bounds for index
-        if (index < 0 || index >= this._subTitleList.size()) {
-            throw new IndexOutOfBoundsException("getSubTitle: Index value '" + index + "' not in range [0.." + (this._subTitleList.size() - 1) + "]");
+        if (index < 0 || index >= _subTitleList.size()) {
+            throw new IndexOutOfBoundsException("getSubTitle: Index value '" + index + "' not in range [0.." + (_subTitleList.size() - 1) + "]");
         }
         
-        return (org.opennms.netmgt.config.charts.SubTitle) _subTitleList.get(index);
+        return (SubTitle) _subTitleList.get(index);
     }
 
     /**
@@ -646,10 +627,10 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return this collection as an Array
      */
-    public org.opennms.netmgt.config.charts.SubTitle[] getSubTitle(
+    public SubTitle[] getSubTitle(
     ) {
-        org.opennms.netmgt.config.charts.SubTitle[] array = new org.opennms.netmgt.config.charts.SubTitle[0];
-        return (org.opennms.netmgt.config.charts.SubTitle[]) this._subTitleList.toArray(array);
+        SubTitle[] array = new SubTitle[0];
+        return (SubTitle[]) _subTitleList.toArray(array);
     }
 
     /**
@@ -659,9 +640,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return a reference to the Vector backing this class
      */
-    public java.util.List<org.opennms.netmgt.config.charts.SubTitle> getSubTitleCollection(
+    public List<SubTitle> getSubTitleCollection(
     ) {
-        return this._subTitleList;
+        return _subTitleList;
     }
 
     /**
@@ -671,7 +652,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public int getSubTitleCount(
     ) {
-        return this._subTitleList.size();
+        return _subTitleList.size();
     }
 
     /**
@@ -679,9 +660,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Title'.
      */
-    public org.opennms.netmgt.config.charts.Title getTitle(
+    public Title getTitle(
     ) {
-        return this._title;
+        return _title;
     }
 
     /**
@@ -689,9 +670,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Variation'.
      */
-    public java.lang.String getVariation(
+    public String getVariation(
     ) {
-        return this._variation;
+        return _variation;
     }
 
     /**
@@ -701,7 +682,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean hasDrawBarOutline(
     ) {
-        return this._has_drawBarOutline;
+        return _drawBarOutline != null;
     }
 
     /**
@@ -711,7 +692,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean hasShowLegend(
     ) {
-        return this._has_showLegend;
+        return _showLegend != null;
     }
 
     /**
@@ -721,7 +702,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean hasShowToolTips(
     ) {
-        return this._has_showToolTips;
+        return _showToolTips != null;
     }
 
     /**
@@ -731,11 +712,11 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean hasShowUrls(
     ) {
-        return this._has_showUrls;
+        return _showUrls != null;
     }
 
     /**
-     * Overrides the java.lang.Object.hashCode method.
+     * Overrides the Object.hashCode method.
      * <p>
      * The following steps came from <b>Effective Java Programming
      * Language Guide</b> by Joshua Bloch, Chapter 3
@@ -745,8 +726,7 @@ import org.exolab.castor.xml.Unmarshaller;
     public int hashCode(
     ) {
         int result = 17;
-        
-        long tmp;
+
         if (_name != null) {
            result = 37 * result + _name.hashCode();
         }
@@ -804,7 +784,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean isDrawBarOutline(
     ) {
-        return this._drawBarOutline;
+        return _drawBarOutline != null ? _drawBarOutline : DEFAULT_DRAW_BAR_OUTLINE;
     }
 
     /**
@@ -814,7 +794,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean isShowLegend(
     ) {
-        return this._showLegend;
+        return _showLegend != null ? _showLegend : DEFAULT_SHOW_LEGEND;
     }
 
     /**
@@ -824,7 +804,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean isShowToolTips(
     ) {
-        return this._showToolTips;
+        return _showToolTips != null ? _showToolTips : DEFAULT_SHOW_TOOLTIPS;
     }
 
     /**
@@ -834,22 +814,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean isShowUrls(
     ) {
-        return this._showUrls;
-    }
-
-    /**
-     * Method isValid.
-     * 
-     * @return true if this object is valid according to the schema
-     */
-    public boolean isValid(
-    ) {
-        try {
-            validate();
-        } catch (org.exolab.castor.xml.ValidationException vex) {
-            return false;
-        }
-        return true;
+        return _showUrls != null ? _showUrls : DEFAULT_SHOW_URLS;
     }
 
     /**
@@ -858,9 +823,9 @@ import org.exolab.castor.xml.Unmarshaller;
      * @return an Iterator over all possible elements in this
      * collection
      */
-    public java.util.Iterator<org.opennms.netmgt.config.charts.SeriesDef> iterateSeriesDef(
+    public Iterator<SeriesDef> iterateSeriesDef(
     ) {
-        return this._seriesDefList.iterator();
+        return _seriesDefList.iterator();
     }
 
     /**
@@ -869,55 +834,23 @@ import org.exolab.castor.xml.Unmarshaller;
      * @return an Iterator over all possible elements in this
      * collection
      */
-    public java.util.Iterator<org.opennms.netmgt.config.charts.SubTitle> iterateSubTitle(
+    public Iterator<SubTitle> iterateSubTitle(
     ) {
-        return this._subTitleList.iterator();
-    }
-
-    /**
-     * 
-     * 
-     * @param out
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     */
-    public void marshal(
-            final java.io.Writer out)
-    throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        Marshaller.marshal(this, out);
-    }
-
-    /**
-     * 
-     * 
-     * @param handler
-     * @throws java.io.IOException if an IOException occurs during
-     * marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     */
-    public void marshal(
-            final org.xml.sax.ContentHandler handler)
-    throws java.io.IOException, org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        Marshaller.marshal(this, handler);
+        return _subTitleList.iterator();
     }
 
     /**
      */
     public void removeAllSeriesDef(
     ) {
-        this._seriesDefList.clear();
+        _seriesDefList.clear();
     }
 
     /**
      */
     public void removeAllSubTitle(
     ) {
-        this._subTitleList.clear();
+        _subTitleList.clear();
     }
 
     /**
@@ -927,7 +860,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * @return true if the object was removed from the collection.
      */
     public boolean removeSeriesDef(
-            final org.opennms.netmgt.config.charts.SeriesDef vSeriesDef) {
+            final SeriesDef vSeriesDef) {
         boolean removed = _seriesDefList.remove(vSeriesDef);
         return removed;
     }
@@ -938,10 +871,10 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param index
      * @return the element removed from the collection
      */
-    public org.opennms.netmgt.config.charts.SeriesDef removeSeriesDefAt(
+    public SeriesDef removeSeriesDefAt(
             final int index) {
-        java.lang.Object obj = this._seriesDefList.remove(index);
-        return (org.opennms.netmgt.config.charts.SeriesDef) obj;
+        Object obj = _seriesDefList.remove(index);
+        return (SeriesDef) obj;
     }
 
     /**
@@ -951,7 +884,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * @return true if the object was removed from the collection.
      */
     public boolean removeSubTitle(
-            final org.opennms.netmgt.config.charts.SubTitle vSubTitle) {
+            final SubTitle vSubTitle) {
         boolean removed = _subTitleList.remove(vSubTitle);
         return removed;
     }
@@ -962,10 +895,10 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param index
      * @return the element removed from the collection
      */
-    public org.opennms.netmgt.config.charts.SubTitle removeSubTitleAt(
+    public SubTitle removeSubTitleAt(
             final int index) {
-        java.lang.Object obj = this._subTitleList.remove(index);
-        return (org.opennms.netmgt.config.charts.SubTitle) obj;
+        Object obj = _subTitleList.remove(index);
+        return (SubTitle) obj;
     }
 
     /**
@@ -975,8 +908,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * 'chartBackgroundColor'.
      */
     public void setChartBackgroundColor(
-            final org.opennms.netmgt.config.charts.ChartBackgroundColor chartBackgroundColor) {
-        this._chartBackgroundColor = chartBackgroundColor;
+            final ChartBackgroundColor chartBackgroundColor) {
+        _chartBackgroundColor = chartBackgroundColor;
     }
 
     /**
@@ -985,8 +918,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param domainAxisLabel the value of field 'domainAxisLabel'.
      */
     public void setDomainAxisLabel(
-            final java.lang.String domainAxisLabel) {
-        this._domainAxisLabel = domainAxisLabel;
+            final String domainAxisLabel) {
+        _domainAxisLabel = domainAxisLabel;
     }
 
     /**
@@ -996,8 +929,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public void setDrawBarOutline(
             final boolean drawBarOutline) {
-        this._drawBarOutline = drawBarOutline;
-        this._has_drawBarOutline = true;
+        _drawBarOutline = drawBarOutline;
     }
 
     /**
@@ -1006,8 +938,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param gridLines the value of field 'gridLines'.
      */
     public void setGridLines(
-            final org.opennms.netmgt.config.charts.GridLines gridLines) {
-        this._gridLines = gridLines;
+            final GridLines gridLines) {
+        _gridLines = gridLines;
     }
 
     /**
@@ -1016,8 +948,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param imageSize the value of field 'imageSize'.
      */
     public void setImageSize(
-            final org.opennms.netmgt.config.charts.ImageSize imageSize) {
-        this._imageSize = imageSize;
+            final ImageSize imageSize) {
+        _imageSize = imageSize;
     }
 
     /**
@@ -1026,8 +958,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param name the value of field 'name'.
      */
     public void setName(
-            final java.lang.String name) {
-        this._name = name;
+            final String name) {
+        _name = name;
     }
 
     /**
@@ -1037,8 +969,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * 'plotBackgroundColor'.
      */
     public void setPlotBackgroundColor(
-            final org.opennms.netmgt.config.charts.PlotBackgroundColor plotBackgroundColor) {
-        this._plotBackgroundColor = plotBackgroundColor;
+            final PlotBackgroundColor plotBackgroundColor) {
+        _plotBackgroundColor = plotBackgroundColor;
     }
 
     /**
@@ -1047,8 +979,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param plotOrientation the value of field 'plotOrientation'.
      */
     public void setPlotOrientation(
-            final java.lang.String plotOrientation) {
-        this._plotOrientation = plotOrientation;
+            final String plotOrientation) {
+        _plotOrientation = plotOrientation;
     }
 
     /**
@@ -1057,8 +989,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param rangeAxisLabel the value of field 'rangeAxisLabel'.
      */
     public void setRangeAxisLabel(
-            final java.lang.String rangeAxisLabel) {
-        this._rangeAxisLabel = rangeAxisLabel;
+            final String rangeAxisLabel) {
+        _rangeAxisLabel = rangeAxisLabel;
     }
 
     /**
@@ -1067,8 +999,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param seriesColorClass the value of field 'seriesColorClass'
      */
     public void setSeriesColorClass(
-            final java.lang.String seriesColorClass) {
-        this._seriesColorClass = seriesColorClass;
+            final String seriesColorClass) {
+        _seriesColorClass = seriesColorClass;
     }
 
     /**
@@ -1076,19 +1008,19 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @param index
      * @param vSeriesDef
-     * @throws java.lang.IndexOutOfBoundsException if the index
+     * @throws IndexOutOfBoundsException if the index
      * given is outside the bounds of the collection
      */
     public void setSeriesDef(
             final int index,
-            final org.opennms.netmgt.config.charts.SeriesDef vSeriesDef)
-    throws java.lang.IndexOutOfBoundsException {
+            final SeriesDef vSeriesDef)
+    throws IndexOutOfBoundsException {
         // check bounds for index
-        if (index < 0 || index >= this._seriesDefList.size()) {
-            throw new IndexOutOfBoundsException("setSeriesDef: Index value '" + index + "' not in range [0.." + (this._seriesDefList.size() - 1) + "]");
+        if (index < 0 || index >= _seriesDefList.size()) {
+            throw new IndexOutOfBoundsException("setSeriesDef: Index value '" + index + "' not in range [0.." + (_seriesDefList.size() - 1) + "]");
         }
         
-        this._seriesDefList.set(index, vSeriesDef);
+        _seriesDefList.set(index, vSeriesDef);
     }
 
     /**
@@ -1097,12 +1029,12 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param vSeriesDefArray
      */
     public void setSeriesDef(
-            final org.opennms.netmgt.config.charts.SeriesDef[] vSeriesDefArray) {
+            final SeriesDef[] vSeriesDefArray) {
         //-- copy array
         _seriesDefList.clear();
         
         for (int i = 0; i < vSeriesDefArray.length; i++) {
-                this._seriesDefList.add(vSeriesDefArray[i]);
+                _seriesDefList.add(vSeriesDefArray[i]);
         }
     }
 
@@ -1113,23 +1045,11 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param vSeriesDefList the Vector to copy.
      */
     public void setSeriesDef(
-            final java.util.List<org.opennms.netmgt.config.charts.SeriesDef> vSeriesDefList) {
+            final List<SeriesDef> vSeriesDefList) {
         // copy vector
-        this._seriesDefList.clear();
+        _seriesDefList.clear();
         
-        this._seriesDefList.addAll(vSeriesDefList);
-    }
-
-    /**
-     * Sets the value of '_seriesDefList' by setting it to the
-     * given Vector. No type checking is performed.
-     * @deprecated
-     * 
-     * @param seriesDefList the Vector to set.
-     */
-    public void setSeriesDefCollection(
-            final java.util.List<org.opennms.netmgt.config.charts.SeriesDef> seriesDefList) {
-        this._seriesDefList = seriesDefList;
+        _seriesDefList.addAll(vSeriesDefList);
     }
 
     /**
@@ -1139,8 +1059,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public void setShowLegend(
             final boolean showLegend) {
-        this._showLegend = showLegend;
-        this._has_showLegend = true;
+        _showLegend = showLegend;
     }
 
     /**
@@ -1150,8 +1069,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public void setShowToolTips(
             final boolean showToolTips) {
-        this._showToolTips = showToolTips;
-        this._has_showToolTips = true;
+        _showToolTips = showToolTips;
     }
 
     /**
@@ -1161,8 +1079,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public void setShowUrls(
             final boolean showUrls) {
-        this._showUrls = showUrls;
-        this._has_showUrls = true;
+        _showUrls = showUrls;
     }
 
     /**
@@ -1171,8 +1088,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param subLabelClass the value of field 'subLabelClass'.
      */
     public void setSubLabelClass(
-            final java.lang.String subLabelClass) {
-        this._subLabelClass = subLabelClass;
+            final String subLabelClass) {
+        _subLabelClass = subLabelClass;
     }
 
     /**
@@ -1180,19 +1097,19 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @param index
      * @param vSubTitle
-     * @throws java.lang.IndexOutOfBoundsException if the index
+     * @throws IndexOutOfBoundsException if the index
      * given is outside the bounds of the collection
      */
     public void setSubTitle(
             final int index,
-            final org.opennms.netmgt.config.charts.SubTitle vSubTitle)
-    throws java.lang.IndexOutOfBoundsException {
+            final SubTitle vSubTitle)
+    throws IndexOutOfBoundsException {
         // check bounds for index
-        if (index < 0 || index >= this._subTitleList.size()) {
-            throw new IndexOutOfBoundsException("setSubTitle: Index value '" + index + "' not in range [0.." + (this._subTitleList.size() - 1) + "]");
+        if (index < 0 || index >= _subTitleList.size()) {
+            throw new IndexOutOfBoundsException("setSubTitle: Index value '" + index + "' not in range [0.." + (_subTitleList.size() - 1) + "]");
         }
         
-        this._subTitleList.set(index, vSubTitle);
+        _subTitleList.set(index, vSubTitle);
     }
 
     /**
@@ -1201,12 +1118,12 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param vSubTitleArray
      */
     public void setSubTitle(
-            final org.opennms.netmgt.config.charts.SubTitle[] vSubTitleArray) {
+            final SubTitle[] vSubTitleArray) {
         //-- copy array
         _subTitleList.clear();
         
         for (int i = 0; i < vSubTitleArray.length; i++) {
-                this._subTitleList.add(vSubTitleArray[i]);
+                _subTitleList.add(vSubTitleArray[i]);
         }
     }
 
@@ -1217,23 +1134,11 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param vSubTitleList the Vector to copy.
      */
     public void setSubTitle(
-            final java.util.List<org.opennms.netmgt.config.charts.SubTitle> vSubTitleList) {
+            final List<SubTitle> vSubTitleList) {
         // copy vector
-        this._subTitleList.clear();
+        _subTitleList.clear();
         
-        this._subTitleList.addAll(vSubTitleList);
-    }
-
-    /**
-     * Sets the value of '_subTitleList' by setting it to the given
-     * Vector. No type checking is performed.
-     * @deprecated
-     * 
-     * @param subTitleList the Vector to set.
-     */
-    public void setSubTitleCollection(
-            final java.util.List<org.opennms.netmgt.config.charts.SubTitle> subTitleList) {
-        this._subTitleList = subTitleList;
+        _subTitleList.addAll(vSubTitleList);
     }
 
     /**
@@ -1242,8 +1147,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param title the value of field 'title'.
      */
     public void setTitle(
-            final org.opennms.netmgt.config.charts.Title title) {
-        this._title = title;
+            final Title title) {
+        _title = title;
     }
 
     /**
@@ -1252,38 +1157,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param variation the value of field 'variation'.
      */
     public void setVariation(
-            final java.lang.String variation) {
-        this._variation = variation;
-    }
-
-    /**
-     * Method unmarshal.
-     * 
-     * @param reader
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     * @return the unmarshaled
-     * org.opennms.netmgt.config.charts.BarChart
-     */
-    public static org.opennms.netmgt.config.charts.BarChart unmarshal(
-            final java.io.Reader reader)
-    throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        return (org.opennms.netmgt.config.charts.BarChart) Unmarshaller.unmarshal(org.opennms.netmgt.config.charts.BarChart.class, reader);
-    }
-
-    /**
-     * 
-     * 
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     */
-    public void validate(
-    )
-    throws org.exolab.castor.xml.ValidationException {
-        org.exolab.castor.xml.Validator validator = new org.exolab.castor.xml.Validator();
-        validator.validate(this);
+            final String variation) {
+        _variation = variation;
     }
 
 }

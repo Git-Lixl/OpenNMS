@@ -161,7 +161,7 @@ public class ChartsConfigTest extends XmlTestNoCastor<ChartConfiguration> {
                     "</rgb>" +
                   "</grid-lines>" +
                   "<series-def number=\"1\" series-name=\"Events\" use-labels=\"true\" >" +
-                    "<jdbc-data-set db-name=\"opennms\" sql=\"select eventseverity, count(*) as count from events where eventseverity &gt; 4 group by eventseverity order by count desc\" />" +
+                    "<jdbc-data-set db-name=\"opennms\" sql=\"select * from events\" />" +
                     "<rgb>" +
                       "<red>" +
                         "<rgb-color>255</rgb-color>" +

@@ -28,16 +28,17 @@
 
 package org.opennms.netmgt.config.charts;
 
-  //---------------------------------/
- //- Imported classes and packages -/
+import java.io.Serializable;
+
+//---------------------------------/
+//- Imported classes and packages -/
 //---------------------------------/
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.exolab.castor.xml.Marshaller;
-import org.exolab.castor.xml.Unmarshaller;
 
 /**
  * Class Title.
@@ -46,73 +47,57 @@ import org.exolab.castor.xml.Unmarshaller;
  */
 @XmlRootElement(name = "title")
 @XmlAccessorType(XmlAccessType.FIELD)
-@SuppressWarnings("all") public class Title implements java.io.Serializable {
+public class Title implements Serializable {
+    private static final long serialVersionUID = 2747919136691598913L;
 
-
-      //--------------------------/
-     //- Class/Member Variables -/
-    //--------------------------/
+    private static final int DEFAULT_PITCH = 1;
 
     /**
      * Field _value.
      */
-    private java.lang.String _value;
+    @XmlAttribute(name="value")
+    private String _value;
 
     /**
      * Field _font.
      */
-    private java.lang.String _font;
+    @XmlAttribute(name="font")
+    private String _font;
 
     /**
      * Field _pitch.
      */
-    private int _pitch;
-
-    /**
-     * keeps track of state for field: _pitch
-     */
-    private boolean _has_pitch;
+    @XmlAttribute(name="pitch")
+    private Integer _pitch;
 
     /**
      * Field _style.
      */
-    private java.lang.String _style;
+    @XmlAttribute(name="style")
+    private String _style;
 
     /**
      * Field _rgb.
      */
-    private org.opennms.netmgt.config.charts.Rgb _rgb;
-
-
-      //----------------/
-     //- Constructors -/
-    //----------------/
-
-    public Title() {
-        super();
-    }
-
-
-      //-----------/
-     //- Methods -/
-    //-----------/
+    @XmlElement(name="rgb")
+    private Rgb _rgb;
 
     /**
      */
     public void deletePitch(
     ) {
-        this._has_pitch= false;
+        this._pitch= null;
     }
 
     /**
-     * Overrides the java.lang.Object.equals method.
+     * Overrides the Object.equals method.
      * 
      * @param obj
      * @return true if the objects are equal.
      */
     @Override()
     public boolean equals(
-            final java.lang.Object obj) {
+            final Object obj) {
         if ( this == obj )
             return true;
         
@@ -134,8 +119,6 @@ import org.exolab.castor.xml.Unmarshaller;
             else if (temp._font != null)
                 return false;
             if (this._pitch != temp._pitch)
-                return false;
-            if (this._has_pitch != temp._has_pitch)
                 return false;
             if (this._style != null) {
                 if (temp._style == null) return false;
@@ -161,7 +144,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Font'.
      */
-    public java.lang.String getFont(
+    public String getFont(
     ) {
         return this._font;
     }
@@ -173,7 +156,7 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public int getPitch(
     ) {
-        return this._pitch;
+        return this._pitch != null ? this._pitch : DEFAULT_PITCH;
     }
 
     /**
@@ -181,7 +164,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Rgb'.
      */
-    public org.opennms.netmgt.config.charts.Rgb getRgb(
+    public Rgb getRgb(
     ) {
         return this._rgb;
     }
@@ -191,7 +174,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Style'.
      */
-    public java.lang.String getStyle(
+    public String getStyle(
     ) {
         return this._style;
     }
@@ -201,7 +184,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Value'.
      */
-    public java.lang.String getValue(
+    public String getValue(
     ) {
         return this._value;
     }
@@ -213,11 +196,11 @@ import org.exolab.castor.xml.Unmarshaller;
      */
     public boolean hasPitch(
     ) {
-        return this._has_pitch;
+        return this._pitch != null;
     }
 
     /**
-     * Overrides the java.lang.Object.hashCode method.
+     * Overrides the Object.hashCode method.
      * <p>
      * The following steps came from <b>Effective Java Programming
      * Language Guide</b> by Joshua Bloch, Chapter 3
@@ -227,8 +210,7 @@ import org.exolab.castor.xml.Unmarshaller;
     public int hashCode(
     ) {
         int result = 17;
-        
-        long tmp;
+
         if (_value != null) {
            result = 37 * result + _value.hashCode();
         }
@@ -247,59 +229,12 @@ import org.exolab.castor.xml.Unmarshaller;
     }
 
     /**
-     * Method isValid.
-     * 
-     * @return true if this object is valid according to the schema
-     */
-    public boolean isValid(
-    ) {
-        try {
-            validate();
-        } catch (org.exolab.castor.xml.ValidationException vex) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 
-     * 
-     * @param out
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     */
-    public void marshal(
-            final java.io.Writer out)
-    throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        Marshaller.marshal(this, out);
-    }
-
-    /**
-     * 
-     * 
-     * @param handler
-     * @throws java.io.IOException if an IOException occurs during
-     * marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     */
-    public void marshal(
-            final org.xml.sax.ContentHandler handler)
-    throws java.io.IOException, org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        Marshaller.marshal(this, handler);
-    }
-
-    /**
      * Sets the value of field 'font'.
      * 
      * @param font the value of field 'font'.
      */
     public void setFont(
-            final java.lang.String font) {
+            final String font) {
         this._font = font;
     }
 
@@ -311,7 +246,6 @@ import org.exolab.castor.xml.Unmarshaller;
     public void setPitch(
             final int pitch) {
         this._pitch = pitch;
-        this._has_pitch = true;
     }
 
     /**
@@ -320,7 +254,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param rgb the value of field 'rgb'.
      */
     public void setRgb(
-            final org.opennms.netmgt.config.charts.Rgb rgb) {
+            final Rgb rgb) {
         this._rgb = rgb;
     }
 
@@ -330,7 +264,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param style the value of field 'style'.
      */
     public void setStyle(
-            final java.lang.String style) {
+            final String style) {
         this._style = style;
     }
 
@@ -340,37 +274,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param value the value of field 'value'.
      */
     public void setValue(
-            final java.lang.String value) {
+            final String value) {
         this._value = value;
-    }
-
-    /**
-     * Method unmarshal.
-     * 
-     * @param reader
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     * @return the unmarshaled org.opennms.netmgt.config.charts.Titl
-     */
-    public static org.opennms.netmgt.config.charts.Title unmarshal(
-            final java.io.Reader reader)
-    throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        return (org.opennms.netmgt.config.charts.Title) Unmarshaller.unmarshal(org.opennms.netmgt.config.charts.Title.class, reader);
-    }
-
-    /**
-     * 
-     * 
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     */
-    public void validate(
-    )
-    throws org.exolab.castor.xml.ValidationException {
-        org.exolab.castor.xml.Validator validator = new org.exolab.castor.xml.Validator();
-        validator.validate(this);
     }
 
 }

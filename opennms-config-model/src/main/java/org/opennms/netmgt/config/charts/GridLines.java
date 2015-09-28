@@ -28,16 +28,14 @@
 
 package org.opennms.netmgt.config.charts;
 
-  //---------------------------------/
- //- Imported classes and packages -/
-//---------------------------------/
+import java.io.Serializable;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.exolab.castor.xml.Marshaller;
-import org.exolab.castor.xml.Unmarshaller;
 
 /**
  * Class GridLines.
@@ -46,71 +44,48 @@ import org.exolab.castor.xml.Unmarshaller;
  */
 @XmlRootElement(name = "grid-lines")
 @XmlAccessorType(XmlAccessType.FIELD)
-@SuppressWarnings("all") public class GridLines implements java.io.Serializable {
+public class GridLines implements Serializable {
+    private static final long serialVersionUID = -4197074558509639250L;
 
-
-      //--------------------------/
-     //- Class/Member Variables -/
-    //--------------------------/
+    private static boolean DEFAULT_VISIBLE = false;
 
     /**
      * Field _visible.
      */
-    private boolean _visible;
-
-    /**
-     * keeps track of state for field: _visible
-     */
-    private boolean _has_visible;
+    @XmlAttribute(name="visible")
+    private Boolean _visible;
 
     /**
      * Field _rgb.
      */
-    private org.opennms.netmgt.config.charts.Rgb _rgb;
-
-
-      //----------------/
-     //- Constructors -/
-    //----------------/
-
-    public GridLines() {
-        super();
-    }
-
-
-      //-----------/
-     //- Methods -/
-    //-----------/
+    @XmlElement(name="rgb")
+    private Rgb _rgb;
 
     /**
      */
-    public void deleteVisible(
-    ) {
-        this._has_visible= false;
+    public void deleteVisible() {
+        _visible = null;
     }
 
     /**
-     * Overrides the java.lang.Object.equals method.
+     * Overrides the Object.equals method.
      * 
      * @param obj
      * @return true if the objects are equal.
      */
     @Override()
-    public boolean equals(
-            final java.lang.Object obj) {
+    public boolean equals(final Object obj) {
         if ( this == obj )
             return true;
         
         if (obj instanceof GridLines) {
         
             GridLines temp = (GridLines)obj;
-            if (this._visible != temp._visible)
+            if (!Objects.equals(_visible, temp._visible))
                 return false;
-            if (this._has_visible != temp._has_visible)
-                return false;
-            if (this._rgb != null) {
+            if (_rgb != null) {
                 if (temp._rgb == null) return false;
-                else if (!(this._rgb.equals(temp._rgb))) 
+                else if (!(_rgb.equals(temp._rgb))) 
                     return false;
             }
             else if (temp._rgb != null)
@@ -125,9 +100,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Rgb'.
      */
-    public org.opennms.netmgt.config.charts.Rgb getRgb(
-    ) {
-        return this._rgb;
+    public Rgb getRgb() {
+        return _rgb;
     }
 
     /**
@@ -135,9 +109,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Visible'.
      */
-    public boolean getVisible(
-    ) {
-        return this._visible;
+    public boolean getVisible() {
+        return _visible != null ? _visible : DEFAULT_VISIBLE;
     }
 
     /**
@@ -145,24 +118,21 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return true if at least one Visible has been added
      */
-    public boolean hasVisible(
-    ) {
-        return this._has_visible;
+    public boolean hasVisible() {
+        return _visible != null;
     }
 
     /**
-     * Overrides the java.lang.Object.hashCode method.
+     * Overrides the Object.hashCode method.
      * <p>
      * The following steps came from <b>Effective Java Programming
      * Language Guide</b> by Joshua Bloch, Chapter 3
      * 
      * @return a hash code value for the object.
      */
-    public int hashCode(
-    ) {
+    public int hashCode() {
         int result = 17;
-        
-        long tmp;
+
         result = 37 * result + (_visible?0:1);
         if (_rgb != null) {
            result = 37 * result + _rgb.hashCode();
@@ -172,60 +142,12 @@ import org.exolab.castor.xml.Unmarshaller;
     }
 
     /**
-     * Method isValid.
-     * 
-     * @return true if this object is valid according to the schema
-     */
-    public boolean isValid(
-    ) {
-        try {
-            validate();
-        } catch (org.exolab.castor.xml.ValidationException vex) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * Returns the value of field 'visible'.
      * 
      * @return the value of field 'Visible'.
      */
-    public boolean isVisible(
-    ) {
-        return this._visible;
-    }
-
-    /**
-     * 
-     * 
-     * @param out
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     */
-    public void marshal(
-            final java.io.Writer out)
-    throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        Marshaller.marshal(this, out);
-    }
-
-    /**
-     * 
-     * 
-     * @param handler
-     * @throws java.io.IOException if an IOException occurs during
-     * marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     */
-    public void marshal(
-            final org.xml.sax.ContentHandler handler)
-    throws java.io.IOException, org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        Marshaller.marshal(this, handler);
+    public boolean isVisible() {
+        return _visible;
     }
 
     /**
@@ -233,9 +155,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @param rgb the value of field 'rgb'.
      */
-    public void setRgb(
-            final org.opennms.netmgt.config.charts.Rgb rgb) {
-        this._rgb = rgb;
+    public void setRgb(final Rgb rgb) {
+        _rgb = rgb;
     }
 
     /**
@@ -243,40 +164,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @param visible the value of field 'visible'.
      */
-    public void setVisible(
-            final boolean visible) {
-        this._visible = visible;
-        this._has_visible = true;
-    }
-
-    /**
-     * Method unmarshal.
-     * 
-     * @param reader
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     * @return the unmarshaled
-     * org.opennms.netmgt.config.charts.GridLines
-     */
-    public static org.opennms.netmgt.config.charts.GridLines unmarshal(
-            final java.io.Reader reader)
-    throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        return (org.opennms.netmgt.config.charts.GridLines) Unmarshaller.unmarshal(org.opennms.netmgt.config.charts.GridLines.class, reader);
-    }
-
-    /**
-     * 
-     * 
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     */
-    public void validate(
-    )
-    throws org.exolab.castor.xml.ValidationException {
-        org.exolab.castor.xml.Validator validator = new org.exolab.castor.xml.Validator();
-        validator.validate(this);
+    public void setVisible(final boolean visible) {
+        _visible = visible;
     }
 
 }

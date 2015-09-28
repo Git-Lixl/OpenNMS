@@ -28,16 +28,12 @@
 
 package org.opennms.netmgt.config.charts;
 
-  //---------------------------------/
- //- Imported classes and packages -/
-//---------------------------------/
+import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.exolab.castor.xml.Marshaller;
-import org.exolab.castor.xml.Unmarshaller;
 
 /**
  * Class Rgb.
@@ -46,51 +42,36 @@ import org.exolab.castor.xml.Unmarshaller;
  */
 @XmlRootElement(name = "rgb")
 @XmlAccessorType(XmlAccessType.FIELD)
-@SuppressWarnings("all") public class Rgb implements java.io.Serializable {
-
-
-      //--------------------------/
-     //- Class/Member Variables -/
-    //--------------------------/
+public class Rgb implements Serializable {
+    private static final long serialVersionUID = -8277806567962836142L;
 
     /**
      * Field _red.
      */
-    private org.opennms.netmgt.config.charts.Red _red;
+    @XmlElement(name="red")
+    private Red _red;
 
     /**
      * Field _green.
      */
-    private org.opennms.netmgt.config.charts.Green _green;
+    @XmlElement(name="green")
+    private Green _green;
 
     /**
      * Field _blue.
      */
-    private org.opennms.netmgt.config.charts.Blue _blue;
-
-
-      //----------------/
-     //- Constructors -/
-    //----------------/
-
-    public Rgb() {
-        super();
-    }
-
-
-      //-----------/
-     //- Methods -/
-    //-----------/
+    @XmlElement(name="blue")
+    private Blue _blue;
 
     /**
-     * Overrides the java.lang.Object.equals method.
+     * Overrides the Object.equals method.
      * 
      * @param obj
      * @return true if the objects are equal.
      */
     @Override()
     public boolean equals(
-            final java.lang.Object obj) {
+            final Object obj) {
         if ( this == obj )
             return true;
         
@@ -128,7 +109,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Blue'.
      */
-    public org.opennms.netmgt.config.charts.Blue getBlue(
+    public Blue getBlue(
     ) {
         return this._blue;
     }
@@ -138,7 +119,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Green'.
      */
-    public org.opennms.netmgt.config.charts.Green getGreen(
+    public Green getGreen(
     ) {
         return this._green;
     }
@@ -148,13 +129,13 @@ import org.exolab.castor.xml.Unmarshaller;
      * 
      * @return the value of field 'Red'.
      */
-    public org.opennms.netmgt.config.charts.Red getRed(
+    public Red getRed(
     ) {
         return this._red;
     }
 
     /**
-     * Overrides the java.lang.Object.hashCode method.
+     * Overrides the Object.hashCode method.
      * <p>
      * The following steps came from <b>Effective Java Programming
      * Language Guide</b> by Joshua Bloch, Chapter 3
@@ -164,8 +145,7 @@ import org.exolab.castor.xml.Unmarshaller;
     public int hashCode(
     ) {
         int result = 17;
-        
-        long tmp;
+
         if (_red != null) {
            result = 37 * result + _red.hashCode();
         }
@@ -180,59 +160,12 @@ import org.exolab.castor.xml.Unmarshaller;
     }
 
     /**
-     * Method isValid.
-     * 
-     * @return true if this object is valid according to the schema
-     */
-    public boolean isValid(
-    ) {
-        try {
-            validate();
-        } catch (org.exolab.castor.xml.ValidationException vex) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 
-     * 
-     * @param out
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     */
-    public void marshal(
-            final java.io.Writer out)
-    throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        Marshaller.marshal(this, out);
-    }
-
-    /**
-     * 
-     * 
-     * @param handler
-     * @throws java.io.IOException if an IOException occurs during
-     * marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     */
-    public void marshal(
-            final org.xml.sax.ContentHandler handler)
-    throws java.io.IOException, org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        Marshaller.marshal(this, handler);
-    }
-
-    /**
      * Sets the value of field 'blue'.
      * 
      * @param blue the value of field 'blue'.
      */
     public void setBlue(
-            final org.opennms.netmgt.config.charts.Blue blue) {
+            final Blue blue) {
         this._blue = blue;
     }
 
@@ -242,7 +175,7 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param green the value of field 'green'.
      */
     public void setGreen(
-            final org.opennms.netmgt.config.charts.Green green) {
+            final Green green) {
         this._green = green;
     }
 
@@ -252,37 +185,8 @@ import org.exolab.castor.xml.Unmarshaller;
      * @param red the value of field 'red'.
      */
     public void setRed(
-            final org.opennms.netmgt.config.charts.Red red) {
+            final Red red) {
         this._red = red;
-    }
-
-    /**
-     * Method unmarshal.
-     * 
-     * @param reader
-     * @throws org.exolab.castor.xml.MarshalException if object is
-     * null or if any SAXException is thrown during marshaling
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     * @return the unmarshaled org.opennms.netmgt.config.charts.Rgb
-     */
-    public static org.opennms.netmgt.config.charts.Rgb unmarshal(
-            final java.io.Reader reader)
-    throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException {
-        return (org.opennms.netmgt.config.charts.Rgb) Unmarshaller.unmarshal(org.opennms.netmgt.config.charts.Rgb.class, reader);
-    }
-
-    /**
-     * 
-     * 
-     * @throws org.exolab.castor.xml.ValidationException if this
-     * object is an invalid instance according to the schema
-     */
-    public void validate(
-    )
-    throws org.exolab.castor.xml.ValidationException {
-        org.exolab.castor.xml.Validator validator = new org.exolab.castor.xml.Validator();
-        validator.validate(this);
     }
 
 }
