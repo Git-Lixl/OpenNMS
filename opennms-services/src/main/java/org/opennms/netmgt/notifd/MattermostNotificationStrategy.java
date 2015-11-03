@@ -29,21 +29,19 @@
 package org.opennms.netmgt.notifd;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.opennms.core.web.HttpClientWrapper;
 import org.opennms.netmgt.config.NotificationManager;
 import org.opennms.netmgt.model.notifd.Argument;
@@ -114,15 +112,50 @@ public class MattermostNotificationStrategy implements NotificationStrategy {
             CloseableHttpResponse response = clientWrapper.getClient().execute(postMethod);
             statusCode = response.getStatusLine().getStatusCode();
             contents = EntityUtils.toString(response.getEntity());
-            LOG.info("send: Contents is: {}", contents);
+            LOG.debug("send: Contents is: {}", contents);
         } catch (IOException e) {
-            LOG.error("send: I/O problem with HTTP post/response: {}", e);
-            throw new RuntimeException("Problem with HTTP post: "+e.getMessage());
+            LOG.error("send: I/O problem with webhook post/response: {}", e);
+            throw new RuntimeException("Problem with webhook post: "+e.getMessage());
         } finally {
             IOUtils.closeQuietly(clientWrapper);
         }
+        
+        if ("ok".equals(contents)) {
+        	LOG.debug("Got 'ok' back from webhook, indicating success.");
+        	statusCode = 0;
+        } else {
+        	LOG.info("Got a non-ok response from webhook, attempting to dissect response.");
+        	LOG.error("Webhook returned non-OK response to notification post: {}", formatWebhookErrorResponse(statusCode, contents));
+        	statusCode = 1;
+        }
 
         return statusCode;
+    }
+    
+    protected String formatWebhookErrorResponse(int statusCode, String contents) {
+    	StringBuilder bldr = new StringBuilder("Response code: ");
+    	bldr.append(statusCode);
+    	
+    	JSONObject errorJson = new JSONObject();
+    	JSONParser jp = new JSONParser();
+    	try {
+			Object parsedError = jp.parse(contents);
+			if (parsedError instanceof JSONObject) {
+				LOG.debug("Got back some JSON. Parsing for dissection.");
+				errorJson = (JSONObject)parsedError;
+			}
+		} catch (ParseException e) {
+			LOG.warn("Got some non-JSON error.");
+			bldr.append(" Contents:").append(contents);
+			return bldr.toString();
+		}
+    	
+    	bldr.append("; Message: ").append(errorJson.get("message"));
+    	bldr.append("; Detailed error: ").append(errorJson.get("detailed_error"));
+    	bldr.append("; Request ID: ").append(errorJson.get("request_id"));
+    	bldr.append("; Status code: ").append(errorJson.get("status_code"));
+    	bldr.append("; Is OAUTH?: ").append(errorJson.get("is_oauth"));
+    	return bldr.toString();
     }
 
     protected String getUrl() {
