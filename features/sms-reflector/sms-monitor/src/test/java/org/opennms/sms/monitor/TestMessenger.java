@@ -29,9 +29,9 @@
 package org.opennms.sms.monitor;
 
 import java.util.Date;
-import java.util.Queue;
 
 import org.opennms.protocols.rt.Messenger;
+import org.opennms.protocols.rt.ReplyHandler;
 import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.SmsResponse;
@@ -47,7 +47,7 @@ import org.smslib.USSDSessionStatus;
  */
 public class TestMessenger implements Messenger<MobileMsgRequest, MobileMsgResponse> {
     
-    protected Queue<MobileMsgResponse> m_q;
+    protected ReplyHandler<MobileMsgResponse> m_callback;
 
     /* (non-Javadoc)
      * @see org.opennms.protocols.rt.Messenger#sendRequest(java.lang.Object)
@@ -62,12 +62,12 @@ public class TestMessenger implements Messenger<MobileMsgRequest, MobileMsgRespo
      * @see org.opennms.protocols.rt.Messenger#start(java.util.Queue)
      */
     @Override
-    public void start(Queue<MobileMsgResponse> q) {
-        m_q = q;
+    public void start(ReplyHandler<MobileMsgResponse> callback) {
+        m_callback = callback;
     }
     
     public void sendTestResponse(MobileMsgResponse response) {
-        m_q.offer(response);
+        m_callback.handleReply(response);
     }
 
     /**

@@ -36,7 +36,6 @@ import static org.opennms.sms.reflector.smsservice.MobileMsgResponseMatchers.tex
 
 import java.util.Date;
 import java.util.Properties;
-import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
@@ -48,6 +47,7 @@ import org.opennms.core.concurrent.LogPreservingThreadFactory;
 import org.opennms.core.tasks.Callback;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.protocols.rt.Messenger;
+import org.opennms.protocols.rt.ReplyHandler;
 import org.smslib.InboundMessage;
 import org.smslib.OutboundMessage;
 import org.smslib.USSDDcs;
@@ -100,7 +100,7 @@ public class MobileMsgTrackerTest {
      */
     public class TestMessenger implements Messenger<MobileMsgRequest, MobileMsgResponse> {
         
-        Queue<MobileMsgResponse> m_q;
+        ReplyHandler<MobileMsgResponse> m_callback;
 
         /* (non-Javadoc)
          * @see org.opennms.protocols.rt.Messenger#sendRequest(java.lang.Object)
@@ -115,12 +115,12 @@ public class MobileMsgTrackerTest {
          * @see org.opennms.protocols.rt.Messenger#start(java.util.Queue)
          */
         @Override
-        public void start(Queue<MobileMsgResponse> q) {
-            m_q = q;
+        public void start(ReplyHandler<MobileMsgResponse> callback) {
+            m_callback = callback;
         }
         
         public void sendTestResponse(MobileMsgResponse response) {
-            m_q.offer(response);
+            m_callback.handleReply(response);
         }
 
         /**

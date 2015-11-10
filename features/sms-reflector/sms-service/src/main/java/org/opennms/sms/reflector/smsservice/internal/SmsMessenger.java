@@ -30,9 +30,9 @@ package org.opennms.sms.reflector.smsservice.internal;
 
 
 import java.io.IOException;
-import java.util.Queue;
 
 import org.opennms.protocols.rt.Messenger;
+import org.opennms.protocols.rt.ReplyHandler;
 import org.opennms.sms.reflector.smsservice.MobileMsgRequest;
 import org.opennms.sms.reflector.smsservice.MobileMsgResponse;
 import org.opennms.sms.reflector.smsservice.OnmsInboundMessageNotification;
@@ -64,7 +64,7 @@ public class SmsMessenger implements Messenger<MobileMsgRequest, MobileMsgRespon
     
     private SmsService m_smsService;
     
-    private Queue<MobileMsgResponse> m_replyQueue;
+    private ReplyHandler<MobileMsgResponse> m_callback;
     
     /**
      * <p>setSmsService</p>
@@ -118,9 +118,9 @@ public class SmsMessenger implements Messenger<MobileMsgRequest, MobileMsgRespon
 
     /** {@inheritDoc} */
     @Override
-    public void start(Queue<MobileMsgResponse> replyQueue) {
+    public void start(ReplyHandler<MobileMsgResponse> callback) {
         debugf("SmsMessenger.start");
-        m_replyQueue = replyQueue;
+        m_callback = callback;
     }
 
     /** {@inheritDoc} */
@@ -130,8 +130,8 @@ public class SmsMessenger implements Messenger<MobileMsgRequest, MobileMsgRespon
         
         debugf("SmsMessenger.processInboundMessage");
         
-        if (m_replyQueue != null) {
-            m_replyQueue.add(new SmsResponse(msg, receiveTime));
+        if (m_callback != null) {
+            m_callback.handleReply(new SmsResponse(msg, receiveTime));
         }
     }
 
@@ -141,8 +141,8 @@ public class SmsMessenger implements Messenger<MobileMsgRequest, MobileMsgRespon
 
         debugf("SmsMessenger.processUSSDResponse");
 
-        if (m_replyQueue != null) {
-            m_replyQueue.add(new UssdResponse(gateway.getGatewayId(), ussdResponse, receiveTime));
+        if (m_callback != null) {
+            m_callback.handleReply(new UssdResponse(gateway.getGatewayId(), ussdResponse, receiveTime));
         }
     }
 
@@ -151,6 +151,5 @@ public class SmsMessenger implements Messenger<MobileMsgRequest, MobileMsgRespon
             log.debug(String.format(fmt, args));
         }
     }
-
 
 }

@@ -30,9 +30,9 @@ package org.opennms.sms.ping.internal;
 
 
 import java.io.IOException;
-import java.util.Queue;
 
 import org.opennms.protocols.rt.Messenger;
+import org.opennms.protocols.rt.ReplyHandler;
 import org.opennms.sms.reflector.smsservice.OnmsInboundMessageNotification;
 import org.opennms.sms.reflector.smsservice.SmsService;
 import org.slf4j.Logger;
@@ -56,8 +56,8 @@ public class SmsPingMessenger implements Messenger<PingRequest, PingReply>, Onms
     
     private SmsService m_smsService;
     
-    private Queue<PingReply> m_replyQueue;
-    
+    private ReplyHandler<PingReply> m_callback;
+
     /**
      * <p>setSmsService</p>
      *
@@ -94,9 +94,9 @@ public class SmsPingMessenger implements Messenger<PingRequest, PingReply>, Onms
 
     /** {@inheritDoc} */
     @Override
-    public void start(Queue<PingReply> replyQueue) {
+    public void start(ReplyHandler<PingReply> callback) {
         debugf("SmsMessenger.start");
-        m_replyQueue = replyQueue;
+        m_callback = callback;
     }
     
     /** {@inheritDoc} */
@@ -106,8 +106,8 @@ public class SmsPingMessenger implements Messenger<PingRequest, PingReply>, Onms
     	
         debugf("SmsMessenger.processInboundMessage");
         
-        if (m_replyQueue != null) {
-            m_replyQueue.add(new PingReply(msg, receiveTime));
+        if (m_callback != null) {
+            m_callback.handleReply(new PingReply(msg, receiveTime));
         }
     }
 
