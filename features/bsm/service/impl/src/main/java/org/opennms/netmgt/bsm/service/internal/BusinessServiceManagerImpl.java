@@ -157,7 +157,9 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
         BusinessService service = new BusinessService();
         service.setId(dto.getId());
         service.setName(dto.getName());
-        service.setAttributes(new HashMap<>(dto.getAttributes()));
+        if (dto.getAttributes() != null) {
+            service.setAttributes(new HashMap<>(dto.getAttributes()));
+        }
         for (IpServiceDTO eachService : dto.getIpServices()) {
             OnmsMonitoredService ipService = getIpService(Integer.valueOf(eachService.getId()));
             service.addIpService(ipService);
