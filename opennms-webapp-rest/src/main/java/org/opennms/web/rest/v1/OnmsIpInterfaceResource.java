@@ -31,6 +31,9 @@ package org.opennms.web.rest.v1;
 
 import static org.opennms.core.utils.InetAddressUtils.addr;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -56,9 +59,11 @@ import org.opennms.netmgt.events.api.EventConstants;
 import org.opennms.netmgt.events.api.EventProxy;
 import org.opennms.netmgt.events.api.EventProxyException;
 import org.opennms.netmgt.model.OnmsIpInterface;
-import org.opennms.netmgt.model.OnmsIpInterfaceList;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.events.EventBuilder;
+import org.opennms.web.rest.api.support.ResourceLocationFactory;
+import org.opennms.web.rest.api.model.IpInterfaceDTO;
+import org.opennms.web.rest.api.model.IpInterfaceListDTO;
 import org.opennms.web.rest.support.MultivaluedMapImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,11 +94,11 @@ public class OnmsIpInterfaceResource extends OnmsRestService {
      * <p>getIpInterfaces</p>
      *
      * @param nodeCriteria a {@link java.lang.String} object.
-     * @return a {@link org.opennms.netmgt.model.OnmsIpInterfaceList} object.
+     * @return a {@link IpInterfaceListDTO} object.
      */
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public OnmsIpInterfaceList getIpInterfaces(@Context final UriInfo uriInfo, @PathParam("nodeCriteria") final String nodeCriteria) {
+    public IpInterfaceListDTO getIpInterfaces(@Context final UriInfo uriInfo, @PathParam("nodeCriteria") final String nodeCriteria) {
         LOG.debug("getIpInterfaces: reading interfaces for node {}", nodeCriteria);
 
         final OnmsNode node = m_nodeDao.get(nodeCriteria);
@@ -107,12 +112,13 @@ public class OnmsIpInterfaceResource extends OnmsRestService {
         applyQueryFilters(params, builder);
         builder.alias("node", "node");
         builder.eq("node.id", node.getId());
-        
-        final OnmsIpInterfaceList interfaceList = new OnmsIpInterfaceList(m_ipInterfaceDao.findMatching(builder.toCriteria()));
 
-        interfaceList.setTotalCount(m_ipInterfaceDao.countMatching(builder.count().toCriteria()));
-        
-        return interfaceList;
+        List<OnmsIpInterface> interfaceList = m_ipInterfaceDao.findMatching(builder.toCriteria());
+        List<IpInterfaceDTO> ipInterfaceDtos = interfaceList.stream().map(input -> new IpInterfaceDTO(input)).collect(Collectors.toList());
+
+        IpInterfaceListDTO interfaceListDTO = new IpInterfaceListDTO(ipInterfaceDtos, ResourceLocationFactory.createIpInterfaceLocation(nodeCriteria));
+        interfaceListDTO.setTotalCount(m_ipInterfaceDao.countMatching(builder.count().toCriteria()));
+        return interfaceListDTO;
     }
 
     /**
@@ -125,12 +131,16 @@ public class OnmsIpInterfaceResource extends OnmsRestService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Path("{ipAddress}")
-    public OnmsIpInterface getIpInterface(@PathParam("nodeCriteria") final String nodeCriteria, @PathParam("ipAddress") final String ipAddress) {
+    public IpInterfaceDTO getIpInterface(@PathParam("nodeCriteria") final String nodeCriteria, @PathParam("ipAddress") final String ipAddress) {
         final OnmsNode node = m_nodeDao.get(nodeCriteria);
         if (node == null) {
             throw getException(Status.BAD_REQUEST, "getIpInterface: can't find node " + nodeCriteria);
         }
-        return node.getIpInterfaceByIpAddress(InetAddressUtils.getInetAddress(ipAddress));
+        final OnmsIpInterface ipInterfaceByIpAddress = node.getIpInterfaceByIpAddress(InetAddressUtils.getInetAddress(ipAddress));
+        if (ipInterfaceByIpAddress != null) {
+            return new IpInterfaceDTO(ipInterfaceByIpAddress);
+        }
+        return null;
     }
 
     /**
@@ -266,7 +276,7 @@ public class OnmsIpInterfaceResource extends OnmsRestService {
     /**
      * <p>getServices</p>
      *
-     * @return a {@link org.opennms.web.rest.OnmsMonitoredServiceResource} object.
+     * @return a {@link org.opennms.web.rest.v1.OnmsMonitoredServiceResource} object.
      */
     @Path("{ipAddress}/services")
     public OnmsMonitoredServiceResource getServices(@Context final ResourceContext context) {

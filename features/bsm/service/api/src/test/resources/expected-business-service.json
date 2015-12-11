@@ -1,0 +1,15 @@
+{
+  "location" : "/api/v2/business-services/1",
+  "name" : "Web Servers",
+  "id" : 1,
+  "attributes" : {
+    "dc" : "RDU"
+  },
+  "ipServices" : [ {
+    "id" : "1",
+    "location" : "/rest/ifservices/1",
+    "serviceName" : null,
+    "nodeLabel" : null,
+    "ipAddress" : null
+  } ]
+}

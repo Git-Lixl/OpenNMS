@@ -28,40 +28,37 @@
 
 package org.opennms.netmgt.bsm.service.model;
 
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Collection;
+import java.io.IOException;
 
-import org.junit.runners.Parameterized;
-import org.opennms.core.test.xml.XmlTestNoCastor;
+import org.junit.Assert;
+import org.junit.Test;
+import org.opennms.core.test.xml.JsonTest;
 import org.opennms.web.rest.api.model.ApiVersion;
 import org.opennms.web.rest.api.model.ResourceLocation;
 
-public class IpServiceDTOJaxbTest extends XmlTestNoCastor<IpServiceDTO> {
+public class BusinessServiceDTOJsonTest {
 
-    public IpServiceDTOJaxbTest(IpServiceDTO sampleObject, Object sampleXml, String schemaFile) {
-        super(sampleObject, sampleXml, schemaFile);
-    }
+    @Test
+    public void testSerializeAndDeserialize() throws IOException {
+        // Object to serialize
+        BusinessServiceDTO bs = new BusinessServiceDTO();
+        bs.setId(1L);
+        bs.setName("Web Servers");
+        bs.setAttribute("dc", "RDU");
+        bs.setLocation(new ResourceLocation(ApiVersion.Version2, "business-services", "1"));
 
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() throws ParseException {
         IpServiceDTO ipService = new IpServiceDTO();
         ipService.setId("1");
-        ipService.setServiceName("my service name");
-        ipService.setNodeLabel("my node label");
-        ipService.setIpAddress("127.0.0.1");
         ipService.setLocation(new ResourceLocation(ApiVersion.Version1, "ifservices", "1"));
+        bs.addIpService(ipService);
 
-        return Arrays.asList(new Object[][]{{
-                ipService,
-                "<ip-service>\n" +
-                "   <id>1</id>\n" +
-                "   <location>/rest/ifservices/1</location>\n" +
-                "   <serviceName>my service name</serviceName>\n" +
-                "   <nodeLabel>my node label</nodeLabel>\n" +
-                "   <ipAddress>127.0.0.1</ipAddress>\n" +
-                "</ip-service>",
-                null
-        }});
+        // serialize object
+        String json = JsonTest.marshalToJson(bs);
+        String expectedJson = JsonTest.read(getClass().getResourceAsStream("/expected-business-service.json"));
+        JsonTest.assertJsonEquals(json, expectedJson);
+
+        // seserialize object
+        BusinessServiceDTO deserializedObject = JsonTest.unmarshalFromJson(json, BusinessServiceDTO.class);
+        Assert.assertEquals(bs, deserializedObject);
     }
 }

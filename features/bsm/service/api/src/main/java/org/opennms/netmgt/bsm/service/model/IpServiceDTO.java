@@ -35,10 +35,14 @@ import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.google.common.base.Objects;
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.opennms.web.rest.api.support.JAXBResourceLocationAdapter;
+import org.opennms.web.rest.api.support.JsonResourceLocationDeserializationProvider;
+import org.opennms.web.rest.api.support.JsonResourceLocationSerializationProvider;
+import org.opennms.web.rest.api.model.ResourceLocation;
 
-import org.opennms.web.rest.api.JAXBResourceLocationAdapter;
-import org.opennms.web.rest.api.ResourceLocation;
+import com.google.common.base.Objects;
 
 @XmlRootElement(name = "ip-service")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -50,12 +54,17 @@ public class IpServiceDTO {
 
     @XmlElement(name="location")
     @XmlJavaTypeAdapter(JAXBResourceLocationAdapter.class)
+    @JsonSerialize(using = JsonResourceLocationSerializationProvider.class)
+    @JsonDeserialize(using = JsonResourceLocationDeserializationProvider.class)
     private ResourceLocation location;
 
+    @XmlElement(name="serviceName")
     private String serviceName;
 
+    @XmlElement(name="nodeLabel")
     private String nodeLabel;
 
+    @XmlElement(name="ipAddress")
     private String ipAddress;
 
     public ResourceLocation getLocation() {

@@ -34,8 +34,8 @@ import java.util.Collection;
 
 import org.junit.runners.Parameterized;
 import org.opennms.core.test.xml.XmlTestNoCastor;
-import org.opennms.web.rest.api.ApiVersion;
-import org.opennms.web.rest.api.ResourceLocation;
+import org.opennms.web.rest.api.model.ApiVersion;
+import org.opennms.web.rest.api.model.ResourceLocation;
 
 public class BusinessServiceDTOJaxbTest extends XmlTestNoCastor<BusinessServiceDTO> {
 

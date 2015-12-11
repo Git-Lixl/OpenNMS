@@ -2,9 +2,6 @@ package org.opennms.web.rest.v1;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,7 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.json.JSONObject;
+import org.opennms.web.rest.api.model.Info;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -42,10 +39,10 @@ public class InfoRestService extends OnmsRestService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getInfo() throws ParseException {
-        final Map<String,String> info = new HashMap<String,String>();
-        info.put("displayVersion", m_displayVersion);
-        info.put("version", m_version);
+    public Response getInfo() {
+        Info info = new Info();
+        info.setDisplayVersion(m_displayVersion);
+        info.setVersion(m_version);
 
         final InputStream installerProperties = getClass().getResourceAsStream("/installer.properties");
         if (installerProperties != null) {
@@ -53,14 +50,12 @@ public class InfoRestService extends OnmsRestService {
             try {
                 props.load(installerProperties);
                 installerProperties.close();
-                info.put("packageName", (String)props.get("install.package.name"));
-                info.put("packageDescription", (String)props.get("install.package.description"));
+                info.setPackageName((String)props.get("install.package.name"));
+                info.setPackageDescription((String)props.get("install.package.description"));
             } catch (final IOException e) {
                 LOG.debug("Unable to read from installer.properties in the classpath.", e);
             }
         }
-
-        final JSONObject jo = new JSONObject(info);
-        return Response.ok(jo.toString(), MediaType.APPLICATION_JSON).build();
+        return Response.ok().entity(info).build();
     }
 }

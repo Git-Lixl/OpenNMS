@@ -75,11 +75,17 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonValue;
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Type;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.events.api.EventConstants;
 import org.opennms.netmgt.events.api.EventForwarder;
+import org.opennms.netmgt.json.bind.NodeLabelSourceJsonDeserializer;
+import org.opennms.netmgt.json.bind.NodeLabelSourceJsonSerializer;
+import org.opennms.netmgt.json.bind.NodeTypeJsonDeserializer;
+import org.opennms.netmgt.json.bind.NodeTypeJsonSerializer;
 import org.opennms.netmgt.model.events.AddEventVisitor;
 import org.opennms.netmgt.model.events.DeleteEventVisitor;
 import org.opennms.netmgt.model.events.EventBuilder;
@@ -368,6 +374,8 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
     @Column(name="nodeType", length=1)
     @Type(type="org.opennms.netmgt.model.NodeTypeUserType")
     //@XmlJavaTypeAdapter(NodeTypeXmlAdapter.class)
+    @JsonSerialize(using = NodeTypeJsonSerializer.class)
+    @JsonDeserialize(using = NodeTypeJsonDeserializer.class)
     public NodeType getType() {
         return m_type;
     }
@@ -574,6 +582,8 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
     @XmlElement(name="labelSource")
     @Column(name="nodeLabelSource", length=1)
     @Type(type="org.opennms.netmgt.model.NodeLabelSourceUserType")
+    @JsonSerialize(using=NodeLabelSourceJsonSerializer.class)
+    @JsonDeserialize(using=NodeLabelSourceJsonDeserializer.class)
     //@XmlJavaTypeAdapter(NodeLabelSourceXmlAdapter.class)
     public NodeLabelSource getLabelSource() {
         return m_labelSource;

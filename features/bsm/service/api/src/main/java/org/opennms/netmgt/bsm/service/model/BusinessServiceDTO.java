@@ -39,8 +39,13 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import org.opennms.web.rest.api.JAXBResourceLocationAdapter;
-import org.opennms.web.rest.api.ResourceLocation;
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.opennms.web.rest.api.support.JAXBMapAdapter;
+import org.opennms.web.rest.api.support.JAXBResourceLocationAdapter;
+import org.opennms.web.rest.api.support.JsonResourceLocationDeserializationProvider;
+import org.opennms.web.rest.api.support.JsonResourceLocationSerializationProvider;
+import org.opennms.web.rest.api.model.ResourceLocation;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -58,6 +63,8 @@ public class BusinessServiceDTO {
 
     @XmlElement(name="location")
     @XmlJavaTypeAdapter(JAXBResourceLocationAdapter.class)
+    @JsonSerialize(using = JsonResourceLocationSerializationProvider.class)
+    @JsonDeserialize(using = JsonResourceLocationDeserializationProvider.class)
     private ResourceLocation location;
 
     @XmlElement(name = "attributes", required = false)

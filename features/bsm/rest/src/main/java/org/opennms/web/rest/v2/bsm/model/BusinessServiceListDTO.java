@@ -36,11 +36,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.codehaus.jackson.map.annotate.JsonRootName;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.opennms.core.config.api.JaxbListWrapper;
 import org.opennms.netmgt.bsm.service.model.BusinessServiceDTO;
-import org.opennms.web.rest.api.JAXBResourceLocationAdapter;
-import org.opennms.web.rest.api.ResourceLocation;
+import org.opennms.web.rest.api.support.JAXBResourceLocationAdapter;
+import org.opennms.web.rest.api.support.JsonResourceLocationDeserializationProvider;
+import org.opennms.web.rest.api.support.JsonResourceLocationSerializationProvider;
+import org.opennms.web.rest.api.model.ResourceLocation;
 
 @XmlRootElement(name = "business-services")
 @JsonRootName("business-services")
@@ -67,6 +71,8 @@ public class BusinessServiceListDTO extends JaxbListWrapper<BusinessServiceDTO> 
 
     @XmlElement(name = "location")
     @XmlJavaTypeAdapter(JAXBResourceLocationAdapter.class)
+    @JsonSerialize(using = JsonResourceLocationSerializationProvider.class)
+    @JsonDeserialize(using = JsonResourceLocationDeserializationProvider.class)
     public ResourceLocation getLocation() {
         return location;
     }

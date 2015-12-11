@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2008-2014 The OpenNMS Group, Inc.
+ * Copyright (C) 2013-2014 The OpenNMS Group, Inc.
  * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
@@ -26,38 +26,27 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.model;
+package org.opennms.netmgt.json.bind;
 
-import java.util.Collection;
-import java.util.List;
+import java.io.IOException;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.JsonSerializer;
+import org.codehaus.jackson.map.SerializerProvider;
+import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.xml.bind.NodeLabelSourceXmlAdapter;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonRootName;
-import org.opennms.core.config.api.JaxbListWrapper;
+public class NodeLabelSourceJsonSerializer extends JsonSerializer<OnmsNode.NodeLabelSource> {
 
-@XmlRootElement(name = "ipInterfaces")
-@XmlAccessorType(XmlAccessType.NONE)
-@JsonRootName("ipInterfaces")
-public class OnmsIpInterfaceList extends JaxbListWrapper<OnmsIpInterface> {
-    private static final long serialVersionUID = 1L;
+    private final NodeLabelSourceXmlAdapter xmlAdapter = new NodeLabelSourceXmlAdapter();
 
-    public OnmsIpInterfaceList() { super(); }
-    public OnmsIpInterfaceList(final Collection<? extends OnmsIpInterface> iface) {
-        super(iface);
-    }
-
-    @XmlElement(name="ipInterface")
-    @JsonProperty("ipInterface")
-    public List<OnmsIpInterface> getObjects() {
-        return super.getObjects();
-    }
-
-    public List<OnmsIpInterface> getIpInterfaces() {
-        return getObjects();
+    @Override
+    public void serialize(OnmsNode.NodeLabelSource value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+        try {
+            jgen.writeString(xmlAdapter.marshal(value));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

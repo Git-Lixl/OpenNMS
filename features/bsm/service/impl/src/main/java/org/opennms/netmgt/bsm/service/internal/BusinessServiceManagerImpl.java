@@ -44,7 +44,7 @@ import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsSeverity;
-import org.opennms.web.rest.api.ResourceLocationFactory;
+import org.opennms.web.rest.api.support.ResourceLocationFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -167,6 +167,9 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
 
     private BusinessServiceDTO transform(BusinessService service) {
         BusinessServiceDTO dto = new BusinessServiceDTO();
+        if (service.getId() != null) {
+            dto.setLocation(ResourceLocationFactory.createBusinessServiceLocation(service.getId().toString()));
+        }
         dto.setId(service.getId());
         dto.setName(service.getName());
         dto.setAttributes(new HashMap<>(service.getAttributes()));

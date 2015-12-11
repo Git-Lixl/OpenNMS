@@ -52,6 +52,7 @@ import org.opennms.netmgt.events.api.EventProxy;
 import org.opennms.netmgt.events.api.EventProxyException;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsMonitoredService;
+import org.opennms.netmgt.model.OnmsMonitoredServiceDetail;
 import org.opennms.netmgt.model.OnmsMonitoredServiceList;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsServiceType;
@@ -126,9 +127,9 @@ public class OnmsMonitoredServiceResource extends OnmsRestService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Path("{service}")
-    public OnmsMonitoredService getService(@PathParam("nodeCriteria") String nodeCriteria, @PathParam("ipAddress") String ipAddress, @PathParam("service") String service) {
+    public OnmsMonitoredServiceDetail getService(@PathParam("nodeCriteria") String nodeCriteria, @PathParam("ipAddress") String ipAddress, @PathParam("service") String service) {
         OnmsNode node = m_nodeDao.get(nodeCriteria);
-        return node.getIpInterfaceByIpAddress(ipAddress).getMonitoredServiceByServiceType(service);
+        return new OnmsMonitoredServiceDetail(node.getIpInterfaceByIpAddress(ipAddress).getMonitoredServiceByServiceType(service));
     }
     
     /**

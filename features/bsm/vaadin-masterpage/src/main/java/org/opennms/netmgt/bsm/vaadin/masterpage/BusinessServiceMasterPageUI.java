@@ -86,6 +86,7 @@ public class BusinessServiceMasterPageUI extends UI {
 		HorizontalLayout rowLayout = new HorizontalLayout();
 		rowLayout.setSizeFull();
 		rowLayout.setSpacing(true);
+		rowLayout.setId("service-" + serviceDTO.getId());
 
 		final OnmsSeverity severity = businessServiceManager.getOperationalStatusForBusinessService(serviceDTO.getId());
 		Label nameLabel = new Label(serviceDTO.getName());

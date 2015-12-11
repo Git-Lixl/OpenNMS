@@ -45,7 +45,7 @@ import javax.ws.rs.core.UriInfo;
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.model.BusinessServiceDTO;
 import org.opennms.netmgt.model.OnmsSeverity;
-import org.opennms.web.rest.api.ResourceLocationFactory;
+import org.opennms.web.rest.api.support.ResourceLocationFactory;
 import org.opennms.web.rest.support.RedirectHelper;
 import org.opennms.web.rest.v2.bsm.model.BusinessServiceListDTO;
 import org.springframework.beans.factory.annotation.Autowired;

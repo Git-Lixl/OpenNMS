@@ -371,6 +371,7 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
     @XmlTransient
     @OneToMany(mappedBy="ipInterface",orphanRemoval=true)
     @org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.ALL)
+    @JsonIgnore
     public Set<OnmsMonitoredService> getMonitoredServices() {
         return m_monitoredServices ;
     }

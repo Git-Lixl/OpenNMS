@@ -33,12 +33,14 @@ import static org.opennms.core.utils.InetAddressUtils.toInteger;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.opennms.core.network.InetAddressXmlAdapter;
 
 @SuppressWarnings("serial")
@@ -122,13 +124,23 @@ public class OnmsMonitoredServiceDetail implements Serializable, Comparable<Onms
     }
 
     @XmlAttribute(name="isMonitored")
+    @JsonProperty(value="isMonitored")
     public boolean isMonitored() {
         return m_isMonitored;
     }
 
     @XmlAttribute(name="isDown")
+    @JsonProperty(value="isDown")
     public boolean isDown() {
         return m_isDown;
+    }
+
+    public void setDown(boolean isDown) {
+        m_isDown = isDown;
+    }
+
+    public void setMonitored(boolean isMonitored) {
+        m_isMonitored = isMonitored;
     }
 
     @XmlAttribute(name="id")
@@ -159,4 +171,31 @@ public class OnmsMonitoredServiceDetail implements Serializable, Comparable<Onms
         return getServiceName().compareToIgnoreCase(o.getServiceName());
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() == getClass()) {
+            OnmsMonitoredServiceDetail other = (OnmsMonitoredServiceDetail)obj;
+            boolean equals = Objects.equals(m_id, other.m_id)
+                    && Objects.equals(m_ipAddress, other.m_ipAddress)
+                    && Objects.equals(m_isDown, other.m_isDown)
+                    && Objects.equals(m_isMonitored, other.m_isMonitored)
+                    && Objects.equals(m_nodeLabel, other.m_nodeLabel)
+                    && Objects.equals(m_serviceName, other.m_serviceName)
+                    && Objects.equals(m_status, other.m_status)
+                    && Objects.equals(m_statusCode, other.m_statusCode);
+            return equals;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_id, m_ipAddress, m_isDown, m_isMonitored, m_nodeLabel, m_serviceName, m_status, m_statusCode);
+    }
 }
