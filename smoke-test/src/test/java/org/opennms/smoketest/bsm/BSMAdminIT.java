@@ -13,7 +13,7 @@
  * <p>
  * OpenNMS(R) is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR RemoteHandler PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  * <p>
  * You should have received a copy of the GNU Affero General Public License
@@ -26,24 +26,25 @@
  * http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.smoketest;
+package org.opennms.smoketest.bsm;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+import org.opennms.smoketest.OpenNMSSeleniumTestCase;
+import org.opennms.smoketest.RequisitionUtils;
+import org.opennms.smoketest.VaadinSeleniumTestCase;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class BSMAdminIT extends OpenNMSSeleniumTestCase {
+public class BSMAdminIT extends VaadinSeleniumTestCase {
 
     private final String RENAMED_SERVICE_NAME = "renamed_service";
-    private final String BSM_ADMIN_URL = BASE_URL + "opennms/admin/bsm/adminpage.jsp";
     private final String BASIC_SERVICE_NAME = "BasicService";
-
 
     private final String IP_Service_Select_XPATH = "//*[@id=\"ipServiceSelect\"]";
     private final String ADD_BUTTON_XPATH = IP_Service_Select_XPATH + "/div[2]/div[1]/span/span";
@@ -82,6 +83,7 @@ public class BSMAdminIT extends OpenNMSSeleniumTestCase {
                 "<policies/>\n" +
                 "</foreign-source>";
         requisitionUtils.setupTestRequisition(requisitionXML, foreignSourceXML);
+        wait.until(requisitionUtils.waitForNodesInDatabase(1));
     }
 
     private void removeTestSetup() throws Exception {
@@ -91,7 +93,7 @@ public class BSMAdminIT extends OpenNMSSeleniumTestCase {
 
     @Before
     public void before() throws Exception {
-        m_driver.get(BSM_ADMIN_URL);
+        visit(Page.BSM_ADMIN);
         switchToVaadinFrame();
     }
 
@@ -137,64 +139,56 @@ public class BSMAdminIT extends OpenNMSSeleniumTestCase {
 
     @Test
     public void testCanHandelIpServicesDuringEdit() throws Exception {
-        //Create test data and wait for it to show up
-        createTestSetup();
-        wait.until(requisitionUtils.new WaitForNodesInDatabase(1));
+        try {
+            //Create test data and wait for it to show up
+            createTestSetup();
 
-        //Create BusinessService open editor
-        testCanCreateMinimalBusinessService();
-        findElementById("editButton-" + BASIC_SERVICE_NAME).click();
-        wait.until(pageContainsText("Business Service Edit"));
+            //Create BusinessService open editor
+            testCanCreateMinimalBusinessService();
+            findElementById("editButton-" + BASIC_SERVICE_NAME).click();
+            wait.until(pageContainsText("Business Service Edit"));
 
-        //Check that the ipServices are known
-        wait.until(pageContainsText(IP_SERVICE_1));
-        wait.until(pageContainsText(IP_SERVICE_2));
-        wait.until(pageContainsText(IP_SERVICE_3));
-        wait.until(pageContainsText(IP_SERVICE_4));
+            //Check that the ipServices are known
+            wait.until(pageContainsText(IP_SERVICE_1));
+            wait.until(pageContainsText(IP_SERVICE_2));
+            wait.until(pageContainsText(IP_SERVICE_3));
+            wait.until(pageContainsText(IP_SERVICE_4));
 
-        //Locate relevant components
-        findElementById("ipServiceSelect");
-        WebElement addButton = findElementByXpath(ADD_BUTTON_XPATH);
-        findElementByXpath(REMOVE_BUTTON_XPATH);
+            //Locate relevant components
+            findElementById("ipServiceSelect");
+            WebElement addButton = findElementByXpath(ADD_BUTTON_XPATH);
+            findElementByXpath(REMOVE_BUTTON_XPATH);
 
-        //Check for not selected ipServices
-        findElementByXpath(IP_SERVICE_1_XPATH_SELECTED_NOT);
-        findElementByXpath(IP_SERVICE_2_XPATH_SELECTED_NOT);
+            //Check for not selected ipServices
+            findElementByXpath(IP_SERVICE_1_XPATH_SELECTED_NOT);
+            findElementByXpath(IP_SERVICE_2_XPATH_SELECTED_NOT);
 
-        //Add ipServices to selection
-        addButton.click();
-        addButton.click();
-        addButton.click();
+            //Add ipServices to selection
+            addButton.click();
+            addButton.click();
+            addButton.click();
 
-        //Check for selected ipServices
-        findElementByXpath(IP_SERVICE_1_XPATH_SELECTED);
-        findElementByXpath(IP_SERVICE_2_XPATH_SELECTED);
+            //Check for selected ipServices
+            findElementByXpath(IP_SERVICE_1_XPATH_SELECTED);
+            findElementByXpath(IP_SERVICE_2_XPATH_SELECTED);
 
-        findElementById("saveButton").click();
+            findElementById("saveButton").click();
 
-        //Open the BusinessService and check the ipServices are in place
-        wait.until(pageContainsText("edit"));
-        findElementById("editButton-BasicService").click();
+            //Open the BusinessService and check the ipServices are in place
+            wait.until(pageContainsText("edit"));
+            findElementById("editButton-BasicService").click();
 
-        //Check for selected ipServices
-        wait.until(pageContainsText("Cancel"));
-        findElementByXpath(IP_SERVICE_1_XPATH_SELECTED);
-        findElementByXpath(IP_SERVICE_2_XPATH_SELECTED);
+            //Check for selected ipServices
+            wait.until(pageContainsText("Cancel"));
+            findElementByXpath(IP_SERVICE_1_XPATH_SELECTED);
+            findElementByXpath(IP_SERVICE_2_XPATH_SELECTED);
 
-        //Close dialog an delete BusinessService
-        findElementById("cancelButton").click();
-        findElementById("deleteButton-BasicService").click();
+            //Close dialog an delete BusinessService
+            findElementById("cancelButton").click();
+            findElementById("deleteButton-BasicService").click();
 
-        removeTestSetup();
-    }
-
-    // switches to the embedded vaadin iframe
-    private void switchToVaadinFrame() {
-        m_driver.switchTo().frame(findElementByXpath("/html/body/div/iframe"));
-    }
-
-    // go back to the content "frame"
-    private void switchToDefaultFrame() {
-        m_driver.switchTo().defaultContent();
+        } finally {
+            removeTestSetup();
+        }
     }
 }

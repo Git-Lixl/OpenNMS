@@ -13,7 +13,7 @@
  * <p>
  * OpenNMS(R) is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR RemoteHandler PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  * <p>
  * You should have received a copy of the GNU Affero General Public License
@@ -26,7 +26,7 @@
  * http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.smoketest;
+package org.opennms.smoketest.bsm;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -36,17 +36,15 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.opennms.core.web.HttpClientWrapper;
+import org.opennms.smoketest.VaadinSeleniumTestCase;
 
 import com.google.common.net.MediaType;
 
-public class BSMMasterPageIT extends OpenNMSSeleniumTestCase {
-
-    private static final String BSM_MASTER_PAGE_URL = BASE_URL + "opennms/admin/bsm/masterpage.jsp";
+public class BSMMasterPageIT extends VaadinSeleniumTestCase {
 
     private static final String BSM_REST_API_URL = BASE_URL + "opennms/api/v2/business-services";
 
@@ -84,10 +82,9 @@ public class BSMMasterPageIT extends OpenNMSSeleniumTestCase {
     }
 
     private void gotoMasterPage() {
-        m_driver.navigate().to(BSM_MASTER_PAGE_URL);
+        visit(Page.BSM_MASTER);
         // we are embedding vaadin in an iframe, so we have to switch there, otherwise findElements does not work
-        m_driver.switchTo().frame(findElementById("vaadin-content"));
-
+        switchToVaadinFrame();
     }
 
     /**
@@ -103,15 +100,10 @@ public class BSMMasterPageIT extends OpenNMSSeleniumTestCase {
             HttpPost request = new HttpPost(BSM_REST_API_URL);
             request.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
 
-            StringEntity params = new StringEntity("{" +
-                    "\"name\":\"" + prefix + "-name\"," +
-                    "\"attributes\":{\"attribute\":[{\"key\":\"" + prefix + "-key\",\"value\":\"" + prefix + "-value\"}]}" +
-                    "}");
-            request.setEntity(params);
 
             try (CloseableHttpResponse response = httpClient.execute(request)) {
                 Assert.assertEquals(201, response.getStatusLine().getStatusCode());
-                // Determine the location of the created object to delete it afterwards
+                // Determine the LOCATION of the created object to delete it afterwards
                 Header[] locations = response.getHeaders("Location");
                 Assert.assertNotNull(locations);
                 return locations[0].getValue();

@@ -20,13 +20,13 @@ import com.google.common.collect.Collections2;
 /**
  * Verifies that the Vaadin JMX Configuration Generator Application is deployed correctly.
  */
-public class JmxConfigurationGeneratorIT extends OpenNMSSeleniumTestCase {
+public class JmxConfigurationGeneratorIT extends VaadinSeleniumTestCase {
 
     private static final String MBEANS_VIEW_TREE_WAIT_NAME = "com.mchange.v2.c3p0";
 
     @Before
     public void before() {
-        m_driver.get(BASE_URL + "opennms/admin/jmxConfigGenerator.jsp");
+        visit(Page.JMX_CONFIGURATION);
         switchToVaadinFrame();
     }
 
@@ -106,18 +106,13 @@ public class JmxConfigurationGeneratorIT extends OpenNMSSeleniumTestCase {
         Assert.assertEquals(7, find("<comp-member", jmxDatacollectionConfigContent));
     }
 
-    // switches to the embedded vaadin iframe
-    private void switchToVaadinFrame() {
-        m_driver.switchTo().frame(findElementByXpath("/html/body/div/iframe"));
-    }
-
     private void updateConnection() {
         updateElementValue("port", "18980");
 
         // configure authentication
         if (!findElementById("authenticate").isSelected()) {
             findElementById("authenticate").findElement(By.tagName("input")).click();
-        };
+        }
         updateElementValue("authenticateUser", "admin");
         updateElementValue("authenticatePassword", "admin");
     }
@@ -138,11 +133,6 @@ public class JmxConfigurationGeneratorIT extends OpenNMSSeleniumTestCase {
                 return value.equals(findElementById(elementId).getAttribute("value"));
             }
         });
-    }
-
-    // go back to the content "frame"
-    private void switchToDefaultFrame() {
-        m_driver.switchTo().defaultContent();
     }
 
     private void selectNodeByName(final String name, boolean select) throws InterruptedException {
