@@ -28,22 +28,20 @@
 package org.opennms.smoketest;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.util.Iterator;
 
-import com.google.common.base.Throwables;
-import com.google.common.net.HttpHeaders;
-import com.google.common.net.MediaType;
+import javax.xml.bind.JAXB;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.opennms.core.web.HttpClientWrapper;
 import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsNodeList;
+import org.opennms.netmgt.provision.persist.foreignsource.ForeignSource;
+import org.opennms.netmgt.provision.persist.requisition.Requisition;
+import org.opennms.web.rest.api.model.IpInterfaceDTO;
+import org.opennms.web.rest.api.model.IpInterfaceListDTO;
+import org.opennms.web.rest.client.RestClient;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.slf4j.Logger;
@@ -63,40 +61,52 @@ public class RequisitionUtils {
 
     private final OpenNMSSeleniumTestCase m_testCase;
 
+    private final RestClient m_restClient;
+
     public RequisitionUtils(OpenNMSSeleniumTestCase testCase) {
         m_testCase = testCase;
+        m_restClient = new RestClient(OpenNMSSeleniumTestCase.BASE_URL, OpenNMSSeleniumTestCase.BASIC_AUTH_USERNAME, OpenNMSSeleniumTestCase.BASIC_AUTH_PASSWORD);
     }
 
-    protected void createNode(String nodeXML) throws IOException, InterruptedException {
-        m_testCase.sendPost("/rest/nodes", nodeXML);
+    public void createNode(String nodeXML) throws IOException, InterruptedException {
+        m_restClient.nodes().create(JAXB.unmarshal(nodeXML, OnmsNode.class));
     }
 
-    protected void setupTestRequisition(String requisitionXML, String foreignSourceXML) throws IOException, InterruptedException {
-        m_testCase.sendPost("/rest/requisitions/", requisitionXML);
+    // TODO refactor to use one single restClient convenient method
+    public void setupTestRequisition(String requisitionXML, String foreignSourceXML) throws IOException, InterruptedException {
+        final Requisition requisition = JaxbUtils.unmarshal(Requisition.class, requisitionXML);
+        m_restClient.requisitions().create(requisition);
         if (foreignSourceXML != null && !"".equals(foreignSourceXML)) {
-            m_testCase.sendPost("/rest/foreignSources", foreignSourceXML);
+            m_restClient.foreignSources().create(JaxbUtils.unmarshal(ForeignSource.class, foreignSourceXML));
         }
-        HttpRequestBase request = new HttpPut(OpenNMSSeleniumTestCase.BASE_URL + "/opennms/rest/requisitions/" + m_testCase.REQUISITION_NAME + "/import");
-        m_testCase.doRequest(request);
+        m_restClient.requisitions().startImport(OpenNMSSeleniumTestCase.REQUISITION_NAME);
     }
 
-    protected void deleteNode(final String foreignId) throws IOException, InterruptedException {
-        m_testCase.sendDelete("/rest/nodes/" + m_testCase.REQUISITION_NAME + ":" + foreignId);
+    // TODO refactor to use one single restClient convenient method
+    public void deleteNode(final String foreignId) throws IOException, InterruptedException {
+        // At the moment we cannot delete the whole node object tree. We have to manually disconnect some links, eg. the ip interfaces
+        IpInterfaceListDTO list = m_restClient.ipInterfaces().list(OpenNMSSeleniumTestCase.REQUISITION_NAME, foreignId);
+        Iterator<IpInterfaceDTO> iterator = list.iterator();
+        while (iterator.hasNext()) {
+            IpInterfaceDTO ipInterfaceDTO = iterator.next();
+            m_restClient.ipInterfaces().delete(OpenNMSSeleniumTestCase.REQUISITION_NAME, foreignId, ipInterfaceDTO.getIpAddress().toString());
+        }
+        m_restClient.nodes().delete(OpenNMSSeleniumTestCase.REQUISITION_NAME, foreignId);
     }
 
-    protected void deleteForeignSource() throws IOException, InterruptedException {
-        m_testCase.sendDelete("/rest/foreignSources/" + m_testCase.REQUISITION_NAME);
+    public void deleteForeignSource() throws IOException, InterruptedException {
+        m_restClient.foreignSources().delete(OpenNMSSeleniumTestCase.REQUISITION_NAME);
     }
 
-    protected void deleteTestRequisition() throws Exception {
+    // TODO refactor to use restClient
+    public void deleteTestRequisition() throws Exception {
         final Integer responseCode = m_testCase.doRequest(new HttpGet(OpenNMSSeleniumTestCase.BASE_URL + "/opennms/rest/requisitions/" + OpenNMSSeleniumTestCase.REQUISITION_NAME));
         LOG.debug("Checking for existing test requisition: {}", responseCode);
         if (responseCode == 404 || responseCode == 204) {
             LOG.debug("deleteTestRequisition: already deleted");
             return;
         }
-
-        for (OnmsNode node : getNodesInDatabase(OpenNMSSeleniumTestCase.REQUISITION_NAME)) {
+        for (OnmsNode node : getNodesInDatabase()) {
             m_testCase.doRequest(new HttpDelete(OpenNMSSeleniumTestCase.BASE_URL + "/opennms/rest/nodes/" + node.getId()));
         }
         m_testCase.doRequest(new HttpDelete(OpenNMSSeleniumTestCase.BASE_URL + "/opennms/rest/requisitions/" + OpenNMSSeleniumTestCase.REQUISITION_NAME));
@@ -106,31 +116,20 @@ public class RequisitionUtils {
         m_testCase.doRequest(new HttpGet(OpenNMSSeleniumTestCase.BASE_URL + "/opennms/rest/requisitions"));
     }
 
-    public OnmsNodeList getNodesInDatabase(final String foreignSource) {
-        try (HttpClientWrapper httpClient = HttpClientWrapper.create()) {
-            httpClient.addBasicCredentials(OpenNMSSeleniumTestCase.BASIC_AUTH_USERNAME, OpenNMSSeleniumTestCase.BASIC_AUTH_PASSWORD);
-            httpClient.usePreemptiveAuth();
-            HttpGet request = new HttpGet(OpenNMSSeleniumTestCase.BASE_URL + "/opennms/rest/nodes");
-            request.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_UTF_8.toString());
-
-            try (CloseableHttpResponse response = httpClient.execute(request)) {
-                try (Reader reader = new InputStreamReader(response.getEntity().getContent())) {
-                    return JaxbUtils.unmarshal(OnmsNodeList.class, reader);
-                }
-            }
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
+    public OnmsNodeList getNodesInDatabase() {
+        return m_restClient.nodes().list();
     }
 
-    protected final class WaitForNodesInDatabase implements ExpectedCondition<Boolean> {
-        private final int m_numberToMatch;
-        public WaitForNodesInDatabase(int numberOfNodes) {
-            m_numberToMatch = numberOfNodes;
-        }
+    public ExpectedCondition<Boolean> waitForNodesInDatabase(int numberOfNodesToMatch) {
+        return new ExpectedCondition<Boolean>() {
+            @Override
+            public Boolean apply(WebDriver input) {
+                return getNodesInDatabase().size() == numberOfNodesToMatch;
+            }
+        };
+    }
 
-        @Override public Boolean apply(final WebDriver input) {
-            return getNodesInDatabase(OpenNMSSeleniumTestCase.REQUISITION_NAME).size() == m_numberToMatch;
-        }
+    public RestClient getRestClient() {
+        return m_restClient;
     }
 }

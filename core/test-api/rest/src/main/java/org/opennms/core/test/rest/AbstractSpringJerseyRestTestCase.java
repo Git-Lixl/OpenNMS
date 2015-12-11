@@ -460,10 +460,17 @@ public abstract class AbstractSpringJerseyRestTestCase {
     }
 
     protected String sendRequest(final String requestType, final String url, final Map<?,?> parameters, final int expectedStatus, final String expectedUrlSuffix) throws Exception {
+        return sendRequest(requestType, MediaType.APPLICATION_XML_TYPE, url, parameters, expectedStatus, expectedUrlSuffix);
+    }
+
+    protected String sendRequest(final String requestType, MediaType acceptMediaType, final String url, final Map<?,?> parameters, final int expectedStatus, final String expectedUrlSuffix) throws Exception {
         final MockHttpServletRequest request = createRequest(servletContext, requestType, url, getUser(), getUserRoles());
         request.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         request.setParameters(parameters);
         request.setQueryString(getQueryString(parameters));
+        if (acceptMediaType != null) {
+            request.addHeader(ACCEPT, acceptMediaType.toString());
+        }
         return sendRequest(request, expectedStatus, expectedUrlSuffix);
     }
 

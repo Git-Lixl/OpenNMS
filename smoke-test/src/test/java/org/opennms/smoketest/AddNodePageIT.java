@@ -106,6 +106,6 @@ public class AddNodePageIT extends OpenNMSSeleniumTestCase {
         // Click on the Provisioning Requisitions breadcrumb
         findElementByLink("Provisioning Requisitions").click();
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//td[text()='" + REQUISITION_NAME + "']")));
-        wait.until(m_requisitionUtils.new WaitForNodesInDatabase(1));
+        wait.until(m_requisitionUtils.waitForNodesInDatabase(1));
     }
 }
