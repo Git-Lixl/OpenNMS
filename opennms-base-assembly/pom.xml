@@ -579,7 +579,7 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.features</groupId>
-      <artifactId>org.opennms.features.rest-commons</artifactId>
+      <artifactId>org.opennms.features.rest-model</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

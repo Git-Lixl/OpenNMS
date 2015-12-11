@@ -31,7 +31,7 @@
             <bundle>mvn:org.opennms.features.bsm/org.opennms.features.bsm.persistence.api/${project.version}</bundle>
             <bundle>mvn:org.opennms.features.bsm/org.opennms.features.bsm.service.api/${project.version}</bundle>
             <bundle>wrap:mvn:com.google.guava/guava/${guavaVersion}</bundle>
-            <bundle>mvn:org.opennms.features/org.opennms.features.rest-commons/${project.version}</bundle>
+            <bundle>mvn:org.opennms.features/org.opennms.features.rest-model/${project.version}</bundle>
           </bundles>
         </configuration>
       </plugin>
@@ -45,7 +45,7 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.features</groupId>
-      <artifactId>org.opennms.features.rest-commons</artifactId>
+      <artifactId>org.opennms.features.rest-model</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>

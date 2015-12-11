@@ -211,6 +211,12 @@
       <artifactId>slf4j-api</artifactId>
       <scope>${onmsLibScope}</scope>
     </dependency>
+    <dependency>
+      <groupId>org.opennms.features</groupId>
+      <artifactId>org.opennms.features.rest-model</artifactId>
+      <version>${project.version}</version>
+      <scope>${onmsLibScope}</scope>
+    </dependency>
 
     <!-- CORS support -->
     <dependency>
