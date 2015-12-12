@@ -13,7 +13,7 @@
  * <p>
  * OpenNMS(R) is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR RemoteHandler PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  * <p>
  * You should have received a copy of the GNU Affero General Public License
@@ -36,6 +36,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -93,13 +94,18 @@ public class BSMMasterPageIT extends VaadinSeleniumTestCase {
      * The name of the service, and its key-value attributes are all prefixed
      * with the given value.
      */
-    private static String createServiceWithPrefix(String prefix) throws IOException {
+    private String createServiceWithPrefix(String prefix) throws IOException {
         try (HttpClientWrapper httpClient = HttpClientWrapper.create()) {
             httpClient.addBasicCredentials(BASIC_AUTH_USERNAME, BASIC_AUTH_PASSWORD);
             httpClient.usePreemptiveAuth();
             HttpPost request = new HttpPost(BSM_REST_API_URL);
             request.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
 
+            StringEntity params = new StringEntity("{" +
+                    "\"name\":\"" + prefix + "-name\"," +
+                    "\"attributes\":{\"attribute\":[{\"key\":\"" + prefix + "-key\",\"value\":\"" + prefix + "-value\"}]}" +
+                    "}");
+            request.setEntity(params);
 
             try (CloseableHttpResponse response = httpClient.execute(request)) {
                 Assert.assertEquals(201, response.getStatusLine().getStatusCode());
