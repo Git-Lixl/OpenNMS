@@ -31,6 +31,7 @@ package org.opennms.web.rest.v2;
 import java.util.Collections;
 
 import javax.servlet.ServletContext;
+import javax.ws.rs.core.MediaType;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -92,7 +93,7 @@ public class MonitoringLocationsServiceIT extends AbstractSpringJerseyRestTestCa
             sendPost("/monitoringLocations", location, 201, null);
         }
 
-        LOG.warn(sendRequest(GET, "/monitoringLocations/count", Collections.emptyMap(), 200));
+        LOG.warn(sendRequest(GET, MediaType.TEXT_PLAIN_TYPE, "/monitoringLocations/count", Collections.emptyMap(), 200, null));
 
         LOG.warn(sendRequest(GET, "/monitoringLocations", Collections.emptyMap(), 200));
 

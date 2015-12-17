@@ -28,13 +28,27 @@
 
 package org.opennms.web.rest.api.model;
 
+import java.util.Objects;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name="info")
+@XmlAccessorType(XmlAccessType.NONE)
 public class Info {
 
+    @XmlElement(name="displayVersion")
     private String displayVersion;
+
+    @XmlElement(name="version")
     private String version;
 
+    @XmlElement(name="packageName")
     private String packageName;
 
+    @XmlElement(name="packageDescription")
     private String packageDescription;
 
     public void setDisplayVersion(String displayVersion) {
@@ -67,5 +81,29 @@ public class Info {
 
     public String getVersion() {
         return version;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(displayVersion, version, packageDescription, packageName);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() == obj.getClass()) {
+            Info other = (Info) obj;
+            boolean equals = Objects.equals(displayVersion, other.displayVersion)
+                    && Objects.equals(version, other.version)
+                    && Objects.equals(packageName, other.packageName)
+                    && Objects.equals(packageDescription, other.packageDescription);
+            return equals;
+        }
+        return false;
     }
 }

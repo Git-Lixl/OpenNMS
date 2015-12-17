@@ -9,8 +9,8 @@
             "isMonitored": true, 
             "node": "node1", 
             "serviceName": "ICMP", 
-            "status": "Managed", 
-            "statusCode": "A"
+            "statusDescription": "Managed",
+            "status": "A"
         },
         {
             "id": "3",
@@ -19,8 +19,8 @@
             "isMonitored": true, 
             "node": "node1", 
             "serviceName": "SNMP", 
-            "status": "Managed", 
-            "statusCode": "A"
+            "statusDescription": "Managed",
+            "status": "A"
         },
         {
             "id": "5",
@@ -29,8 +29,8 @@
             "isMonitored": true, 
             "node": "node1", 
             "serviceName": "ICMP", 
-            "status": "Managed", 
-            "statusCode": "A"
+            "statusDescription": "Managed",
+            "status": "A"
         },
         {
             "id": "6",
@@ -39,8 +39,8 @@
             "isMonitored": true, 
             "node": "node1", 
             "serviceName": "HTTP", 
-            "status": "Managed", 
-            "statusCode": "A"
+            "statusDescription": "Managed",
+            "status": "A"
         },
         {
             "id": "8",
@@ -49,8 +49,8 @@
             "isMonitored": true, 
             "node": "node1", 
             "serviceName": "ICMP", 
-            "status": "Managed", 
-            "statusCode": "A"
+            "statusDescription": "Managed",
+            "status": "A"
         },
         {
             "id": "10",
@@ -59,8 +59,8 @@
             "isMonitored": true, 
             "node": "node1", 
             "serviceName": "ICMP", 
-            "status": "Managed", 
-            "statusCode": "A"
+            "statusDescription": "Managed",
+            "status": "A"
         },
         {
             "id": "17",
@@ -69,8 +69,8 @@
             "isMonitored": true, 
             "node": "node2", 
             "serviceName": "ICMP", 
-            "status": "Managed", 
-            "statusCode": "A"
+            "statusDescription": "Managed",
+            "status": "A"
         },
         {
             "id": "18",
@@ -79,8 +79,8 @@
             "isMonitored": true, 
             "node": "node2", 
             "serviceName": "SNMP", 
-            "status": "Managed", 
-            "statusCode": "A"
+            "statusDescription": "Managed",
+            "status": "A"
         },
         {
             "id": "20",
@@ -89,8 +89,8 @@
             "isMonitored": true, 
             "node": "node2", 
             "serviceName": "ICMP", 
-            "status": "Managed", 
-            "statusCode": "A"
+            "statusDescription": "Managed",
+            "status": "A"
         },
         {
             "id": "21",
@@ -99,8 +99,8 @@
             "isMonitored": true, 
             "node": "node2", 
             "serviceName": "HTTP", 
-            "status": "Managed", 
-            "statusCode": "A"
+            "statusDescription": "Managed",
+            "status": "A"
         }
     ], 
     "totalCount": 31

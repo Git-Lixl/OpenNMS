@@ -33,7 +33,9 @@ import org.opennms.web.rest.client.RestClient;
 public class VaadinSeleniumTestCase extends OpenNMSSeleniumTestCase {
 
     public enum Page {
-        BSM_MASTER(BASE_URL + "opennms/admin/bsm/masterpage.jsp"), BSM_ADMIN(BASE_URL + "opennms/admin/bsm/adminpage.jsp"), JMX_CONFIGURATION(BASE_URL + "opennms/admin/jmxConfigGenerator.jsp");
+        BSM_MASTER(BASE_URL + "opennms/admin/bsm/masterpage.jsp"),
+        BSM_ADMIN(BASE_URL + "opennms/admin/bsm/adminpage.jsp"),
+        JMX_CONFIGURATION(BASE_URL + "opennms/admin/jmxConfigGenerator.jsp");
 
         private final String url;
 

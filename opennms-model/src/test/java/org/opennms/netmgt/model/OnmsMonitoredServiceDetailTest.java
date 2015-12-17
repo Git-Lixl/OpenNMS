@@ -61,12 +61,11 @@ public class OnmsMonitoredServiceDetailTest {
     public void testMarshalAndUnmarshalXml() {
         final OnmsMonitoredServiceDetail detail = createServiceDetail();
         final String xmlString = XmlTest.marshalToXmlWithJaxb(detail);
-        XmlTest.assertXmlEquals("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
-                "<monitored-service isDown=\"true\" id=\"1\" isMonitored=\"true\" statusCode=\"1234\">\n" +
+        XmlTest.assertXmlEquals("<monitored-service isDown=\"true\" id=\"1\" isMonitored=\"true\" status=\"1234\">\n" +
                 "    <ipAddress>127.0.0.1</ipAddress>\n" +
                 "    <node>some label</node>\n" +
                 "    <serviceName>some service</serviceName>\n" +
-                "    <status>some status</status>\n" +
+                "    <statusDescription>some status</statusDescription>\n" +
                 "</monitored-service>", xmlString);
 
         OnmsMonitoredServiceDetail unmarshalled = XmlTest.unmarshalFromXmlWithJaxb(xmlString, OnmsMonitoredServiceDetail.class);

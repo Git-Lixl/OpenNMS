@@ -28,7 +28,10 @@
 
 package org.opennms.web.rest.v2;
 
+import java.util.Collections;
+
 import javax.servlet.ServletContext;
+import javax.ws.rs.core.MediaType;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -112,6 +115,8 @@ public class NodeRestServiceIT extends AbstractSpringJerseyRestTestCase {
         LOG.warn(sendRequest(GET, url, parseParamData("_s=label==%2521%2524%2527%2528%2529%252B%252C%253B%253D"), 204));
 
         //LOG.warn(sendRequest(GET, url, parseParamData("limit=2&$filter=id eq '1'"), 200));
+
+        LOG.warn(sendRequest(GET, MediaType.TEXT_PLAIN_TYPE, String.format("%s/count", url), Collections.emptyMap(), 200, null));
 
     }
 

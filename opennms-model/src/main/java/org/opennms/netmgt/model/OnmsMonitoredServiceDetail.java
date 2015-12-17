@@ -77,7 +77,7 @@ public class OnmsMonitoredServiceDetail implements Serializable, Comparable<Onms
         m_id = service.getXmlId();
     }
 
-    @XmlElement(name="status")
+    @XmlElement(name="statusDescription")
     public String getStatus() {
         return m_status;
     }
@@ -86,7 +86,7 @@ public class OnmsMonitoredServiceDetail implements Serializable, Comparable<Onms
         this.m_status = status;
     }
 
-    @XmlAttribute(name="statusCode")
+    @XmlAttribute(name="status")
     public String getStatusCode() {
         return m_statusCode;
     }

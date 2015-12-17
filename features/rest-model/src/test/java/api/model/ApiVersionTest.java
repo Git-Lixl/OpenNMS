@@ -26,7 +26,7 @@
  * http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.web.rest.api;
+package api.model;
 
 import org.junit.Assert;
 import org.junit.Test;

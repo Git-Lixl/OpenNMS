@@ -30,8 +30,6 @@ package org.opennms.smoketest;
 import java.io.IOException;
 import java.util.Iterator;
 
-import javax.xml.bind.JAXB;
-
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.opennms.core.xml.JaxbUtils;
@@ -69,7 +67,7 @@ public class RequisitionUtils {
     }
 
     public void createNode(String nodeXML) throws IOException, InterruptedException {
-        m_restClient.nodes().create(JAXB.unmarshal(nodeXML, OnmsNode.class));
+        m_restClient.nodes().create(JaxbUtils.unmarshal(OnmsNode.class, nodeXML));
     }
 
     // TODO refactor to use one single restClient convenient method

@@ -62,11 +62,12 @@ public class IpInterfaceDTO implements Serializable {
     private String id;
     private InetAddress ipAddress;
     private String ipHostName;
-    private boolean isManaged;
+    private String isManaged;
     private Date ipLastCapsdPoll;
     private Integer ifIndex;
     private String snmpType;
     private boolean isDown;
+    private Integer nodeId;
 
 
     public IpInterfaceDTO() {
@@ -77,13 +78,14 @@ public class IpInterfaceDTO implements Serializable {
         this.id = onmsIpInterface.getInterfaceId();
         this.ipAddress = onmsIpInterface.getIpAddress();
         this.ipHostName = onmsIpInterface.getIpHostName();
-        this.isManaged = "M".equals(onmsIpInterface.getIsManaged());
+        this.isManaged = onmsIpInterface.getIsManaged();
         this.ifIndex = onmsIpInterface.getIfIndex();
         this.snmpType = onmsIpInterface.getPrimaryString();
         this.isDown = onmsIpInterface.isDown();
         if (onmsIpInterface.getNodeId() != null) {
             String nodeCriteria = NodeCriteriaBuilder.getNodeCriteria(onmsIpInterface.getNode());
             nodeLocation = ResourceLocationFactory.createNodeLocation(nodeCriteria);
+            nodeId = onmsIpInterface.getNodeId();
             if (ipAddress != null) {
                 location = ResourceLocationFactory.createIpInterfaceLocation(nodeCriteria, ipAddress.toString());
                 servicesLocation = ResourceLocationFactory.createIpServiceLocation(nodeCriteria, ipAddress.toString());
@@ -123,11 +125,11 @@ public class IpInterfaceDTO implements Serializable {
 
     @XmlAttribute(name="isManaged")
     @JsonProperty(value="isManaged")
-    public boolean isManaged() {
+    public String getIsManaged() {
         return isManaged;
     }
 
-    public void setManaged(boolean isManaged) {
+    public void setIsManaged(String isManaged) {
         this.isManaged = isManaged;
     }
 
@@ -193,6 +195,17 @@ public class IpInterfaceDTO implements Serializable {
     @JsonDeserialize(using = JsonResourceLocationDeserializationProvider.class)
     public ResourceLocation getServicesLocation() {
         return servicesLocation;
+    }
+
+    @Deprecated
+    @XmlElement(name="nodeId")
+    public Integer getNodeId() {
+        return nodeId;
+    }
+
+    @Deprecated
+    public void setNodeInt(Integer nodeId) {
+        this.nodeId = nodeId;
     }
 
     public void setLocation(ResourceLocation location) {

@@ -129,7 +129,11 @@ public class OnmsMonitoredServiceResource extends OnmsRestService {
     @Path("{service}")
     public OnmsMonitoredServiceDetail getService(@PathParam("nodeCriteria") String nodeCriteria, @PathParam("ipAddress") String ipAddress, @PathParam("service") String service) {
         OnmsNode node = m_nodeDao.get(nodeCriteria);
-        return new OnmsMonitoredServiceDetail(node.getIpInterfaceByIpAddress(ipAddress).getMonitoredServiceByServiceType(service));
+        OnmsMonitoredService monitoredServiceByServiceType = node.getIpInterfaceByIpAddress(ipAddress).getMonitoredServiceByServiceType(service);
+        if (monitoredServiceByServiceType != null) {
+            return new OnmsMonitoredServiceDetail(monitoredServiceByServiceType);
+        }
+        return null;
     }
     
     /**
