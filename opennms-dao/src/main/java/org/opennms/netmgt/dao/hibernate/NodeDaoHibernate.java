@@ -48,7 +48,6 @@ import org.opennms.core.criteria.restrictions.EqRestriction;
 import org.opennms.core.criteria.restrictions.NeRestriction;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsCategory;
-import org.opennms.netmgt.model.OnmsDistPoller;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
@@ -102,12 +101,6 @@ public class NodeDaoHibernate extends AbstractDaoHibernate<OnmsNode, Integer> im
             labelsByNodeId.put((Integer)row[0], (String)row[1]);
         }
         return labelsByNodeId;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public List<OnmsNode> findNodes(final OnmsDistPoller distPoller) {
-        return find("from OnmsNode where distPoller = ?", distPoller);
     }
 
     /** {@inheritDoc} */

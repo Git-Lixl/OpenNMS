@@ -78,7 +78,7 @@ public class NsclientCollectorTest extends AbstractNsclientTest {
         @Override
         public void visitAttribute(CollectionAttribute attribute) {
             count++;
-            Assert.assertEquals(10, Integer.parseInt(attribute.getNumericValue()));
+            Assert.assertEquals(10d, attribute.getNumericValue());
         }
     }
 

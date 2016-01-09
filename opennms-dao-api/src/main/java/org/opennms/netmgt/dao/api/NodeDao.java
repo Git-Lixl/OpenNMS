@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.opennms.netmgt.model.OnmsCategory;
-import org.opennms.netmgt.model.OnmsDistPoller;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.SurveillanceStatus;
@@ -79,14 +78,6 @@ public interface NodeDao extends LegacyOnmsDao<OnmsNode, Integer> {
      * @return a {@link java.util.Collection} object.
      */
     List<OnmsNode> findByLabel(String label);
-    
-    /**
-     * <p>findNodes</p>
-     *
-     * @param dp a {@link org.opennms.netmgt.model.OnmsDistPoller} object.
-     * @return a {@link java.util.Collection} object.
-     */
-    List<OnmsNode> findNodes(OnmsDistPoller dp);
     
     /**
      * <p>getHierarchy</p>

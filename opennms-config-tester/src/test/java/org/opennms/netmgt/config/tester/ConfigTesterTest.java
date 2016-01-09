@@ -215,6 +215,16 @@ public class ConfigTesterTest {
     }
 
     @Test
+    public void testJmxConfig() {
+        testConfigFile("jmx-config.xml");
+    }
+
+    @Test
+    public void testJmsNorthbounderConfiguration() {
+        testConfigFile("jms-northbounder-configuration.xml");
+    }
+
+    @Test
     public void testJmxDatacollectionConfig() {
         testConfigFile("jmx-datacollection-config.xml");
     }
@@ -222,14 +232,6 @@ public class ConfigTesterTest {
     @Test
     public void testKscPerformanceReports() {
         testConfigFile("ksc-performance-reports.xml");
-    }
-
-    @Test
-    /**
-     * FIXME: Database access.
-     */
-    public void testLinkdConfiguration() {
-        ignoreConfigFile("linkd-configuration.xml");
     }
 
     @Test
@@ -248,11 +250,6 @@ public class ConfigTesterTest {
     }
 
     @Test
-    public void testMap() {
-        testConfigFile("map.properties");
-    }
-
-    @Test
     /**
      * FIXME: Database access.
      */
@@ -266,11 +263,6 @@ public class ConfigTesterTest {
     }
 
     @Test
-    public void testModelImporter() {
-        testConfigFile("model-importer.properties");
-    }
-
-    @Test
     /**
      * FIXME: Don't know why this is ignored.
      * 
@@ -278,14 +270,6 @@ public class ConfigTesterTest {
      */
     public void testModemConfig() {
         ignoreConfigFile("modemConfig.properties");
-    }
-
-    @Test
-    /**
-     * FIXME: Use LocationMonitorDaoHibernate to parse the config file
-     */
-    public void testMonitoringLocations() {
-        ignoreConfigFile("monitoring-locations.xml");
     }
 
     @Test
@@ -316,6 +300,14 @@ public class ConfigTesterTest {
     @Ignore
     public void testNsclientDatacollectionConfig() {
         testConfigFile("nsclient-datacollection-config.xml");
+    }
+
+    /**
+     * Used by the ActiveMQ broker embedded inside applicationContext-daemon.xml.
+     */
+    @Test
+    public void testOpennmsActivemq() {
+        ignoreConfigFile("opennms-activemq.xml");
     }
 
     @Test
@@ -528,12 +520,6 @@ public class ConfigTesterTest {
     public void testWmiDatacollectionConfig() {
         testConfigFile("wmi-datacollection-config.xml");
     }
-
-    @Test
-    public void testXmlrpcdConfiguration() {
-        testConfigFile("xmlrpcd-configuration.xml");
-    }
-
 
     @Test
     public void testVMwareCimDatacollectionConfig() {

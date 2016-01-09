@@ -49,7 +49,6 @@ import org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy;
 import org.opennms.netmgt.config.datacollection.StorageStrategy;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.model.NetworkBuilder;
-import org.opennms.netmgt.model.OnmsDistPoller;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.snmp.SnmpInstId;
@@ -76,8 +75,8 @@ public class PersistRegexSelectorStrategyTest {
     public void setUp() throws Exception {
         ipInterfaceDao = EasyMock.createMock(IpInterfaceDao.class);
         String localhost = InetAddress.getLocalHost().getHostAddress();
-        OnmsDistPoller distPoller = new OnmsDistPoller("localhost", localhost);
-        NetworkBuilder builder = new NetworkBuilder(distPoller);
+
+        NetworkBuilder builder = new NetworkBuilder();
         builder.addNode("myNode");
         builder.addInterface(localhost).setIsManaged("M").setIsSnmpPrimary("P");
         OnmsNode node = builder.getCurrentNode();
@@ -151,7 +150,7 @@ public class PersistRegexSelectorStrategyTest {
         Expression exp = parser.parseExpression("#name matches '^Alejandro.*'");
         StandardEvaluationContext context = new StandardEvaluationContext();
         context.setVariable("name", "Alejandro Galue");
-        boolean result = exp.getValue(context, Boolean.class);
+        boolean result = (Boolean)exp.getValue(context, Boolean.class);
         Assert.assertTrue(result);
     }
 }

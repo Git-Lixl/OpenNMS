@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.opennms</groupId>
     <artifactId>org.opennms.assemblies</artifactId>
-    <version>17.0.0-SNAPSHOT</version>
+    <version>18.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.assemblies</groupId>
@@ -256,6 +256,12 @@
       <groupId>org.opennms</groupId>
       <artifactId>opennms-rrd-jrobin</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>jrrd2-dependencies</artifactId>
+      <scope>test</scope>
+      <type>pom</type>
     </dependency>
     <dependency>
       <groupId>org.opennms</groupId>

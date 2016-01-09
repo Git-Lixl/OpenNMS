@@ -28,8 +28,10 @@
 
 package org.opennms.web.svclayer.support;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +42,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+
+import javax.ws.rs.core.MultivaluedMap;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.opennms.netmgt.events.api.EventConstants;
 import org.opennms.netmgt.events.api.EventProxy;
@@ -66,8 +71,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessResourceFailureException;
-
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class DefaultRequisitionAccessService implements RequisitionAccessService {
 	
@@ -217,7 +220,7 @@ public class DefaultRequisitionAccessService implements RequisitionAccessService
             }
         }
 
-        void updateRequisition(final MultivaluedMapImpl params) {
+        void updateRequisition(final MultivaluedMap<String,String> params) {
             final String foreignSource = m_foreignSource;
             LOG.debug("updateRequisition: Updating requisition with foreign source {}", foreignSource);
             if (params.isEmpty()) return;
@@ -230,7 +233,7 @@ public class DefaultRequisitionAccessService implements RequisitionAccessService
             }
         }
 
-        void updateNode(final String foreignId, final MultivaluedMapImpl params) {
+        void updateNode(final String foreignId, final MultivaluedMap<String,String> params) {
             final String foreignSource = m_foreignSource;
             LOG.debug("updateNode: Updating node with foreign source {} and foreign id {}", foreignSource, foreignId);
             if (params.isEmpty()) return;
@@ -246,7 +249,7 @@ public class DefaultRequisitionAccessService implements RequisitionAccessService
             }
         }
 
-        void updateInterface(final String foreignId, final String ipAddress, final MultivaluedMapImpl params) {
+        void updateInterface(final String foreignId, final String ipAddress, final MultivaluedMap<String,String> params) {
             final String foreignSource = m_foreignSource;
             LOG.debug("updateInterface: Updating interface {} on node {}/{}", ipAddress, foreignSource, foreignId);
             if (params.isEmpty()) return;
@@ -433,14 +436,27 @@ public class DefaultRequisitionAccessService implements RequisitionAccessService
         URL createSnapshot() throws MalformedURLException {
             flush();
 
-            final Requisition pending = getPendingForeignSourceRepository().getRequisition(getForeignSource());
-            final Requisition deployed = getDeployedForeignSourceRepository().getRequisition(getForeignSource());
+            final ForeignSourceRepository pendingForeignSourceRepository = getPendingForeignSourceRepository();
+            final String foreignSource = getForeignSource();
+            LOG.debug("createSnapshot(): foreignSource = {}", foreignSource);
 
-            final URL activeUrl = pending == null || (deployed != null && deployed.getDateStamp().compare(pending.getDateStamp()) > -1)
-                    ? getDeployedForeignSourceRepository().getRequisitionURL(getForeignSource())
-                        : RequisitionFileUtils.createSnapshot(getPendingForeignSourceRepository(), getForeignSource(), pending.getDate()).toURI().toURL();
+            final Requisition pending = pendingForeignSourceRepository.getRequisition(foreignSource);
+            LOG.debug("createSnapshot(): pending = {}", pending);
 
-                    return activeUrl;
+            final Requisition deployed = getDeployedForeignSourceRepository().getRequisition(foreignSource);
+            LOG.debug("createSnapshot(): deployed = {}", deployed);
+
+            final URL activeUrl;
+            final XMLGregorianCalendar pendingDateStamp = pending == null? null : pending.getDateStamp();
+
+            if (pending == null || (deployed != null && deployed.getDateStamp().compare(pendingDateStamp) > -1)) {
+                activeUrl = getDeployedForeignSourceRepository().getRequisitionURL(foreignSource);
+            } else {
+                final Date pendingDate = pending.getDate();
+                final File snapshot = RequisitionFileUtils.createSnapshot(pendingForeignSourceRepository, foreignSource, pendingDate);
+                activeUrl = snapshot.toURI().toURL();
+            }
+            return activeUrl;
         }
 
         private void flush() {
@@ -746,7 +762,7 @@ public class DefaultRequisitionAccessService implements RequisitionAccessService
     }
 
     @Override
-    public void updateRequisition(final String foreignSource, final MultivaluedMapImpl params) {
+    public void updateRequisition(final String foreignSource, final MultivaluedMap<String,String> params) {
         submitWriteOp(new Runnable() {
             @Override public void run() {
                 getAccessor(foreignSource).updateRequisition(params);
@@ -755,7 +771,7 @@ public class DefaultRequisitionAccessService implements RequisitionAccessService
     }
 
     @Override
-    public void updateNode(final String foreignSource, final String foreignId, final MultivaluedMapImpl params) {
+    public void updateNode(final String foreignSource, final String foreignId, final MultivaluedMap<String,String> params) {
         submitWriteOp(new Runnable() {
             @Override public void run() {
                 getAccessor(foreignSource).updateNode(foreignId, params);
@@ -764,7 +780,7 @@ public class DefaultRequisitionAccessService implements RequisitionAccessService
     }
 
     @Override
-    public void updateInterface(final String foreignSource, final String foreignId, final String ipAddress, final MultivaluedMapImpl params) {
+    public void updateInterface(final String foreignSource, final String foreignId, final String ipAddress, final MultivaluedMap<String,String> params) {
         submitWriteOp(new Runnable() {
             @Override public void run() {
                 getAccessor(foreignSource).updateInterface(foreignId, ipAddress, params);

@@ -28,9 +28,11 @@
 
 package org.opennms.web.api;
 
+import java.beans.PropertyEditor;
 import java.net.InetAddress;
 import java.util.Date;
 
+import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.opennms.netmgt.model.InetAddressTypeEditor;
@@ -44,15 +46,28 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-
 public abstract class RestUtils {
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(RestUtils.class);
 
-
-	public static void setBeanProperties(final Object bean, final MultivaluedMapImpl properties) {
-		final BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
+	/**
+	 * <p>Use Spring's {@link PropertyAccessorFactory} to set values on the specified bean.
+	 * This call registers several {@link PropertyEditor} classes to properly convert
+	 * values.</p>
+	 * 
+	 * <ul>
+	 * <li>{@link StringXmlCalendarPropertyEditor}</li>
+	 * <li>{@link ISO8601DateEditor}</li>
+	 * <li>{@link InetAddressTypeEditor}</li>
+	 * <li>{@link OnmsSeverityEditor}</li>
+	 * <li>{@link PrimaryTypeEditor}</li>
+	 * </ul>
+	 * 
+	 * @param bean
+	 * @param properties
+	 */
+	public static void setBeanProperties(final Object bean, final MultivaluedMap<String,String> properties) {
+	    final BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
 	    wrapper.registerCustomEditor(XMLGregorianCalendar.class, new StringXmlCalendarPropertyEditor());
 	    wrapper.registerCustomEditor(Date.class, new ISO8601DateEditor());
 	    wrapper.registerCustomEditor(InetAddress.class, new InetAddressTypeEditor());
@@ -62,7 +77,7 @@ public abstract class RestUtils {
 	        final String propertyName = convertNameToPropertyName(key);
 	        if (wrapper.isWritableProperty(propertyName)) {
 	            final String stringValue = properties.getFirst(key);
-				Object value = convertIfNecessary(wrapper, propertyName, stringValue);
+	            Object value = convertIfNecessary(wrapper, propertyName, stringValue);
 	            wrapper.setPropertyValue(propertyName, value);
 	        }
 	    }
@@ -105,5 +120,4 @@ public abstract class RestUtils {
 	    }
 	    return result.toString();
 	}
-
 }

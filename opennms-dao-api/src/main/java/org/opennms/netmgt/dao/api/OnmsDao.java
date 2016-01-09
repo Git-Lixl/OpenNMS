@@ -72,7 +72,7 @@ public interface OnmsDao<T, K extends Serializable> {
 
     T load(K id);
 
-    void save(T entity);
+    K save(T entity);
 
     void saveOrUpdate(T entity);
 

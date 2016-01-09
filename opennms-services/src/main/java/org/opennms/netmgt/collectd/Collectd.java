@@ -50,6 +50,7 @@ import org.opennms.core.utils.InsufficientInformationException;
 import org.opennms.netmgt.collection.api.CollectionInitializationException;
 import org.opennms.netmgt.collection.api.CollectionInstrumentation;
 import org.opennms.netmgt.collection.api.ServiceCollector;
+import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.config.CollectdConfigFactory;
 import org.opennms.netmgt.config.DataCollectionConfigFactory;
 import org.opennms.netmgt.config.SnmpEventInfo;
@@ -62,6 +63,7 @@ import org.opennms.netmgt.config.collectd.Package;
 import org.opennms.netmgt.daemon.AbstractServiceDaemon;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.events.api.EventConstants;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.opennms.netmgt.events.api.EventListener;
@@ -174,6 +176,12 @@ public class Collectd extends AbstractServiceDaemon implements
     @Autowired
     private volatile NodeDao m_nodeDao;
 
+    @Autowired
+    private PersisterFactory m_persisterFactory;
+
+    @Autowired
+    private ResourceStorageDao m_resourceStorageDao;
+
     /**
      * Constructor.
      */
@@ -194,8 +202,7 @@ public class Collectd extends AbstractServiceDaemon implements
         Assert.notNull(m_ifaceDao, "ifaceDao must not be null");
         Assert.notNull(m_nodeDao, "nodeDao must not be null");
         Assert.notNull(m_filterDao, "filterDao must not be null");
-        
-        
+
         LOG.debug("init: Initializing collection daemon");
         
         // make sure the instrumentation gets initialized
@@ -505,7 +512,9 @@ public class Collectd extends AbstractServiceDaemon implements
                     m_ifaceDao, 
                     spec, 
                     getScheduler(),
-                    m_schedulingCompletedFlag
+                    m_schedulingCompletedFlag,
+                    m_persisterFactory,
+                    m_resourceStorageDao
                 );
 
                 // Add new collectable service to the collectable service list.
@@ -1005,11 +1014,15 @@ public class Collectd extends AbstractServiceDaemon implements
             }
         }
         // Removing unused collectors if necessary
+        List<String> blackList = new ArrayList<String>();
         for (String collectorName : getCollectorNames()) {
             if (!configuredCollectors.contains(collectorName)) {
-                LOG.info("rebuildScheduler: removing collector for {}, it is no longer required", collectorName);
-                m_collectors.remove(collectorName);
+                blackList.add(collectorName);
             }
+        }
+        for (String collectorName : blackList) {
+            LOG.info("rebuildScheduler: removing collector for {}, it is no longer required", collectorName);
+            m_collectors.remove(collectorName);
         }
         // Recreating all Collectable Services (using the nodeID list populated at the beginning)
         Collection<Integer> nodeIds = m_nodeDao.getNodeIds();
@@ -1494,7 +1507,6 @@ public class Collectd extends AbstractServiceDaemon implements
     void setNodeDao(NodeDao nodeDao) {
         m_nodeDao = nodeDao;
     }
-    
 
     /**
      * <p>setServiceCollector</p>
@@ -1514,6 +1526,14 @@ public class Collectd extends AbstractServiceDaemon implements
      */
     public ServiceCollector getServiceCollector(String svcName) {
         return m_collectors.get(svcName);
+    }
+
+    public PersisterFactory getPersisterFactory() {
+        return m_persisterFactory;
+    }
+
+    public void setPersisterFactory(PersisterFactory persisterFactory) {
+        m_persisterFactory = persisterFactory;
     }
 
     /**

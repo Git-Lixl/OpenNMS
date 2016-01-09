@@ -83,9 +83,20 @@ delete $ENV{'M2_HOME'};
 
 # maven options
 $MAVEN_OPTS = $ENV{'MAVEN_OPTS'};
-$OOSNMP_TRUSTSTORE = File::Spec->catfile($PREFIX, 'bin', 'oosnmp.net.trustStore');
 if (not defined $MAVEN_OPTS or $MAVEN_OPTS eq '') {
-	$MAVEN_OPTS = "-Xmx1280m -XX:ReservedCodeCacheSize=512m -Djavax.net.ssl.trustStore=$OOSNMP_TRUSTSTORE -Djavax.net.ssl.trustStorePassword=password";
+	$MAVEN_OPTS = "-Xmx1536m -XX:ReservedCodeCacheSize=512m";
+
+	# The concurrent collector will throw an OutOfMemoryError if too much time is being spent in garbage collection: if
+	# more than 98% of the total time is spent in garbage collection and less than 2% of the heap is recovered, an
+	# OutOfMemoryError will be thrown. This feature is designed to prevent applications from running for an extended
+	# period of time while making little or no progress because the heap is too small. If necessary, this feature can
+	# be disabled by adding the option -XX:-UseGCOverheadLimit to the command line.
+	$MAVEN_OPTS .= " -XX:-UseGCOverheadLimit";
+
+	# If (a) peak application performance is the first priority and (b) there are no pause time requirements or pauses
+	# of one second or longer are acceptable, then select the parallel collector with -XX:+UseParallelGC and
+	# (optionally) enable parallel compaction with -XX:+UseParallelOldGC.
+	$MAVEN_OPTS .= " -XX:+UseParallelGC -XX:+UseParallelOldGC";
 }
 
 my $result = GetOptions(
@@ -118,7 +129,7 @@ usage: $0 [-h] [-j \$JAVA_HOME] [-t] [-v]
 	-m/--maven-opts OPTS   set \$MAVEN_OPTS to OPTS
 	                       (default: $MAVEN_OPTS)
 	-p/--profile PROFILE   default, dir, full, or fulldir
-	-t/--enable-tests      enable tests when building
+	-t/--enable-tests      enable integration tests when building
 	-l/--log-level         log level (error/warning/info/debug)
 END
 	exit 1;
@@ -179,12 +190,10 @@ if ($MAVEN_VERSION =~ /^[12]/) {
 	warning("Your maven version ($MAVEN_VERSION) is too old.  There are known bugs building with a version less than 3.0.  Expect trouble.");
 }
 
+unshift(@ARGS, '-DfailIfNoTests=false');
 if (defined $TESTS) {
-	debug("tests are enabled");
-	unshift(@ARGS, '-DfailIfNoTests=false');
-} else {
-	debug("tests are not enabled, passing -Dmaven.test.skip.exec=true");
-	unshift(@ARGS, '-Dmaven.test.skip.exec=true');
+	debug("integration tests are enabled");
+	unshift(@ARGS, '-DskipITs=false');
 }
 unshift(@ARGS, '-Djava.awt.headless=true');
 
@@ -206,6 +215,12 @@ if (grep { $_ =~ /^-Dbuild.profile=/ } @ARGS) {
 	unshift(@ARGS, "-Dbuild.profile=$BUILD_PROFILE");
 }
 
+if (not grep { $_ =~ /^-Dbuild.skip.tarball=/ } @ARGS) {
+	if (abs_path(getcwd()) ne abs_path($PREFIX)) {
+		debug("not building in the root directory, passing -Dbuild.skip.tarball=true");
+		unshift(@ARGS, "-Dbuild.skip.tarball=true");
+	}
+}
 
 if (-r File::Spec->catfile($ENV{'HOME'}, '.opennms-buildrc')) {
 	if (open(FILEIN, File::Spec->catfile($ENV{'HOME'}, '/.opennms-buildrc'))) {
@@ -226,12 +241,21 @@ info("PATH = " . $ENV{'PATH'});
 info("MVN = $MVN");
 info("MAVEN_OPTS = $MAVEN_OPTS"); 
 
-chomp(my $git_branch=`$GIT symbolic-ref HEAD 2>/dev/null || $GIT rev-parse HEAD 2>/dev/null`);
+my $git_branch = "unknown";
+if (exists $ENV{'bamboo_planRepository_branch'}) {
+	$git_branch = $ENV{'bamboo_planRepository_branch'};
+} elsif (defined $GIT and -x $GIT) {
+	chomp($git_branch=`$GIT symbolic-ref HEAD 2>/dev/null || $GIT rev-parse HEAD 2>/dev/null`);
+}
+
 $git_branch =~ s,^refs/heads/,,;
 info("Git Branch = $git_branch");
 
 sub find_git {
-	my $git = $ENV{'GIT'};
+	my $git = undef;
+	if (exists $ENV{'GIT'}) {
+		$git = $ENV{'GIT'};
+	}
 
 	if (not defined $git or not -x $git) {
 		for my $dir (File::Spec->path()) {
@@ -245,7 +269,7 @@ sub find_git {
 		}
 	}
 
-	if ($git eq "" or ! -x $git) {
+	if (not defined $git or $git eq "" or ! -x $git) {
 		warning("Unable to locate git.");
 		$git = undef;
 	}
@@ -364,7 +388,7 @@ sub find_java_home {
 }
 
 sub clean_git {
-	if (-d '.git') {
+	if (-d '.git' and defined $GIT and -x $GIT) {
 		my @command = ($GIT, "clean", "-fdx", ".");
 		info("running:", @command);
 		handle_errors_and_exit_on_failure(system(@command));

@@ -28,6 +28,20 @@
 
 package org.opennms.netmgt.collectd;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.FileInputStream;
+import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,22 +57,11 @@ import org.opennms.netmgt.collection.support.SingleResourceCollectionSet;
 import org.opennms.netmgt.config.BeanInfo;
 import org.opennms.netmgt.config.JMXDataCollectionConfigFactory;
 import org.opennms.netmgt.config.collectd.jmx.Attrib;
+import org.opennms.netmgt.dao.jmx.JmxConfigDao;
+import org.opennms.netmgt.dao.jmx.JmxConfigDaoJaxb;
 import org.opennms.netmgt.jmx.connection.JmxConnectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import java.io.FileInputStream;
-import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -87,6 +90,11 @@ public class JMXCollectorTest {
         @Override
         public int getNodeId() {
             return 0;
+        }
+
+        @Override
+        public String getNodeLabel() {
+            return null;
         }
 
         @Override
@@ -170,6 +178,7 @@ public class JMXCollectorTest {
     public void setUp() throws Exception {
         jmxNodeInfo = new JMXNodeInfo(0);
         jmxCollector = new JMXCollectorImpl();
+        ((JMXCollectorImpl)jmxCollector).setJmxConfigDao(new JmxConfigDaoJaxb());
         platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
         ObjectName objectName = new ObjectName("org.opennms.netmgt.collectd.jmxhelper:type=JmxTest");
         JmxTestMBean testMBean = new JmxTest();
@@ -306,8 +315,12 @@ public class JMXCollectorTest {
 
     public class JMXCollectorImpl extends JMXCollector {
         @Override
-        protected String getConnectionName() {
-            return JmxConnectors.PLATFORM;
+        protected JmxConnectors getConnectionName() {
+            return JmxConnectors.platform;
+        }
+
+        protected void setJmxConfigDao(JmxConfigDao jmxConfigDao) {
+            this.m_jmxConfigDao = jmxConfigDao;
         }
     }
 }

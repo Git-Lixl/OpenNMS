@@ -55,6 +55,7 @@ import org.opennms.netmgt.xml.event.Operaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.util.Assert;
 
 /**
@@ -79,7 +80,7 @@ import org.springframework.util.Assert;
  * @author <A HREF="mailto:sowmya@opennms.org">Sowmya Nataraj </A>
  * @author <A HREF="http://www.opennms.org">OpenNMS.org </A>
  */
-public final class HibernateEventWriter implements EventWriter {
+public class HibernateEventWriter implements EventWriter {
     private static final Logger LOG = LoggerFactory.getLogger(HibernateEventWriter.class);
     
     @Autowired
@@ -142,7 +143,11 @@ public final class HibernateEventWriter implements EventWriter {
 
         LOG.debug("HibernateEventWriter: processing {} nodeid: {} ipaddr: {} serviceid: {} time: {}", event.getUei(), event.getNodeid(), event.getInterface(), event.getService(), event.getTime());
 
-        insertEvent(eventHeader, event);
+        try {
+            insertEvent(eventHeader, event);
+        } catch (DeadlockLoserDataAccessException e) {
+            throw new EventProcessorException("Encountered deadlock when inserting event: " + event.toString(), e);
+        }
     }
 
     /**
@@ -190,16 +195,20 @@ public final class HibernateEventWriter implements EventWriter {
         	ovent.setIfIndex(null);
         }
 
-        // eventDpName
-        String dpName = event.getDistPoller();
-        if (eventHeader != null && eventHeader.getDpName() != null && !"".equals(eventHeader.getDpName())) {
-            dpName = EventDatabaseConstants.format(eventHeader.getDpName(), EVENT_DPNAME_FIELD_SIZE);
-        } else if (event.getDistPoller() != null && !"".equals(event.getDistPoller())) {
-            dpName = EventDatabaseConstants.format(event.getDistPoller(), EVENT_DPNAME_FIELD_SIZE);
-        } else {
-            dpName = "localhost";
+        // systemId
+
+        // If available, use the header's distPoller
+        if (eventHeader != null && eventHeader.getDpName() != null && !"".equals(eventHeader.getDpName().trim())) {
+            ovent.setDistPoller(distPollerDao.get(eventHeader.getDpName()));
         }
-        ovent.setDistPoller(distPollerDao.get(dpName));
+        // Otherwise, use the event's distPoller
+        if (ovent.getDistPoller() == null && event.getDistPoller() != null && !"".equals(event.getDistPoller().trim())) {
+            ovent.setDistPoller(distPollerDao.get(event.getDistPoller()));
+        } 
+        // And if both are unavailable, use the local system as the event's source system
+        if (ovent.getDistPoller() == null) {
+            ovent.setDistPoller(distPollerDao.whoami());
+        }
 
         // eventSnmpHost
         ovent.setEventSnmpHost(EventDatabaseConstants.format(event.getSnmphost(), EVENT_SNMPHOST_FIELD_SIZE));

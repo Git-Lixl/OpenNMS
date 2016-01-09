@@ -32,8 +32,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -48,11 +50,15 @@ import javax.management.ObjectName;
 import javax.management.ReflectionException;
 import javax.management.openmbean.CompositeData;
 
+import org.opennms.core.spring.BeanUtils;
+import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.config.collectd.jmx.Attrib;
 import org.opennms.netmgt.config.collectd.jmx.CompAttrib;
 import org.opennms.netmgt.config.collectd.jmx.CompMember;
 import org.opennms.netmgt.config.collectd.jmx.JmxCollection;
 import org.opennms.netmgt.config.collectd.jmx.Mbean;
+import org.opennms.netmgt.config.jmx.MBeanServer;
+import org.opennms.netmgt.dao.jmx.JmxConfigDao;
 import org.opennms.netmgt.jmx.JmxCollector;
 import org.opennms.netmgt.jmx.JmxCollectorConfig;
 import org.opennms.netmgt.jmx.JmxSampleProcessor;
@@ -75,10 +81,25 @@ public class DefaultJmxCollector implements JmxCollector {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    protected JmxConfigDao m_jmxConfigDao = null;
+
     @Override
     public void collect(JmxCollectorConfig config, JmxSampleProcessor sampleProcessor) throws JmxServerConnectionException {
+        if (m_jmxConfigDao == null) {
+            m_jmxConfigDao = BeanUtils.getBean("daoContext", "jmxConfigDao", JmxConfigDao.class);
+        }
+
+        Map<String, String> mergedStringMap = new HashMap<>(config.getServiceProperties());
+
+        if (mergedStringMap.containsKey("port")) {
+            MBeanServer mBeanServer = m_jmxConfigDao.getConfig().lookupMBeanServer(config.getAgentAddress(), mergedStringMap.get("port"));
+            if (mBeanServer != null) {
+                mergedStringMap.putAll(mBeanServer.getParameterMap());
+            }
+        }
+
         JmxConnectionManager connectionManager = new DefaultConnectionManager(config.getRetries());
-        try (JmxServerConnectionWrapper connectionWrapper = connectionManager.connect(config.getConnectionName(), config.getAgentAddress(), config.getServiceProperties(), null)) {
+        try (JmxServerConnectionWrapper connectionWrapper = connectionManager.connect(config.getConnectionName(), InetAddressUtils.addr(config.getAgentAddress()), mergedStringMap, null)) {
             Objects.requireNonNull(connectionWrapper, "connectionWrapper should never be null");
             Objects.requireNonNull(connectionWrapper.getMBeanServerConnection(), "connectionWrapper.getMBeanServerConnection() should never be null");
 
@@ -271,5 +292,14 @@ public class DefaultJmxCollector implements JmxCollector {
             objectNames.add(new ObjectName(objectName));
         }
         return Collections.unmodifiableSet(objectNames);
+    }
+
+    /**
+     * Method for setting the config dao to use. Required for the tests to work properly.
+     *
+     * @param jmxConfigDao the dao instance
+     */
+    public void setJmxConfigDao(JmxConfigDao jmxConfigDao) {
+        this.m_jmxConfigDao = jmxConfigDao;
     }
 }

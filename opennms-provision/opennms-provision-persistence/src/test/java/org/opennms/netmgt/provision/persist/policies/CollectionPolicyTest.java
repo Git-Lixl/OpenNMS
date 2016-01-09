@@ -61,7 +61,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(OpenNMSJUnit4ClassRunner.class)
 @ContextConfiguration(locations={
         "classpath:/META-INF/opennms/applicationContext-soa.xml",
-        "classpath:/META-INF/opennms/applicationContext-mockDao.xml"
+        "classpath:/META-INF/opennms/applicationContext-mockDao.xml",
+        "classpath:/META-INF/opennms/applicationContext-databasePopulator.xml"
 })
 @JUnitConfigurationEnvironment
 public class CollectionPolicyTest implements InitializingBean {

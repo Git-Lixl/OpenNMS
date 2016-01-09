@@ -32,7 +32,6 @@
 
   <bean id="propertyPlaceholderConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
     <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
-    <property name="location" value="file:${opennms.home}/etc/model-importer.properties" />
     <!-- 
       We need to ignore unresolvable placeholders since if multiple PropertyPlaceholderConfigurer
       preprocessors are in use in a single context (such as inside unit tests), Spring will encounter
@@ -43,6 +42,12 @@
       TODO: Fix this behavior after upgrading to Spring 3.1.
     -->
     <property name="ignoreUnresolvablePlaceholders" value="true"/>
+    <property name="properties">
+      <props>
+        <prop key="importer.foreign-source.dir">${opennms.home}/etc/foreign-sources</prop>
+        <prop key="importer.requisition.dir">${opennms.home}/etc/imports</prop>
+      </props>
+    </property>
   </bean>
 
   <!-- 
@@ -106,6 +111,8 @@
     <property name="jtaTransactionManager" ref="transactionManager" />
     <property name="packagesToScan">
       <list>
+        <!-- TODO: Move into org.opennms.netmgt.model -->
+        <value>org.opennms.netmgt.config.monitoringLocations</value>
         <value>org.opennms.netmgt.dao.hibernate</value>
         <value>org.opennms.netmgt.model</value>
       </list>
@@ -330,12 +337,6 @@
 
   <onmsgi:service interface="org.opennms.netmgt.dao.api.MinionDao" ref="minionDao" />
 
-  <bean id="minionPropertyDao" class="org.opennms.netmgt.dao.hibernate.MinionPropertyDaoHibernate">
-    <property name="sessionFactory" ref="sessionFactory" />
-  </bean>
-
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.MinionPropertyDao" ref="minionPropertyDao" />
-
   <bean id="nodeDao" class="org.opennms.netmgt.dao.hibernate.NodeDaoHibernate">
     <property name="sessionFactory" ref="sessionFactory" />
   </bean>
@@ -351,12 +352,6 @@
   </bean>
   
   <onmsgi:service interface="org.opennms.netmgt.dao.api.RequisitionedCategoryAssociationDao" ref="requisitionedCategoryAssociationDao" />
-
-  <bean id="linkStateDao" class="org.opennms.netmgt.dao.hibernate.LinkStateDaoHibernate">
-    <property name="sessionFactory" ref="sessionFactory" />
-  </bean>
-  
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.LinkStateDao" ref="linkStateDao" />
 
   <bean id="reportCatalogDao" class="org.opennms.netmgt.dao.hibernate.ReportCatalogDaoHibernate">
     <property name="sessionFactory" ref="sessionFactory" />
@@ -404,36 +399,6 @@
   
   <onmsgi:service interface="org.opennms.netmgt.dao.api.UserNotificationDao" ref="userNotificationDao" />
 
-  <bean id="atInterfaceDao" class="org.opennms.netmgt.dao.hibernate.AtInterfaceDaoHibernate">
-    <property name="sessionFactory" ref="sessionFactory" />
-  </bean>
-  
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.AtInterfaceDao" ref="atInterfaceDao" />
-
-  <bean id="vlanDao" class="org.opennms.netmgt.dao.hibernate.VlanDaoHibernate">
-    <property name="sessionFactory" ref="sessionFactory" />
-  </bean>
-  
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.VlanDao" ref="vlanDao" />
-
-  <bean id="stpNodeDao" class="org.opennms.netmgt.dao.hibernate.StpNodeDaoHibernate">
-    <property name="sessionFactory" ref="sessionFactory" />
-  </bean>
-  
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.StpNodeDao" ref="stpNodeDao" />
-
-  <bean id="stpInterfaceDao" class="org.opennms.netmgt.dao.hibernate.StpInterfaceDaoHibernate">
-    <property name="sessionFactory" ref="sessionFactory" />
-  </bean>
-  
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.StpInterfaceDao" ref="stpInterfaceDao" />
-
-  <bean id="ipRouteInterfaceDao" class="org.opennms.netmgt.dao.hibernate.IpRouteInterfaceDaoHibernate">
-    <property name="sessionFactory" ref="sessionFactory" />
-  </bean>
-  
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.IpRouteInterfaceDao" ref="ipRouteInterfaceDao" />
-
   <!--
   <bean id="userDao" class="org.opennms.netmgt.dao.hibernate.UserDaoHibernate" >
     <property name="sessionFactory" ref="sessionFactory" />
@@ -469,13 +434,14 @@
 
   <onmsgi:service interface="org.opennms.netmgt.dao.api.ResourceReferenceDao" ref="resourceReferenceDao" />
 
-  <bean id="locationMonitorConfigResourceLocation" class="java.lang.String">
-    <constructor-arg value="file:${opennms.home}/etc/monitoring-locations.xml" />
+  <bean id="monitoringLocationDao" class="org.opennms.netmgt.dao.hibernate.MonitoringLocationDaoHibernate">
+    <property name="sessionFactory" ref="sessionFactory" />
   </bean>
+
+  <onmsgi:service interface="org.opennms.netmgt.dao.api.MonitoringLocationDao" ref="monitoringLocationDao" />
 
   <bean id="locationMonitorDao" class="org.opennms.netmgt.dao.hibernate.LocationMonitorDaoHibernate">
     <property name="sessionFactory" ref="sessionFactory" />
-    <property name="monitoringLocationConfigResource" ref="locationMonitorConfigResourceLocation" />
   </bean>
  
   <onmsgi:service interface="org.opennms.netmgt.dao.api.LocationMonitorDao" ref="locationMonitorDao" />
@@ -558,18 +524,23 @@
 
   <onmsgi:service interface="org.opennms.netmgt.dao.api.TopologyDao" ref="topologyDao" />
 
+  <!-- The time-series strategy specific context should provide beans that implement:
+            org.opennms.netmgt.collection.api.PersisterFactory
+            org.opennms.netmgt.dao.api.ResourceStorageDao
+            org.opennms.netmgt.rrd.RrdStrategy
+   -->
+  <import resource="classpath*:/META-INF/opennms/applicationContext-${org.opennms.timeseries.strategy:rrd}.xml"/>
+
   <bean id="resourceDao" class="org.opennms.netmgt.dao.support.DefaultResourceDao">
     <property name="nodeDao" ref="nodeDao" />
     <property name="locationMonitorDao" ref="locationMonitorDao" />
     <property name="ipInterfaceDao" ref="ipInterfaceDao" />
     <property name="collectdConfig" ref="collectdConfig" />
     <property name="dataCollectionConfigDao" ref="dataCollectionConfig" />
-    <property name="rrdDirectory" value="${rrd.base.dir}" />
+    <property name="resourceStorageDao" ref="resourceStorageDao" />
   </bean>
-  
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.ResourceDao" ref="resourceDao" />
 
-  <bean id="rrdStrategy" class="org.opennms.netmgt.rrd.RrdUtils" factory-method="getStrategy"/>
+  <onmsgi:service interface="org.opennms.netmgt.dao.api.ResourceDao" ref="resourceDao" />
 
   <bean id="rrdDao" class="org.opennms.netmgt.dao.support.DefaultRrdDao">
     <property name="rrdStrategy" ref="rrdStrategy" />
@@ -600,24 +571,6 @@
   </bean>
 
   <onmsgi:service interface="org.opennms.netmgt.dao.api.JavaMailConfigurationDao" ref="javamailConfigDao" />
-
-  <bean id="onmsMapDao" class="org.opennms.netmgt.dao.hibernate.OnmsMapDaoHibernate">
-    <property name="sessionFactory" ref="sessionFactory" />
-  </bean>
-
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.OnmsMapDao" ref="onmsMapDao" />
-
-  <bean id="onmsMapElementDao" class="org.opennms.netmgt.dao.hibernate.OnmsMapElementDaoHibernate">
-    <property name="sessionFactory" ref="sessionFactory" />
-  </bean>
-
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.OnmsMapElementDao" ref="onmsMapElementDao" />
-
-  <bean id="dataLinkInterfaceDao" class="org.opennms.netmgt.dao.hibernate.DataLinkInterfaceDaoHibernate">
-    <property name="sessionFactory" ref="sessionFactory" />
-  </bean>
-  
-  <onmsgi:service interface="org.opennms.netmgt.dao.api.DataLinkInterfaceDao" ref="dataLinkInterfaceDao" />
 
   <bean id="simpleJdbcTemplate" class="org.springframework.jdbc.core.simple.SimpleJdbcTemplate">
     <constructor-arg ref="jdbcTemplate" />

@@ -28,7 +28,6 @@
 
 package org.opennms.netmgt.collectd;
 
-import org.opennms.netmgt.collection.api.CollectionAttributeType;
 import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.Persister;
 import org.opennms.netmgt.collection.support.AbstractCollectionAttribute;
@@ -123,26 +122,29 @@ public class SnmpAttribute extends AbstractCollectionAttribute {
      * @return a {@link java.lang.String} object.
      */
     @Override
-    public String getNumericValue() {
+    public Number getNumericValue() {
         if (getValue() == null) {
             LOG.debug("No data collected for attribute {}. Skipping", this);
             return null;
         } else if (getValue().isNumeric()) {
-            return Long.toString(getValue().toLong());
+            return getValue().toLong();
         } else {
             // Check to see if this is a 63-bit counter packed into an octetstring
             Long value = SnmpUtils.getProtoCounter63Value(getValue());
             if (value != null) {
-                return value.toString();
+                return value;
             }
 
             try {
-                return Double.valueOf(getValue().toString()).toString();
+                if (getType().toLowerCase().startsWith("counter")) { // See NMS-7839: for RRDtool the raw counter value must be an integer.
+                    return Long.valueOf(getValue().toString());
+                }
+                return Double.valueOf(getValue().toString());
             } catch(NumberFormatException e) {
                 LOG.trace("Unable to process data received for attribute {} maybe this is not a number? See bug 1473 for more information. Skipping.", this);
                 if (getValue().getType() == SnmpValue.SNMP_OCTET_STRING) {
                     try {
-                        return Long.valueOf(getValue().toHexString(), 16).toString();
+                        return Long.valueOf(getValue().toHexString(), 16);
                     } catch(NumberFormatException ex) {
                         LOG.trace("Unable to process data received for attribute {} maybe this is not a number? See bug 1473 for more information. Skipping.", this);
                     }
@@ -151,7 +153,7 @@ public class SnmpAttribute extends AbstractCollectionAttribute {
             return null;
         }
     }
-    
+
     /**
      * <p>getStringValue</p>
      *

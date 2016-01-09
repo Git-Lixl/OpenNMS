@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.opennms</groupId>
     <artifactId>opennms</artifactId>
-    <version>17.0.0-SNAPSHOT</version>
+    <version>18.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>org.opennms.features</artifactId>
@@ -11,8 +11,11 @@
   <name>OpenNMS Features</name>
   <modules>
 
-    <!-- ActiveMQ broker and JMS features -->
+    <!-- ActiveMQ broker -->
     <module>activemq</module>
+
+    <!-- AMQP Event Gateway and Alarm Northbounder -->
+    <module>amqp</module>
 
     <!-- OpenNMS Provisioning API and implementations -->
     <module>provisioning</module>
@@ -23,10 +26,16 @@
     <!-- Events -->
     <module>events</module>
 
+    <!-- Executor factories -->
+    <module>executor-factory</module>
+
     <!-- OpenNMS Collection API and implementations -->
     <module>collection</module>
     <module>jdbc-collector</module>
     <module>juniper-tca-collector</module>
+
+    <!-- Discovery -->
+    <module>discovery</module>
 
     <!-- OpenNMS Reporting API and implementations -->
     <module>reporting</module>
@@ -40,14 +49,18 @@
     <module>ticketing</module>
     <module>request-tracker</module>
 
+    <!-- OpenNMS Resource CLI tool -->
+    <module>resource-cli</module>
+
     <!-- OpenNMS OSGI Core -->
     <module>opennms-osgi-core</module>
 
     <!-- JMX config generator -->
     <module>jmx-config-generator</module>
-    <module>jmx-config-generator-webui</module>   
+    <module>vaadin-jmxconfiggenerator</module>
  
     <!-- SNMP MIB Parser and Event/Collection Configuration -->
+    <module>mib-compiler</module>
     <module>vaadin-snmp-events-and-metrics</module>
 
     <!-- Near Real Time Graphing -->
@@ -60,8 +73,11 @@
     <!-- webapps -->
     <module>root-webapp</module>
 
-    <!-- REST -->
-    <module>rest-measurements-api</module>
+    <!-- Measurements API -->
+    <module>measurements</module>
+
+    <!-- Newts -->
+    <module>newts</module>
 
     <!-- GWT UI plugins -->
     <module>node-page-list</module>
@@ -80,6 +96,12 @@
     <!-- OpenNMS Vaadin Themes -->
     <module>themes</module>
 
+    <!-- Vaadin Feature -->
+    <module>vaadin</module>
+
+    <!-- Generic Vaadin components -->
+    <module>vaadin-components</module>
+
     <!-- Dashboard and dashlet UI elements -->
     <module>vaadin-dashboard</module>
     <module>vaadin-dashlets</module>
@@ -94,5 +116,8 @@
     <module>ncs</module>
     <module>springframework-security</module>
     <module>system-report</module>
+
+    <!-- Elasticsearch event-forwarder-->
+    <module>elasticsearch</module>
   </modules>
 </project>

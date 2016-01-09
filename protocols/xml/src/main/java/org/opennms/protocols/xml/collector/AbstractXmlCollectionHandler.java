@@ -64,10 +64,12 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Entities.EscapeMode;
 import org.opennms.core.spring.BeanUtils;
 import org.opennms.netmgt.collection.api.AttributeGroupType;
 import org.opennms.netmgt.collection.api.CollectionAgent;
 import org.opennms.netmgt.collection.api.CollectionException;
+import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.ServiceCollector;
 import org.opennms.netmgt.collection.support.PersistAllSelectorStrategy;
 import org.opennms.netmgt.config.DataCollectionConfigFactory;
@@ -75,6 +77,7 @@ import org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy;
 import org.opennms.netmgt.config.datacollection.ResourceType;
 import org.opennms.netmgt.config.datacollection.StorageStrategy;
 import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.protocols.xml.config.Content;
@@ -113,8 +116,15 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
     /** The RRD Repository. */
     private RrdRepository m_rrdRepository;
 
-    /** The Node Level Resource (temporary variable). It is initialized on each collection attempt. */
-    private XmlSingleInstanceCollectionResource m_nodeResource;
+    private ResourceStorageDao m_resourceStorageDao;
+
+    public ResourceStorageDao getResourceStorageDao() {
+        return m_resourceStorageDao;
+    }
+
+    public void setResourceStorageDao(ResourceStorageDao resourceStorageDao) {
+        m_resourceStorageDao = resourceStorageDao;
+    }
 
     /* (non-Javadoc)
      * @see org.opennms.protocols.xml.collector.XmlCollectionHandler#setServiceName(java.lang.String)
@@ -189,7 +199,7 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
                 Request request = parseRequest(source.getRequest(), agent, collection.getXmlRrd().getStep());
                 LOG.debug("collect: parsed request for source url '{}' : {}", urlStr, request);
                 fillCollectionSet(urlStr, request, agent, collectionSet, source);
-                LOG.debug("collect: finished source url '{}' collection", source.getUrl());
+                LOG.debug("collect: finished source url '{}' collection with {} resources", urlStr, collectionSet.getCollectionResources().size());
             }
             collectionSet.setStatus(ServiceCollector.COLLECTION_SUCCEEDED);
             return collectionSet;
@@ -214,7 +224,7 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
      * @throws ParseException the parse exception
      */
     protected void fillCollectionSet(CollectionAgent agent, XmlCollectionSet collectionSet, XmlSource source, Document doc) throws XPathExpressionException, ParseException {
-        m_nodeResource = null; // Be sure that the temporary resource for node level data is clean before processing a new document.
+        XmlCollectionResource nodeResource = new XmlSingleInstanceCollectionResource(agent);
         NamespaceContext nc = new DocumentNamespaceResolver(doc);
         XPath xpath = XPathFactory.newInstance().newXPath();
         xpath.setNamespaceContext(nc);
@@ -225,8 +235,13 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
             for (int j = 0; j < resourceList.getLength(); j++) {
                 Node resource = resourceList.item(j);
                 String resourceName = getResourceName(xpath, group, resource);
-                LOG.debug("fillCollectionSet: processing XML resource {}", resourceName);
-                XmlCollectionResource collectionResource = getCollectionResource(agent, resourceName, group.getResourceType(), timestamp);
+                XmlCollectionResource collectionResource;
+                if (group.getResourceType().equalsIgnoreCase(CollectionResource.RESOURCE_TYPE_NODE)) {
+                    collectionResource = nodeResource;
+                } else {
+                    collectionResource = getCollectionResource(agent, resourceName, group.getResourceType(), timestamp);
+                }
+                LOG.debug("fillCollectionSet: processing resource {}", collectionResource);
                 AttributeGroupType attribGroupType = new AttributeGroupType(group.getName(), group.getIfType());
                 for (XmlObject object : group.getXmlObjects()) {
                     String value = (String) xpath.evaluate(object.getXpath(), resource, XPathConstants.STRING);
@@ -234,9 +249,13 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
                     collectionResource.setAttributeValue(attribType, value);
                 }
                 processXmlResource(collectionResource, attribGroupType);
+                LOG.debug("fillCollectionSet: adding collection resource {}", collectionResource);
                 collectionSet.getCollectionResources().add(collectionResource);
             }
         }
+        XmlAttributeCounter counter = new XmlAttributeCounter();
+        collectionSet.visit(counter);
+        LOG.debug("fillCollectionSet: finishing collection set with {} resources and {} attributes on {}", collectionSet.getCollectionResources().size(), counter.getCount(), agent);
     }
 
     /**
@@ -261,7 +280,8 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
         }
         // If key-xpath doesn't exist or not found, a node resource will be assumed.
         if (group.getKeyXpath() == null) {
-            return "node";
+            LOG.debug("getResourceName: assuming node level resource");
+            return "node"; // CollectionResource.RESOURCE_TYPE_NODE
         }
         // Processing single-key resource name.
         LOG.debug("getResourceName: getting key for resource's name using {}", group.getKeyXpath());
@@ -299,17 +319,8 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
      * @return the collection resource
      */
     protected XmlCollectionResource getCollectionResource(CollectionAgent agent, String instance, String resourceType, Date timestamp) {
-        XmlCollectionResource resource = null;
-        if (resourceType.equalsIgnoreCase("node")) {
-            if (m_nodeResource == null) {
-                LOG.debug("getCollectionResource: initializing node-level resource.");
-                m_nodeResource = new XmlSingleInstanceCollectionResource(agent);
-            }
-            resource = m_nodeResource;
-        } else {
-            XmlResourceType type = getXmlResourceType(agent, resourceType);
-            resource = new XmlMultiInstanceCollectionResource(agent, instance, type);
-        }
+        XmlResourceType type = getXmlResourceType(agent, resourceType);
+        XmlCollectionResource resource = new XmlMultiInstanceCollectionResource(agent, instance, type);
         if (timestamp != null) {
             LOG.debug("getCollectionResource: the date that will be used when updating the RRDs is {}", timestamp);
             resource.setTimeKeeper(new ConstantTimeKeeper(timestamp));
@@ -546,7 +557,8 @@ public abstract class AbstractXmlCollectionHandler implements XmlCollectionHandl
             return is;
         }
         try {
-            org.jsoup.nodes.Document doc = Jsoup.parse(is, "UTF-8", "/");
+            org.jsoup.nodes.Document doc = Jsoup.parse(is, "ISO-8859-9", "/");
+            doc.outputSettings().escapeMode(EscapeMode.xhtml);
             return new ByteArrayInputStream(doc.outerHtml().getBytes());
         } finally {
             IOUtils.closeQuietly(is);

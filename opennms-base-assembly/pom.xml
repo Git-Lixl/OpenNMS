@@ -3,7 +3,7 @@
   <parent>
     <artifactId>opennms</artifactId>
     <groupId>org.opennms</groupId>
-    <version>17.0.0-SNAPSHOT</version>
+    <version>18.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-base-assembly</artifactId>
@@ -56,14 +56,21 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>org.opennms.assemblies</groupId>
-                  <artifactId>org.opennms.assemblies.jmx-config-generator-onejar</artifactId>
+                  <groupId>org.opennms.features</groupId>
+                  <artifactId>jmxconfiggenerator</artifactId>
                   <type>jar</type>
-                  <classifier>signed-jar-with-dependencies</classifier>
+                  <classifier>onejar</classifier>
                   <destFileName>opennms_jmx_config_generator.jar</destFileName>
+                  <outputDirectory>${project.build.directory}/jmx</outputDirectory>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.opennms</groupId>
+                  <artifactId>opennms-jasperstudio-extension</artifactId>
+                  <type>jar</type>
+                  <classifier>jar-with-dependencies</classifier>
+                  <outputDirectory>${project.build.directory}/jasperstudio-extension</outputDirectory>
                 </artifactItem>
               </artifactItems>
-              <outputDirectory>${project.build.directory}/jmx</outputDirectory>
             </configuration>
           </execution>
         </executions>
@@ -75,6 +82,7 @@
             <descriptor>src/assembly/daemon.xml</descriptor>
             <descriptor>src/assembly/log4j2.xml</descriptor>
           </descriptors>
+          <tarLongFileMode>posix</tarLongFileMode>
         </configuration>
         <executions>
           <execution>
@@ -98,12 +106,12 @@
           </execution>
         </executions>
         <configuration>
-          <sourceDirectory>target/classes/etc/report-templates</sourceDirectory>
+          <sourceDirectory>${project.build.outputDirectory}/etc/report-templates</sourceDirectory>
           <outputDirectory>${project.build.directory}/jasper</outputDirectory>
           <xmlValidation>true</xmlValidation>
           <forceCompile>false</forceCompile>
           <additionalProperties>
-            <net.sf.jasperreports.query.executer.factory.jrobin>org.opennms.netmgt.jasper.jrobin.JRobinQueryExecutorFactory</net.sf.jasperreports.query.executer.factory.jrobin>
+            <net.sf.jasperreports.query.executer.factory.measurement>org.opennms.netmgt.jasper.measurement.MeasurementExecutorFactory</net.sf.jasperreports.query.executer.factory.measurement>
           </additionalProperties>
         </configuration>
         <dependencies>
@@ -164,6 +172,10 @@
     <dependency>
       <groupId>org.opennms</groupId>
       <artifactId>opennms-alarm-northbounder-syslog</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-alarm-northbounder-jms</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opennms</groupId>
@@ -276,6 +288,10 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.features</groupId>
+      <artifactId>opennms-integration-otrs-31</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features</groupId>
       <artifactId>opennms-integration-remedy</artifactId>
     </dependency>
     <dependency>
@@ -292,6 +308,12 @@
       <groupId>org.opennms</groupId>
       <artifactId>opennms-rrd-jrobin</artifactId>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>jrrd2-dependencies</artifactId>
+      <scope>test</scope>
+      <type>pom</type>
     </dependency>
     <dependency>
       <groupId>org.opennms</groupId>
@@ -329,6 +351,10 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.features.events</groupId>
+      <artifactId>org.opennms.features.events.syslog</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features.events</groupId>
       <artifactId>org.opennms.features.events.traps</artifactId>
     </dependency>
     <dependency>
@@ -353,15 +379,26 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.features.ticketing</groupId>
+      <artifactId>org.opennms.features.ticketing.api</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features.ticketing</groupId>
+      <artifactId>org.opennms.features.ticketing.daemon</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features.ticketing</groupId>
       <artifactId>org.opennms.features.ticketing.drools-integration</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.opennms.features</groupId>
-      <artifactId>jira-troubleticketer</artifactId>
+      <artifactId>resource-cli</artifactId>
       <version>${project.version}</version>
-      <scope>compile</scope>
     </dependency>
     <!--
     <dependency>
@@ -552,8 +589,13 @@
       <artifactId>org.opennms.features.springframework-security</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.opennms.features.measurements</groupId>
+      <artifactId>org.opennms.features.measurements.rest</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.opennms.features</groupId>
-      <artifactId>org.opennms.features.rest-measurements-api</artifactId>
+      <artifactId>org.opennms.features.newts</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -586,35 +628,6 @@
       <groupId>oro</groupId>
       <artifactId>oro</artifactId>
     </dependency>
-    <!-- dependencies for SMS monitors -->
-    <!--
-    <dependency>
-      <groupId>org.opennms.features.sms-reflector</groupId>
-      <artifactId>sms-gateway</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.features.sms-reflector</groupId>
-      <artifactId>sms-service</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.features.sms-reflector</groupId>
-      <artifactId>sms-ping</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.features.sms-reflector</groupId>
-      <artifactId>sms-monitor</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.dependencies</groupId>
-      <artifactId>smslib-dependencies</artifactId>
-      <type>pom</type>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.dependencies</groupId>
-      <artifactId>rxtx-dependencies</artifactId>
-      <type>pom</type>
-    </dependency>
-    -->
     <!-- dependencies for XML/JSON collector -->
     <dependency>
       <groupId>commons-jxpath</groupId>
@@ -654,13 +667,13 @@
       <artifactId>org.opennms.features.request-tracker</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.opennms.dependencies</groupId>
-      <artifactId>jersey-dependencies</artifactId>
-      <type>pom</type>
+      <groupId>org.opennms</groupId>
+      <artifactId>jasper-extensions</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opennms</groupId>
-      <artifactId>jasper-extensions</artifactId>
+      <artifactId>opennms-jasperstudio-extension</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- TODO: Is this the better place for the following dependency? -->
@@ -668,6 +681,11 @@
       <groupId>org.opennms.dependencies</groupId>
       <artifactId>jradius-dependencies</artifactId>
       <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>org.opennms.features.discovery</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

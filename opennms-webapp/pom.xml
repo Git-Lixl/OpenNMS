@@ -3,7 +3,7 @@
   <parent>
     <artifactId>opennms</artifactId>
     <groupId>org.opennms</groupId>
-    <version>17.0.0-SNAPSHOT</version>
+    <version>18.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-webapp</artifactId>
@@ -13,9 +13,10 @@
     <moduleName>org.opennms.dashboard.Dashboard</moduleName>
     <moduleHtml>index.html</moduleHtml>
     <web.port>8080</web.port>
-		<!-- this is used by runInPlace.sh to get the overwise provided 
-				 onms libs into the WEB-INF/lib for jetty -->
-		<onmsLibScope>provided</onmsLibScope>
+    <!-- this is used by runInPlace.sh to get the overwise provided 
+         nms libs into the WEB-INF/lib for jetty -->
+    <onmsLibScope>provided</onmsLibScope>
+    <skipITs>true</skipITs>
   </properties>
   <build>
     <plugins>
@@ -58,7 +59,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-Xmx1g -Djava.endorsed.dirs=${basedir}/target/endorsed</argLine>
+          <!-- Don't specify argLine here or it will override the value from /pom.xml -->
           <systemProperties>
             <property>
               <name>java.endorsed.dirs</name>
@@ -66,6 +67,22 @@
             </property>
           </systemProperties>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <skipITs>${skipITs}</skipITs>
+          <reuseForks>false</reuseForks>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -87,7 +104,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
-        <version>2.4.1</version>
         <configuration>
           <filesets>
             <fileset>
@@ -320,6 +336,7 @@
             <descriptor>src/assembly/meta-inf.xml</descriptor>
             <descriptor>src/assembly/xsds.xml</descriptor>
           </descriptors>
+          <tarLongFileMode>posix</tarLongFileMode>
         </configuration>
         <executions>
           <execution>
@@ -535,6 +552,12 @@
       <groupId>org.opennms</groupId>
       <artifactId>opennms-rrd-jrobin</artifactId>
       <scope>${onmsLibScope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>jrrd2-dependencies</artifactId>
+      <scope>${onmsLibScope}</scope>
+      <type>pom</type>
     </dependency>
     <dependency>
       <groupId>org.opennms</groupId>
@@ -952,6 +975,11 @@
     <dependency>
       <groupId>org.opennms.features.events</groupId>
       <artifactId>org.opennms.features.events.daemon</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features.collection</groupId>
+      <artifactId>org.opennms.features.collection.persistence.rrd</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

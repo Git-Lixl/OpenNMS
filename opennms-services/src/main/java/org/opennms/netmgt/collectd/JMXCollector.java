@@ -28,9 +28,9 @@
 
 package org.opennms.netmgt.collectd;
 
-import java.io.File;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.InetAddress;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -56,14 +56,16 @@ import org.opennms.netmgt.collection.support.SingleResourceCollectionSet;
 import org.opennms.netmgt.config.JMXDataCollectionConfigFactory;
 import org.opennms.netmgt.config.collectd.jmx.Attrib;
 import org.opennms.netmgt.config.collectd.jmx.Mbean;
+import org.opennms.netmgt.dao.jmx.JmxConfigDao;
+import org.opennms.netmgt.events.api.EventProxy;
 import org.opennms.netmgt.jmx.JmxCollector;
 import org.opennms.netmgt.jmx.JmxCollectorConfig;
 import org.opennms.netmgt.jmx.JmxSampleProcessor;
 import org.opennms.netmgt.jmx.JmxUtils;
+import org.opennms.netmgt.jmx.connection.JmxConnectors;
 import org.opennms.netmgt.jmx.impl.DefaultJmxCollector;
 import org.opennms.netmgt.jmx.samples.JmxAttributeSample;
 import org.opennms.netmgt.jmx.samples.JmxCompositeSample;
-import org.opennms.netmgt.events.api.EventProxy;
 import org.opennms.netmgt.rrd.RrdRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,6 +119,11 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class JMXCollector implements ServiceCollector {
     private static final Logger LOG = LoggerFactory.getLogger(JMXCollector.class);
+
+    /**
+     * the config dao to be used
+     */
+    protected JmxConfigDao m_jmxConfigDao = null;
 
     /**
      * Interface attribute key used to store a JMXNodeInfo object which holds
@@ -259,7 +266,7 @@ public abstract class JMXCollector implements ServiceCollector {
     }
 
     // we need this to determine which connection type/manager should be used to connect to the jvm
-    protected abstract String getConnectionName();
+    protected abstract JmxConnectors getConnectionName();
 
     /**
      * {@inheritDoc}
@@ -268,7 +275,7 @@ public abstract class JMXCollector implements ServiceCollector {
      */
     @Override
     public CollectionSet collect(CollectionAgent agent, EventProxy eproxy, Map<String, Object> map) {
-        final Map<String, String> stringMap = JmxUtils.convertToStringMap(map);
+        final Map<String, String> stringMap = JmxUtils.convertToUnmodifiableStringMap(map);
         final InetAddress ipaddr = agent.getAddress();
         final JMXNodeInfo nodeInfo = agent.getAttribute(NODE_INFO_KEY);
         final String collectionName = agent.getAttribute("collectionName");
@@ -293,6 +300,7 @@ public abstract class JMXCollector implements ServiceCollector {
             config.setJmxCollection(JMXDataCollectionConfigFactory.getInstance().getJmxCollection(collectionName));
 
             final JmxCollector jmxCollector = new DefaultJmxCollector();
+            ((DefaultJmxCollector) jmxCollector).setJmxConfigDao(m_jmxConfigDao);
             jmxCollector.collect(config, new JmxSampleProcessor() {
 
                 private final Map<String, AttributeGroupType> groupNameAttributeGroupTypeMap = new HashMap<>();
@@ -419,13 +427,7 @@ public abstract class JMXCollector implements ServiceCollector {
 
                     ds.setMax(ds_maxval);
                     ds.setInstance(collectionName);
-
-                    /*
-                     * Truncate MBean object name/alias if it exceeds 19 char
-                     * max for RRD data source names.
-                     */
-                    String ds_name = JmxUtils.trimAttributeName(attr.getAlias());
-                    ds.setName(ds_name);
+                    ds.setName(attr.getAlias());
 
                     // Map MBean object data type to RRD data type
                     ds.setType(ds_type);
@@ -487,8 +489,12 @@ public abstract class JMXCollector implements ServiceCollector {
         }
 
         @Override
-        public String getNumericValue() {
-            return m_value;
+        public Double getNumericValue() {
+            try {
+                return Double.parseDouble(m_value);
+            } catch (NumberFormatException|NullPointerException e) {
+                return null;
+            }
         }
 
         @Override
@@ -535,8 +541,8 @@ public abstract class JMXCollector implements ServiceCollector {
         }
 
         @Override
-        public File getResourceDir(RrdRepository repository) {
-            return new File(repository.getRrdBaseDir(), getParent() + File.separator + m_resourceName);
+        public Path getPath() {
+            return super.getPath().resolve(m_resourceName);
         }
 
         @Override
@@ -548,6 +554,7 @@ public abstract class JMXCollector implements ServiceCollector {
         public String getInstance() {
             return null; //For node type resources, use the default instance
         }
+
     }
 
     /**

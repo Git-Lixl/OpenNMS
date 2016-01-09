@@ -133,6 +133,19 @@ public class DefaultCollectionAgentService implements CollectionAgentService {
     }
 
     /* (non-Javadoc)
+    * @see org.opennms.netmgt.collectd.CollectionAgent#getNodeLabel()
+    */
+   /**
+    * <p>getNodeLabel</p>
+    *
+     * @return a {@link java.lang.String} object.
+    */
+   @Override
+   public String getNodeLabel() {
+       return getIpInterface().getNode().getLabel();
+   }
+
+    /* (non-Javadoc)
      * @see org.opennms.netmgt.collectd.CollectionAgent#getForeignSource()
      */
     /**
@@ -142,7 +155,7 @@ public class DefaultCollectionAgentService implements CollectionAgentService {
      */
     @Override
     public String getForeignSource() {
-       return getIpInterface().getNode().getForeignSource() == null ? null : getIpInterface().getNode().getForeignSource();
+       return getIpInterface().getNode().getForeignSource();
     }
 
     /* (non-Javadoc)
@@ -155,7 +168,7 @@ public class DefaultCollectionAgentService implements CollectionAgentService {
      */
     @Override
     public String getForeignId() {
-       return getIpInterface().getNode().getForeignId() == null ? null : getIpInterface().getNode().getForeignId();
+       return getIpInterface().getNode().getForeignId();
     }
     
     /* (non-Javadoc)
@@ -168,11 +181,14 @@ public class DefaultCollectionAgentService implements CollectionAgentService {
      */
     @Override
     public File getStorageDir() {
-        File dir = new File(String.valueOf(getIpInterface().getNode().getId()));
-        if(isStoreByForeignSource() && !(getIpInterface().getNode().getForeignSource() == null) && !(getIpInterface().getNode().getForeignId() == null)) {
-               File fsDir = new File(ResourceTypeUtils.FOREIGN_SOURCE_DIRECTORY, getIpInterface().getNode().getForeignSource());
-            dir = new File(fsDir, getIpInterface().getNode().getForeignId());
+        File dir = new File(String.valueOf(getNodeId()));
+        final String foreignSource = getForeignSource();
+        final String foreignId = getForeignId();
+        if(isStoreByForeignSource() && foreignSource != null && foreignId != null) {
+            File fsDir = new File(ResourceTypeUtils.FOREIGN_SOURCE_DIRECTORY, foreignSource);
+            dir = new File(fsDir, foreignId);
         }
+        LOG.debug("getStorageDir: isStoreByForeignSource = {}, foreignSource = {}, foreignId = {}, dir = {}", isStoreByForeignSource(), foreignSource, foreignId, dir);
         return dir;
     }
     

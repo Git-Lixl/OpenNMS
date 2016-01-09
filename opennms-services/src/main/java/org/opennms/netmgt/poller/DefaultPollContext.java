@@ -323,6 +323,8 @@ public class DefaultPollContext implements PollContext, EventListener {
         else {
             r.run();
         }
+        LOG.debug("openOutage: sending outageCreated event for: {} on {}", svc.getSvcName(), svc.getIpAddr());
+        sendEvent(createEvent(EventConstants.OUTAGE_CREATED_EVENT_UEI, svc.getNodeId(), svc.getAddress(), svc.getSvcName(), svcLostEvent.getDate(), null));
     }
 
     /* (non-Javadoc)
@@ -361,12 +363,8 @@ public class DefaultPollContext implements PollContext, EventListener {
         else {
             r.run();
         }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void reparentOutages(String ipAddr, int oldNodeId, int newNodeId) {
-        getQueryManager().reparentOutages(ipAddr, oldNodeId, newNodeId);
+        LOG.debug("resolveOutage: sending outageResolved event for: {} on {}", svc.getSvcName(), svc.getIpAddr());
+        sendEvent(createEvent(EventConstants.OUTAGE_RESOLVED_EVENT_UEI, svc.getNodeId(), svc.getAddress(), svc.getSvcName(), svcRegainEvent.getDate(), null));
     }
 
     /* (non-Javadoc)

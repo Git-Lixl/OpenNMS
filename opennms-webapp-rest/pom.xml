@@ -3,7 +3,7 @@
   <parent>
     <artifactId>opennms</artifactId>
     <groupId>org.opennms</groupId>
-    <version>17.0.0-SNAPSHOT</version>
+    <version>18.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-webapp-rest</artifactId>
@@ -15,10 +15,32 @@
       onms libs into the WEB-INF/lib for jetty 
     -->
     <onmsLibScope>provided</onmsLibScope>
+    <skipITs>true</skipITs>
   </properties>
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <skipITs>${skipITs}</skipITs>
+          <reuseForks>false</reuseForks>
+          <argLine>-Xmx1g -Djava.endorsed.dirs=${basedir}/target/endorsed</argLine>
+          <systemPropertyVariables>
+            <opennms.home>${project.build.testOutputDirectory}</opennms.home>
+            <java.endorsed.dirs>${basedir}/target/endorsed</java.endorsed.dirs>
+          </systemPropertyVariables>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -44,7 +66,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-Xmx1g -Djava.endorsed.dirs=${basedir}/target/endorsed</argLine>
+          <!-- Don't specify argLine here or it will override the value from /pom.xml -->
           <systemProperties>
             <property>
               <name>java.endorsed.dirs</name>
@@ -164,7 +186,8 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>
-      <artifactId>jersey-dependencies</artifactId>
+      <artifactId>cxf-dependencies</artifactId>
+      <version>${project.version}</version>
       <type>pom</type>
       <scope>${onmsLibScope}</scope>
     </dependency>
@@ -220,6 +243,22 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-rrd-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-rrd-jrobin</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>jrrd2-dependencies</artifactId>
+      <scope>test</scope>
+      <type>pom</type>
+    </dependency>
+    <dependency>
       <groupId>org.opennms.core.test-api</groupId>
       <artifactId>org.opennms.core.test-api.db</artifactId>
     </dependency>
@@ -234,6 +273,17 @@
     <dependency>
       <groupId>org.opennms.core.test-api</groupId>
       <artifactId>org.opennms.core.test-api.services</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features.collection</groupId>
+      <artifactId>org.opennms.features.collection.persistence.rrd</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.skyscreamer</groupId>
+      <artifactId>jsonassert</artifactId>
+      <version>1.2.3</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

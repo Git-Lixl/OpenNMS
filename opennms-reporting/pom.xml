@@ -3,7 +3,7 @@
   <parent>
     <artifactId>opennms</artifactId>
     <groupId>org.opennms</groupId>
-    <version>17.0.0-SNAPSHOT</version>
+    <version>18.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-reporting</artifactId>
@@ -33,6 +33,7 @@
           <descriptors>
             <descriptor>src/assembly/xsds.xml</descriptor>
           </descriptors>
+          <tarLongFileMode>posix</tarLongFileMode>
         </configuration>
         <executions>
           <execution>
@@ -119,6 +120,12 @@
       <groupId>org.opennms</groupId>
       <artifactId>opennms-rrd-jrobin</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>jrrd2-dependencies</artifactId>
+      <scope>test</scope>
+      <type>pom</type>
     </dependency>
     <dependency>
       <groupId>org.opennms</groupId>

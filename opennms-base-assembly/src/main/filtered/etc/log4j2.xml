@@ -93,9 +93,6 @@
     <logger name="httpclient" additivity="false" level="INFO">
       <appender-ref ref="RoutingAppender"/>
     </logger>
-    <logger name="mx4j" additivity="false" level="INFO">
-      <appender-ref ref="RoutingAppender"/>
-    </logger>
     <logger name="net.sf.jasperreports" additivity="false" level="INFO">
       <appender-ref ref="RoutingAppender"/>
     </logger>
@@ -106,6 +103,9 @@
       <appender-ref ref="RoutingAppender"/>
     </logger>
     <logger name="org.apache.coyote" additivity="false" level="WARN">
+      <appender-ref ref="RoutingAppender"/>
+    </logger>
+    <logger name="org.apache.mina.filter.logging" additivity="false" level="WARN">
       <appender-ref ref="RoutingAppender"/>
     </logger>
     <logger name="org.asteriskjava" additivity="false" level="WARN">
@@ -166,7 +166,6 @@
         <KeyValuePair key="alarmd"               value="DEBUG" />
         <KeyValuePair key="asterisk-gateway"     value="DEBUG" />
         <KeyValuePair key="archiver"             value="DEBUG" />
-        <KeyValuePair key="capsd"                value="DEBUG" />
         <KeyValuePair key="collectd"             value="DEBUG" />
         <KeyValuePair key="correlator"           value="DEBUG" />
         <KeyValuePair key="dhcpd"                value="DEBUG" />
@@ -175,11 +174,9 @@
         <KeyValuePair key="event-translator"     value="DEBUG" />
         <KeyValuePair key="icmp"                 value="DEBUG" />
         <KeyValuePair key="jetty-server"         value="DEBUG" />
-        <KeyValuePair key="linkd"                value="DEBUG" />
         <KeyValuePair key="enlinkd"              value="DEBUG" />
         <KeyValuePair key="manager"              value="DEBUG" />
         <KeyValuePair key="map"                  value="DEBUG" />
-        <KeyValuePair key="model-importer"       value="DEBUG" />
         <KeyValuePair key="notifd"               value="DEBUG" />
         <KeyValuePair key="oss-qosd"             value="DEBUG" />
         <KeyValuePair key="oss-qosdrx"           value="DEBUG" />
@@ -190,16 +187,16 @@
         <KeyValuePair key="reportd"              value="DEBUG" />
         <KeyValuePair key="reports"              value="DEBUG" />
         <KeyValuePair key="rtc"                  value="DEBUG" />
-        <KeyValuePair key="syslogd"              value="DEBUG" />
+        <KeyValuePair key="statsd"               value="DEBUG" />
         <KeyValuePair key="scriptd"              value="DEBUG" />
         <KeyValuePair key="snmp-poller"          value="DEBUG" />
         <KeyValuePair key="syslogd"              value="DEBUG" />
         <KeyValuePair key="threshd"              value="DEBUG" />
         <KeyValuePair key="tl1d"                 value="DEBUG" />
         <KeyValuePair key="trapd"                value="DEBUG" />
+        <KeyValuePair key="trouble-ticketer"     value="DEBUG" />
         <KeyValuePair key="vacuumd"              value="DEBUG" />
         <KeyValuePair key="web"                  value="DEBUG" />
-        <KeyValuePair key="xmlrpcd"              value="DEBUG" />
       </DynamicThresholdFilter>
 
       <appender-ref ref="RoutingAppender"/>

@@ -30,15 +30,6 @@
      <constructor-arg ref="daoContext" />
    </bean>
    
-   <bean id="provisionerContext" class="org.springframework.context.support.ClassPathXmlApplicationContext">
-     <constructor-arg>
-       <list>
-         <value>META-INF/opennms/applicationContext-provisioner.xml</value>
-       </list>
-     </constructor-arg>
-     <constructor-arg ref="daoContext" />
-   </bean>
-   
    <bean id="snmpinterfacepollerdContext" class="org.springframework.context.support.ClassPathXmlApplicationContext">
      <constructor-arg>
        <list>
@@ -56,16 +47,7 @@
      </constructor-arg>
      <constructor-arg ref="daoContext" />
    </bean>
-   
-    <bean id="troubleTicketerContext" class="org.springframework.context.support.ClassPathXmlApplicationContext">
-     <constructor-arg>
-       <list>
-         <value>META-INF/opennms/applicationContext-troubleTicketer.xml</value>
-       </list>
-     </constructor-arg>
-     <constructor-arg ref="daoContext" />
-   </bean>
-   
+
     <bean id="queuedContext" class="org.springframework.context.support.ClassPathXmlApplicationContext">
      <constructor-arg>
        <list>
@@ -84,15 +66,6 @@
      <constructor-arg ref="daoContext" />
     </bean>
     
-    <bean id="linkdContext" class="org.springframework.context.support.ClassPathXmlApplicationContext">
-     <constructor-arg>
-       <list>
-         <value>META-INF/opennms/applicationContext-linkd.xml</value>
-       </list>
-     </constructor-arg>
-     <constructor-arg ref="daoContext" />
-   </bean>
-        
    <bean id="enhancedLinkdContext" class="org.springframework.context.support.ClassPathXmlApplicationContext">
      <constructor-arg>
        <list>
@@ -119,13 +92,5 @@
      </constructor-arg>
      <constructor-arg ref="daoContext" />
    </bean>
-    
-   <bean id="discoveryContext" class="org.springframework.context.support.ClassPathXmlApplicationContext">
-     <constructor-arg>
-       <list>
-         <value>META-INF/opennms/applicationContext-discovery.xml</value>
-       </list>
-     </constructor-arg>
-     <constructor-arg ref="daoContext" />
-   </bean> 
+
 </beans>

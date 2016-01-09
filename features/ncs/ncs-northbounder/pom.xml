@@ -2,13 +2,16 @@
   <parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>org.opennms.features.ncs</artifactId>
-    <version>17.0.0-SNAPSHOT</version>
+    <version>18.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.ncs</groupId>
   <artifactId>ncs-northbounder</artifactId>
   <packaging>bundle</packaging>
   <name>OpenNMS Features NCS Northbounder</name>
+  <properties>
+    <skipITs>true</skipITs>
+  </properties>
 
   <build>
     <plugins>
@@ -18,6 +21,7 @@
           <descriptors>
             <descriptor>src/assembly/etc.xml</descriptor>
           </descriptors>
+          <tarLongFileMode>posix</tarLongFileMode>
         </configuration>
         <executions>
           <execution>
@@ -43,6 +47,21 @@
             </Export-Package>
           </instructions>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <skipITs>${skipITs}</skipITs>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

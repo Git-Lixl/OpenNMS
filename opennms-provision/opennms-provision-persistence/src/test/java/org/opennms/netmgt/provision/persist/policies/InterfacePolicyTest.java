@@ -55,6 +55,7 @@ import org.springframework.transaction.annotation.Transactional;
 @ContextConfiguration(locations={
         "classpath:/META-INF/opennms/applicationContext-soa.xml",
         "classpath:/META-INF/opennms/applicationContext-mockDao.xml",
+        "classpath:/META-INF/opennms/applicationContext-databasePopulator.xml",
         "classpath:/META-INF/opennms/applicationContext-mockEventd.xml"
 })
 @JUnitConfigurationEnvironment

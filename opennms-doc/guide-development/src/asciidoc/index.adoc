@@ -8,13 +8,16 @@
 :numbered:
 
 = Developers Guide
-:author: Copyright (c) 2014 The OpenNMS Group, Inc.
-:revnumber: OpenNMS v{opennms-version}
+:author: Copyright (c) 2015 The OpenNMS Group, Inc.
+:revnumber: OpenNMS {opennms-version}
 :revdate: {last-update-label} {docdatetime}
 :version-label!:
 
 // Include your documentation sections here
 // include::text/myFile.adoc[]
+
+== Setup a development system
+include::text/dev-guide.adoc[]
 
 == CORS Support
 include::text/rest/CORS.adoc[]
@@ -30,8 +33,8 @@ include::text/rest/alarms.adoc[]
 include::text/rest/events.adoc[]
 include::text/rest/foreign_sources.adoc[]
 include::text/rest/groups.adoc[]
+include::text/rest/heatmap.adoc[]
 include::text/rest/ksc_reports.adoc[]
-include::text/rest/links.adoc[]
 include::text/rest/maps.adoc[]
 include::text/rest/measurements.adoc[]
 include::text/rest/nodes.adoc[]
@@ -46,3 +49,17 @@ include::text/rest/users.adoc[]
 
 === ReST API Examples
 include::text/rest/examples.adoc[]
+
+== Develop Documentation
+include::text/docs/introduction.adoc[]
+include::text/docs/writing.adoc[]
+include::text/docs/images.adoc[]
+include::text/docs/include-source.adoc[]
+include::text/docs/cheat-sheets.adoc[]
+
+== AMQP Integration
+include::text/amqp/introduction.adoc[]
+include::text/amqp/event_forwarder.adoc[]
+include::text/amqp/event_receiver.adoc[]
+include::text/amqp/alarm_northbounder.adoc[]
+include::text/amqp/custom_processors.adoc[]

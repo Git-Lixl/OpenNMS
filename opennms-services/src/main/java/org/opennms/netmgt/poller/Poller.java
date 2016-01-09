@@ -36,11 +36,10 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 
-import javax.sql.DataSource;
-
 import org.opennms.core.criteria.Criteria;
 import org.opennms.core.criteria.restrictions.InRestriction;
 import org.opennms.core.utils.InetAddressUtils;
+import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.config.OpennmsServerConfigFactory;
 import org.opennms.netmgt.config.PollOutagesConfig;
 import org.opennms.netmgt.config.PollerConfig;
@@ -48,6 +47,7 @@ import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.daemon.AbstractServiceDaemon;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.OutageDao;
+import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.opennms.netmgt.model.OnmsEvent;
 import org.opennms.netmgt.model.OnmsIpInterface;
@@ -102,9 +102,6 @@ public class Poller extends AbstractServiceDaemon {
     private EventIpcManager m_eventMgr;
 
     @Autowired
-    private DataSource m_dataSource;
-
-    @Autowired
     private MonitoredServiceDao m_monitoredServiceDao;
 
     @Autowired
@@ -112,6 +109,16 @@ public class Poller extends AbstractServiceDaemon {
 
     @Autowired
     private TransactionTemplate m_transactionTemplate;
+
+    @Autowired
+    private PersisterFactory m_persisterFactory;
+
+    @Autowired
+    private ResourceStorageDao m_resourceStorageDao;
+
+    public void setPersisterFactory(PersisterFactory persisterFactory) {
+        m_persisterFactory = persisterFactory;
+    }
 
     public void setOutageDao(OutageDao outageDao) {
         this.m_outageDao = outageDao;
@@ -151,14 +158,6 @@ public class Poller extends AbstractServiceDaemon {
     }
 
     /* Getters/Setters used for dependency injection */
-    /**
-     * <p>setDataSource</p>
-     *
-     * @param dataSource a {@link javax.sql.DataSource} object.
-     */
-    void setDataSource(DataSource dataSource) {
-        m_dataSource = dataSource;
-    }
 
     /**
      * <p>getEventManager</p>
@@ -545,7 +544,8 @@ public class Poller extends AbstractServiceDaemon {
         }
 
         PollableService svc = getNetwork().createService(nodeId, nodeLabel, addr, serviceName);
-        PollableServiceConfig pollConfig = new PollableServiceConfig(svc, m_pollerConfig, m_pollOutagesConfig, pkg, getScheduler());
+        PollableServiceConfig pollConfig = new PollableServiceConfig(svc, m_pollerConfig, m_pollOutagesConfig, pkg,
+                getScheduler(), m_persisterFactory, m_resourceStorageDao);
         svc.setPollConfig(pollConfig);
         synchronized(svc) {
             if (svc.getSchedule() == null) {

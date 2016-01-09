@@ -37,8 +37,10 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.transform.ResultTransformer;
 import org.opennms.netmgt.dao.api.OutageDao;
 import org.opennms.netmgt.filter.api.FilterDao;
+import org.opennms.netmgt.model.HeatMapElement;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsOutage;
 import org.opennms.netmgt.model.ServiceSelector;
@@ -86,15 +88,15 @@ public class OutageDaoHibernate extends AbstractDaoHibernate<OnmsOutage, Integer
     /** {@inheritDoc} */
     @Override
     public Collection<OnmsOutage> findAll(final Integer offset, final Integer limit) {
-        return (Collection<OnmsOutage>)getHibernateTemplate().execute(new HibernateCallback<Collection<OnmsOutage>>() {
+        return (Collection<OnmsOutage>) getHibernateTemplate().execute(new HibernateCallback<Collection<OnmsOutage>>() {
 
             @SuppressWarnings("unchecked")
             @Override
             public Collection<OnmsOutage> doInHibernate(final Session session) throws HibernateException {
                 return session.createCriteria(OnmsOutage.class)
-                .setFirstResult(offset)
-                .setMaxResults(limit)
-                .list();
+                        .setFirstResult(offset)
+                        .setMaxResults(limit)
+                        .list();
             }
 
         });
@@ -126,19 +128,20 @@ public class OutageDaoHibernate extends AbstractDaoHibernate<OnmsOutage, Integer
     }
 
     // final int nodeId, final String nodeLabel, final Date timeDown, final Date timeUp, final Date timeNow
+
     /** {@inheritDoc} */
     @Override
     public List<OutageSummary> getNodeOutageSummaries(final int rows) {
         final List<OutageSummary> outages = findObjects(
-            OutageSummary.class,
-            "SELECT DISTINCT new org.opennms.netmgt.model.outage.OutageSummary(node.id, node.label, max(outage.ifLostService)) " +
-            "FROM OnmsOutage AS outage " +
-            "LEFT JOIN outage.monitoredService AS monitoredService " +
-            "LEFT JOIN monitoredService.ipInterface AS ipInterface " + 
-            "LEFT JOIN ipInterface.node AS node " +
-            "WHERE outage.ifRegainedService IS NULL " +
-            "GROUP BY node.id, node.label " +
-            "ORDER BY max(outage.ifLostService) DESC, node.label ASC, node.id ASC"
+                OutageSummary.class,
+                "SELECT DISTINCT new org.opennms.netmgt.model.outage.OutageSummary(node.id, node.label, max(outage.ifLostService)) " +
+                        "FROM OnmsOutage AS outage " +
+                        "LEFT JOIN outage.monitoredService AS monitoredService " +
+                        "LEFT JOIN monitoredService.ipInterface AS ipInterface " +
+                        "LEFT JOIN ipInterface.node AS node " +
+                        "WHERE outage.ifRegainedService IS NULL " +
+                        "GROUP BY node.id, node.label " +
+                        "ORDER BY max(outage.ifLostService) DESC, node.label ASC, node.id ASC"
         );
         if (rows == 0 || outages.size() < rows) {
             return outages;
@@ -147,4 +150,58 @@ public class OutageDaoHibernate extends AbstractDaoHibernate<OnmsOutage, Integer
         }
     }
 
+    @Override
+    public List<HeatMapElement> getHeatMapItemsForEntity(String entityNameColumn, String entityIdColumn, String restrictionColumn, String restrictionValue, String... groupByColumns) {
+
+        String grouping = "";
+
+        if (groupByColumns != null && groupByColumns.length > 0) {
+            for (String groupByColumn : groupByColumns) {
+                if (!"".equals(grouping)) {
+                    grouping += ", ";
+                }
+
+                grouping += groupByColumn;
+            }
+        } else {
+            grouping = entityNameColumn + ", " + entityIdColumn;
+        }
+
+        final String groupByClause = grouping;
+
+        return getHibernateTemplate().execute(new HibernateCallback<List<HeatMapElement>>() {
+            @Override
+            public List<HeatMapElement> doInHibernate(Session session) throws HibernateException {
+                return (List<HeatMapElement>) session.createSQLQuery(
+                        "select coalesce(" + entityNameColumn + ",'Uncategorized'), " + entityIdColumn + ", " +
+                                "count(distinct case when outages.outageid is not null and ifservices.status <> 'D' then ifservices.id else null end) as servicesDown, " +
+                                "count(distinct case when ifservices.status <> 'D' then ifservices.id else null end) as servicesTotal, " +
+                                "count(distinct case when outages.outageid is null and ifservices.status <> 'D' then node.nodeid else null end) as nodesUp, " +
+                                "count(distinct node.nodeid) as nodeTotalCount " +
+                                "from node left " +
+                                "join category_node using (nodeid) left join categories using (categoryid) " +
+                                "left outer join ipinterface using (nodeid) " +
+                                "left outer join ifservices on (ifservices.ipinterfaceid = ipinterface.id) " +
+                                "left outer join service on (ifservices.serviceid = service.serviceid) " +
+                                "left outer join outages on (outages.ifserviceid = ifservices.id and outages.ifregainedservice is null) " +
+                                "where nodeType <> 'D' " +
+                                (restrictionColumn != null ? "and coalesce(" + restrictionColumn + ",'Uncategorized')='" + restrictionValue + "' " : "") +
+                                "group by " + groupByClause + " having count(distinct case when ifservices.status <> 'D' then ifservices.id else null end) > 0")
+                        .setResultTransformer(new ResultTransformer() {
+                            private static final long serialVersionUID = 5152094813503430377L;
+
+                            @Override
+                            public Object transformTuple(Object[] tuple, String[] aliases) {
+                                return new HeatMapElement((String) tuple[0], (Number) tuple[1], (Number) tuple[2], (Number) tuple[3], (Number) tuple[4], (Number) tuple[5]);
+                            }
+
+                            @SuppressWarnings("rawtypes")
+                            @Override
+                            public List transformList(List collection) {
+                                return collection;
+                            }
+                        }).list();
+            }
+        });
+    }
 }
