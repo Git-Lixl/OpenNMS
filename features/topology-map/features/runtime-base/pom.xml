@@ -30,6 +30,7 @@
           <features>
             <feature>opennms-core</feature>
             <feature>opennms-topology-api</feature>
+            <feature>cxf</feature>
           </features>
           <configs>
             <config>

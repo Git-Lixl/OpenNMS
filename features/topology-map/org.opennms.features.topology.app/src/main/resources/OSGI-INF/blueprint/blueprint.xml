@@ -1,9 +1,15 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
-xsi:schemaLocation="
-http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
-http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
-http://www.osgi.org/xmlns/blueprint-ext/v1.1.0 http://aries.apache.org/schemas/blueprint-ext/blueprint-ext-1.1.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+    xmlns:jaxws="http://cxf.apache.org/blueprint/jaxws"
+    xmlns:jaxrs="http://cxf.apache.org/blueprint/jaxrs"
+    xmlns:cxf="http://cxf.apache.org/blueprint/core"
+    xsi:schemaLocation="
+    http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+    http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+    http://cxf.apache.org/blueprint/jaxws http://cxf.apache.org/schemas/blueprint/jaxws.xsd
+    http://cxf.apache.org/blueprint/jaxrs http://cxf.apache.org/schemas/blueprint/jaxrs.xsd
+    http://cxf.apache.org/blueprint/core http://cxf.apache.org/schemas/blueprint/core.xsd">
 
     <cm:property-placeholder id="appConfig" persistent-id="org.opennms.features.topology.app" update-strategy="reload">
         <cm:default-properties>
@@ -406,5 +412,32 @@ http://www.osgi.org/xmlns/blueprint-ext/v1.1.0 http://aries.apache.org/schemas/b
 			<entry key="registration.export" value="true" />
 		</service-properties>
 	</service>
+
+    <!-- Expose it via rest -->
+    <cxf:bus id="cxfBus">
+        <cxf:features>
+            <cxf:logging/>
+        </cxf:features>
+    </cxf:bus>
+    <jaxrs:server address="/abc-graphs" id="topologyRestServer">
+        <jaxrs:serviceBeans>
+            <ref component-id="topologyRestServiceImpl"/>
+        </jaxrs:serviceBeans>
+    </jaxrs:server>
+    <!-- Implementation of the rest service -->
+    <bean id="topologyRestServiceImpl" class="org.opennms.features.topology.app.internal.rest.TopologyRestService">
+        <property name="topologyService" ref="topologyServiceImpl"/>
+    </bean>
+    <bean id="topologyServiceImpl" class="org.opennms.features.topology.app.internal.rest.DefaultTopologyService"/>
+    <reference-list interface="org.opennms.features.topology.api.topo.EdgeProvider" availability="optional">
+        <reference-listener bind-method="onEdgeProviderBind" unbind-method="onEdgeProviderUnbind" ref="topologyServiceImpl"/>
+    </reference-list>
+    <reference-list interface="org.opennms.features.topology.api.topo.VertexProvider" availability="optional">
+        <reference-listener bind-method="onVertexProviderBind" unbind-method="onVertexProviderUnbind" ref="topologyServiceImpl"/>
+    </reference-list>
+    <reference-list interface="org.opennms.features.topology.api.topo.GraphProvider" availability="optional">
+        <reference-listener bind-method="onGraphProviderBind" unbind-method="onGraphProviderUnbind" ref="topologyServiceImpl"/>
+    </reference-list>
+
 
 </blueprint>
