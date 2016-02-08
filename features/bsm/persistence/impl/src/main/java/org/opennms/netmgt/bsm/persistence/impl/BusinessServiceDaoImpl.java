@@ -28,14 +28,53 @@
 
 package org.opennms.netmgt.bsm.persistence.impl;
 
-import org.opennms.netmgt.bsm.persistence.api.BusinessService;
-import org.opennms.netmgt.bsm.persistence.api.BusinessServiceDao;
-import org.opennms.netmgt.dao.hibernate.AbstractDaoHibernate;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-public class BusinessServiceDaoImpl extends AbstractDaoHibernate<BusinessService, Long> implements BusinessServiceDao {
+import org.hibernate.Criteria;
+import org.hibernate.HibernateException;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceDao;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEntity;
+import org.opennms.netmgt.dao.hibernate.AbstractDaoHibernate;
+import org.springframework.orm.hibernate3.HibernateCallback;
+
+public class BusinessServiceDaoImpl extends AbstractDaoHibernate<BusinessServiceEntity, Long> implements BusinessServiceDao {
 
     public BusinessServiceDaoImpl() {
-        super(BusinessService.class);
+        super(BusinessServiceEntity.class);
+    }
+
+    @Override
+    public Set<BusinessServiceEntity> findParents(BusinessServiceEntity child) {
+        final long childId =  Objects.requireNonNull(child).getId();
+        Set<BusinessServiceEntity> parents = getHibernateTemplate().execute(new HibernateCallback<Set<BusinessServiceEntity>>() {
+            @Override
+            public Set<BusinessServiceEntity> doInHibernate(Session session) throws HibernateException, SQLException {
+                Query query = session.createQuery("select edge from BusinessServiceEdgeEntity edge where type(edge) = BusinessServiceChildEdgeEntity and edge.child.id = :childId");
+                query.setParameter("childId", childId);
+                List<BusinessServiceEdgeEntity> list = query.list();
+                return list.stream().map(e -> e.getBusinessService()).collect(Collectors.toSet());
+            }
+        });
+        return parents;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<BusinessServiceEntity> findMatching(final org.opennms.core.criteria.Criteria criteria) {
+        final HibernateCallback<List<BusinessServiceEntity>> callback = session -> {
+            final Criteria hibernateCriteria = m_criteriaConverter.convert(criteria, session);
+            // Manually override default. Otherwise for each 1 - n relationship (with n > 1), n entities are returned instead of 1
+            hibernateCriteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+            return (List<BusinessServiceEntity>)(hibernateCriteria.list());
+        };
+        return getHibernateTemplate().execute(callback);
     }
 
 }

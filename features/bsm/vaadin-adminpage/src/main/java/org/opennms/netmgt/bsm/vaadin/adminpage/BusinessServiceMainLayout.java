@@ -18,12 +18,12 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with OpenNMS(R).  If not, see:
- * http://www.gnu.org/licenses/
+ *      http://www.gnu.org/licenses/
  *
  * For more information contact:
- * OpenNMS(R) Licensing <license@opennms.org>
- * http://www.opennms.org/
- * http://www.opennms.com/
+ *     OpenNMS(R) Licensing <license@opennms.org>
+ *     http://www.opennms.org/
+ *     http://www.opennms.com/
  *******************************************************************************/
 
 package org.opennms.netmgt.bsm.vaadin.adminpage;
@@ -31,11 +31,12 @@ package org.opennms.netmgt.bsm.vaadin.adminpage;
 import java.util.Objects;
 
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
-import org.opennms.netmgt.bsm.service.model.BusinessServiceDTO;
+import org.opennms.netmgt.bsm.service.model.BusinessService;
+import org.opennms.netmgt.vaadin.core.TransactionAwareUI;
 import org.opennms.netmgt.vaadin.core.UIHelper;
 
 import com.google.common.base.Strings;
-import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.data.util.BeanContainer;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
@@ -63,7 +64,7 @@ public class BusinessServiceMainLayout extends VerticalLayout {
     /**
      * the bean item container for the listed Business Service DTOs
      */
-    private final BeanItemContainer<BusinessServiceDTO> m_beanItemContainer = new BeanItemContainer<>(BusinessServiceDTO.class);
+    private final BeanContainer<Long, BusinessService> m_beanContainer = new BeanContainer<>(BusinessService.class);
 
     public BusinessServiceMainLayout(BusinessServiceManager businessServiceManager) {
         m_businessServiceManager = Objects.requireNonNull(businessServiceManager);
@@ -80,33 +81,22 @@ public class BusinessServiceMainLayout extends VerticalLayout {
 
         // business service input field
         final TextField createTextField = new TextField();
+        createTextField.setWidth(300.0f, Unit.PIXELS);
         createTextField.setInputPrompt("Business Service Name");
         createTextField.setId("createTextField");
 
-        // create button
+        // create Button
         final Button createButton = new Button("Create");
         createButton.setId("createButton");
         createButton.addClickListener((Button.ClickListener) event -> {
-            /**
-             * check for valid value
-             */
             if (!"".equals(Strings.nullToEmpty(createTextField.getValue()).trim())) {
-                /**
-                 * create new DTO instance
-                 */
-                final BusinessServiceDTO businessServiceDTO = new BusinessServiceDTO();
-                /**
-                 * add the title
-                 */
-                businessServiceDTO.setName(createTextField.getValue().trim());
-                /**
-                 * create the modal configuration dialog
-                 */
-                getUI().addWindow(new BusinessServiceEditWindow(businessServiceDTO, BusinessServiceMainLayout.this));
-                /**
-                 * clear the textfield value
-                 */
+                final BusinessService businessService = m_businessServiceManager.createBusinessService();
+                businessService.setName(createTextField.getValue().trim());
                 createTextField.setValue("");
+
+                final BusinessServiceEditWindow window = new BusinessServiceEditWindow(businessService, m_businessServiceManager);
+                window.addCloseListener(e -> refreshTable());
+                getUI().addWindow(window);
             }
         });
 
@@ -127,7 +117,7 @@ public class BusinessServiceMainLayout extends VerticalLayout {
          */
         m_table = new Table();
         m_table.setSizeFull();
-        m_table.setContainerDataSource(m_beanItemContainer);
+        m_table.setContainerDataSource(m_beanContainer);
 
         /**
          * ...and configure the visible columns
@@ -135,18 +125,22 @@ public class BusinessServiceMainLayout extends VerticalLayout {
         m_table.setVisibleColumns("id", "name");
 
         /**
-         * create generated columns for modification of entries...
+         * createBusinessService generated columns for modification of entries...
          */
         m_table.addGeneratedColumn("edit", new Table.ColumnGenerator() {
             @Override
             public Object generateCell(Table source, Object itemId, Object columnId) {
                 Button editButton = new Button("edit");
-                editButton.setId("editButton-" + ((BusinessServiceDTO) itemId).getName());
+                editButton.addStyleName("small");
+                editButton.setId("editButton-" + m_beanContainer.getItem(itemId).getBean().getName());
 
-                editButton.addClickListener((Button.ClickListener) event -> {
-                    getUI().addWindow(new BusinessServiceEditWindow((BusinessServiceDTO) itemId, BusinessServiceMainLayout.this));
-                    refreshTable();
-                });
+                editButton.addClickListener(UIHelper.getCurrent(TransactionAwareUI.class).wrapInTransactionProxy((Button.ClickListener) event -> {
+                    BusinessService businessService = m_businessServiceManager.getBusinessServiceById((Long) itemId);
+                    final BusinessServiceEditWindow window = new BusinessServiceEditWindow(businessService, m_businessServiceManager);
+                    window.addCloseListener(e -> refreshTable());
+
+                    getUI().addWindow(window);
+                }));
                 return editButton;
             }
         });
@@ -155,17 +149,39 @@ public class BusinessServiceMainLayout extends VerticalLayout {
          * ...and deletion of entries
          */
         m_table.addGeneratedColumn("delete", new Table.ColumnGenerator() {
-            @Override
-            public Object generateCell(Table source, Object itemId, Object columnId) {
-                Button deleteButton = new Button("delete");
-                deleteButton.setId("deleteButton-" + ((BusinessServiceDTO) itemId).getName());
-                deleteButton.addClickListener((Button.ClickListener) event -> {
-                    businessServiceManager.delete(((BusinessServiceDTO) itemId).getId());
-                    refreshTable();
-                });
-                return deleteButton;
-            }
-        });
+                    @Override
+                    public Object generateCell(Table source, Object itemId, Object columnId) {
+                        Button deleteButton = new Button("delete");
+                        deleteButton.addStyleName("small");
+                        deleteButton.setId("deleteButton-" + m_beanContainer.getItem(itemId).getBean().getName());
+
+                        deleteButton.addClickListener((Button.ClickListener)event -> {
+                            BusinessService businessService = m_businessServiceManager.getBusinessServiceById((Long) itemId);
+                            if (businessService.getParentServices().isEmpty() && businessService.getChildEdges().isEmpty()) {
+                                UIHelper.getCurrent(TransactionAwareUI.class).runInTransaction(() -> {
+                                    m_businessServiceManager.getBusinessServiceById((Long) itemId).delete();
+                                    refreshTable();
+                                });
+                            } else {
+                                new org.opennms.netmgt.vaadin.core.ConfirmationDialog()
+                                        .withOkAction(UIHelper.getCurrent(TransactionAwareUI.class).wrapInTransactionProxy(new org.opennms.netmgt.vaadin.core.ConfirmationDialog.Action() {
+                                            @Override
+                                            public void execute(org.opennms.netmgt.vaadin.core.ConfirmationDialog window) {
+                                                m_businessServiceManager.getBusinessServiceById((Long) itemId).delete();
+                                                refreshTable();
+                                            }
+                                        }))
+                                        .withOkLabel("Delete anyway")
+                                        .withCancelLabel("Cancel")
+                                        .withCaption("Warning")
+                                        .withDescription("This entry is referencing or is referenced by other Business Services! Do you really want to delete this entry?")
+                                        .open();
+                            }
+                        });
+                        return deleteButton;
+                    }
+                }
+        );
 
         /**
          * add the table to the layout
@@ -191,14 +207,9 @@ public class BusinessServiceMainLayout extends VerticalLayout {
     /**
      * Refreshes the entries of the table used for listing the DTO instances.
      */
-    public void refreshTable() {
-        /**
-         * remove all...
-         */
-        m_beanItemContainer.removeAllItems();
-        /**
-         * ...and add all DTOs found by the service instance.
-         */
-        m_beanItemContainer.addAll(m_businessServiceManager.findAll());
+    private void refreshTable() {
+        m_beanContainer.setBeanIdProperty("id");
+        m_beanContainer.removeAllItems();
+        m_beanContainer.addAll(m_businessServiceManager.getAllBusinessServices());
     }
 }

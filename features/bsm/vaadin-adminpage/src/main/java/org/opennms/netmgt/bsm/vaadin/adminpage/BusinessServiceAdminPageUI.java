@@ -18,12 +18,12 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with OpenNMS(R).  If not, see:
- * http://www.gnu.org/licenses/
+ *      http://www.gnu.org/licenses/
  *
  * For more information contact:
- * OpenNMS(R) Licensing <license@opennms.org>
- * http://www.opennms.org/
- * http://www.opennms.com/
+ *     OpenNMS(R) Licensing <license@opennms.org>
+ *     http://www.opennms.org/
+ *     http://www.opennms.com/
  *******************************************************************************/
 
 package org.opennms.netmgt.bsm.vaadin.adminpage;
@@ -32,11 +32,12 @@ import java.util.Objects;
 
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.vaadin.core.TransactionAwareBeanProxyFactory;
+import org.opennms.netmgt.vaadin.core.TransactionAwareUI;
+import org.springframework.transaction.support.TransactionOperations;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.server.VaadinRequest;
-import com.vaadin.ui.UI;
 
 /**
  * Business Service Admin Vaadin UI: this class is the main entry point for the Vaadin application
@@ -48,7 +49,7 @@ import com.vaadin.ui.UI;
 @Theme("opennms")
 @Title("Business Service Admin Page")
 @SuppressWarnings("serial")
-public class BusinessServiceAdminPageUI extends UI {
+public class BusinessServiceAdminPageUI extends TransactionAwareUI {
 
     /**
      * wrapper for transaction-based service instances
@@ -60,13 +61,9 @@ public class BusinessServiceAdminPageUI extends UI {
      */
     private BusinessServiceManager m_businessServiceManager;
 
-    /**
-     * Constructor
-     *
-     * @param transactionAwareBeanProxyFactory the instance of the transaction wrapper
-     */
-    public BusinessServiceAdminPageUI(TransactionAwareBeanProxyFactory transactionAwareBeanProxyFactory) {
-        this.m_transactionAwareBeanProxyFactory = Objects.requireNonNull(transactionAwareBeanProxyFactory);
+    public BusinessServiceAdminPageUI(final TransactionOperations transactionOperations) {
+        super(transactionOperations);
+        this.m_transactionAwareBeanProxyFactory = new TransactionAwareBeanProxyFactory(transactionOperations);
     }
 
     /**
@@ -84,6 +81,7 @@ public class BusinessServiceAdminPageUI extends UI {
      */
     public void setBusinessServiceManager(BusinessServiceManager businessServiceManager) {
         Objects.requireNonNull(businessServiceManager);
-        m_businessServiceManager = m_transactionAwareBeanProxyFactory.createProxy(businessServiceManager);
+//        m_businessServiceManager = m_transactionAwareBeanProxyFactory.createProxy(businessServiceManager);
+        m_businessServiceManager = businessServiceManager;
     }
 }

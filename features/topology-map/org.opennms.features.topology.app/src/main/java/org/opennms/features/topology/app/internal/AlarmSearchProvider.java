@@ -270,14 +270,12 @@ public class AlarmSearchProvider extends AbstractSearchProvider implements Searc
     @Override
     public void onCenterSearchResult(SearchResult searchResult, GraphContainer graphContainer) {
     	LOG.trace("SearchProvider.onCenterSearchResult: called with search result: '{}'", searchResult);
-    	LOG.debug("SearchProvider->onCenterSearchResult: called with search result: '{}'", searchResult);
     	super.onCenterSearchResult(searchResult, graphContainer);
     }
 
     @Override
     public void onFocusSearchResult(SearchResult searchResult, OperationContext operationContext) {
     	LOG.trace("SearchProvider.onFocusSearchResult: called with search result: '{}'", searchResult);
-    	LOG.debug("SearchProvider->onFocusSearchResult: called with search result: '{}'", searchResult);
     	super.onFocusSearchResult(searchResult, operationContext);
 
     }
