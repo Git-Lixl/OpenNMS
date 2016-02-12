@@ -28,8 +28,10 @@
 
 package org.opennms.netmgt.bsm.service.internal;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -143,12 +145,36 @@ public class DefaultBusinessServiceStateMachine implements BusinessServiceStateM
         }
     }
 
+    private static int gcd(int a, int b) {
+        return BigInteger.valueOf(a).gcd(BigInteger.valueOf(b)).intValue();
+    }
+
+    private static List<Status> weighStatuses(Map<Edge, Status> edgeStatusMap) {
+        // Find the greatest common divisor of all the weights
+        int gcd = edgeStatusMap.keySet().stream()
+                .map(e -> e.getWeight())
+                .reduce((a,b) -> gcd(a, b))
+                .orElse(1);
+
+        // Multiply the statuses based on their relative weight
+        List<Status> statuses = Lists.newArrayList();
+        for (Entry<Edge, Status> edgeStatus : edgeStatusMap.entrySet()) {
+            int relativeWeight = Math.floorDiv(edgeStatus.getKey().getWeight(), gcd);
+            for (int i = 0; i < relativeWeight; i++) {
+                statuses.add(edgeStatus.getValue());
+            }
+        }
+
+        return statuses;
+    }
+
     private Status calculateCurrentStatus(BusinessService businessService) {
         // Map
         final Map<Edge, Status> edgeStatusMap = getStatusMapForReduceFunction(businessService);
-
+        // Weigh
+        final List<Status> weightedStatuses = weighStatuses(edgeStatusMap);
         // Reduce
-        final Status overallStatus = businessService.getReduceFunction().reduce(edgeStatusMap).orElse(DEFAULT_SEVERITY);
+        final Status overallStatus = businessService.getReduceFunction().reduce(weightedStatuses).orElse(DEFAULT_SEVERITY);
 
         // Apply lower bound, severity states like INDETERMINATE and CLEARED don't always make sense
         return overallStatus.isLessThan(MIN_SEVERITY) ? MIN_SEVERITY : overallStatus;
