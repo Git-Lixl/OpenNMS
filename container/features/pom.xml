@@ -95,6 +95,9 @@
 
             <!-- Ticketing Features-->
             <repository>mvn:org.opennms.features/jira-troubleticketer/${project.version}/xml/features</repository>
+
+            <!-- Data Choices -->
+            <repository>mvn:org.opennms.features/datachoices/${project.version}/xml/features</repository>
           </repositories>
 
           <!--
@@ -160,7 +163,6 @@
             <feature>hibernate36</feature>
             <feature>hibernate-validator41</feature>
             <feature>jaxb</feature>
-            <feature>jersey-client</feature>
             <feature>jfreechart</feature>
             <feature>jolokia</feature>
             <feature>jrobin</feature>
@@ -242,6 +244,7 @@
             <feature>vaadin-surveillance-views</feature>
             <feature>opennms-elasticsearch-event-forwarder</feature>
             <feature>jira-troubleticketer</feature>
+            <feature>datachoices</feature>
 
             <!-- BSM -->
             <feature>org.opennms.features.bsm.service.api</feature>
@@ -461,6 +464,13 @@
     <dependency>
       <groupId>org.opennms</groupId>
       <artifactId>opennms-icmp-jni6</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features</groupId>
+      <artifactId>datachoices</artifactId>
       <version>${project.version}</version>
       <type>pom</type>
       <scope>provided</scope>
