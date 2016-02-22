@@ -29,15 +29,34 @@
 package org.opennms.smoketest;
 
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
+import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
-
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CategoriesBoxTest extends OpenNMSSeleniumTestCase {
 
     @Before
     public void before() {
         m_driver.get(BASE_URL+"opennms");
+    }
+
+    /**
+     * This test typically runs first, so we opt-in here.
+     *
+     * FIXME: This logic must be moved into the default OpenNMSSeleniumTestCase
+     * implementation (or alternative) before being merge upstream
+     */
+    @Test
+    public void canEnableDatachoices() throws Exception {
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(By.id("datachoices-enable")));
+            findElementById("datachoices-enable").click();
+        } catch (Throwable t) {
+            // pass
+        }
     }
 
     @Test
