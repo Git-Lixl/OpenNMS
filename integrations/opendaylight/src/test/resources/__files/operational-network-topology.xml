@@ -1,0 +1,602 @@
+<?xml version="1.0"?>
+<network-topology xmlns="urn:TBD:params:xml:ns:yang:network-topology">
+  <topology>
+    <topology-id>flow:1</topology-id>
+    <node>
+      <node-id>host:00:00:00:00:00:08</node-id>
+      <termination-point>
+        <tp-id>host:00:00:00:00:00:08</tp-id>
+      </termination-point>
+      <attachment-points xmlns="urn:opendaylight:host-tracker">
+        <tp-id>openflow:7:2</tp-id>
+        <active>true</active>
+        <corresponding-tp>host:00:00:00:00:00:08</corresponding-tp>
+      </attachment-points>
+      <addresses xmlns="urn:opendaylight:host-tracker">
+        <id>7</id>
+        <mac>00:00:00:00:00:08</mac>
+        <first-seen>1456238929636</first-seen>
+        <ip>10.0.0.8</ip>
+        <last-seen>1456238929636</last-seen>
+      </addresses>
+      <id xmlns="urn:opendaylight:host-tracker">00:00:00:00:00:08</id>
+    </node>
+    <node>
+      <node-id>host:00:00:00:00:00:07</node-id>
+      <termination-point>
+        <tp-id>host:00:00:00:00:00:07</tp-id>
+      </termination-point>
+      <attachment-points xmlns="urn:opendaylight:host-tracker">
+        <tp-id>openflow:7:1</tp-id>
+        <active>true</active>
+        <corresponding-tp>host:00:00:00:00:00:07</corresponding-tp>
+      </attachment-points>
+      <addresses xmlns="urn:opendaylight:host-tracker">
+        <id>5</id>
+        <mac>00:00:00:00:00:07</mac>
+        <first-seen>1456238929633</first-seen>
+        <ip>10.0.0.7</ip>
+        <last-seen>1456238929633</last-seen>
+      </addresses>
+      <id xmlns="urn:opendaylight:host-tracker">00:00:00:00:00:07</id>
+    </node>
+    <node>
+      <node-id>openflow:5</node-id>
+      <termination-point>
+        <tp-id>openflow:5:3</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:5']/a:node-connector[a:id='openflow:5:3']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:5:LOCAL</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:5']/a:node-connector[a:id='openflow:5:LOCAL']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:5:2</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:5']/a:node-connector[a:id='openflow:5:2']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:5:1</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:5']/a:node-connector[a:id='openflow:5:1']</inventory-node-connector-ref>
+      </termination-point>
+      <inventory-node-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:5']</inventory-node-ref>
+    </node>
+    <node>
+      <node-id>host:00:00:00:00:00:04</node-id>
+      <termination-point>
+        <tp-id>host:00:00:00:00:00:04</tp-id>
+      </termination-point>
+      <attachment-points xmlns="urn:opendaylight:host-tracker">
+        <tp-id>openflow:4:2</tp-id>
+        <active>true</active>
+        <corresponding-tp>host:00:00:00:00:00:04</corresponding-tp>
+      </attachment-points>
+      <addresses xmlns="urn:opendaylight:host-tracker">
+        <id>3</id>
+        <mac>00:00:00:00:00:04</mac>
+        <first-seen>1456238929619</first-seen>
+        <ip>10.0.0.4</ip>
+        <last-seen>1456238929619</last-seen>
+      </addresses>
+      <id xmlns="urn:opendaylight:host-tracker">00:00:00:00:00:04</id>
+    </node>
+    <node>
+      <node-id>openflow:6</node-id>
+      <termination-point>
+        <tp-id>openflow:6:1</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:6']/a:node-connector[a:id='openflow:6:1']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:6:3</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:6']/a:node-connector[a:id='openflow:6:3']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:6:2</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:6']/a:node-connector[a:id='openflow:6:2']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:6:LOCAL</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:6']/a:node-connector[a:id='openflow:6:LOCAL']</inventory-node-connector-ref>
+      </termination-point>
+      <inventory-node-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:6']</inventory-node-ref>
+    </node>
+    <node>
+      <node-id>host:00:00:00:00:00:03</node-id>
+      <termination-point>
+        <tp-id>host:00:00:00:00:00:03</tp-id>
+      </termination-point>
+      <attachment-points xmlns="urn:opendaylight:host-tracker">
+        <tp-id>openflow:4:1</tp-id>
+        <active>true</active>
+        <corresponding-tp>host:00:00:00:00:00:03</corresponding-tp>
+      </attachment-points>
+      <addresses xmlns="urn:opendaylight:host-tracker">
+        <id>2</id>
+        <mac>00:00:00:00:00:03</mac>
+        <first-seen>1456238929615</first-seen>
+        <ip>10.0.0.3</ip>
+        <last-seen>1456238929615</last-seen>
+      </addresses>
+      <id xmlns="urn:opendaylight:host-tracker">00:00:00:00:00:03</id>
+    </node>
+    <node>
+      <node-id>openflow:7</node-id>
+      <termination-point>
+        <tp-id>openflow:7:3</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:7']/a:node-connector[a:id='openflow:7:3']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:7:2</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:7']/a:node-connector[a:id='openflow:7:2']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:7:1</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:7']/a:node-connector[a:id='openflow:7:1']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:7:LOCAL</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:7']/a:node-connector[a:id='openflow:7:LOCAL']</inventory-node-connector-ref>
+      </termination-point>
+      <inventory-node-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:7']</inventory-node-ref>
+    </node>
+    <node>
+      <node-id>host:00:00:00:00:00:06</node-id>
+      <termination-point>
+        <tp-id>host:00:00:00:00:00:06</tp-id>
+      </termination-point>
+      <attachment-points xmlns="urn:opendaylight:host-tracker">
+        <tp-id>openflow:6:2</tp-id>
+        <active>true</active>
+        <corresponding-tp>host:00:00:00:00:00:06</corresponding-tp>
+      </attachment-points>
+      <addresses xmlns="urn:opendaylight:host-tracker">
+        <id>6</id>
+        <mac>00:00:00:00:00:06</mac>
+        <first-seen>1456238929634</first-seen>
+        <ip>10.0.0.6</ip>
+        <last-seen>1456238929634</last-seen>
+      </addresses>
+      <id xmlns="urn:opendaylight:host-tracker">00:00:00:00:00:06</id>
+    </node>
+    <node>
+      <node-id>host:00:00:00:00:00:05</node-id>
+      <termination-point>
+        <tp-id>host:00:00:00:00:00:05</tp-id>
+      </termination-point>
+      <attachment-points xmlns="urn:opendaylight:host-tracker">
+        <tp-id>openflow:6:1</tp-id>
+        <active>true</active>
+        <corresponding-tp>host:00:00:00:00:00:05</corresponding-tp>
+      </attachment-points>
+      <addresses xmlns="urn:opendaylight:host-tracker">
+        <id>4</id>
+        <mac>00:00:00:00:00:05</mac>
+        <first-seen>1456238929621</first-seen>
+        <ip>10.0.0.5</ip>
+        <last-seen>1456238929621</last-seen>
+      </addresses>
+      <id xmlns="urn:opendaylight:host-tracker">00:00:00:00:00:05</id>
+    </node>
+    <node>
+      <node-id>host:00:00:00:00:00:02</node-id>
+      <termination-point>
+        <tp-id>host:00:00:00:00:00:02</tp-id>
+      </termination-point>
+      <attachment-points xmlns="urn:opendaylight:host-tracker">
+        <tp-id>openflow:3:2</tp-id>
+        <active>true</active>
+        <corresponding-tp>host:00:00:00:00:00:02</corresponding-tp>
+      </attachment-points>
+      <addresses xmlns="urn:opendaylight:host-tracker">
+        <id>1</id>
+        <mac>00:00:00:00:00:02</mac>
+        <first-seen>1456238929606</first-seen>
+        <ip>10.0.0.2</ip>
+        <last-seen>1456238929606</last-seen>
+      </addresses>
+      <id xmlns="urn:opendaylight:host-tracker">00:00:00:00:00:02</id>
+    </node>
+    <node>
+      <node-id>host:00:00:00:00:00:01</node-id>
+      <termination-point>
+        <tp-id>host:00:00:00:00:00:01</tp-id>
+      </termination-point>
+      <attachment-points xmlns="urn:opendaylight:host-tracker">
+        <tp-id>openflow:3:1</tp-id>
+        <active>true</active>
+        <corresponding-tp>host:00:00:00:00:00:01</corresponding-tp>
+      </attachment-points>
+      <addresses xmlns="urn:opendaylight:host-tracker">
+        <id>0</id>
+        <mac>00:00:00:00:00:01</mac>
+        <first-seen>1456238929593</first-seen>
+        <ip>10.0.0.1</ip>
+        <last-seen>1456238929593</last-seen>
+      </addresses>
+      <id xmlns="urn:opendaylight:host-tracker">00:00:00:00:00:01</id>
+    </node>
+    <node>
+      <node-id>openflow:2</node-id>
+      <termination-point>
+        <tp-id>openflow:2:1</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:2']/a:node-connector[a:id='openflow:2:1']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:2:2</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:2']/a:node-connector[a:id='openflow:2:2']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:2:LOCAL</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:2']/a:node-connector[a:id='openflow:2:LOCAL']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:2:3</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:2']/a:node-connector[a:id='openflow:2:3']</inventory-node-connector-ref>
+      </termination-point>
+      <inventory-node-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:2']</inventory-node-ref>
+    </node>
+    <node>
+      <node-id>openflow:1</node-id>
+      <termination-point>
+        <tp-id>openflow:1:1</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:1']/a:node-connector[a:id='openflow:1:1']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:1:2</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:1']/a:node-connector[a:id='openflow:1:2']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:1:LOCAL</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:1']/a:node-connector[a:id='openflow:1:LOCAL']</inventory-node-connector-ref>
+      </termination-point>
+      <inventory-node-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:1']</inventory-node-ref>
+    </node>
+    <node>
+      <node-id>openflow:4</node-id>
+      <termination-point>
+        <tp-id>openflow:4:2</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:4']/a:node-connector[a:id='openflow:4:2']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:4:3</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:4']/a:node-connector[a:id='openflow:4:3']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:4:1</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:4']/a:node-connector[a:id='openflow:4:1']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:4:LOCAL</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:4']/a:node-connector[a:id='openflow:4:LOCAL']</inventory-node-connector-ref>
+      </termination-point>
+      <inventory-node-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:4']</inventory-node-ref>
+    </node>
+    <node>
+      <node-id>openflow:3</node-id>
+      <termination-point>
+        <tp-id>openflow:3:3</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:3']/a:node-connector[a:id='openflow:3:3']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:3:LOCAL</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:3']/a:node-connector[a:id='openflow:3:LOCAL']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:3:1</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:3']/a:node-connector[a:id='openflow:3:1']</inventory-node-connector-ref>
+      </termination-point>
+      <termination-point>
+        <tp-id>openflow:3:2</tp-id>
+        <inventory-node-connector-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:3']/a:node-connector[a:id='openflow:3:2']</inventory-node-connector-ref>
+      </termination-point>
+      <inventory-node-ref xmlns="urn:opendaylight:model:topology:inventory" xmlns:a="urn:opendaylight:inventory">/a:nodes/a:node[a:id='openflow:3']</inventory-node-ref>
+    </node>
+    <link>
+      <link-id>openflow:3:1/host:00:00:00:00:00:01</link-id>
+      <destination>
+        <dest-node>host:00:00:00:00:00:01</dest-node>
+        <dest-tp>host:00:00:00:00:00:01</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:3:1</source-tp>
+        <source-node>openflow:3</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:3:3</link-id>
+      <destination>
+        <dest-node>openflow:2</dest-node>
+        <dest-tp>openflow:2:1</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:3:3</source-tp>
+        <source-node>openflow:3</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:2:2</link-id>
+      <destination>
+        <dest-node>openflow:4</dest-node>
+        <dest-tp>openflow:4:3</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:2:2</source-tp>
+        <source-node>openflow:2</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:2:1</link-id>
+      <destination>
+        <dest-node>openflow:3</dest-node>
+        <dest-tp>openflow:3:3</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:2:1</source-tp>
+        <source-node>openflow:2</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:2:3</link-id>
+      <destination>
+        <dest-node>openflow:1</dest-node>
+        <dest-tp>openflow:1:1</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:2:3</source-tp>
+        <source-node>openflow:2</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:5:2</link-id>
+      <destination>
+        <dest-node>openflow:7</dest-node>
+        <dest-tp>openflow:7:3</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:5:2</source-tp>
+        <source-node>openflow:5</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>host:00:00:00:00:00:08/openflow:7:2</link-id>
+      <destination>
+        <dest-node>openflow:7</dest-node>
+        <dest-tp>openflow:7:2</dest-tp>
+      </destination>
+      <source>
+        <source-tp>host:00:00:00:00:00:08</source-tp>
+        <source-node>host:00:00:00:00:00:08</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:4:2/host:00:00:00:00:00:04</link-id>
+      <destination>
+        <dest-node>host:00:00:00:00:00:04</dest-node>
+        <dest-tp>host:00:00:00:00:00:04</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:4:2</source-tp>
+        <source-node>openflow:4</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:7:1/host:00:00:00:00:00:07</link-id>
+      <destination>
+        <dest-node>host:00:00:00:00:00:07</dest-node>
+        <dest-tp>host:00:00:00:00:00:07</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:7:1</source-tp>
+        <source-node>openflow:7</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:5:3</link-id>
+      <destination>
+        <dest-node>openflow:1</dest-node>
+        <dest-tp>openflow:1:2</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:5:3</source-tp>
+        <source-node>openflow:5</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>host:00:00:00:00:00:02/openflow:3:2</link-id>
+      <destination>
+        <dest-node>openflow:3</dest-node>
+        <dest-tp>openflow:3:2</dest-tp>
+      </destination>
+      <source>
+        <source-tp>host:00:00:00:00:00:02</source-tp>
+        <source-node>host:00:00:00:00:00:02</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>host:00:00:00:00:00:04/openflow:4:2</link-id>
+      <destination>
+        <dest-node>openflow:4</dest-node>
+        <dest-tp>openflow:4:2</dest-tp>
+      </destination>
+      <source>
+        <source-tp>host:00:00:00:00:00:04</source-tp>
+        <source-node>host:00:00:00:00:00:04</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:6:2/host:00:00:00:00:00:06</link-id>
+      <destination>
+        <dest-node>host:00:00:00:00:00:06</dest-node>
+        <dest-tp>host:00:00:00:00:00:06</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:6:2</source-tp>
+        <source-node>openflow:6</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:4:3</link-id>
+      <destination>
+        <dest-node>openflow:2</dest-node>
+        <dest-tp>openflow:2:2</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:4:3</source-tp>
+        <source-node>openflow:4</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:5:1</link-id>
+      <destination>
+        <dest-node>openflow:6</dest-node>
+        <dest-tp>openflow:6:3</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:5:1</source-tp>
+        <source-node>openflow:5</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:7:2/host:00:00:00:00:00:08</link-id>
+      <destination>
+        <dest-node>host:00:00:00:00:00:08</dest-node>
+        <dest-tp>host:00:00:00:00:00:08</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:7:2</source-tp>
+        <source-node>openflow:7</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>host:00:00:00:00:00:07/openflow:7:1</link-id>
+      <destination>
+        <dest-node>openflow:7</dest-node>
+        <dest-tp>openflow:7:1</dest-tp>
+      </destination>
+      <source>
+        <source-tp>host:00:00:00:00:00:07</source-tp>
+        <source-node>host:00:00:00:00:00:07</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>host:00:00:00:00:00:01/openflow:3:1</link-id>
+      <destination>
+        <dest-node>openflow:3</dest-node>
+        <dest-tp>openflow:3:1</dest-tp>
+      </destination>
+      <source>
+        <source-tp>host:00:00:00:00:00:01</source-tp>
+        <source-node>host:00:00:00:00:00:01</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:1:2</link-id>
+      <destination>
+        <dest-node>openflow:5</dest-node>
+        <dest-tp>openflow:5:3</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:1:2</source-tp>
+        <source-node>openflow:1</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:6:1/host:00:00:00:00:00:05</link-id>
+      <destination>
+        <dest-node>host:00:00:00:00:00:05</dest-node>
+        <dest-tp>host:00:00:00:00:00:05</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:6:1</source-tp>
+        <source-node>openflow:6</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:6:3</link-id>
+      <destination>
+        <dest-node>openflow:5</dest-node>
+        <dest-tp>openflow:5:1</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:6:3</source-tp>
+        <source-node>openflow:6</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:3:2/host:00:00:00:00:00:02</link-id>
+      <destination>
+        <dest-node>host:00:00:00:00:00:02</dest-node>
+        <dest-tp>host:00:00:00:00:00:02</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:3:2</source-tp>
+        <source-node>openflow:3</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:1:1</link-id>
+      <destination>
+        <dest-node>openflow:2</dest-node>
+        <dest-tp>openflow:2:3</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:1:1</source-tp>
+        <source-node>openflow:1</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>host:00:00:00:00:00:05/openflow:6:1</link-id>
+      <destination>
+        <dest-node>openflow:6</dest-node>
+        <dest-tp>openflow:6:1</dest-tp>
+      </destination>
+      <source>
+        <source-tp>host:00:00:00:00:00:05</source-tp>
+        <source-node>host:00:00:00:00:00:05</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:7:3</link-id>
+      <destination>
+        <dest-node>openflow:5</dest-node>
+        <dest-tp>openflow:5:2</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:7:3</source-tp>
+        <source-node>openflow:7</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>host:00:00:00:00:00:03/openflow:4:1</link-id>
+      <destination>
+        <dest-node>openflow:4</dest-node>
+        <dest-tp>openflow:4:1</dest-tp>
+      </destination>
+      <source>
+        <source-tp>host:00:00:00:00:00:03</source-tp>
+        <source-node>host:00:00:00:00:00:03</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>openflow:4:1/host:00:00:00:00:00:03</link-id>
+      <destination>
+        <dest-node>host:00:00:00:00:00:03</dest-node>
+        <dest-tp>host:00:00:00:00:00:03</dest-tp>
+      </destination>
+      <source>
+        <source-tp>openflow:4:1</source-tp>
+        <source-node>openflow:4</source-node>
+      </source>
+    </link>
+    <link>
+      <link-id>host:00:00:00:00:00:06/openflow:6:2</link-id>
+      <destination>
+        <dest-node>openflow:6</dest-node>
+        <dest-tp>openflow:6:2</dest-tp>
+      </destination>
+      <source>
+        <source-tp>host:00:00:00:00:00:06</source-tp>
+        <source-node>host:00:00:00:00:00:06</source-node>
+      </source>
+    </link>
+  </topology>
+</network-topology>
