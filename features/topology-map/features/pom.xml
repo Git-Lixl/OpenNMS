@@ -22,6 +22,7 @@
     <module>runtime-base</module>
     <module>runtime-browsers</module>
     <module>runtime-bsm</module>
+    <module>runtime-odl</module>
     <module>runtime-simple</module>
     <module>runtime-linkd</module>
     <module>runtime-vmware</module>

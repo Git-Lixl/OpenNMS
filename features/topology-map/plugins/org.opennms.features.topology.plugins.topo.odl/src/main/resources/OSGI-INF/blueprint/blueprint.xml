@@ -1,0 +1,39 @@
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
+
+    <reference id="nodeDao" interface="org.opennms.netmgt.dao.api.NodeDao" availability="mandatory"/>
+
+    <!-- Topology Provider -->
+    <bean id="odlTopologyProvider" scope="prototype"
+        class="org.opennms.features.topology.plugins.topo.odl.OpendaylightTopologyProvider">
+        <property name="nodeDao" ref="nodeDao"/>
+    </bean>
+    <bean id="odlTopologyHopProvider"
+        class="org.opennms.features.topology.api.support.VertexHopGraphProvider">
+        <argument ref="odlTopologyProvider" />
+    </bean>
+    <service interface="org.opennms.features.topology.api.topo.VertexProvider"
+        ref="odlTopologyHopProvider">
+        <service-properties>
+            <entry key="label" value="Opendaylight" />
+        </service-properties>
+    </service>
+    <service interface="org.opennms.features.topology.api.topo.EdgeProvider" ref="odlTopologyHopProvider">
+        <service-properties>
+            <entry key="label" value="Opendaylight" />
+        </service-properties>
+    </service>
+    <service interface="org.opennms.features.topology.api.topo.GraphProvider" ref="odlTopologyHopProvider">
+        <service-properties>
+            <entry key="label" value="Opendaylight" />
+        </service-properties>
+    </service>
+
+    <!-- Search Provider -->
+    <bean id="odlSearchProvider" class="org.opennms.features.topology.plugins.topo.odl.OpendaylightSearchProvider">
+        <property name="nodeDao" ref="nodeDao"/>
+    </bean>
+    <service interface="org.opennms.features.topology.api.topo.SearchProvider" ref="odlSearchProvider" />
+
+</blueprint>
