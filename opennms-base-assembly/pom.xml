@@ -726,6 +726,16 @@
       <artifactId>org.opennms.features.discovery</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>org.opennms.features.discovery</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.integrations</groupId>
+      <artifactId>opendaylight</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <pluginRepositories>

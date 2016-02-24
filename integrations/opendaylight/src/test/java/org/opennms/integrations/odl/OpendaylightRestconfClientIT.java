@@ -26,7 +26,7 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.provision.service.odl;
+package org.opennms.integrations.odl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -45,6 +45,7 @@ import org.junit.Test;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
+import org.opennms.integrations.odl.OpendaylightRestconfClient;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -57,7 +58,7 @@ public class OpendaylightRestconfClientIT {
             .dynamicPort());
 
     @Test
-    public void canRetrieveNodes() throws Exception {
+    public void canGetOperationalNetworkTopology() throws Exception {
         stubFor(get(urlEqualTo("/restconf/operational/network-topology:network-topology/"))
                 .willReturn(aResponse()
                     .withHeader("Content-Type", "Content-Type: application/yang.data+json; charset=utf-8")
@@ -65,7 +66,7 @@ public class OpendaylightRestconfClientIT {
 
         // Make the call
         OpendaylightRestconfClient client = new OpendaylightRestconfClient("localhost", wireMockRule.port());
-        NetworkTopology networkTopology = client.getNetworkTopology();
+        NetworkTopology networkTopology = client.getOperationalNetworkTopology();
 
         // Verify
         List<Topology> topologies = networkTopology.getTopology();
@@ -80,5 +81,26 @@ public class OpendaylightRestconfClientIT {
         assertEquals(15, nodeIds.size());
         assertTrue(nodeIds.contains("host:00:00:00:00:00:08"));
         assertTrue(nodeIds.contains("openflow:6"));
+    }
+
+    @Test
+    public void canGetNodeFromOperationalTopology() throws Exception {
+        stubFor(get(urlEqualTo("/restconf/operational/network-topology:network-topology/"))
+                .willReturn(aResponse()
+                    .withHeader("Content-Type", "Content-Type: application/yang.data+json; charset=utf-8")
+                    .withBodyFile("operational-network-topology.json")));
+        /*
+        stubFor(get(urlEqualTo("/restconf/operational/network-topology:network-topology/topology/flow:1/node/openflow:1"))
+                .willReturn(aResponse()
+                    .withHeader("Content-Type", "Content-Type: application/yang.data+json; charset=utf-8")
+                    .withBodyFile("operational-network-topology-node.json")));
+        */
+
+        // Make the call
+        OpendaylightRestconfClient client = new OpendaylightRestconfClient("localhost", wireMockRule.port());
+        Node node = client.getNodeFromOperationalTopology("flow:1", "openflow:1");
+
+        // Verify
+        assertEquals("openflow:1", node.getNodeId().getValue());
     }
 }

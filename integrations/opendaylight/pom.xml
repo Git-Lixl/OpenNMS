@@ -60,7 +60,7 @@
         </dependency>
         <dependency>
             <groupId>org.opennms</groupId>
-            <artifactId>opennms-dao</artifactId>
+            <artifactId>opennms-provision-persistence</artifactId>
             <scope>compile</scope>
         </dependency>
 

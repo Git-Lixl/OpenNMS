@@ -73,6 +73,8 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
         // Map the protocol dns against the DNS implementation
         addURLConnection("dns", "org.opennms.netmgt.provision.service.dns.DnsRequisitionUrlConnection", 53);
         addURLConnection("vmware", "org.opennms.netmgt.provision.service.vmware.VmwareRequisitionUrlConnection", 443);
+        // FIXME: There should be a better way of registering this
+        addURLConnection("odl", "org.opennms.netmgt.provision.service.odl.OpendaylightRequisitionUrlConnection", 8181);
     }
 
     /**

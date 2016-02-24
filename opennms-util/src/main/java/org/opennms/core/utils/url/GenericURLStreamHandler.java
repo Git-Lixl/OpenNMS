@@ -86,18 +86,8 @@ public class GenericURLStreamHandler extends URLStreamHandler {
             Constructor<? extends URLConnection> constructor = urlConnectionClass
                     .getConstructor(new Class[]{URL.class});
             urlConnection = constructor.newInstance(u);
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        } catch (InvocationTargetException|NoSuchMethodException|InstantiationException|IllegalAccessException e) {
+            throw new IOException("Failed create URL connection.", e);
         }
 
         return urlConnection;

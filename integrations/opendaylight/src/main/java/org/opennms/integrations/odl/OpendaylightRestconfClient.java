@@ -26,7 +26,7 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.provision.service.odl;
+package org.opennms.integrations.odl;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -38,11 +38,13 @@ import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingCodecTreeNode;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeCodec;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opendaylight.yangtools.binding.data.codec.gen.impl.StreamWriterGenerator;
 import org.opendaylight.yangtools.binding.data.codec.impl.BindingNormalizedNodeCodecRegistry;
 import org.opendaylight.yangtools.sal.binding.generator.impl.ModuleInfoBackedContext;
@@ -56,6 +58,7 @@ import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opennms.core.web.HttpClientWrapper;
 
 import com.google.common.base.Charsets;
 import com.google.gson.stream.JsonReader;
@@ -71,18 +74,13 @@ import javassist.ClassPool;
  * @author jwhite
  */
 public class OpendaylightRestconfClient {
-    private final static InstanceIdentifier<NetworkTopology> NETWORK_TOPOLOGY_PATH = InstanceIdentifier.create(NetworkTopology.class);
+    public static final int DEFAULT_PORT = 8181;
+    private static final InstanceIdentifier<NetworkTopology> NETWORK_TOPOLOGY_PATH = InstanceIdentifier.create(NetworkTopology.class);
 
-    private final String m_host;
-    private final int m_port;
+    private static final SchemaContext s_schemaContext;
+    private static final BindingCodecTreeNode<NetworkTopology> s_networkTopologyCodec;
 
-    private final SchemaContext m_schemaContext;
-    private final BindingCodecTreeNode<NetworkTopology> m_networkTopologyNode;
-
-    public OpendaylightRestconfClient(String host, int port) {
-        m_host = Objects.requireNonNull(host);
-        m_port = port;
-
+    static {
         /*
          * This next block of code scans the class-path for .yang files in order to
          * generate the SchemaContext and then creates a codec registry.
@@ -93,37 +91,75 @@ public class OpendaylightRestconfClient {
          */
         ModuleInfoBackedContext ctx = ModuleInfoBackedContext.create();
         ctx.addModuleInfos(BindingReflections.loadModuleInfos());
-        m_schemaContext = ctx.tryToCreateSchemaContext().get();
-        BindingRuntimeContext runtimeContext = BindingRuntimeContext.create(ctx, m_schemaContext);
+        s_schemaContext = ctx.tryToCreateSchemaContext().get();
+        BindingRuntimeContext runtimeContext = BindingRuntimeContext.create(ctx, s_schemaContext);
         final JavassistUtils utils = JavassistUtils.forClassPool(ClassPool.getDefault());
         BindingNormalizedNodeCodecRegistry registry = new BindingNormalizedNodeCodecRegistry(StreamWriterGenerator.create(utils));
         registry.onBindingRuntimeContextUpdated(runtimeContext);
 
         // Create codecs for the object we'll need to serialize/deserialize
-        m_networkTopologyNode = registry.getCodecContext().getSubtreeCodec(NETWORK_TOPOLOGY_PATH);
+        s_networkTopologyCodec = registry.getCodecContext().getSubtreeCodec(NETWORK_TOPOLOGY_PATH);
+    }
+
+    private final String m_host;
+    private final int m_port;
+
+    public OpendaylightRestconfClient(String host) {
+        this(host, DEFAULT_PORT);
+    }
+
+    public OpendaylightRestconfClient(String host, int port) {
+        m_host = Objects.requireNonNull(host);
+        m_port = port;
     }
 
     private String doGet(HttpGet httpGet) throws ParseException, IOException {
-        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-        try (CloseableHttpClient httpClient = httpClientBuilder.build()) {
+        HttpClientWrapper httpClientBuilder = HttpClientWrapper.create()
+            .addBasicCredentials("admin", "admin");
+        try (CloseableHttpClient httpClient = httpClientBuilder.getClient()) {
             HttpHost target = new HttpHost(m_host, m_port, "http");
-            HttpGet getRequest = new HttpGet("/restconf/operational/network-topology:network-topology/");
-            HttpResponse httpResponse = httpClient.execute(target, getRequest);
+            HttpResponse httpResponse = httpClient.execute(target, httpGet);
+            if (httpResponse.getStatusLine().getStatusCode() != 200) {
+                throw new IOException("Get did not return a 200: " + httpResponse);
+            }
             HttpEntity entity = httpResponse.getEntity();
             return EntityUtils.toString(entity, Charsets.UTF_8);
         }
     }
 
-    public NetworkTopology getNetworkTopology() throws Exception {
+    public NetworkTopology getOperationalNetworkTopology() throws Exception {
         String json = doGet(new HttpGet("/restconf/operational/network-topology:network-topology/"));
-        return deserializeJsonUsing(json, m_networkTopologyNode);
+        return deserializeJsonUsing(json, s_networkTopologyCodec);
+    }
+
+    public Node getNodeFromOperationalTopology(TopologyId topologyId, NodeId nodeId) throws Exception {
+        return getNodeFromOperationalTopology(topologyId.getValue(), nodeId.getValue());
+    }
+
+    public Node getNodeFromOperationalTopology(String topologyId, String nodeId) throws Exception {
+        return getOperationalNetworkTopology().getTopology().stream()
+                .filter(t -> topologyId.equals(t.getTopologyId().getValue()))
+                .flatMap(t -> t.getNode().stream())
+                .filter(n -> nodeId.equals(n.getNodeId().getValue()))
+                .findFirst().orElse(null);
+        /* TODO: Make a specific call instead, currently fails with:
+         * java.lang.IllegalArgumentException: Node (urn:ietf:params:xml:ns:netconf:base:1.0)data is not a simple type
+         *  at com.google.common.base.Preconditions.checkArgument(Preconditions.java:148)
+         *  at org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream.setValue(JsonParserStream.java:111)
+         *  at org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream.read(JsonParserStream.java:125)
+         *  at org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream.parse(JsonParserStream.java:87)
+         *  at org.opennms.integrations.odl.OpendaylightRestconfClient.deserializeJsonUsing(OpendaylightRestconfClient.java:148)
+        String json = doGet(new HttpGet(String.format("/restconf/operational/network-topology:network-topology/"
+                + "topology/%s/node/%s", topologyId, nodeId)));
+        return deserializeJsonUsing(json, m_nodeCodec);
+        */
     }
 
     private <T extends DataObject> T deserializeJsonUsing(String json, BindingNormalizedNodeCodec<T> codec) {
         final NormalizedNodeResult result = new NormalizedNodeResult();
         final NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(result);
  
-        final JsonParserStream jsonParser = JsonParserStream.create(streamWriter, m_schemaContext);
+        final JsonParserStream jsonParser = JsonParserStream.create(streamWriter, s_schemaContext);
         jsonParser.parse(new JsonReader(new StringReader(json)));
 
         return codec.deserialize(result.getResult());
