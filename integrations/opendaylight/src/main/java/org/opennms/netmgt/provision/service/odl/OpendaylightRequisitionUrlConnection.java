@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.stream.Collectors;
 
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
@@ -42,8 +43,11 @@ import org.opennms.core.utils.url.GenericURLConnection;
 import org.opennms.core.xml.JaxbUtils;
 import org.opennms.integrations.odl.NamingUtils;
 import org.opennms.integrations.odl.OpendaylightRestconfClient;
+import org.opennms.integrations.odl.topo.Link;
+import org.opennms.integrations.odl.topo.Links;
 import org.opennms.netmgt.provision.persist.ForeignSourceRepository;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
@@ -101,7 +105,14 @@ public class OpendaylightRequisitionUrlConnection extends GenericURLConnection {
             return null;
         }
     }
- 
+
+    public static Links getLinksSourceFrom(Topology topology, Node node) {
+        return new Links(topology.getLink().stream()
+            .filter(l -> node.getNodeId().equals(l.getSource().getSourceNode()))
+            .map(l -> new Link(l))
+            .collect(Collectors.toList()));
+    }
+
     private Requisition getRequisition() throws Exception {
         LOG.debug("Retrieving existing requisition.");
         Requisition requisition = getExistingRequisition();
@@ -121,14 +132,23 @@ public class OpendaylightRequisitionUrlConnection extends GenericURLConnection {
 
                 final String foreignId = String.format("%s-%s", topologyId, nodeId)
                         .replaceAll(":", "_"); // Colons are typically used a separators, so we replace them to be safe
-                // TODO: What if the string already contains an underscore?
-                
-                if (requisition.getNode(foreignId) != null) {
+                // TODO: What if the string already contains an underscore or colon dash
+
+                // Parse the topology info we need to persist
+                Links links = getLinksSourceFrom(topology, node);
+
+                RequisitionAsset requisitionAssetTopologyInfo = new RequisitionAsset("vmwareTopologyInfo", JaxbUtils.marshal(links));
+                RequisitionNode requisitionNode = requisition.getNode(foreignId);
+                if (requisitionNode != null) {
                     // There already a node in the requisition for this fid
+                    // Update the topology info
+                    requisitionNode.putAsset(requisitionAssetTopologyInfo);
                     continue;
                 }
 
-                RequisitionNode requisitionNode = new RequisitionNode();
+                requisitionNode = new RequisitionNode();
+                requisitionNode.putAsset(requisitionAssetTopologyInfo);
+
                 requisitionNode.setForeignId(foreignId);
                 requisitionNode.setNodeLabel(nodeId);
 

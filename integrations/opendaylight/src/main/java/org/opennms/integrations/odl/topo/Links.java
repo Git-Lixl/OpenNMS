@@ -26,35 +26,37 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.integrations.odl;
+package org.opennms.integrations.odl.topo;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
 
-public class NamingUtils {
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
-    public static String getTopologyIdFromForeignId(String foreignId) {
-        return foreignId.split("-")[0].replace("_", ":");
+import com.google.common.collect.Lists;
+
+@XmlRootElement(name="links")
+@XmlAccessorType(XmlAccessType.NONE)
+public class Links {
+
+    @XmlElement(name="link")
+    private List<Link> m_links = Lists.newArrayList();
+    
+    public Links() {
+        // pass
     }
 
-    public static String getNodeIdFromForeignId(String foreignId) {
-        return foreignId.split("-")[1].replace("_", ":");
+    public Links(List<Link> links) {
+        m_links = links;
     }
 
-    public static String generateIpAddressForForeignId(String foreignId) {
-        // TODO Generate IPv6 addresses in the link-local prefix fe80::/10 
-        Pattern switches = Pattern.compile(".*openflow_(\\d+)$");
-        Matcher m = switches.matcher(foreignId);
-        if (m.find()) {
-            return "127.0.10." + m.group(1);
-        }
-        
-        Pattern hosts = Pattern.compile(".*host_00_00_00_00_00_0(\\d+)$");
-        m = hosts.matcher(foreignId);
-        if (m.find()) {
-            return "127.0.20." + m.group(1);
-        }
+    public List<Link> getLinks() {
+        return m_links;
+    }
 
-        throw new RuntimeException("Unsupported fid: " + foreignId);
+    public void setLinks(List<Link> links) {
+        m_links = links;
     }
 }
