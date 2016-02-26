@@ -54,7 +54,7 @@ public class OpendaylightMonitor extends AbstractServiceMonitor {
         }
         OnmsNode node = m_nodeDao.get(svc.getNodeId());
         String foreignId = node.getForeignId();
-        String odlTopologyId = NamingUtils.getTopologyIdFromForeignId(foreignId);
+        String odlTopologyId = node.getAssetRecord().getBuilding();
         String odlNodeId = NamingUtils.getNodeIdFromForeignId(foreignId);
 
         OpendaylightRestconfClient odlClient = new OpendaylightRestconfClient("127.0.0.1");

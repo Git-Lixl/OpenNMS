@@ -33,12 +33,8 @@ import java.util.regex.Pattern;
 
 public class NamingUtils {
 
-    public static String getTopologyIdFromForeignId(String foreignId) {
-        return foreignId.split("-")[0].replace("_", ":");
-    }
-
     public static String getNodeIdFromForeignId(String foreignId) {
-        return foreignId.split("-")[1].replace("_", ":");
+        return foreignId.replace("_", ":");
     }
 
     public static String generateIpAddressForForeignId(String foreignId) {

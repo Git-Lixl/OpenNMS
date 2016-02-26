@@ -88,7 +88,7 @@ public class OpendaylightRequisitionUrlConnectionIT {
                 .map(n -> n.getForeignId())
                 .collect(Collectors.toSet());
         assertEquals(15, foreignIds.size());
-        String expectedFid = "flow_1-openflow_5";
+        String expectedFid = "openflow_5";
         assertTrue("No node with foreign id " + expectedFid + " was present in the requisition.", 
                 foreignIds.contains(expectedFid));
     }

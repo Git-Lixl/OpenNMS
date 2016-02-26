@@ -130,9 +130,9 @@ public class OpendaylightRequisitionUrlConnection extends GenericURLConnection {
             for (Node node : topology.getNode()) {
                 final String nodeId = node.getNodeId().getValue();
 
-                final String foreignId = String.format("%s-%s", topologyId, nodeId)
-                        .replaceAll(":", "_"); // Colons are typically used a separators, so we replace them to be safe
                 // TODO: What if the string already contains an underscore or colon dash
+                // Colons are typically used a separators, so we replace them to be safe
+                final String foreignId = nodeId.replaceAll(":", "_");
 
                 // Parse the topology info we need to persist
                 Links links = getLinksSourceFrom(topology, node);
@@ -148,6 +148,7 @@ public class OpendaylightRequisitionUrlConnection extends GenericURLConnection {
 
                 requisitionNode = new RequisitionNode();
                 requisitionNode.putAsset(requisitionAssetTopologyInfo);
+                requisitionNode.putAsset(new RequisitionAsset("building", topologyId));
 
                 requisitionNode.setForeignId(foreignId);
                 requisitionNode.setNodeLabel(nodeId);
@@ -166,7 +167,7 @@ public class OpendaylightRequisitionUrlConnection extends GenericURLConnection {
 
         return requisition;
     }
-    
+
     @Override
     public InputStream getInputStream() throws IOException {
         try {
