@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2013-2014 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
+ * Copyright (C) 2016 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2016 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -26,21 +26,22 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.features.topology.plugins.topo.linkd.internal.operations;
+package org.opennms.features.topology.plugins.topo.linkd.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.opennms.features.topology.api.AbstractCheckedOperation;
-import org.opennms.features.topology.api.GraphContainer;
-import org.opennms.features.topology.api.OperationContext;
+import org.opennms.features.topology.api.topo.Criteria;
+import org.opennms.features.topology.api.topo.EdgeProvider;
+import org.opennms.features.topology.api.topo.EdgeRef;
 import org.opennms.features.topology.api.topo.EdgeStatusProvider;
-import org.opennms.features.topology.api.topo.VertexRef;
+import org.opennms.features.topology.api.topo.Status;
 import org.osgi.framework.ServiceReference;
 
-public class LinkStatusToggleOperation extends AbstractCheckedOperation {
+public class LinkdWrappedEdgeStatusProviders implements EdgeStatusProvider {
 
     private EdgeStatusProvider m_llpdStatusProvider;
     private EdgeStatusProvider m_ospfLinkStatusProvider;
@@ -61,57 +62,28 @@ public class LinkStatusToggleOperation extends AbstractCheckedOperation {
     }
 
     @Override
-    protected boolean isChecked(GraphContainer container) {
-        Set<EdgeStatusProvider> edgeStatusProviders = container.getEdgeStatusProviders();
-
-        return edgeStatusProviders.containsAll(m_providers);
-
-    }
-
-    @Override
-    public void applyHistory(GraphContainer container, Map<String, String> settings) {
-        Set<EdgeStatusProvider> edgeStatusProviders = container.getEdgeStatusProviders();
-
-        String historyValue = settings.get(getClass().getName());
-        // an history value is set, decide what to do
-        boolean statusEnabled = Boolean.TRUE.toString().equals(historyValue);
-        if (statusEnabled) {
-            if(!edgeStatusProviders.containsAll(m_providers)) {
-                edgeStatusProviders.addAll(m_providers);
-            }
-
-        } else {
-            if(edgeStatusProviders.containsAll(m_providers)) {
-                edgeStatusProviders.removeAll(m_providers);
-            }
+    public Map<EdgeRef, Status> getStatusForEdges(EdgeProvider edgeProvider, Collection<EdgeRef> edges, Criteria[] criteria) {
+        final Map<EdgeRef,Status> edgeRefStatusMap = new HashMap<>();
+        for (EdgeStatusProvider statusProvider : m_providers) {
+            edgeRefStatusMap.putAll(statusProvider.getStatusForEdges(edgeProvider, edges, criteria));
         }
+        return edgeRefStatusMap;
     }
 
     @Override
-    public void execute(List<VertexRef> targets, OperationContext operationContext) {
-        toggle(operationContext.getGraphContainer());
+    public String getNamespace() {
+        return AbstractLinkdTopologyProvider.TOPOLOGY_NAMESPACE_LINKD;
     }
 
     @Override
-    public boolean display(List<VertexRef> targets, OperationContext operationContext) {
-        return m_enlinkdIsActive;
+    public boolean contributesTo(String namespace) {
+        return namespace != null &&  namespace.equals(getNamespace());
     }
 
-    @Override
-    public String getId() {
-        return getClass().getSimpleName();
-    }
-
-    private void toggle(GraphContainer graphContainer) {
-        Set<EdgeStatusProvider> edgeStatusProviders = graphContainer.getEdgeStatusProviders();
-
-        if(edgeStatusProviders.containsAll(m_providers)) {
-            edgeStatusProviders.removeAll(m_providers);
-        } else {
-            edgeStatusProviders.addAll(m_providers);
+    public void setEnlinkdService(ServiceReference<?> enlinkdService) {
+        if(enlinkdService != null){
+            m_enlinkdIsActive = true;
         }
-
-        graphContainer.redoLayout();
     }
 
     public void setLlpdStatusProvider(EdgeStatusProvider llpdStatusProvider) {
@@ -138,9 +110,4 @@ public class LinkStatusToggleOperation extends AbstractCheckedOperation {
         m_cdpLinkStatusProvider = cdpLinkStatusProvider;
     }
 
-    public void setEnlinkdService(ServiceReference<?> enlinkdService) {
-        if(enlinkdService != null){
-            m_enlinkdIsActive = true;
-        }
-    }
 }
