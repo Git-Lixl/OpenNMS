@@ -73,6 +73,11 @@ public class OpendaylightTopologyProvider extends AbstractTopologyProvider imple
                 AbstractVertex vertex = addVertex(nodeId, 50, 50);
                 vertex.setLabel(node.getLabel());
                 vertex.setNodeID(node.getId());
+                if (node.getLabel().startsWith("host")) {
+                    vertex.setIconKey("HOST");
+                } else if (node.getLabel().startsWith("openflow")) {
+                    vertex.setIconKey("OPENFLOW_SWITCH");
+                }
 
                 // Grab the links
                 OnmsAssetRecord assets = node.getAssetRecord();

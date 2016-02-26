@@ -36,4 +36,15 @@
     </bean>
     <service interface="org.opennms.features.topology.api.topo.SearchProvider" ref="odlSearchProvider" />
 
+    <!-- Icons -->
+    <service interface="org.opennms.features.topology.api.IconRepository">
+        <bean class="org.opennms.features.topology.api.support.DefaultIconRepository">
+            <property name="iconMap">
+                <map>
+                    <entry key="HOST" value="workstation"/>
+                    <entry key="OPENFLOW_SWITCH" value="workgroup_switch"/>
+                </map>
+            </property>
+        </bean>
+    </service>
 </blueprint>
