@@ -45,11 +45,15 @@ public class OpendaylightSearchProvider extends AbstractSearchProvider implement
     @Override
     public List<SearchResult> query(SearchQuery searchQuery, GraphContainer graphContainer) {
         List<SearchResult> results = Lists.newArrayList();
+        final String queryString = searchQuery.getQueryString();
         CriteriaBuilder bldr = new CriteriaBuilder(OnmsNode.class);
+        if (queryString != null && queryString.length() > 0) {
+            bldr.ilike("label", String.format("%%%s%%", queryString));
+        }
         bldr.orderBy("label", true);
         bldr.limit(10);
         Criteria dbQueryCriteria = bldr.toCriteria();
-        
+
         for (OnmsNode node : m_nodeDao.findMatching(dbQueryCriteria)) {
             try {
                 String nodeId = NamingUtils.getNodeIdFromForeignId(node.getForeignId());
