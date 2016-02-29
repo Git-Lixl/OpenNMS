@@ -68,22 +68,22 @@
         <dependency>
             <groupId>org.opendaylight.mdsal</groupId>
             <artifactId>mdsal-binding-dom-codec</artifactId>
-            <version>0.8.0-SNAPSHOT</version>
+            <version>0.8.0-Beryllium</version>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.yangtools</groupId>
             <artifactId>yang-data-codec-gson</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>0.8.0-Beryllium</version>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.controller.model</groupId>
             <artifactId>model-topology</artifactId>
-            <version>1.3.0-SNAPSHOT</version>
+            <version>1.3.0-Beryllium</version>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.l2switch.hosttracker</groupId>
             <artifactId>hosttracker-model</artifactId>
-            <version>0.4.0-SNAPSHOT</version>
+            <version>0.3.0-Beryllium</version>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -101,6 +101,18 @@
     </dependencies>
 
     <repositories>
+        <repository>
+          <id>opendaylight-mirror</id>
+          <name>opendaylight-mirror</name>
+          <url>http://nexus.opendaylight.org/content/repositories/public/</url>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
         <repository>
             <id>opendaylight-snapshot</id>
             <name>opendaylight-snapshot</name>
