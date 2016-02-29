@@ -52,12 +52,17 @@ public class OpendaylightMonitor extends AbstractServiceMonitor {
         if (m_nodeDao == null) {
             m_nodeDao = BeanUtils.getBean("daoContext", "nodeDao", NodeDao.class);
         }
+
+        String controllerHost = (String)parameters.getOrDefault("host", "127.0.0.1");
+        String controllerPortStr = (String)parameters.getOrDefault("port", "" + OpendaylightRestconfClient.DEFAULT_PORT);
+        int controllerPort = Integer.valueOf(controllerPortStr);
+
         OnmsNode node = m_nodeDao.get(svc.getNodeId());
         String foreignId = node.getForeignId();
         String odlTopologyId = node.getAssetRecord().getBuilding();
         String odlNodeId = NamingUtils.getNodeIdFromForeignId(foreignId);
 
-        OpendaylightRestconfClient odlClient = new OpendaylightRestconfClient("127.0.0.1");
+        OpendaylightRestconfClient odlClient = new OpendaylightRestconfClient(controllerHost, controllerPort);
         try {
             Node odlNode = odlClient.getNodeFromOperationalTopology(odlTopologyId, odlNodeId);
             if (odlNode == null) {
