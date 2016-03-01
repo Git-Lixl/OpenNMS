@@ -84,17 +84,26 @@ public class OpendaylightRestconfClientIT {
     }
 
     @Test
-    public void canGetNodeFromOperationalTopology() throws Exception {
-        stubFor(get(urlEqualTo("/restconf/operational/network-topology:network-topology/"))
+    public void canGetOperationalTopology() throws Exception {
+        stubFor(get(urlEqualTo("/restconf/operational/network-topology:network-topology/topology/flow:1"))
                 .willReturn(aResponse()
                     .withHeader("Content-Type", "Content-Type: application/yang.data+json; charset=utf-8")
-                    .withBodyFile("operational-network-topology.json")));
-        /*
+                    .withBodyFile("operational-topology.json")));
+
+        // Make the call
+        OpendaylightRestconfClient client = new OpendaylightRestconfClient("localhost", wireMockRule.port());
+        Topology topology = client.getOperationalTopology("flow:1");
+
+        // Verify
+        assertEquals("flow:1", topology.getTopologyId().getValue());
+    }
+
+    @Test
+    public void canGetNodeFromOperationalTopology() throws Exception {
         stubFor(get(urlEqualTo("/restconf/operational/network-topology:network-topology/topology/flow:1/node/openflow:1"))
                 .willReturn(aResponse()
                     .withHeader("Content-Type", "Content-Type: application/yang.data+json; charset=utf-8")
-                    .withBodyFile("operational-network-topology-node.json")));
-        */
+                    .withBodyFile("operational-topology-node.json")));
 
         // Make the call
         OpendaylightRestconfClient client = new OpendaylightRestconfClient("localhost", wireMockRule.port());
