@@ -66,7 +66,7 @@
     <property name="packagesToScan">
       <list>
         <!-- TODO: Move into org.opennms.netmgt.model -->
-        <value>org.opennms.netmgt.config.monitoringLocations</value>
+        <value>org.opennms.netmgt.model.monitoringLocations</value>
         <value>org.opennms.netmgt.dao.hibernate</value>
         <value>org.opennms.netmgt.model</value>
       </list>
