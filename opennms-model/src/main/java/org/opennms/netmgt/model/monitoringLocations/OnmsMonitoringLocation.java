@@ -46,6 +46,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -170,7 +171,8 @@ public class OnmsMonitoringLocation implements Serializable {
         m_tags = ((tags == null || tags.length == 0) ? Collections.emptyList() : Arrays.asList(tags));
     }
 
-    @Id 
+    @Id
+    @XmlID
     @Column(name="id", nullable=false)
     public String getLocationName() {
         return m_locationName;
