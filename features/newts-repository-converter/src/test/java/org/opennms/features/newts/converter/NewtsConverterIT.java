@@ -28,8 +28,23 @@
 
 package org.opennms.features.newts.converter;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.cassandraunit.JUnitNewtsCassandra;
 import org.cassandraunit.JUnitNewtsCassandraExecutionListener;
 import org.junit.Before;
@@ -43,6 +58,7 @@ import org.opennms.core.test.db.TemporaryDatabaseAware;
 import org.opennms.core.test.db.TemporaryDatabaseExecutionListener;
 import org.opennms.core.test.db.TemporaryDatabasePostgreSQL;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
+import org.opennms.netmgt.dao.api.MonitoringLocationDao;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.model.ResourcePath;
 import org.opennms.netmgt.newts.support.NewtsUtils;
@@ -60,16 +76,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
 @TestExecutionListeners({JUnitNewtsCassandraExecutionListener.class,
@@ -492,7 +500,7 @@ public class NewtsConverterIT implements TemporaryDatabaseAware {
     public void setupDatabase() throws Exception {
         if (!NewtsConverterIT.populated) {
             this.database.getJdbcTemplate().execute("INSERT INTO node (location, nodeid, nodecreatetime, nodelabel, foreignsource, foreignid) " +
-                                               "VALUES ('localhost', 1, NOW(), 'my-node-1', 'fs1', 'fid1')");
+                                               "VALUES ('" + MonitoringLocationDao.DEFAULT_MONITORING_LOCATION_ID + "', 1, NOW(), 'my-node-1', 'fs1', 'fid1')");
 
 
             try (final BufferedReader r = Files.newBufferedReader(OPENNMS_HOME.resolve("etc")
