@@ -1,62 +1,28 @@
 
-This guide describes the requirements and the steps necessary in order to get started with the development of the OpenNMS project.
+This guide is intended to help developers get started on setting up their development environment, specifically links to operating systems, tools and utilities that prove useful during development.
 
-=== Operating System / Environment
+=== Requirements
 
-To build/compile OpenNMS it is necessary to run a *nix system.
-You do not need to run it physically, a virtual machine is sufficient, but the choice is yours.
-We recommend one of the following:
+To checkout the source and compile _OpenNMS_ the following components have to be installed on your system:
 
- * link:http://www.linuxmint.com/[Linux Minut] with Cinnamon Desktop environment
- * link:http://ubuntu.com[Ubuntu Desktop]
- * Mac OS X
+. Download and install link:https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[Git]
+. Download and install latest link:http://docs.opennms.org/opennms/branches/develop/guide-install/guide-install.html#gi-install-oracle-java[Oracle Java Development Kit 8]
+. Download and install latest link:http://maven.apache.org/download.cgi[Maven]
+. Download and install stable link:http://www.postgresql.org/download/[PostgreSQL Server]
+. Prepare PostgreSQL database access described in link:http://docs.opennms.org/opennms/branches/develop/guide-install/guide-install.html[Install Guide]
+. Download and install link:http://nsis.sourceforge.net/Download[nsis]
+. Install JICMP, JICMP6 and optional JRRD if you want to use RRDTool
 
-[NOTE]
-This documentation assumes that you chose a debian based desktop environment.
-
-=== Installation
-
-The next chapter describes the full setup of your environment in order to meet the pre-requirements.
-Simply follow these instructions, they may vary depending on your Operating System.
-
+.Add Maven to your search path in `~/.bashrc` or `~/.zshrc` and set MAVEN_OPTS
 [source, shell]
 ----
-# add OpenNMS as repository to install icmp and such
-echo "deb http://debian.opennms.org stable main" > /etc/apt/sources.list.d/opennms.list
-echo "deb-src http://debian.opennms.org stable main" >> /etc/apt/sources.list.d/opennms.list
-# Add pgp key
-wget -O - http://debian.opennms.org/OPENNMS-GPG-KEY | apt-key add -
+export PATH=$PATH:/path/to/maven/bin
+export MAVEN_OPTS="-Xmx2g"
+----
 
-# overall update
-apt-get update
-
-# install stuff
-apt-get install -y software-properties-common
-apt-get install -y git-core
-apt-get install -y nsis
-
-# install Oracle Java 8 JDK
-# this setup is based on: http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html
-add-apt-repository -y ppa:webupd8team/java
-apt-get update
-apt-get install -y oracle-java8-installer
-apt-get install -y oracle-java8-set-default
-
-# install and configure PostgreSQL
-apt-get install -y postgresql
-echo "local   all             postgres                                peer" > /etc/postgresql/9.3/main/pg_hba.conf
-echo "local   all             all                                     peer" >> /etc/postgresql/9.3/main/pg_hba.conf
-echo "host    all             all             127.0.0.1/32            trust" >> /etc/postgresql/9.3/main/pg_hba.conf
-echo "host    all             all             ::1/128                 trust" >> /etc/postgresql/9.3/main/pg_hba.conf
-# restart postgres to use new configs
-/etc/init.d/postgresql restart
-
-# install OpenNMS basic dependencies
-apt-get install -y maven
-apt-get install -y jicmp jicmp6
-apt-get install -y jrrd
-
-# clone opennms
+.Clone the source from GitHub
+[source, shell]
+----
 mkdir -p ~/dev/opennms
 git clone https://github.com/OpenNMS/opennms.git ~/dev/opennms
 ----
@@ -66,14 +32,9 @@ After this you should be able to build OpenNMS:
 [source, shell]
 ----
 cd ~/dev/opennms
-./clean.pl
-./compile.pl -DskipTests
-./assemble.pl -p dir
+mvn -DskipITs=true -Dmaven.test.skip.exec=true --fn clean install
+mvn -DskipITs=true -Dmaven.test.skip.exec=true --fn clean assemble
 ----
-
-For more information on how to build OpenNMS from source check this wiki link:http://www.opennms.org/wiki/Installation:Source#Building[Install from Source].
-
-After OpenNMS successfully built, please follow the wiki link:http://www.opennms.org/wiki/Installation:Source#Running_OpenNMS[Running OpenNMS].
 
 === Tooling
 We recommend the following toolset:
@@ -82,7 +43,6 @@ We recommend the following toolset:
  * DB-Tool: link:http://dbeaver.jkiss.org/[DBeaver] or link:http://www.pgadmin.org/[Postgres Admin - pgAdmin]
  * Graphing: link:http://www.yworks.com/en/products/yfiles/yed/[yEd]
  * Other: link:http://www.atom.io[atom.io]
-
 
 === Useful links
 
