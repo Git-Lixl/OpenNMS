@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2007-2014 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
+ * Copyright (C) 2016 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2016 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -26,15 +26,29 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.core.concurrent;
+package org.opennms.minion.core.impl;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
+import java.util.Objects;
 
-/**
- * This interface is used to denote a WaterfallCallable that terminates the chain of 
- * execution by not returning a subsequent Callable&lt;Callable&lt;?&gt;&gt; value.
- * 
- * @deprecated Replace usage of this class with Java 8's {@link CompletableFuture}.
- */
-public interface EndOfTheWaterfall extends Callable<Callable<Void>> {}
+import org.opennms.minion.core.api.MinionIdentity;
+
+public class MinionIdentityImpl implements MinionIdentity {
+
+    private final String m_location;
+    private final String m_id;
+
+    public MinionIdentityImpl(String location, String id) {
+        m_location = Objects.requireNonNull(location);
+        m_id = Objects.requireNonNull(id);
+    }
+
+    @Override
+    public String getLocation() {
+        return m_location;
+    }
+
+    @Override
+    public String getId() {
+        return m_id;
+    }
+}
