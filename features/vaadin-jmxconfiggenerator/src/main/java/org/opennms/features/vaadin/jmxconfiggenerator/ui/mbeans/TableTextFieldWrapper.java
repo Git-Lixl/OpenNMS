@@ -66,6 +66,11 @@ public class TableTextFieldWrapper extends HorizontalLayout implements Field<Str
 	}
 
 	@Override
+	public void clear() {
+		this.textField.clear();
+	}
+
+	@Override
 	public void commit() throws SourceException, InvalidValueException {
 		this.textField.commit();
 	}
@@ -83,6 +88,11 @@ public class TableTextFieldWrapper extends HorizontalLayout implements Field<Str
 	@Override
 	public void setBuffered(final boolean readThrough) throws SourceException {
 		this.textField.setBuffered(readThrough);
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return this.textField.isEmpty();
 	}
 
 	@Override

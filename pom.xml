@@ -1310,12 +1310,12 @@
 
     <!-- moved here from topology features -->
     <jungVersion>2.0.1</jungVersion>
-    <vaadinVersion>7.2.7</vaadinVersion>
-    <vaadinSharedEpsVersion>1.0.2</vaadinSharedEpsVersion>
+    <vaadinVersion>7.6.4</vaadinVersion>
+    <vaadinSharedEpsVersion>1.0.3</vaadinSharedEpsVersion>
     <vaadin.plugin.version>${vaadinVersion}</vaadin.plugin.version>
-    <vaadinAddonContextMenuVersion>4.2.1</vaadinAddonContextMenuVersion>
+    <vaadinAddonContextMenuVersion>4.5</vaadinAddonContextMenuVersion>
     <vaadinAddonRefresherVersion>1.2.3.7</vaadinAddonRefresherVersion>
-    <vaadinAddonConfirmDialogVersion>2.0.4</vaadinAddonConfirmDialogVersion>
+    <vaadinAddonConfirmDialogVersion>2.1.3</vaadinAddonConfirmDialogVersion>
   </properties>
 
   <profiles>
