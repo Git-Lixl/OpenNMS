@@ -28,20 +28,64 @@
 
 package org.opennms.features.topology.plugins.topo.bsm;
 
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.opennms.netmgt.bsm.service.model.graph.GraphVertex;
+
+import com.google.common.collect.Sets;
+
 public class ReductionKeyVertex extends AbstractBusinessServiceVertex {
+
+    public static final int MAX_LABEL_LENGTH = 24;
+    private static final Pattern REDUCTION_KEY_LABEL_PATTERN = Pattern.compile("^.*\\/(.+?):.*:(.+)$");
 
     private final String reductionKey;
 
-    protected ReductionKeyVertex(String reductionKey) {
-        this("reduction-key:" + reductionKey, reductionKey);
+    public ReductionKeyVertex(GraphVertex graphVertex) {
+        this(graphVertex.getReductionKey(), graphVertex.getLevel());
     }
 
-    private ReductionKeyVertex(String id, String reductionKey) {
-        super(id, reductionKey);
+    public ReductionKeyVertex(String reductionKey, int level) {
+        super(Type.ReductionKey + ":" + reductionKey, getLabelFromReductionKey(reductionKey), level);
         this.reductionKey = reductionKey;
+        setTooltipText(String.format("Reduction Key '%s'", reductionKey));
+        setIconKey("bsm.reduction-key");
+    }
+
+    protected static String getLabelFromReductionKey(String reductionKey) {
+        String label;
+        Matcher m = REDUCTION_KEY_LABEL_PATTERN.matcher(reductionKey);
+        if (m.matches()) {
+            label = String.format("%s:%s", m.group(1), m.group(2));
+        } else {
+            label = reductionKey;
+        }
+        return label.substring(0, Math.min(label.length(), MAX_LABEL_LENGTH));
     }
 
     public String getReductionKey() {
         return reductionKey;
+    }
+
+    @Override
+    public Type getType() {
+        return Type.ReductionKey;
+    }
+
+    @Override
+    public boolean isLeaf() {
+        return true;
+    }
+
+    @Override
+    public Set<String> getReductionKeys() {
+        return Sets.newHashSet(getReductionKey());
+    }
+
+    @Override
+    public <T> T accept(BusinessServiceVertexVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

@@ -28,6 +28,7 @@
 
 package org.opennms.netmgt.bsm.service.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.opennms.netmgt.bsm.test.BsmTestUtils.createAlarmWrapper;
 import static org.opennms.netmgt.bsm.test.BsmTestUtils.createDummyBusinessService;
 
@@ -54,7 +55,11 @@ import org.opennms.netmgt.bsm.service.model.BusinessService;
 import org.opennms.netmgt.bsm.service.model.IpService;
 import org.opennms.netmgt.bsm.service.model.Status;
 import org.opennms.netmgt.bsm.service.model.edge.Edge;
+import org.opennms.netmgt.bsm.service.model.edge.IpServiceEdge;
+import org.opennms.netmgt.bsm.service.model.functions.map.Decrease;
 import org.opennms.netmgt.bsm.service.model.functions.map.Identity;
+import org.opennms.netmgt.bsm.service.model.functions.map.Increase;
+import org.opennms.netmgt.bsm.service.model.functions.reduce.HighestSeverity;
 import org.opennms.netmgt.bsm.test.BsmDatabasePopulator;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.model.OnmsSeverity;
@@ -65,6 +70,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
@@ -99,13 +105,13 @@ public class BusinessServiceManagerImplIT {
     private MonitoredServiceDao monitoredServiceDao;
 
     @Autowired
-    private MapFunctionDao mapFunctionDao;
-
-    @Autowired
-    private ReductionFunctionDao reduceFunctionDao;
-
-    @Autowired
     private BusinessServiceEdgeDao edgeDao;
+
+    @Autowired
+    private ReductionFunctionDao reductionFunctionDao;
+
+    @Autowired
+    private MapFunctionDao mapFunctionDao;
 
     @Autowired
     @Qualifier("bsmDatabasePopulator")
@@ -131,44 +137,46 @@ public class BusinessServiceManagerImplIT {
         final IpService ipServiceWithId6 = getIpService(6);
 
         // no ip services attached
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForBusinessService(bsService1));
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForBusinessService(bsService2));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(bsService1));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(bsService2));
 
         // ip services attached
         businessServiceManager.addIpServiceEdge(bsService1, ipServiceWithId5, new Identity(), Edge.DEFAULT_WEIGHT);
         businessServiceManager.addIpServiceEdge(bsService2, ipServiceWithId6, new Identity(), Edge.DEFAULT_WEIGHT);
         bsService1.save();
         bsService2.save();
+        businessServiceDao.flush();
         Assert.assertFalse("Services are equal but should not", Objects.equals(bsService1, bsService2));
         businessServiceStateMachine.setBusinessServices(Lists.newArrayList(bsService1, bsService2));
 
         // should not have any effect
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForBusinessService(bsService1));
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForBusinessService(bsService2));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(bsService1));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(bsService2));
 
         // attach NORMAL alarm to service 1
+        final IpServiceEdge ipServiceEdgeOnBsService1 = bsService1.getIpServiceEdges().iterator().next();
         businessServiceStateMachine.handleNewOrUpdatedAlarm(createAlarmWrapper(monitoredServiceDao.get(5), OnmsSeverity.NORMAL));
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForIPService(ipServiceWithId5));
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForBusinessService(bsService1));
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForBusinessService(bsService2));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(ipServiceEdgeOnBsService1));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(bsService1));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(bsService2));
 
         // attach INDETERMINATE alarm to service 1
         businessServiceStateMachine.handleNewOrUpdatedAlarm(createAlarmWrapper(monitoredServiceDao.get(5), OnmsSeverity.INDETERMINATE));
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForIPService(ipServiceWithId5));
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForBusinessService(bsService1));
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForBusinessService(bsService2));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(ipServiceEdgeOnBsService1));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(bsService1));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(bsService2));
 
         // attach WARNING alarm to service 1
         businessServiceStateMachine.handleNewOrUpdatedAlarm(createAlarmWrapper(monitoredServiceDao.get(5), OnmsSeverity.WARNING));
-        Assert.assertEquals(Status.WARNING, businessServiceManager.getOperationalStatusForIPService(ipServiceWithId5));
-        Assert.assertEquals(Status.WARNING, businessServiceManager.getOperationalStatusForBusinessService(bsService1));
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForBusinessService(bsService2));
+        Assert.assertEquals(Status.WARNING, businessServiceManager.getOperationalStatus(ipServiceEdgeOnBsService1));
+        Assert.assertEquals(Status.WARNING, businessServiceManager.getOperationalStatus(bsService1));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(bsService2));
 
         // attach CRITICAL alarm to service 1
         businessServiceStateMachine.handleNewOrUpdatedAlarm(createAlarmWrapper(monitoredServiceDao.get(5), OnmsSeverity.CRITICAL));
-        Assert.assertEquals(Status.CRITICAL, businessServiceManager.getOperationalStatusForIPService(ipServiceWithId5));
-        Assert.assertEquals(Status.CRITICAL, businessServiceManager.getOperationalStatusForBusinessService(bsService1));
-        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatusForBusinessService(bsService2));
+        Assert.assertEquals(Status.CRITICAL, businessServiceManager.getOperationalStatus(ipServiceEdgeOnBsService1));
+        Assert.assertEquals(Status.CRITICAL, businessServiceManager.getOperationalStatus(bsService1));
+        Assert.assertEquals(Status.NORMAL, businessServiceManager.getOperationalStatus(bsService2));
     }
 
     @Test
@@ -295,6 +303,53 @@ public class BusinessServiceManagerImplIT {
         businessServiceManager.addChildEdge(getBusinessService(serviceId1), getBusinessService(serviceId2), new Identity(), Edge.DEFAULT_WEIGHT);
         businessServiceManager.addChildEdge(getBusinessService(serviceId2), getBusinessService(serviceId3), new Identity(), Edge.DEFAULT_WEIGHT);
         businessServiceManager.addChildEdge(getBusinessService(serviceId3), getBusinessService(serviceId1), new Identity(), Edge.DEFAULT_WEIGHT);
+    }
+
+    @Test
+    @Transactional
+    public void ensureNoDanglingReductionFunctions() {
+        // Create a business service
+        final BusinessService bs = this.createBusinessService("bs1");
+        bs.save();
+
+        // Ensure there is an associated reduction function
+        assertEquals(1, reductionFunctionDao.countAll());
+
+        bs.setReduceFunction(new HighestSeverity());
+        bs.save();
+
+        // Ensure there is still only one associated reduction function
+        assertEquals(1, reductionFunctionDao.countAll());
+
+        // Delete
+        bs.delete();
+
+        // There should be no reduction function left
+        assertEquals(0, reductionFunctionDao.countAll());
+    }
+
+    @Test
+    public void ensureNoDanglingMapFunctions() {
+        // Create a business service with an edge
+        final BusinessService bs = this.createBusinessService("bs1");
+        bs.addReductionKeyEdge("my-reduction-key", new Increase(), Edge.DEFAULT_WEIGHT, "My Reduction Key");
+        bs.save();
+
+        // Ensure there is an associated mapping function
+        assertEquals(1, mapFunctionDao.countAll());
+
+        Iterables.getOnlyElement(bs.getReductionKeyEdges())
+                 .setMapFunction(new Decrease());
+        bs.save();
+
+        // Ensure there is still only one associated mapping function
+        assertEquals(1, mapFunctionDao.countAll());
+
+        // Delete an edge
+        bs.delete();
+
+        // Ensure there are no mapping functions left
+        assertEquals(0, mapFunctionDao.countAll());
     }
 
     private BusinessService createBusinessService(String serviceName) {

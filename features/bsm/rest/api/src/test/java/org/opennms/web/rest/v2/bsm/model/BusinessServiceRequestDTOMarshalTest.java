@@ -37,6 +37,10 @@ import java.util.Collection;
 
 import org.junit.runners.Parameterized;
 import org.opennms.core.test.xml.MarshalAndUnmarshalTest;
+import org.opennms.netmgt.bsm.service.model.Status;
+import org.opennms.netmgt.bsm.service.model.functions.map.Increase;
+import org.opennms.netmgt.bsm.service.model.functions.map.SetTo;
+import org.opennms.netmgt.bsm.service.model.functions.reduce.HighestSeverity;
 
 public class BusinessServiceRequestDTOMarshalTest extends MarshalAndUnmarshalTest<BusinessServiceRequestDTO> {
 
@@ -46,18 +50,21 @@ public class BusinessServiceRequestDTOMarshalTest extends MarshalAndUnmarshalTes
 
     @Parameterized.Parameters
     public static Collection<Object[]> data() throws IOException {
-        final MapFunctionDTO increaseDto = createMapFunctionDTO(MapFunctionType.Increase, null);
-        final MapFunctionDTO setToDto = createMapFunctionDTO(MapFunctionType.SetTo, new String[]{"status", "Critical"});
+        final SetTo setTo = new SetTo();
+        setTo.setStatus(Status.CRITICAL);
+
+        final MapFunctionDTO increaseDto = createMapFunctionDTO(new Increase());
+        final MapFunctionDTO setToDto = createMapFunctionDTO(setTo);
         final BusinessServiceRequestDTO requestDTO = new BusinessServiceRequestDTO();
-        requestDTO.setReduceFunction(createReduceFunctionDTO(ReduceFunctionType.MostCritical, null));
+        requestDTO.setReduceFunction(createReduceFunctionDTO(new HighestSeverity()));
         requestDTO.setName("Web Servers");
         requestDTO.addAttribute("dc", "RDU");
         requestDTO.addAttribute("some-key", "some-value");
         requestDTO.addChildService(2L, increaseDto, 5);
         requestDTO.addChildService(3L, setToDto, 5);
-        requestDTO.addReductionKey("myReductionKeyA", increaseDto, 7);
-        requestDTO.addReductionKey("myReductionKeyB", increaseDto, 7);
-        requestDTO.addIpService(1, increaseDto, 9);
+        requestDTO.addReductionKey("myReductionKeyA", increaseDto, 7, "reduction-key-a-friendly-name");
+        requestDTO.addReductionKey("myReductionKeyB", increaseDto, 7, "reduction-key-b-friendly-name");
+        requestDTO.addIpService(1, increaseDto, 9, "ip-service-friendly-name");
 
         return Arrays.asList(new Object[][]{{
             BusinessServiceRequestDTO.class,
@@ -69,14 +76,14 @@ public class BusinessServiceRequestDTOMarshalTest extends MarshalAndUnmarshalTes
             "    \"some-key\" : \"some-value\"" +
             "  }," +
             "  \"reduceFunction\" : {" +
-            "       \"type\" : \"MostCritical\"," +
-            "       \"properties\" : null" +
+            "       \"type\" : \"HighestSeverity\"," +
+            "       \"properties\" : { }" +
             "  }," +
             "  \"childServices\" : [" +
             "       {" +
             "           \"mapFunction\" : {" +
             "               \"type\" : \"Increase\"," +
-            "               \"properties\" : null" +
+            "               \"properties\" : { }" +
             "           }," +
             "           \"weight\" : 5," +
             "           \"childId\" : 2" +
@@ -96,59 +103,63 @@ public class BusinessServiceRequestDTOMarshalTest extends MarshalAndUnmarshalTes
             "       {" +
             "           \"mapFunction\" : {" +
             "               \"type\" : \"Increase\"," +
-            "               \"properties\" : null" +
+            "               \"properties\" : { }" +
             "           }," +
             "           \"weight\" : 9," +
-            "           \"ipServiceId\" : 1" +
+            "           \"ipServiceId\" : 1," +
+            "           \"friendlyName\" : \"ip-service-friendly-name\"" +
             "       }," +
             "   ]," +
             "  \"reductionKeys\" : [" +
             "       {" +
             "           \"mapFunction\" : {" +
             "               \"type\" : \"Increase\"," +
-            "               \"properties\" : null" +
+            "               \"properties\" : { }" +
             "           }," +
             "           \"weight\" : 7," +
-            "           \"reductionKey\" : \"myReductionKeyA\"" +
+            "           \"reductionKey\" : \"myReductionKeyA\"," +
+            "           \"friendlyName\" : \"reduction-key-a-friendly-name\"" +
             "       }," +
             "       {" +
             "            \"mapFunction\" : {" +
             "               \"type\" : \"Increase\"," +
-            "               \"properties\" : null" +
+            "               \"properties\" : { }" +
             "           }," +
             "           \"weight\" : 7," +
-            "           \"reductionKey\" : \"myReductionKeyB\"" +
+            "           \"reductionKey\" : \"myReductionKeyB\"," +
+            "           \"friendlyName\" : \"reduction-key-b-friendly-name\"" +
             "       }," +
             "   ]," +
             "}",
             "<business-service>\n" +
             "   <name>Web Servers</name>\n" +
             "   <attributes>\n" +
-            "       <attribute>\n" +
-            "           <key>dc</key>\n" +
-            "           <value>RDU</value>\n" +
-            "       </attribute>\n" +
-            "       <attribute>\n" +
-            "           <key>some-key</key>\n" +
-            "           <value>some-value</value>\n" +
-            "       </attribute>\n" +
+            "      <attribute>\n" +
+            "         <key>dc</key>\n" +
+            "         <value>RDU</value>\n" +
+            "      </attribute>\n" +
+            "      <attribute>\n" +
+            "         <key>some-key</key>\n" +
+            "         <value>some-value</value>\n" +
+            "      </attribute>\n" +
             "   </attributes>\n" +
-            "    <ip-services-edges>\n" +
+            "    <ip-service-edges>\n" +
             "      <ip-service-edge>\n" +
             "         <map-function>\n" +
             "            <type>Increase</type>\n" +
             "         </map-function>\n" +
             "         <weight>9</weight>\n" +
+            "         <friendly-name>ip-service-friendly-name</friendly-name>\n" +
             "         <ip-service-id>1</ip-service-id>\n" +
             "      </ip-service-edge>\n" +
-            "   </ip-services-edges>\n" +
+            "   </ip-service-edges>\n" +
             "   <child-edges>\n" +
             "      <child-edge>\n" +
             "         <map-function>\n" +
             "            <type>Increase</type>\n" +
             "         </map-function>\n" +
             "         <weight>5</weight>\n" +
-            "         <childId>2</childId>\n" +
+            "         <child-id>2</child-id>\n" +
             "      </child-edge>\n" +
             "      <child-edge>\n" +
             "         <map-function>\n" +
@@ -161,27 +172,29 @@ public class BusinessServiceRequestDTOMarshalTest extends MarshalAndUnmarshalTes
             "            </properties>\n" +
             "         </map-function>\n" +
             "         <weight>5</weight>\n" +
-            "         <childId>3</childId>\n" +
+            "         <child-id>3</child-id>\n" +
             "      </child-edge>\n" +
             "   </child-edges>\n" +
-            "   <reductionkey-edges>\n" +
-            "      <reductionkey-edge>\n" +
+            "   <reduction-key-edges>\n" +
+            "      <reduction-key-edge>\n" +
             "         <map-function>\n" +
             "            <type>Increase</type>\n" +
             "         </map-function>\n" +
             "         <weight>7</weight>\n" +
+            "         <friendly-name>reduction-key-a-friendly-name</friendly-name>\n" +
             "         <reduction-key>myReductionKeyA</reduction-key>\n" +
-            "      </reductionkey-edge>\n" +
-            "      <reductionkey-edge>\n" +
+            "      </reduction-key-edge>\n" +
+            "      <reduction-key-edge>\n" +
             "         <map-function>\n" +
             "            <type>Increase</type>\n" +
             "         </map-function>\n" +
             "         <weight>7</weight>\n" +
+            "         <friendly-name>reduction-key-b-friendly-name</friendly-name>\n" +
             "         <reduction-key>myReductionKeyB</reduction-key>\n" +
-            "      </reductionkey-edge>\n" +
-            "   </reductionkey-edges>\n" +
+            "      </reduction-key-edge>\n" +
+            "   </reduction-key-edges>\n" +
             "   <reduce-function>\n" +
-            "      <type>MostCritical</type>\n" +
+            "      <type>HighestSeverity</type>\n" +
             "   </reduce-function>\n" +
             "</business-service>"
         }});

@@ -30,6 +30,7 @@ package org.opennms.netmgt.bsm.service.model.edge;
 
 public interface ReductionKeyEdge extends Edge {
     String getReductionKey();
-
+    String getFriendlyName();
     void setReductionKey(String reductionKey);
+    void setFriendlyName(String friendlyName);
 }

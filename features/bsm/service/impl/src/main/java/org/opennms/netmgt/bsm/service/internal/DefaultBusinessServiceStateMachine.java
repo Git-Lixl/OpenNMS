@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2009-2015 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2015 The OpenNMS Group, Inc.
+ * Copyright (C) 2016 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2016 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -21,230 +21,247 @@
  *      http://www.gnu.org/licenses/
  *
  * For more information contact:
- *     OpenNMS(R) Licensing <license@opennms.org>
- *     http://www.opennms.org/
- *     http://www.opennms.com/
+ * OpenNMS(R) Licensing <license@opennms.org>
+ *      http://www.opennms.org/
+ *      http://www.opennms.com/
  *******************************************************************************/
 
 package org.opennms.netmgt.bsm.service.internal;
 
+import java.awt.Dimension;
+import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.imageio.ImageIO;
+
+import org.apache.commons.collections15.Transformer;
+import org.opennms.netmgt.bsm.service.AlarmProvider;
 import org.opennms.netmgt.bsm.service.BusinessServiceStateChangeHandler;
 import org.opennms.netmgt.bsm.service.BusinessServiceStateMachine;
 import org.opennms.netmgt.bsm.service.model.AlarmWrapper;
 import org.opennms.netmgt.bsm.service.model.BusinessService;
 import org.opennms.netmgt.bsm.service.model.IpService;
 import org.opennms.netmgt.bsm.service.model.Status;
-import org.opennms.netmgt.bsm.service.model.edge.ChildEdge;
 import org.opennms.netmgt.bsm.service.model.edge.Edge;
-import org.opennms.netmgt.bsm.service.model.edge.IpServiceEdge;
-import org.opennms.netmgt.bsm.service.model.edge.ReductionKeyEdge;
+import org.opennms.netmgt.bsm.service.model.graph.BusinessServiceGraph;
+import org.opennms.netmgt.bsm.service.model.graph.GraphEdge;
+import org.opennms.netmgt.bsm.service.model.graph.GraphVertex;
+import org.opennms.netmgt.bsm.service.model.graph.internal.BusinessServiceGraphImpl;
+import org.opennms.netmgt.bsm.service.model.graph.internal.GraphAlgorithms;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import edu.uci.ics.jung.algorithms.layout.KKLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.visualization.VisualizationImageServer;
 
 public class DefaultBusinessServiceStateMachine implements BusinessServiceStateMachine {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultBusinessServiceStateMachine.class);
-
-    private ReadWriteLock m_rwLock = new ReentrantReadWriteLock();
-    public static final Status DEFAULT_SEVERITY = Status.NORMAL;
     public static final Status MIN_SEVERITY = Status.NORMAL;
 
-    private final List<BusinessServiceStateChangeHandler> m_handlers = Lists.newArrayList();
-    private final Map<String, Set<BusinessService>> m_reductionKeys = Maps.newHashMap();
-    private final Map<BusinessService, Status> m_businessServiceStatus = Maps.newHashMap();
-    private final Map<String, Status> m_reductionKeyStatus = Maps.newHashMap();
-    private final Set<Integer> m_ipServiceIds = Sets.newHashSet();
+    @Autowired
+    private AlarmProvider m_alarmProvider;
 
-    // children -> parent
-    private final Map<BusinessService, Set<BusinessService>> m_rootMap = Maps.newHashMap();
+    private final List<BusinessServiceStateChangeHandler> m_handlers = Lists.newArrayList();
+    private final ReadWriteLock m_rwLock = new ReentrantReadWriteLock();
+    private BusinessServiceGraph m_g = new BusinessServiceGraphImpl(Collections.emptyList());
 
     @Override
     public void setBusinessServices(List<BusinessService> businessServices) {
-        Objects.requireNonNull(businessServices, "businessServices cannot be null");
-
         m_rwLock.writeLock().lock();
         try {
-            // Clear previous state
-            m_reductionKeys.clear();
-            m_businessServiceStatus.clear();
-            m_reductionKeyStatus.clear();
-            m_ipServiceIds.clear();
-            m_rootMap.clear();
+            // Create a new graph
+            BusinessServiceGraph g = new BusinessServiceGraphImpl(businessServices);
 
-            // Rebuild the reduction Key set
-            for (BusinessService businessService : businessServices) {
-                for (IpServiceEdge ipServiceEdge : businessService.getIpServiceEdges()) {
-                    m_ipServiceIds.add(ipServiceEdge.getIpService().getId());
-                }
-                m_businessServiceStatus.put(businessService, DEFAULT_SEVERITY);
-                for (Edge edge : businessService.getEdges()) {
-                    for (String eachRk : edge.getReductionKeys()) {
-                        addReductionKey(eachRk, businessService);
-                    }
+            // Prime the graph with the state from the previous graph and
+            // keep track of the new reductions keys
+            Set<String> reductionsKeysToLookup = Sets.newHashSet();
+            for (String reductionKey : g.getReductionKeys()) {
+                GraphVertex reductionKeyVertex = m_g.getVertexByReductionKey(reductionKey);
+                if (reductionKeyVertex != null) {
+                    updateAndPropagateVertex(g, g.getVertexByReductionKey(reductionKey), reductionKeyVertex.getStatus());
+                } else {
+                    reductionsKeysToLookup.add(reductionKey);
                 }
             }
 
-            // Rebuild root structure
-            businessServices.forEach(bs -> bs.getChildEdges()
-                    .forEach(edge -> {
-                        if (m_rootMap.get(edge.getChild()) == null) {
-                            m_rootMap.put(edge.getChild(), Sets.newHashSet());
-                        }
-                        m_rootMap.get(edge.getChild()).add(edge.getSource());
-                    })
-            );
-
-            // Rebuild the hierarchy
-            Set<BusinessService> roots = getRoots(businessServices);
-            determineHierarchyLevel(0, roots);
+            if (m_alarmProvider == null && reductionsKeysToLookup.size() > 0) {
+                LOG.warn("There are one or more reduction keys to lookup, but no alarm provider is set.");
+            } else {
+                // Query the status of the reductions keys that were added
+                // We do this so that we can immediately reflect the state of the new
+                // graph without having to wait for calls to handleNewOrUpdatedAlarm()
+                for (String reductionKey : reductionsKeysToLookup) {
+                    AlarmWrapper alarm = m_alarmProvider.lookup(reductionKey);
+                    if (alarm != null) {
+                        updateAndPropagateVertex(g, g.getVertexByReductionKey(reductionKey), alarm.getStatus());
+                    }
+                }
+            }
+            m_g = g;
         } finally {
             m_rwLock.writeLock().unlock();
-        }
-    }
-
-    protected void determineHierarchyLevel(int level, Set<BusinessService> elements) {
-        elements.forEach(bs -> {
-            // elements can be children of multiple parents, we use the maximum level
-            bs.setLevel(Math.max(bs.getLevel(), level));
-            // Afterwards move to next level
-            determineHierarchyLevel(level + 1, bs.getChildServices());
-        });
-    }
-
-    protected Set<BusinessService> getRoots(List<BusinessService> businessServiceEntities) {
-        return businessServiceEntities
-                .stream()
-                .filter(eachService -> m_rootMap.get(eachService) == null || m_rootMap.get(eachService).isEmpty())
-                .collect(Collectors.toSet());
-    }
-
-    private void addReductionKey(String reductionKey, BusinessService bs) {
-        if (m_reductionKeys.containsKey(reductionKey)) {
-            m_reductionKeys.get(reductionKey).add(bs);
-        } else {
-            m_reductionKeys.put(reductionKey, Sets.newHashSet(bs));
         }
     }
 
     @Override
-    public void handleNewOrUpdatedAlarm(AlarmWrapper alarmWrapper) {
-        // The ReadWriteLock doesn't give us the ability to upgrade from a
-        // read lock to a write lock, so we acquire a write lock even
-        // if we may not need it
+    public void handleNewOrUpdatedAlarm(AlarmWrapper alarm) {
         m_rwLock.writeLock().lock();
         try {
-            // Are there any business services referencing this alarm?
-            Set<BusinessService> affectedBusinessServices = m_reductionKeys.get(alarmWrapper.getReductionKey());
-            if (affectedBusinessServices == null || affectedBusinessServices.isEmpty()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("No Business Service depends on alarm with reduction key: '{}'. "
-                            + "Monitored reduction keys include: {}.", alarmWrapper.getReductionKey(), m_reductionKeys.keySet());
-                }
-                return;
-            }
-
-            // Maintain the last known status for the reduction key
-            m_reductionKeyStatus.put(alarmWrapper.getReductionKey(), alarmWrapper.getStatus());
-
-            // Get the maximum level
-            Integer maxLevel = affectedBusinessServices.stream().mapToInt(s -> s.getLevel()).max().getAsInt();
-            // Propagate to the affected business services
-            for (int eachLevel = maxLevel; eachLevel>=0; eachLevel--) {
-                calculateStatus(eachLevel);
-            }
+            // Recursively propagate the status
+            updateAndPropagateVertex(m_g, m_g.getVertexByReductionKey(alarm.getReductionKey()), alarm.getStatus());
         } finally {
             m_rwLock.writeLock().unlock();
         }
     }
 
-    private Status calculateCurrentStatus(BusinessService businessService) {
-        // Map
-        final Map<Edge, Status> edgeStatusMap = getStatusMapForReduceFunction(businessService);
+    private void updateAndPropagateVertex(BusinessServiceGraph graph, GraphVertex vertex, Status newStatus) {
+        if (vertex == null) {
+            // Nothing to do here
+            return;
+        }
+
+        // Apply lower bound
+        newStatus = newStatus.isLessThan(MIN_SEVERITY) ? MIN_SEVERITY : newStatus;
+
+        // Update the status if necessary
+        Status previousStatus = vertex.getStatus();
+        if (previousStatus.equals(newStatus)) {
+            // The status hasn't changed, there's nothing to propagate
+            return;
+        }
+        vertex.setStatus(newStatus);
+
+        // Notify the listeners
+        onStatusUpdated(graph, vertex, previousStatus);
+
+        // Update the edges with the mapped status
+        List<GraphEdge> updatedEges = Lists.newArrayList();
+        for (GraphEdge edge : graph.getInEdges(vertex)) {
+            Status mappedStatus = newStatus;
+            if (newStatus.isGreaterThan(MIN_SEVERITY)) {
+                // Only apply the map function when the status is > the minimum
+                mappedStatus = edge.getMapFunction().map(newStatus).orElse(MIN_SEVERITY);
+            } else {
+                mappedStatus = newStatus;
+            }
+
+            if (mappedStatus.equals(edge.getStatus())) {
+                // The status hasn't changed
+                continue;
+            }
+
+            // Update the status and add it to the list of edges to propagate
+            edge.setStatus(mappedStatus);
+            updatedEges.add(edge);
+        }
+
+        // Propagate once all of the edges have been updated
+        for (GraphEdge edge : updatedEges) {
+            reduceUpdateAndPropagateVertex(graph, graph.getOpposite(vertex, edge));
+        }
+    }
+
+    private void reduceUpdateAndPropagateVertex(BusinessServiceGraph graph, GraphVertex vertex) {
+        if (vertex == null) {
+            // Nothing to do here
+            return;
+        }
+
+        // Calculate the weighed statuses from the child edges
+        List<Status> statuses = weighStatuses(graph.getOutEdges(vertex));
 
         // Reduce
-        final Status overallStatus = businessService.getReduceFunction().reduce(edgeStatusMap).orElse(DEFAULT_SEVERITY);
+        Status newStatus = vertex.getReductionFunction().reduce(statuses).orElse(MIN_SEVERITY);
 
-        // Apply lower bound, severity states like INDETERMINATE and CLEARED don't always make sense
-        return overallStatus.isLessThan(MIN_SEVERITY) ? MIN_SEVERITY : overallStatus;
+        // Update and propagate
+        updateAndPropagateVertex(graph, vertex, newStatus);
     }
 
-    protected Map<Edge, Status> getStatusMapForReduceFunction(BusinessService businessService) {
-        final Map<Edge, Status> statusMap = Maps.newHashMap();
-        // reduction keys
-        for (ReductionKeyEdge reductionKeyEdge : businessService.getReductionKeyEdges()) {
-            final Status rkStatus = m_reductionKeyStatus.get(reductionKeyEdge.getReductionKey());
-            statusMap.put(reductionKeyEdge, rkStatus);
-        }
-        // ip services
-        for (IpServiceEdge ipServiceEdge : businessService.getIpServiceEdges()) {
-            final Status ipServiceStatus = getOperationalStatus(ipServiceEdge.getIpService());
-            statusMap.put(ipServiceEdge, ipServiceStatus);
-        }
-        // business services child edges
-        for (ChildEdge childEdge : businessService.getChildEdges()) {
-            final Status bsStatus = m_businessServiceStatus.get(childEdge.getChild());
-            statusMap.put(childEdge, bsStatus);
-        }
-        // for now we throw an exception.
-        if (statusMap.size() != businessService.getEdges().size()) {
-            throw new IllegalStateException("Determining the status map for the reduction function failed. Expected " +
-                    businessService.getEdges().size() + " but got " + statusMap.size() + " mappings");
-        }
-        // map
-        for (Edge eachEdge : businessService.getEdges()) {
-            Optional<Status> mappedStatus = eachEdge.getMapFunction().map(statusMap.get(eachEdge));
-            statusMap.put(eachEdge, mappedStatus.orElse(Status.INDETERMINATE));
-        }
-        return statusMap;
+    public static List<Status> weighStatuses(Collection<GraphEdge> edges) {
+        return weighStatuses(edges.stream()
+                .collect(Collectors.toMap(Function.identity(), e -> e.getStatus())));
     }
 
-    // calculates the status for all business services on a certain level
-    private void calculateStatus(int level) {
-        Set<BusinessService> businessServiceEntities = m_businessServiceStatus.keySet().stream().filter(bs -> bs.getLevel() == level).collect(Collectors.toSet());
-        for (BusinessService eachEntity : businessServiceEntities) {
-            doBusinessServiceStatusCalculation(eachEntity);
-        }
-    }
+    /**
+     * Apply the edges weights to the associated statuses set in the map,
+     * ignoring the actual status stored in the edge. Can be used for simulations
+     * without needing to change the actual edge's status.
+     *
+     * @param edgesWithStatus
+     * @return
+     */
+    public static List<Status> weighStatuses(Map<GraphEdge, Status> edgesWithStatus) {
+        // Find the greatest common divisor of all the weights
+        int gcd = edgesWithStatus.keySet().stream()
+                .map(e -> e.getWeight())
+                .reduce((a,b) -> BigInteger.valueOf(a).gcd(BigInteger.valueOf(b)).intValue())
+                .orElse(1);
 
-    private void doBusinessServiceStatusCalculation(BusinessService businessService) {
-        // Calculate the new status
-        Status newStatus = calculateCurrentStatus(businessService);
-
-        // Did the severity change?
-        Status prevStatus = m_businessServiceStatus.get(businessService);
-        if (newStatus.equals(prevStatus)) {
-            return; // The status hasn't changed, we're done
-        }
-
-        // Update the severity
-        LOG.debug("Updating state on {} from {} to {}.", businessService, prevStatus, newStatus);
-        m_businessServiceStatus.put(businessService, newStatus);
-
-        // Notify
-        synchronized(m_handlers) {
-            for (BusinessServiceStateChangeHandler handler : m_handlers) {
-                handler.handleBusinessServiceStateChanged(businessService, newStatus, prevStatus);
+        // Multiply the statuses based on their relative weight
+        List<Status> statuses = Lists.newArrayList();
+        for (Entry<GraphEdge, Status> entry : edgesWithStatus.entrySet()) {
+            int relativeWeight = Math.floorDiv(entry.getKey().getWeight(), gcd);
+            for (int i = 0; i < relativeWeight; i++) {
+                statuses.add(entry.getValue());
             }
+        }
+
+        return statuses;
+    }
+
+    private void onStatusUpdated(BusinessServiceGraph graph, GraphVertex vertex, Status previousStatus) {
+        BusinessService businessService = vertex.getBusinessService();
+        if (businessService == null) {
+            // Only send updates for business services (and not for reduction keys)
+            return;
+        }
+
+        if (graph != m_g) {
+            // We're working with a new graph, only send a status update if the new status is different
+            // than the one in the previous graph
+            GraphVertex previousVertex = m_g.getVertexByBusinessServiceId(businessService.getId());
+            if (previousVertex != null && vertex.getStatus().equals(previousVertex.getStatus())) {
+                // The vertex for this business service in the previous graph
+                // had the same status, don't issue any notifications
+                return;
+            }
+        }
+
+        for (BusinessServiceStateChangeHandler handler : m_handlers) {
+            handler.handleBusinessServiceStateChanged(businessService, vertex.getStatus(), previousStatus);
         }
     }
 
     @Override
     public Status getOperationalStatus(BusinessService businessService) {
+        Objects.requireNonNull(businessService);
         m_rwLock.readLock().lock();
         try {
-            return m_businessServiceStatus.get(businessService);
+            GraphVertex vertex = m_g.getVertexByBusinessServiceId(businessService.getId());
+            if (vertex != null) {
+                return vertex.getStatus();
+            }
+            return null;
         } finally {
             m_rwLock.readLock().unlock();
         }
@@ -254,20 +271,11 @@ public class DefaultBusinessServiceStateMachine implements BusinessServiceStateM
     public Status getOperationalStatus(IpService ipService) {
         m_rwLock.readLock().lock();
         try {
-            // Return null if the IP-Service is not associated with any Business Service
-            if (!m_ipServiceIds.contains(ipService.getId())) {
-                return null;
+            GraphVertex vertex = m_g.getVertexByIpServiceId(ipService.getId());
+            if (vertex != null) {
+                return vertex.getStatus();
             }
-
-            // The IP-Service resolves to multiple reduction keys, we use the one with the highest severity (Most Critical)
-            Status maxStatus = DEFAULT_SEVERITY;
-            for (String reductionKey : ipService.getReductionKeys()) {
-                final Status rkStatus = m_reductionKeyStatus.get(reductionKey);
-                if (rkStatus != null && rkStatus.isGreaterThan(maxStatus)) {
-                    maxStatus = rkStatus;
-                }
-            }
-            return maxStatus;
+            return null;
         } finally {
             m_rwLock.readLock().unlock();
         }
@@ -277,9 +285,36 @@ public class DefaultBusinessServiceStateMachine implements BusinessServiceStateM
     public Status getOperationalStatus(String reductionKey) {
         m_rwLock.readLock().lock();
         try {
-            return m_reductionKeyStatus.get(reductionKey);
+            GraphVertex vertex = m_g.getVertexByReductionKey(reductionKey);
+            if (vertex != null) {
+                return vertex.getStatus();
+            }
+            return null;
         } finally {
             m_rwLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public Status getOperationalStatus(Edge edge) {
+        m_rwLock.readLock().lock();
+        try {
+            GraphVertex vertex = m_g.getVertexByEdgeId(edge.getId());
+            if (vertex != null) {
+                return vertex.getStatus();
+            }
+            return null;
+        } finally {
+            m_rwLock.readLock().unlock();
+        }
+    }
+
+    public void setAlarmProvider(AlarmProvider alarmProvider) {
+        m_rwLock.writeLock().lock();
+        try {
+            m_alarmProvider = alarmProvider;
+        } finally {
+            m_rwLock.writeLock().unlock();
         }
     }
 
@@ -301,5 +336,159 @@ public class DefaultBusinessServiceStateMachine implements BusinessServiceStateM
         } finally {
             m_rwLock.writeLock().unlock();
         }
+    }
+
+    @Override
+    public void renderGraphToPng(File tempFile) {
+        m_rwLock.readLock().lock();
+        try {
+            Layout<GraphVertex,GraphEdge> layout = new KKLayout<GraphVertex,GraphEdge>(m_g);
+            layout.setSize(new Dimension(1024,1024)); // Size of the layout
+
+            VisualizationImageServer<GraphVertex, GraphEdge> vv = new VisualizationImageServer<GraphVertex, GraphEdge>(layout, layout.getSize());
+            vv.setPreferredSize(new Dimension(1200,1200)); // Viewing area size
+            vv.getRenderContext().setVertexLabelTransformer(new Transformer<GraphVertex,String>() {
+                @Override
+                public String transform(GraphVertex vertex) {
+                    if (vertex.getBusinessService() != null) {
+                        return String.format("BS[%s]", vertex.getBusinessService().getName());
+                    }
+                    if (vertex.getIpService() != null) {
+                        IpService ipService = vertex.getIpService();
+                        return String.format("IP_SERVICE[%s,%s]", ipService.getId(), ipService.getServiceName());
+                    }
+                    if (vertex.getReductionKey() != null) {
+                        return String.format("RK[%s]", vertex.getReductionKey());
+                    }
+                    return "UNKNOWN";
+                }
+            });
+            vv.getRenderContext().setEdgeLabelTransformer(new Transformer<GraphEdge,String>() {
+                @Override
+                public String transform(GraphEdge edge) {
+                    return String.format("%s", edge.getMapFunction().getClass().getSimpleName());
+                }
+            });
+
+            // Create the buffered image
+            BufferedImage image = (BufferedImage) vv.getImage(
+                    new Point2D.Double(vv.getGraphLayout().getSize().getWidth() / 2,
+                    vv.getGraphLayout().getSize().getHeight() / 2),
+                    new Dimension(vv.getGraphLayout().getSize()));
+
+            // Render
+            try {
+                ImageIO.write(image, "png", tempFile);
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
+            }
+        } finally {
+            m_rwLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public BusinessServiceGraph getGraph() {
+        return m_g;
+    }
+
+    @Override
+    public Set<GraphEdge> calculateImpacting(BusinessService businessService) {
+        m_rwLock.readLock().lock();
+        try {
+            final GraphVertex vertex = m_g.getVertexByBusinessServiceId(businessService.getId());
+            return GraphAlgorithms.calculateImpacting(m_g, vertex);
+        } finally {
+            m_rwLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public BusinessServiceStateMachine clone(boolean preserveState) {
+        m_rwLock.readLock().lock();
+        try {
+            final BusinessServiceStateMachine sm = new DefaultBusinessServiceStateMachine();
+
+            // Rebuild the graph using the business services from the existing state machine
+            final BusinessServiceGraph graph = getGraph();
+            sm.setBusinessServices(graph.getVertices().stream()
+                    .filter(v -> v.getBusinessService() != null)
+                    .map(v -> v.getBusinessService())
+                    .collect(Collectors.toList()));
+
+            // Prime the state
+            if (preserveState) {
+                for (String reductionKey : graph.getReductionKeys()) {
+                    GraphVertex reductionKeyVertex = graph.getVertexByReductionKey(reductionKey);
+                    sm.handleNewOrUpdatedAlarm(new AlarmWrapper() {
+                        @Override
+                        public String getReductionKey() {
+                            return reductionKey;
+                        }
+
+                        @Override
+                        public Status getStatus() {
+                            return reductionKeyVertex.getStatus();
+                        }
+
+                        @Override
+                        public Integer getId() {
+                            return 0;
+                        }
+                    });
+                }
+            }
+            return sm;
+        } finally {
+            m_rwLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public List<GraphVertex> calculateRootCause(BusinessService businessService) {
+        m_rwLock.readLock().lock();
+        try {
+            final GraphVertex vertex = m_g.getVertexByBusinessServiceId(businessService.getId());
+            return GraphAlgorithms.calculateRootCause(m_g, vertex);
+        } finally {
+            m_rwLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public List<GraphVertex> calculateImpact(BusinessService businessService) {
+        m_rwLock.readLock().lock();
+        try {
+            final GraphVertex vertex = m_g.getVertexByBusinessServiceId(businessService.getId());
+            return calculateImpact(vertex);
+        } finally {
+            m_rwLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public List<GraphVertex> calculateImpact(IpService ipService) {
+        m_rwLock.readLock().lock();
+        try {
+            final GraphVertex vertex = m_g.getVertexByIpServiceId(ipService.getId());
+            return calculateImpact(vertex);
+        } finally {
+            m_rwLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public List<GraphVertex> calculateImpact(String reductionKey) {
+        m_rwLock.readLock().lock();
+        try {
+            final GraphVertex vertex = m_g.getVertexByReductionKey(reductionKey);
+            return calculateImpact(vertex);
+        } finally {
+            m_rwLock.readLock().unlock();
+        }
+    }
+
+    private List<GraphVertex> calculateImpact(GraphVertex vertex) {
+        return GraphAlgorithms.calculateImpact(m_g, vertex);
     }
 }

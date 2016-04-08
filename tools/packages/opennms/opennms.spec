@@ -468,7 +468,6 @@ VTD-XML is very fast GPL library for parsing XMLs with XPath Suppoer.
 %{extrainfo}
 %{extrainfo2}
 
-
 %prep
 
 tar -xvzf $RPM_SOURCE_DIR/%{name}-source-%{version}-%{release}.tar.gz -C $RPM_BUILD_DIR
@@ -992,9 +991,13 @@ if [ -d "$ROOT_INST/data" ]; then
 fi
 echo "done"
 
+if [ ! -e "$ROOT_INST/etc/java.conf" ]; then
+	"$ROOT_INST/bin/runjava" "-s"
+fi
+
 echo ""
 echo " *** Installation complete.  You must still run the installer at"
-echo " *** \$OPENNMS_HOME/bin/install to be sure your database is up"
+echo " *** \$OPENNMS_HOME/bin/install -dis to be sure your database is up"
 echo " *** to date before you start %{_descr}.  See the install guide at"
 echo " *** http://www.opennms.org/wiki/Installation:RPM and the"
 echo " *** release notes for details."

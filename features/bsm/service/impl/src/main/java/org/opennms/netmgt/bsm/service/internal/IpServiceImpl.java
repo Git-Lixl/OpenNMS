@@ -35,7 +35,6 @@ import java.util.Set;
 import org.opennms.netmgt.bsm.persistence.api.ReductionKeyHelper;
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.model.IpService;
-import org.opennms.netmgt.bsm.service.model.Status;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 
 public class IpServiceImpl implements IpService {
@@ -73,6 +72,14 @@ public class IpServiceImpl implements IpService {
     }
 
     @Override
+    public Integer getNodeId() {
+        if (m_entity.getNodeId() != null) {
+            return m_manager.getNodeById(m_entity.getNodeId()).getId();
+        }
+        return null;
+    }
+
+    @Override
     public String getIpAddress() {
         return m_entity.getIpAddress().toString();
     }
@@ -80,11 +87,6 @@ public class IpServiceImpl implements IpService {
     @Override
     public Set<String> getReductionKeys() {
         return Collections.unmodifiableSet(ReductionKeyHelper.getReductionKeys(m_entity));
-    }
-
-    @Override
-    public Status getOperationalStatus() {
-        return m_manager.getOperationalStatusForIPService(this);
     }
 
     @Override
@@ -109,7 +111,6 @@ public class IpServiceImpl implements IpService {
                 .add("nodeLabel", this.getNodeLabel())
                 .add("ipAddress", this.getIpAddress())
                 .add("reductionKeys", this.getReductionKeys())
-                .add("operationalStatus", this.getOperationalStatus())
                 .toString();
     }
 }

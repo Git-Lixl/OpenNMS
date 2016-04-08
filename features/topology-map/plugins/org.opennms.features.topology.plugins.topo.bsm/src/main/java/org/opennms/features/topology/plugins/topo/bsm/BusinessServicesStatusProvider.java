@@ -29,72 +29,85 @@
 package org.opennms.features.topology.plugins.topo.bsm;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.opennms.features.topology.api.topo.Criteria;
 import org.opennms.features.topology.api.topo.DefaultStatus;
+import org.opennms.features.topology.api.topo.EdgeProvider;
+import org.opennms.features.topology.api.topo.EdgeRef;
+import org.opennms.features.topology.api.topo.EdgeStatusProvider;
 import org.opennms.features.topology.api.topo.Status;
 import org.opennms.features.topology.api.topo.StatusProvider;
 import org.opennms.features.topology.api.topo.VertexProvider;
 import org.opennms.features.topology.api.topo.VertexRef;
+import org.opennms.features.topology.plugins.topo.bsm.simulate.SimulationAwareStateMachineFactory;
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
-import org.opennms.netmgt.vaadin.core.TransactionAwareBeanProxyFactory;
+import org.opennms.netmgt.bsm.service.BusinessServiceStateMachine;
+import org.opennms.netmgt.bsm.service.model.graph.BusinessServiceGraph;
+import org.opennms.netmgt.bsm.service.model.graph.GraphEdge;
+import org.opennms.netmgt.bsm.service.model.graph.GraphVertex;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
+public class BusinessServicesStatusProvider implements StatusProvider, EdgeStatusProvider {
 
-public class BusinessServicesStatusProvider implements StatusProvider {
-
-    private final TransactionAwareBeanProxyFactory transactionAwareBeanProxyFactory;
     private BusinessServiceManager businessServiceManager;
-
-    public BusinessServicesStatusProvider(TransactionAwareBeanProxyFactory transactionAwareBeanProxyFactory) {
-        this.transactionAwareBeanProxyFactory = Objects.requireNonNull(transactionAwareBeanProxyFactory);
-    }
 
     @Override
     public Map<VertexRef, Status> getStatusForVertices(VertexProvider vertexProvider, Collection<VertexRef> vertices, Criteria[] criteria) {
-        // filter out vertices from other providers
-        final Collection<VertexRef> filteredVertices = Collections2.filter(vertices, new Predicate<VertexRef>() {
-            @Override
-            public boolean apply(VertexRef input) {
-                return input instanceof AbstractBusinessServiceVertex && contributesTo(input.getNamespace());
-            }
-        });
-
-        // cast to AbstractBusinessServiceVertex
-        final Collection<AbstractBusinessServiceVertex> businessServiceVertices = Collections2.transform(filteredVertices, new Function<VertexRef, AbstractBusinessServiceVertex>() {
-            @Override
-            public AbstractBusinessServiceVertex apply(VertexRef input) {
-                return (AbstractBusinessServiceVertex) input;
-            }
-        });
-
-        final Map<VertexRef, Status> statusMap = new HashMap<>();
-        for (AbstractBusinessServiceVertex eachVertex : businessServiceVertices) {
-            final org.opennms.netmgt.bsm.service.model.Status operationalStatus = getOperationalStatus(eachVertex);
-            statusMap.put(eachVertex, new DefaultStatus(operationalStatus.getLabel(), 0));
-        }
-        return statusMap;
+        final BusinessServiceStateMachine stateMachine = SimulationAwareStateMachineFactory.createStateMachine(businessServiceManager, criteria);
+        return vertices.stream()
+            .filter(v -> contributesTo(v.getNamespace()) && v instanceof AbstractBusinessServiceVertex)
+            .map(v -> (AbstractBusinessServiceVertex) v)
+            .collect(Collectors.toMap(v -> v, v -> new DefaultStatus(getStatus(stateMachine, v).getLabel(), 0)));
     }
 
-    private org.opennms.netmgt.bsm.service.model.Status getOperationalStatus(AbstractBusinessServiceVertex vertex) {
-        if (vertex instanceof BusinessServiceVertex) {
-            BusinessServiceVertex bsVertex = (BusinessServiceVertex) vertex;
-            return businessServiceManager.getBusinessServiceById(bsVertex.getServiceId()).getOperationalStatus();
-        }
-        if (vertex instanceof IpServiceVertex) {
-            IpServiceVertex ipServiceVertex = (IpServiceVertex) vertex;
-            return businessServiceManager.getIpServiceById(ipServiceVertex.getIpServiceId()).getOperationalStatus();
-        }
-        if (vertex instanceof ReductionKeyVertex) {
-            ReductionKeyVertex rkVertex = (ReductionKeyVertex) vertex;
-            return businessServiceManager.getOperationalStatusForReductionKey(rkVertex.getReductionKey());
-        }
-        throw new IllegalStateException("Unsupported BusinessServiceVertex type: " + vertex.getClass());
+    @Override
+    public Map<EdgeRef, Status> getStatusForEdges(EdgeProvider edgeProvider, Collection<EdgeRef> edges, Criteria[] criteria) {
+        final BusinessServiceStateMachine stateMachine = SimulationAwareStateMachineFactory.createStateMachine(businessServiceManager, criteria);
+        return edges.stream()
+                .filter(edge -> contributesTo(edge.getNamespace()) && edge instanceof BusinessServiceEdge)
+                .map(edge -> (BusinessServiceEdge) edge)
+                .collect(Collectors.toMap(edge -> edge, edge -> new DefaultStatus(getStatus(stateMachine, edge).getLabel(), 0)));
+    }
+
+    public static org.opennms.netmgt.bsm.service.model.Status getStatus(BusinessServiceStateMachine stateMachine, AbstractBusinessServiceVertex vertex) {
+        final GraphVertex graphVertex = getGraphVertex(vertex, stateMachine.getGraph());
+        return graphVertex != null ? graphVertex.getStatus() : null;
+    }
+
+    public static org.opennms.netmgt.bsm.service.model.Status getStatus(BusinessServiceStateMachine stateMachine, BusinessServiceEdge edge) {
+        final BusinessServiceGraph graph = stateMachine.getGraph();
+        // We need both the source and target vertices to find the edge in the graph
+        final GraphVertex source = getGraphVertex(edge.getBusinessServiceSource(), stateMachine.getGraph());
+        final GraphVertex target = getGraphVertex(edge.getBusinessServiceTarget(), stateMachine.getGraph());
+        final GraphEdge graphEdge = graph.findEdge(source, target);
+        return graphEdge != null ? graphEdge.getStatus() : null;
+    }
+
+    private static GraphVertex getGraphVertex(AbstractBusinessServiceVertex vertex, BusinessServiceGraph graph) {
+        final AtomicReference<GraphVertex> graphVertex = new AtomicReference<>();
+        vertex.accept(new BusinessServiceVertexVisitor<Void>() {
+            @Override
+            public Void visit(BusinessServiceVertex vertex) {
+                graphVertex.set(graph.getVertexByBusinessServiceId(vertex.getServiceId()));
+                return null;
+            }
+
+            @Override
+            public Void visit(IpServiceVertex vertex) {
+                graphVertex.set(graph.getVertexByIpServiceId(vertex.getIpServiceId()));
+                return null;
+            }
+
+            @Override
+            public Void visit(ReductionKeyVertex vertex) {
+                graphVertex.set(graph.getVertexByReductionKey(vertex.getReductionKey()));
+                return null;
+            }
+        });
+        return graphVertex.get();
     }
 
     @Override
@@ -107,8 +120,7 @@ public class BusinessServicesStatusProvider implements StatusProvider {
         return getNamespace().equals(namespace);
     }
 
-    public void setBusinessServiceManager(BusinessServiceManager serviceManager) {
-        Objects.requireNonNull(serviceManager);
-        this.businessServiceManager = transactionAwareBeanProxyFactory.createProxy(serviceManager);
+    public void setBusinessServiceManager(BusinessServiceManager businessServiceManager) {
+        this.businessServiceManager = Objects.requireNonNull(businessServiceManager);
     }
 }

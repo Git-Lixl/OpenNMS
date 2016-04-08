@@ -59,8 +59,8 @@
 
             <!-- BSM features -->
             <repository>mvn:org.opennms.features.bsm/org.opennms.features.bsm.service.api/${project.version}/xml/features</repository>
+            <repository>mvn:org.opennms.features.bsm/org.opennms.features.bsm.shell-commands/${project.version}/xml/features</repository>
             <repository>mvn:org.opennms.features.bsm/vaadin-adminpage/${project.version}/xml/features</repository>
-            <repository>mvn:org.opennms.features.bsm/vaadin-masterpage/${project.version}/xml/features</repository>
 
             <!-- MIB Parser and Event/Collection features -->
             <repository>mvn:org.opennms.features/vaadin-snmp-events-and-metrics/${project.version}/xml/features</repository>
@@ -95,6 +95,9 @@
 
             <!-- Ticketing Features-->
             <repository>mvn:org.opennms.features/jira-troubleticketer/${project.version}/xml/features</repository>
+
+            <!-- Data Choices -->
+            <repository>mvn:org.opennms.features/datachoices/${project.version}/xml/features</repository>
           </repositories>
 
           <!--
@@ -155,16 +158,17 @@
             <feature>commons-lang</feature>
             <feature>commons-net</feature>
             <feature>dnsjava</feature>
+            <feature>dropwizard-metrics</feature>
             <feature>fop</feature>
             <feature>guava</feature>
             <feature>hibernate36</feature>
             <feature>hibernate-validator41</feature>
             <feature>jaxb</feature>
-            <feature>jersey-client</feature>
             <feature>jfreechart</feature>
             <feature>jolokia</feature>
             <feature>jrobin</feature>
             <feature>json-lib</feature>
+            <feature>lmax-disruptor</feature>
             <!--
             <feature>opennms-activemq-config</feature>
             <feature>opennms-activemq</feature>
@@ -184,10 +188,15 @@
             <feature>opennms-core-web</feature>
             <feature>opennms-dao-api</feature>
             <feature>opennms-dao</feature>
+            <feature>opennms-discovery</feature>
+            <feature>opennms-discovery-daemon</feature>
             <feature>opennms-events-api</feature>
             <feature>opennms-events-daemon</feature>
             <feature>opennms-events-traps</feature>
             <feature>opennms-icmp-api</feature>
+            <feature>opennms-icmp-jna</feature>
+            <feature>opennms-icmp-jni</feature>
+            <feature>opennms-icmp-jni6</feature>
             <feature>opennms-javamail</feature>
             <feature>opennms-model</feature>
             <feature>opennms-poller-api</feature>
@@ -196,9 +205,17 @@
             <feature>opennms-rrd-api</feature>
             <feature>opennms-rrd-jrobin</feature>
             <feature>opennms-snmp</feature>
+            <feature>opennms-syslogd</feature>
+            <feature>opennms-syslogd-listener-javanet</feature>
+            <feature>opennms-syslogd-listener-camel-netty</feature>
+            <feature>opennms-syslogd-listener-nio</feature>
+            <feature>opennms-syslogd-handler-kafka</feature>
+            <feature>opennms-syslogd-handler-minion</feature>
             <!-- <feature>opennms-webapp</feature> -->
             <feature>org.json</feature>
             <feature>postgresql</feature>
+            <feature>spring-security32</feature>
+            <feature>spring-webflow</feature>
 
             <!-- Features from other OpenNMS repositories -->
             <feature>opennms-core</feature>
@@ -238,11 +255,12 @@
             <feature>vaadin-surveillance-views</feature>
             <feature>opennms-elasticsearch-event-forwarder</feature>
             <feature>jira-troubleticketer</feature>
+            <feature>datachoices</feature>
 
             <!-- BSM -->
             <feature>org.opennms.features.bsm.service.api</feature>
+            <feature>org.opennms.features.bsm.shell-commands</feature>
             <feature>vaadin-adminpage</feature>
-            <feature>vaadin-masterpage</feature>
           </features>
         </configuration>
       </plugin>
@@ -271,6 +289,28 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-artifacts</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>${project.build.outputDirectory}/features-minion.xml</file>
+                  <type>xml</type>
+                  <classifier>minion</classifier>
+                </artifact>
+              </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
@@ -289,6 +329,13 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.features</groupId>
+      <artifactId>org.opennms.features.discovery</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features</groupId>
       <artifactId>jmxconfiggenerator</artifactId>
       <version>${project.version}</version>
       <type>pom</type>
@@ -296,7 +343,7 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.features.bsm</groupId>
-      <artifactId>vaadin-masterpage</artifactId>
+      <artifactId>org.opennms.features.bsm.shell-commands</artifactId>
       <version>${project.version}</version>
       <type>pom</type>
       <scope>provided</scope>
@@ -443,6 +490,34 @@
     <dependency>
       <groupId>org.opennms.features</groupId>
       <artifactId>jira-troubleticketer</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-icmp-jni</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-icmp-jni6</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.core.snmp</groupId>
+      <artifactId>org.opennms.core.snmp.commands</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features</groupId>
+      <artifactId>datachoices</artifactId>
       <version>${project.version}</version>
       <type>pom</type>
       <scope>provided</scope>

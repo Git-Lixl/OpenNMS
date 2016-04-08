@@ -40,8 +40,12 @@ import org.opennms.netmgt.bsm.persistence.api.BusinessServiceDao;
 import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeDao;
 import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
 import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEntity;
+import org.opennms.netmgt.bsm.persistence.api.EdgeEntityVisitor;
 import org.opennms.netmgt.bsm.persistence.api.IPServiceEdgeEntity;
 import org.opennms.netmgt.bsm.persistence.api.SingleReductionKeyEdgeEntity;
+import org.opennms.netmgt.bsm.persistence.api.functions.map.AbstractMapFunctionEntity;
+import org.opennms.netmgt.bsm.persistence.api.functions.map.MapFunctionDao;
+import org.opennms.netmgt.bsm.persistence.api.functions.reduce.AbstractReductionFunctionEntity;
 import org.opennms.netmgt.bsm.persistence.api.functions.reduce.ReductionFunctionDao;
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.BusinessServiceSearchCriteria;
@@ -58,15 +62,9 @@ import org.opennms.netmgt.bsm.service.model.edge.ChildEdge;
 import org.opennms.netmgt.bsm.service.model.edge.Edge;
 import org.opennms.netmgt.bsm.service.model.edge.IpServiceEdge;
 import org.opennms.netmgt.bsm.service.model.edge.ReductionKeyEdge;
-import org.opennms.netmgt.bsm.service.model.functions.map.Decrease;
-import org.opennms.netmgt.bsm.service.model.functions.map.Identity;
-import org.opennms.netmgt.bsm.service.model.functions.map.Ignore;
-import org.opennms.netmgt.bsm.service.model.functions.map.Increase;
-import org.opennms.netmgt.bsm.service.model.functions.map.SetTo;
-import org.opennms.netmgt.bsm.service.model.functions.reduce.MostCritical;
-import org.opennms.netmgt.bsm.service.model.functions.reduce.Threshold;
-import org.opennms.netmgt.bsm.service.model.mapreduce.MapFunction;
-import org.opennms.netmgt.bsm.service.model.mapreduce.ReductionFunction;
+import org.opennms.netmgt.bsm.service.model.functions.map.MapFunction;
+import org.opennms.netmgt.bsm.service.model.functions.reduce.ReductionFunction;
+import org.opennms.netmgt.bsm.service.model.graph.BusinessServiceGraph;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.events.api.EventConstants;
@@ -75,23 +73,22 @@ import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.collect.Lists;
-
-@Transactional
 public class BusinessServiceManagerImpl implements BusinessServiceManager {
     @Autowired
     private BusinessServiceDao businessServiceDao;
-
-    @Autowired
-    private ReductionFunctionDao reductionFunctionDao;
 
     @Autowired
     private BusinessServiceEdgeDao edgeDao;
 
     @Autowired
     private MonitoredServiceDao monitoredServiceDao;
+
+    @Autowired
+    private MapFunctionDao mapFunctionDao;
+
+    @Autowired
+    private ReductionFunctionDao reductionFunctionDao;
 
     @Autowired
     private BusinessServiceStateMachine businessServiceStateMachine;
@@ -136,6 +133,7 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
         return new BusinessServiceImpl(this, new BusinessServiceEntity());
     }
 
+    @SuppressWarnings("unchecked")
     private <T extends Edge> T createEdge(Class<T> type, BusinessService source, MapFunction mapFunction, int weight) {
         T edge = null;
         if (type == IpServiceEdge.class) {
@@ -159,16 +157,23 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
     @Override
     public Edge getEdgeById(Long edgeId) {
         BusinessServiceEdgeEntity edgeEntity = getBusinessServiceEdgeEntity(edgeId);
-        if (edgeEntity instanceof BusinessServiceChildEdgeEntity) {
-            return new ChildEdgeImpl(this, (BusinessServiceChildEdgeEntity) edgeEntity);
-        }
-        if (edgeEntity instanceof SingleReductionKeyEdgeEntity) {
-            return new ReductionKeyEdgeImpl(this, (SingleReductionKeyEdgeEntity) edgeEntity);
-        }
-        if (edgeEntity instanceof IPServiceEdgeEntity) {
-            return new IpServiceEdgeImpl(this, (IPServiceEdgeEntity) edgeEntity);
-        }
-        throw new IllegalArgumentException("Could not create edge for entity " + edgeEntity.getClass());
+        return edgeEntity.accept(new EdgeEntityVisitor<Edge>() {
+
+            @Override
+            public Edge visit(BusinessServiceChildEdgeEntity edgeEntity) {
+                return new ChildEdgeImpl(BusinessServiceManagerImpl.this, edgeEntity);
+            }
+
+            @Override
+            public Edge visit(SingleReductionKeyEdgeEntity edge) {
+                return new ReductionKeyEdgeImpl(BusinessServiceManagerImpl.this, edge);
+            }
+
+            @Override
+            public Edge visit(IPServiceEdgeEntity edge) {
+                return new IpServiceEdgeImpl(BusinessServiceManagerImpl.this, edge);
+            }
+        });
     }
 
     @Override
@@ -233,11 +238,17 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
 
     @Override
     public boolean addReductionKeyEdge(BusinessService businessService, String reductionKey, MapFunction mapFunction, int weight) {
+        return addReductionKeyEdge(businessService, reductionKey, mapFunction, weight, null);
+    }
+
+    @Override
+    public boolean addReductionKeyEdge(BusinessService businessService, String reductionKey, MapFunction mapFunction, int weight, String friendlyName) {
         final BusinessServiceEntity parentEntity = getBusinessServiceEntity(businessService);
 
         // Create the edge
         final ReductionKeyEdgeImpl edge = (ReductionKeyEdgeImpl) createEdge(ReductionKeyEdge.class, businessService, mapFunction, weight);
         edge.setReductionKey(reductionKey);
+        edge.setFriendlyName(friendlyName);
 
         // if already exists, no update
         final SingleReductionKeyEdgeEntity edgeEntity = getBusinessServiceEdgeEntity(edge);
@@ -260,11 +271,17 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
 
     @Override
     public boolean addIpServiceEdge(BusinessService businessService, IpService ipService, MapFunction mapFunction, int weight) {
+        return addIpServiceEdge(businessService, ipService, mapFunction, weight, null);
+    }
+
+    @Override
+    public boolean addIpServiceEdge(BusinessService businessService, IpService ipService, MapFunction mapFunction, int weight, String friendlyName) {
         final BusinessServiceEntity parentEntity = getBusinessServiceEntity(businessService);
 
         // Create the edge
         final IpServiceEdge edge = createEdge(IpServiceEdge.class, businessService, mapFunction, weight);
         edge.setIpService(ipService);
+        edge.setFriendlyName(friendlyName);
 
         // if already exists, no update
         final IPServiceEdgeEntity edgeEntity = getBusinessServiceEdgeEntity(edge);
@@ -309,6 +326,14 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
         return true;
     }
 
+    @Override
+    public void removeEdge(final BusinessService businessService, final Edge edge) {
+        final BusinessServiceEntity businessServiceEntity = getBusinessServiceEntity(businessService);
+        final BusinessServiceEdgeEntity edgeEntity = getBusinessServiceEdgeEntity(edge);
+
+        businessServiceEntity.removeEdge(edgeEntity);
+    }
+
     private boolean checkDescendantForLoop(final BusinessServiceEntity parent,
                                            final BusinessServiceEntity descendant) {
         if (parent.equals(descendant)) {
@@ -333,14 +358,26 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
     }
 
     @Override
-    public Status getOperationalStatusForBusinessService(BusinessService service) {
+    public Status getOperationalStatus(BusinessService service) {
         final Status status = businessServiceStateMachine.getOperationalStatus(service);
         return status != null ? status : Status.INDETERMINATE;
     }
 
     @Override
-    public Status getOperationalStatusForIPService(IpService ipService) {
+    public Status getOperationalStatus(IpService ipService) {
         final Status status = businessServiceStateMachine.getOperationalStatus(ipService);
+        return status != null ? status : Status.INDETERMINATE;
+    }
+
+    @Override
+    public Status getOperationalStatus(String reductionKey) {
+        final Status status = businessServiceStateMachine.getOperationalStatus(reductionKey);
+        return status != null ? status : Status.INDETERMINATE;
+    }
+
+    @Override
+    public Status getOperationalStatus(Edge edge) {
+        final Status status = businessServiceStateMachine.getOperationalStatus(edge);
         return status != null ? status : Status.INDETERMINATE;
     }
 
@@ -365,39 +402,51 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
     }
 
     @Override
-    public Status getOperationalStatusForReductionKey(String reductionKey) {
-        final Status status = businessServiceStateMachine.getOperationalStatus(reductionKey);
-        return status != null ? status : Status.INDETERMINATE;
-    }
-
-    @Override
-    public Status getOperationalStatusForEdge(Edge edge) {
-        Objects.requireNonNull(edge);
-        if (edge instanceof ReductionKeyEdge) {
-            return getOperationalStatusForReductionKey(((ReductionKeyEdge) edge).getReductionKey());
-        }
-        if (edge instanceof ChildEdge) {
-            return getOperationalStatusForBusinessService(((ChildEdge) edge).getChild());
-        }
-        if (edge instanceof IpServiceEdge) {
-            return getOperationalStatusForIPService(((IpServiceEdge) edge).getIpService());
-        }
-        throw new IllegalArgumentException("Could not determine status for edge of type " + edge.getClass());
-    }
-
-    @Override
-    public List<MapFunction> listMapFunctions() {
-        return Lists.newArrayList(new Identity(), new Increase(), new Decrease(), new SetTo(), new Ignore());
-    }
-
-    @Override
-    public List<ReductionFunction> listReduceFunctions() {
-        return Lists.newArrayList(new MostCritical(), new Threshold());
-    }
-
-    @Override
     public Node getNodeById(Integer nodeId) {
-        return new NodeImpl(this, getNodeEntity(nodeId));
+        return new NodeImpl(getNodeEntity(nodeId));
+    }
+
+    @Override
+    public BusinessServiceGraph getGraph() {
+        // Do not instantiate a new instance, or the status is not set
+        return businessServiceStateMachine.getGraph();
+    }
+
+    @Override
+    public BusinessServiceStateMachine getStateMachine() {
+        return businessServiceStateMachine;
+    }
+
+    @Override
+    public void setMapFunction(final Edge edge, final MapFunction mapFunction) {
+        // This is a workaround for a hibernate bug which does not remove
+        // orphan elements if the element is replaced using the setter. See:
+        // https://hibernate.atlassian.net/browse/HHH-6484
+        final BusinessServiceEdgeEntity edgeEntity = this.getBusinessServiceEdgeEntity(edge);
+
+        final AbstractMapFunctionEntity prevMapFunctionEntity = edgeEntity.getMapFunction();
+        if (prevMapFunctionEntity != null && prevMapFunctionEntity.getId() != null) {
+            this.mapFunctionDao.delete(prevMapFunctionEntity);
+        }
+
+        final AbstractMapFunctionEntity mapFunctionEntity = new MapFunctionMapper().toPersistenceFunction(mapFunction);
+        edgeEntity.setMapFunction(mapFunctionEntity);
+    }
+
+    @Override
+    public void setReduceFunction(final BusinessService businessService, final ReductionFunction reductionFunction) {
+        // This is a workaround for a hibernate bug which does not remove
+        // orphan elements if the element is replaced using the setter. See:
+        // https://hibernate.atlassian.net/browse/HHH-6484
+        final BusinessServiceEntity entity = this.getBusinessServiceEntity(businessService);
+
+        final AbstractReductionFunctionEntity prevReduceFunctionEntity = entity.getReductionFunction();
+        if (prevReduceFunctionEntity != null && prevReduceFunctionEntity.getId() != null) {
+            this.reductionFunctionDao.delete(prevReduceFunctionEntity);
+        }
+
+        final AbstractReductionFunctionEntity reduceFunctionEntity = new ReduceFunctionMapper().toPersistenceFunction(reductionFunction);
+        entity.setReductionFunction(reduceFunctionEntity);
     }
 
     protected BusinessServiceDao getDao() {
@@ -408,20 +457,20 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
         Objects.requireNonNull(nodeId);
         final OnmsNode entity = nodeDao.get(nodeId);
         if (entity == null) {
-            throw new NoSuchElementException();
+            throw new NoSuchElementException("OnmsNode with id " + nodeId);
         }
         return entity;
     }
 
     private BusinessServiceEdgeEntity getBusinessServiceEdgeEntity(Edge edge) {
-        return ((AbstractEdge) edge).getEntity();
+        return ((AbstractEdge<?>) edge).getEntity();
     }
 
     private BusinessServiceEdgeEntity getBusinessServiceEdgeEntity(Long edgeId) {
         Objects.requireNonNull(edgeId);
         BusinessServiceEdgeEntity edgeEntity = edgeDao.get(edgeId);
         if (edgeEntity == null) {
-            throw new NoSuchElementException();
+            throw new NoSuchElementException("BusinessServiceEdgeEntity with id " + edgeId);
         }
         return edgeEntity;
     }
@@ -446,20 +495,16 @@ public class BusinessServiceManagerImpl implements BusinessServiceManager {
         Objects.requireNonNull(serviceId);
         final BusinessServiceEntity entity = getDao().get(serviceId);
         if (entity == null) {
-            throw new NoSuchElementException();
+            throw new NoSuchElementException("BusinessServiceEntity with id " + serviceId);
         }
         return entity;
-    }
-
-    private OnmsMonitoredService getMonitoredServiceEntity(IpService ipService) throws NoSuchElementException {
-        return ((IpServiceImpl) ipService).getEntity();
     }
 
     private OnmsMonitoredService getMonitoredServiceEntity(Integer serviceId) throws NoSuchElementException {
         Objects.requireNonNull(serviceId);
         final OnmsMonitoredService monitoredService = monitoredServiceDao.get(serviceId);
         if (monitoredService == null) {
-            throw new NoSuchElementException();
+            throw new NoSuchElementException("OnmsMonitoredService with id " + serviceId);
         }
         return monitoredService;
     }

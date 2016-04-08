@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEntity;
-import org.opennms.netmgt.bsm.persistence.api.functions.reduce.AbstractReductionFunctionEntity;
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.internal.edge.ChildEdgeImpl;
 import org.opennms.netmgt.bsm.service.internal.edge.IpServiceEdgeImpl;
@@ -46,11 +45,10 @@ import org.opennms.netmgt.bsm.service.model.edge.ChildEdge;
 import org.opennms.netmgt.bsm.service.model.edge.Edge;
 import org.opennms.netmgt.bsm.service.model.edge.IpServiceEdge;
 import org.opennms.netmgt.bsm.service.model.edge.ReductionKeyEdge;
-import org.opennms.netmgt.bsm.service.model.mapreduce.MapFunction;
-import org.opennms.netmgt.bsm.service.model.mapreduce.ReductionFunction;
+import org.opennms.netmgt.bsm.service.model.functions.map.MapFunction;
+import org.opennms.netmgt.bsm.service.model.functions.reduce.ReductionFunction;
 
 import com.google.common.collect.Sets;
-
 
 public class BusinessServiceImpl implements BusinessService {
 
@@ -115,16 +113,7 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public Status getOperationalStatus() {
-        return m_manager.getOperationalStatusForBusinessService(this);
-    }
-
-    @Override
-    public void setLevel(int level) {
-        getEntity().setLevel(level);
-    }
-
-    public int getLevel() {
-        return getEntity().getLevel();
+        return m_manager.getOperationalStatus(this);
     }
 
     @Override
@@ -134,8 +123,7 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public void setReduceFunction(ReductionFunction reductionFunction) {
-        AbstractReductionFunctionEntity reductionFunctionEntity = new ReduceFunctionMapper().toPersistenceFunction(reductionFunction);
-        getEntity().setReductionFunction(reductionFunctionEntity);
+        m_manager.setReduceFunction(this, reductionFunction);
     }
 
     @Override
@@ -161,8 +149,8 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
-    public void addIpServiceEdge(IpService ipService, MapFunction mapFunction, int weight) {
-        m_manager.addIpServiceEdge(this, ipService, mapFunction, weight);
+    public void addIpServiceEdge(IpService ipService, MapFunction mapFunction, int weight, String friendlyName) {
+        m_manager.addIpServiceEdge(this, ipService, mapFunction, weight, friendlyName);
     }
 
     @Override
@@ -179,8 +167,8 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
-    public void addReductionKeyEdge(String reductionKey, MapFunction mapFunction, int weight) {
-        m_manager.addReductionKeyEdge(this, reductionKey, mapFunction, weight);
+    public void addReductionKeyEdge(String reductionKey, MapFunction mapFunction, int weight, String friendlyName) {
+        m_manager.addReductionKeyEdge(this, reductionKey, mapFunction, weight, friendlyName);
     }
 
     @Override
@@ -224,5 +212,10 @@ public class BusinessServiceImpl implements BusinessService {
                 .add("edges", this.getEdges())
                 .add("operationalStatus", this.getOperationalStatus())
                 .toString();
+    }
+
+    @Override
+    public void removeEdge(final Edge edge) {
+        m_manager.removeEdge(this, edge);
     }
 }

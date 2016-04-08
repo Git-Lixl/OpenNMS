@@ -39,8 +39,9 @@ import org.opennms.netmgt.bsm.service.model.edge.ChildEdge;
 import org.opennms.netmgt.bsm.service.model.edge.Edge;
 import org.opennms.netmgt.bsm.service.model.edge.IpServiceEdge;
 import org.opennms.netmgt.bsm.service.model.edge.ReductionKeyEdge;
-import org.opennms.netmgt.bsm.service.model.mapreduce.MapFunction;
-import org.opennms.netmgt.bsm.service.model.mapreduce.ReductionFunction;
+import org.opennms.netmgt.bsm.service.model.functions.map.MapFunction;
+import org.opennms.netmgt.bsm.service.model.functions.reduce.ReductionFunction;
+import org.opennms.netmgt.bsm.service.model.graph.BusinessServiceGraph;
 
 public interface BusinessServiceManager extends NodeManager {
 
@@ -66,13 +67,13 @@ public interface BusinessServiceManager extends NodeManager {
 
     Set<BusinessService> getFeasibleChildServices(BusinessService service);
 
-    Status getOperationalStatusForBusinessService(BusinessService service);
+    Status getOperationalStatus(BusinessService service);
 
-    Status getOperationalStatusForIPService(IpService ipService);
+    Status getOperationalStatus(IpService ipService);
 
-    Status getOperationalStatusForReductionKey(String reductionKey);
+    Status getOperationalStatus(String reductionKey);
 
-    Status getOperationalStatusForEdge(Edge edge);
+    Status getOperationalStatus(Edge edge);
 
     List<IpService> getAllIpServices();
 
@@ -85,10 +86,6 @@ public interface BusinessServiceManager extends NodeManager {
 
     Set<BusinessService> getParentServices(Long id);
 
-    List<MapFunction> listMapFunctions();
-
-    List<ReductionFunction> listReduceFunctions();
-
     void setChildEdges(BusinessService parentService, Set<ChildEdge> childEdges);
 
     boolean addChildEdge(BusinessService parent, BusinessService child, MapFunction mapFunction, int weight);
@@ -97,7 +94,28 @@ public interface BusinessServiceManager extends NodeManager {
 
     boolean addIpServiceEdge(BusinessService businessService, IpService ipService, MapFunction mapFunction, int weight);
 
+    boolean addIpServiceEdge(BusinessService businessService, IpService ipService, MapFunction mapFunction, int weight, String friendlyName);
+
     boolean addReductionKeyEdge(BusinessService businessService, String reductionKey, MapFunction mapFunction, int weight);
 
+    boolean addReductionKeyEdge(BusinessService businessService, String reductionKey, MapFunction mapFunction, int weight, String friendlyName);
+
     void setReductionKeyEdges(BusinessService businessService, Set<ReductionKeyEdge> reductionKeyEdges);
+
+    void removeEdge(BusinessService businessService, Edge edge);
+
+    /**
+     * This returns the actual graph of the underlying {@link BusinessServiceStateMachine}.
+     *
+     * Please DO NOT MODIFY any object in that graph.
+     *
+     * @return the actual graph of the underlying {@link BusinessServiceStateMachine}. DO NOT MODIFY!
+     */
+    BusinessServiceGraph getGraph();
+
+    BusinessServiceStateMachine getStateMachine();
+
+    void setMapFunction(Edge edge, MapFunction mapFunction);
+
+    void setReduceFunction(BusinessService businessService, ReductionFunction reductionFunction);
 }

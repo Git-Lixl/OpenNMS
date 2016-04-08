@@ -36,17 +36,12 @@ import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.internal.BusinessServiceImpl;
 import org.opennms.netmgt.bsm.service.model.BusinessService;
 import org.opennms.netmgt.bsm.service.model.edge.ChildEdge;
-import org.opennms.netmgt.bsm.service.model.edge.Edge;
+import org.opennms.netmgt.bsm.service.model.edge.EdgeVisitor;
 
 public class ChildEdgeImpl extends AbstractEdge<BusinessServiceChildEdgeEntity> implements ChildEdge {
 
     public ChildEdgeImpl(BusinessServiceManager manager, BusinessServiceChildEdgeEntity entity) {
         super(manager, entity);
-    }
-
-    @Override
-    public Type getType() {
-        return Type.CHILD_SERVICE;
     }
 
     @Override
@@ -70,5 +65,22 @@ public class ChildEdgeImpl extends AbstractEdge<BusinessServiceChildEdgeEntity> 
                 .add("parent", super.toString())
                 .add("child", getChild() == null ? null : getChild().getId())
                 .toString();
+    }
+
+    /**
+     * Method implementation for the friendly name used in the topology UI. Since this value is not
+     * used for child Business Services this method always returns <code>null</code>.
+     *
+     * @return always null
+     * @see AbstractEdge#getFriendlyName()
+     */
+    @Override
+    public String getFriendlyName() {
+        return null;
+    }
+
+    @Override
+    public <T> T accept(EdgeVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

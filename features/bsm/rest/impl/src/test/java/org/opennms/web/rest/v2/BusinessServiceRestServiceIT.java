@@ -28,13 +28,14 @@
 
 package org.opennms.web.rest.v2;
 
-import static org.opennms.netmgt.bsm.test.BambooTestHierarchy.BAMBOO_AGENT_CAROLINA_REDUCTION_KEY;
-import static org.opennms.netmgt.bsm.test.BambooTestHierarchy.BAMBOO_AGENT_DUKE_REDUCTION_KEY;
-import static org.opennms.netmgt.bsm.test.BambooTestHierarchy.BAMBOO_AGENT_NCSTATE_REDUCTION_KEY;
 import static org.opennms.netmgt.bsm.test.BsmTestUtils.toRequestDto;
 import static org.opennms.netmgt.bsm.test.BsmTestUtils.toResponseDTO;
 import static org.opennms.netmgt.bsm.test.BsmTestUtils.toResponseDto;
 import static org.opennms.netmgt.bsm.test.BsmTestUtils.toXml;
+import static org.opennms.netmgt.bsm.test.BsmTestUtils.transform;
+import static org.opennms.netmgt.bsm.test.hierarchies.BambooTestHierarchy.BAMBOO_AGENT_CAROLINA_REDUCTION_KEY;
+import static org.opennms.netmgt.bsm.test.hierarchies.BambooTestHierarchy.BAMBOO_AGENT_DUKE_REDUCTION_KEY;
+import static org.opennms.netmgt.bsm.test.hierarchies.BambooTestHierarchy.BAMBOO_AGENT_NCSTATE_REDUCTION_KEY;
 
 import java.util.List;
 import java.util.Map;
@@ -66,14 +67,16 @@ import org.opennms.netmgt.bsm.persistence.api.functions.map.IdentityEntity;
 import org.opennms.netmgt.bsm.persistence.api.functions.map.IgnoreEntity;
 import org.opennms.netmgt.bsm.persistence.api.functions.map.IncreaseEntity;
 import org.opennms.netmgt.bsm.persistence.api.functions.map.SetToEntity;
-import org.opennms.netmgt.bsm.persistence.api.functions.reduce.MostCriticalEntity;
+import org.opennms.netmgt.bsm.persistence.api.functions.reduce.HighestSeverityAboveEntity;
+import org.opennms.netmgt.bsm.persistence.api.functions.reduce.HighestSeverityEntity;
 import org.opennms.netmgt.bsm.service.model.Status;
 import org.opennms.netmgt.bsm.service.model.edge.Edge;
+import org.opennms.netmgt.bsm.service.model.functions.map.Identity;
 import org.opennms.netmgt.bsm.service.model.functions.map.Ignore;
-import org.opennms.netmgt.bsm.test.BambooTestHierarchy;
 import org.opennms.netmgt.bsm.test.BsmDatabasePopulator;
 import org.opennms.netmgt.bsm.test.BusinessServiceEntityBuilder;
-import org.opennms.netmgt.bsm.test.SimpleTestHierarchy;
+import org.opennms.netmgt.bsm.test.hierarchies.BambooTestHierarchy;
+import org.opennms.netmgt.bsm.test.hierarchies.SimpleTestHierarchy;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.model.OnmsSeverity;
 import org.opennms.test.JUnitConfigurationEnvironment;
@@ -81,14 +84,12 @@ import org.opennms.web.rest.api.ResourceLocation;
 import org.opennms.web.rest.v2.bsm.model.BusinessServiceListDTO;
 import org.opennms.web.rest.v2.bsm.model.BusinessServiceRequestDTO;
 import org.opennms.web.rest.v2.bsm.model.BusinessServiceResponseDTO;
-import org.opennms.web.rest.v2.bsm.model.MapFunctionDTO;
-import org.opennms.web.rest.v2.bsm.model.MapFunctionListDTO;
-import org.opennms.web.rest.v2.bsm.model.MapFunctionType;
-import org.opennms.web.rest.v2.bsm.model.ReduceFunctionDTO;
-import org.opennms.web.rest.v2.bsm.model.ReduceFunctionListDTO;
 import org.opennms.web.rest.v2.bsm.model.edge.ChildEdgeRequestDTO;
 import org.opennms.web.rest.v2.bsm.model.edge.IpServiceEdgeRequestDTO;
 import org.opennms.web.rest.v2.bsm.model.edge.ReductionKeyEdgeRequestDTO;
+import org.opennms.web.rest.v2.bsm.model.meta.FunctionMetaDTO;
+import org.opennms.web.rest.v2.bsm.model.meta.FunctionMetaListDTO;
+import org.opennms.web.rest.v2.bsm.model.meta.FunctionsManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
@@ -153,16 +154,14 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
         // Create a business service without any edges
         BusinessServiceEntity service = new BusinessServiceEntityBuilder()
                 .name("Dummy Service")
-                .reduceFunction(new MostCriticalEntity())
+                .reduceFunction(new HighestSeverityEntity())
                 .toEntity();
         final Long serviceId = m_businessServiceDao.save(service);
         m_businessServiceDao.flush();
 
         // The Request to send to create an edge
         IpServiceEdgeRequestDTO edgeRequestDTO = new IpServiceEdgeRequestDTO();
-        MapFunctionDTO mapFunctionDTO = new MapFunctionDTO();
-        mapFunctionDTO.setType(MapFunctionType.Identity);
-        edgeRequestDTO.setMapFunction(mapFunctionDTO);
+        edgeRequestDTO.setMapFunction(new FunctionsManager().getMapFunctionDTO(new Identity()));
 
         // verify adding of not existing ip service is not possible
         edgeRequestDTO.setIpServiceId(-1);
@@ -188,11 +187,11 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
         // Create a child and parent Business Service without any edges
         BusinessServiceEntity childEntity = new BusinessServiceEntityBuilder()
                 .name("Child Service")
-                .reduceFunction(new MostCriticalEntity())
+                .reduceFunction(new HighestSeverityEntity())
                 .toEntity();
         BusinessServiceEntity parentEntity = new BusinessServiceEntityBuilder()
                 .name("Parent Service")
-                .reduceFunction(new MostCriticalEntity())
+                .reduceFunction(new HighestSeverityEntity())
                 .toEntity();
         final Long parentServiceId = m_businessServiceDao.save(parentEntity);
         final Long childServiceId = m_businessServiceDao.save(childEntity);
@@ -200,9 +199,7 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
 
         // The Request to send to create the edge
         ChildEdgeRequestDTO edgeRequestDTO = new ChildEdgeRequestDTO();
-        MapFunctionDTO mapFunctionDTO = new MapFunctionDTO();
-        mapFunctionDTO.setType(MapFunctionType.Identity);
-        edgeRequestDTO.setMapFunction(mapFunctionDTO);
+        edgeRequestDTO.setMapFunction(new FunctionsManager().getMapFunctionDTO(new Identity()));
 
         // verify adding of not existing ip parentEntity is not possible
         edgeRequestDTO.setChildId(-1L);
@@ -223,16 +220,14 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
         // Create a business service without any edges
         BusinessServiceEntity service = new BusinessServiceEntityBuilder()
                 .name("Dummy Service")
-                .reduceFunction(new MostCriticalEntity())
+                .reduceFunction(new HighestSeverityEntity())
                 .toEntity();
         final Long serviceId = m_businessServiceDao.save(service);
         m_businessServiceDao.flush();
 
         // The Request to send to create an edge
         ReductionKeyEdgeRequestDTO edgeRequestDTO = new ReductionKeyEdgeRequestDTO();
-        MapFunctionDTO mapFunctionDTO = new MapFunctionDTO();
-        mapFunctionDTO.setType(MapFunctionType.Identity);
-        edgeRequestDTO.setMapFunction(mapFunctionDTO);
+        edgeRequestDTO.setMapFunction(new FunctionsManager().getMapFunctionDTO(new Identity()));
 
         // verify adding of existing ip service is possible
         edgeRequestDTO.setReductionKey("1st reduction key");
@@ -253,12 +248,12 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
     public void canRemoveEdges() throws Exception {
         BusinessServiceEntity child = new BusinessServiceEntityBuilder()
                 .name("Child Service")
-                .reduceFunction(new MostCriticalEntity())
+                .reduceFunction(new HighestSeverityEntity())
                 .toEntity();
         m_businessServiceDao.save(child);
         BusinessServiceEntity parent = new BusinessServiceEntityBuilder()
                 .name("Parent Service")
-                .reduceFunction(new MostCriticalEntity())
+                .reduceFunction(new HighestSeverityEntity())
                 // add the IP services edges
                 .addIpService(monitoredServiceDao.get(17), new SetToEntity(OnmsSeverity.CRITICAL.getId()))
                 .addIpService(monitoredServiceDao.get(18), new IgnoreEntity())
@@ -338,13 +333,12 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void canRetrieveBusinessServices() throws Exception {
         // Add business services to the DB
         BusinessServiceEntity bs = new BusinessServiceEntityBuilder()
                 .name("Application Servers")
                 .addReductionKey("MyReductionKey", new IdentityEntity())
-                .reduceFunction(new MostCriticalEntity())
+                .reduceFunction(new HighestSeverityEntity())
                 .toEntity();
         Long id = m_businessServiceDao.save(bs);
         m_businessServiceDao.flush();
@@ -368,7 +362,7 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
         final BusinessServiceEntity bs = new BusinessServiceEntityBuilder()
                 .name("some-service")
                 .addAttribute("some-key", "some-value")
-                .reduceFunction(new MostCriticalEntity())
+                .reduceFunction(new HighestSeverityEntity())
                 .addReductionKey("reductionKey-1", new IdentityEntity())
                 .addReductionKey("reductionKey-2", new IdentityEntity())
                 .addReductionKey("reductionKey-3", new IdentityEntity())
@@ -505,6 +499,7 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
                 .stream()
                 .map(e -> e.getId())
                 .collect(Collectors.toSet()), responseDTO.getParentServices());
+        Assert.assertEquals(transform(expectedEntity.getReductionFunction()), responseDTO.getReduceFunction());
         return responseDTO;
     }
 
@@ -530,7 +525,7 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
                 .addAttribute("some-key", "some-value")
                 .addReductionKey("key1", new IdentityEntity())
                 .addReductionKey("key2-deleteMe", new IdentityEntity())
-                .reduceFunction(new MostCriticalEntity())
+                .reduceFunction(new HighestSeverityEntity())
                 .toEntity();
         final Long serviceId = m_businessServiceDao.save(bs);
         m_businessServiceDao.flush();
@@ -540,7 +535,7 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
         requestDTO.setName("New Name");
         requestDTO.getAttributes().put("key", "value");
         requestDTO.getReductionKeys().clear();
-        requestDTO.addReductionKey("key1updated", MapFunctionType.Ignore.toDTO(new Ignore()), Edge.DEFAULT_WEIGHT);
+        requestDTO.addReductionKey("key1updated", new FunctionsManager().getMapFunctionDTO(new Ignore()), Edge.DEFAULT_WEIGHT);
 
         // TODO JSON cannot be de-serialized by the rest service. Fix me.
 //        sendData(PUT, MediaType.APPLICATION_JSON, "/business-services/" + serviceId, toJson(requestDTO), 204);
@@ -560,10 +555,45 @@ public class BusinessServiceRestServiceIT extends AbstractSpringJerseyRestTestCa
 
     @Test
     public void verifyListFunctions() throws Exception {
-        List<MapFunctionDTO> mapFunctions = getXmlObject(JAXBContext.newInstance(MapFunctionListDTO.class), "/business-services/functions/map", 200, MapFunctionListDTO.class).getFunctions();
-        List<ReduceFunctionDTO> reduceFunctions = getXmlObject(JAXBContext.newInstance(ReduceFunctionListDTO.class), "/business-services/functions/reduce", 200, ReduceFunctionListDTO.class).getFunctions();
-
+        List<FunctionMetaDTO> mapFunctions = getXmlObject(JAXBContext.newInstance(FunctionMetaListDTO.class), "/business-services/functions/map", 200, FunctionMetaListDTO.class).getFunctions();
         Assert.assertEquals(5, mapFunctions.size());
-        Assert.assertEquals(2, reduceFunctions.size());
+        for (FunctionMetaDTO eachFunction : mapFunctions) {
+            FunctionMetaDTO manuallyRead = getXmlObject(JAXBContext.newInstance(FunctionMetaDTO.class), "/business-services/functions/map/" + eachFunction.getName(), 200, FunctionMetaDTO.class);
+            Assert.assertEquals(eachFunction, manuallyRead);
+        }
+
+        List<FunctionMetaDTO> reduceFunctions = getXmlObject(JAXBContext.newInstance(FunctionMetaListDTO.class), "/business-services/functions/reduce", 200, FunctionMetaListDTO.class).getFunctions();
+        Assert.assertEquals(3, reduceFunctions.size());
+        for (FunctionMetaDTO eachFunction : reduceFunctions) {
+            FunctionMetaDTO manuallyRead = getXmlObject(JAXBContext.newInstance(FunctionMetaDTO.class), "/business-services/functions/reduce/" + eachFunction.getName(), 200, FunctionMetaDTO.class);
+            Assert.assertEquals(eachFunction, manuallyRead);
+        }
+    }
+
+    @Test
+    public void verifyHighestSeverityAboveReduceFunction() throws Exception {
+        BusinessServiceEntity entity = new BusinessServiceEntityBuilder()
+                .name("Dummy Service")
+                .reduceFunction(new HighestSeverityAboveEntity(Status.CRITICAL.ordinal()))
+                .toEntity();
+        sendData(POST, MediaType.APPLICATION_XML, "/business-services", toXml(toRequestDto(entity)), 201);
+
+        entity.setId(findEntityByName("Dummy Service").getId());
+
+        verifyResponse(entity);
+    }
+
+    @Test
+    public void verifyFriendlyName() throws Exception {
+        BusinessServiceEntity entity = new BusinessServiceEntityBuilder()
+                .name("Some Custom Name")
+                .addReductionKey("My Reduction Key", new IdentityEntity(), "so friendly")
+                .reduceFunction(new HighestSeverityEntity())
+                .toEntity();
+
+        sendData(POST, MediaType.APPLICATION_XML, "/business-services", toXml(toRequestDto(entity)), 201);
+        BusinessServiceResponseDTO responseDTO = verifyResponse(findEntityByName("Some Custom Name"));
+        Assert.assertEquals(1, responseDTO.getReductionKeys().size());
+        Assert.assertEquals("so friendly", responseDTO.getReductionKeys().get(0).getFriendlyName());
     }
 }

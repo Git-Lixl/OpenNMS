@@ -29,29 +29,37 @@
 package org.opennms.features.topology.plugins.topo.bsm;
 
 import java.net.MalformedURLException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
 import org.opennms.core.criteria.CriteriaBuilder;
-import org.opennms.features.topology.api.topo.AbstractEdge;
+import org.opennms.core.criteria.restrictions.Restrictions;
+import org.opennms.features.topology.api.browsers.ContentType;
+import org.opennms.features.topology.api.browsers.SelectionChangedListener;
+import org.opennms.features.topology.api.support.VertexHopGraphProvider;
 import org.opennms.features.topology.api.topo.AbstractTopologyProvider;
 import org.opennms.features.topology.api.topo.Criteria;
 import org.opennms.features.topology.api.topo.Edge;
 import org.opennms.features.topology.api.topo.GraphProvider;
 import org.opennms.features.topology.api.topo.SimpleEdgeProvider;
+import org.opennms.features.topology.api.topo.VertexRef;
+import org.opennms.features.topology.plugins.topo.bsm.AbstractBusinessServiceVertex.Type;
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.model.BusinessService;
-import org.opennms.netmgt.bsm.service.model.edge.IpServiceEdge;
-import org.opennms.netmgt.bsm.service.model.edge.ReductionKeyEdge;
+import org.opennms.netmgt.bsm.service.model.graph.BusinessServiceGraph;
+import org.opennms.netmgt.bsm.service.model.graph.GraphEdge;
+import org.opennms.netmgt.bsm.service.model.graph.GraphVertex;
 import org.opennms.netmgt.vaadin.core.TransactionAwareBeanProxyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class BusinessServicesTopologyProvider extends AbstractTopologyProvider implements GraphProvider {
 
@@ -71,71 +79,50 @@ public class BusinessServicesTopologyProvider extends AbstractTopologyProvider i
 
     @Override
     public void save() {
-        // we do not support save at the moment
+        throw new UnsupportedOperationException();
     }
 
     private void load() {
         resetContainer();
-        // we only consider root business services to build the graph
-        Collection<BusinessService> businessServices = Collections2.filter(businessServiceManager.getAllBusinessServices(),
-                new Predicate<BusinessService>() {
-                    @Override
-                    public boolean apply(BusinessService input) {
-                        return input.getParentServices().isEmpty();
-                    }
-                });
-        addBusinessServices(null, businessServices);
-    }
-
-    private void addBusinessServices(BusinessServiceVertex parentVertex, Collection<BusinessService> businessServices) {
-        for (BusinessService eachBusinessService : businessServices) {
-            addBusinessService(parentVertex, eachBusinessService);
+        BusinessServiceGraph graph = businessServiceManager.getGraph();
+        for (GraphVertex topLevelBusinessService : graph.getVerticesByLevel(0)) {
+            addVertex(graph, topLevelBusinessService, null);
         }
     }
 
-    private void addBusinessService(BusinessServiceVertex parentVertex, BusinessService businessService) {
-        // create the vertex itself
-        BusinessServiceVertex businessServiceVertex = new BusinessServiceVertex(businessService);
-        addVertices(businessServiceVertex);
-
-        // if we have a parent, connect the parent at the current business
-        // service vertex as well
-        if (parentVertex != null) {
-            parentVertex.addChildren(businessServiceVertex);
-            addEdges(createConnection(parentVertex, businessServiceVertex));
+    private void addVertex(BusinessServiceGraph graph, GraphVertex graphVertex, AbstractBusinessServiceVertex topologyVertex) {
+        if (topologyVertex == null) {
+            // Create a topology vertex for the current vertex
+            topologyVertex = createTopologyVertex(graphVertex);
+            addVertices(topologyVertex);
         }
 
-        // add ip services
-        for (IpServiceEdge eachIpEdge : businessService.getIpServiceEdges()) {
-            AbstractBusinessServiceVertex serviceVertex = new IpServiceVertex(eachIpEdge.getIpService());
-            businessServiceVertex.addChildren(serviceVertex);
-            addVertices(serviceVertex);
+        for (GraphEdge graphEdge : graph.getOutEdges(graphVertex)) {
+            GraphVertex childVertex = graph.getOpposite(graphVertex, graphEdge);
 
-            // connect with businessService
-            Edge edge = createConnection(businessServiceVertex, serviceVertex);
+            // Create a topology vertex for the child vertex
+
+            AbstractBusinessServiceVertex childTopologyVertex = createTopologyVertex(childVertex);
+            graph.getInEdges(childVertex).stream()
+                    .map(GraphEdge::getFriendlyName)
+                    .filter(s -> !Strings.isNullOrEmpty(s))
+                    .findFirst()
+                    .ifPresent(childTopologyVertex::setLabel);
+
+            addVertices(childTopologyVertex);
+
+            // Connect the two
+            childTopologyVertex.setParent(topologyVertex);
+            Edge edge = new BusinessServiceEdge(graphEdge, topologyVertex, childTopologyVertex);
             addEdges(edge);
+
+            // Recurse
+            addVertex(graph, childVertex, childTopologyVertex);
         }
-
-        // add reduction keys
-        for (ReductionKeyEdge eachRkEdge : businessService.getReductionKeyEdges()) {
-            AbstractBusinessServiceVertex rkVertex = new ReductionKeyVertex(eachRkEdge.getReductionKey());
-            businessServiceVertex.addChildren(rkVertex);
-            addVertices(rkVertex);
-
-            // connect with businessService
-            Edge edge = createConnection(businessServiceVertex, rkVertex);
-            addEdges(edge);
-        }
-
-        // add children to the hierarchy as well
-        addBusinessServices(businessServiceVertex, businessService.getChildServices());
     }
 
-    private Edge createConnection(AbstractBusinessServiceVertex v1, AbstractBusinessServiceVertex v2) {
-        String id = String.format("connection:%s:%s", v1.getId(), v2.getId());
-        Edge edge = new AbstractEdge(getEdgeNamespace(), id, v1, v2);
-        edge.setTooltipText("LINK");
-        return edge;
+    private AbstractBusinessServiceVertex createTopologyVertex(GraphVertex graphVertex) {
+        return GraphVertexToTopologyVertexConverter.createTopologyVertex(graphVertex);
     }
 
     public void setBusinessServiceManager(BusinessServiceManager businessServiceManager) {
@@ -155,7 +142,8 @@ public class BusinessServicesTopologyProvider extends AbstractTopologyProvider i
         // If one was found, use it for the default focus
         if (!businessServices.isEmpty()) {
             BusinessService businessService = businessServices.iterator().next();
-            return new BusinessServiceCriteria(String.valueOf(businessService.getId()), businessService.getName(), businessServiceManager);
+            BusinessServiceVertex businessServiceVertex = new BusinessServiceVertex(businessService, 0);
+            return new VertexHopGraphProvider.DefaultVertexHopCriteria(businessServiceVertex);
         }
         return null;
     }
@@ -168,5 +156,62 @@ public class BusinessServicesTopologyProvider extends AbstractTopologyProvider i
     @Override
     public void resetContainer() {
         super.resetContainer();
+    }
+
+    @Override
+    public SelectionChangedListener.Selection getSelection(List<VertexRef> selectedVertices, ContentType contentType) {
+        // only consider vertices of our namespace and of the correct type
+        final Set<AbstractBusinessServiceVertex> filteredSet = selectedVertices.stream()
+                .filter(e -> TOPOLOGY_NAMESPACE.equals(e.getNamespace()))
+                .filter(e -> e instanceof AbstractBusinessServiceVertex)
+                .map(e -> (AbstractBusinessServiceVertex) e)
+                .collect(Collectors.toSet());
+        switch (contentType) {
+            case Alarm:
+                // show alarms with reduction keys associated with the current selection.
+                final Set<String> reductionKeys = filteredSet.stream()
+                        .map(vertex -> vertex.getReductionKeys())
+                        .flatMap(rkSet -> rkSet.stream())
+                        .collect(Collectors.toSet());
+                return () -> {
+                    if (reductionKeys != null && !reductionKeys.isEmpty()) {
+                        return Lists.newArrayList(Restrictions.in("reductionKey", reductionKeys));
+                    }
+                    return Lists.newArrayList(Restrictions.isNull("id")); // is always false, so nothing is shown
+                };
+            case BusinessService:
+                final Set<Long> businessServiceIds = Sets.newHashSet();
+
+                // Business Service
+                filteredSet.stream()
+                        .filter(v -> v.getType() == Type.BusinessService)
+                        .forEach(v -> businessServiceIds.add(((BusinessServiceVertex) v).getServiceId()));
+
+                // Ip Service
+                filteredSet.stream()
+                        .filter(v -> v.getType() == Type.IpService)
+                        .forEach(v -> businessServiceIds.add(((BusinessServiceVertex) v.getParent()).getServiceId()));
+
+                // Reduction keys (Only consider children of Business Services)
+                filteredSet.stream()
+                    .filter(v -> v.getType() == Type.ReductionKey
+                            && ((AbstractBusinessServiceVertex) v.getParent()).getType() == Type.BusinessService ) // we ignore children of ip services
+                    .forEach(v -> ((BusinessServiceVertex) v.getParent()).getServiceId());
+                return new SelectionChangedListener.IdSelection<>(businessServiceIds);
+            case Node:
+                final Set<Integer> nodeIds = filteredSet.stream()
+                        .filter(v -> v.getType() == Type.IpService)
+                        .map(v -> businessServiceManager.getIpServiceById(((IpServiceVertex) v).getIpServiceId()).getNodeId())
+                        .collect(Collectors.toSet());
+                return new SelectionChangedListener.IdSelection<>(nodeIds);
+            default:
+                // pass
+        }
+        throw new IllegalArgumentException(getClass().getSimpleName() + " does not support filtering vertices for contentType " + contentType);
+    }
+
+    @Override
+    public boolean contributesTo(ContentType type) {
+        return Sets.newHashSet(ContentType.Alarm, ContentType.Node, ContentType.BusinessService).contains(type);
     }
 }

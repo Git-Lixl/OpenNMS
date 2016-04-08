@@ -42,13 +42,13 @@ import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.MockDatabase;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.netmgt.bsm.persistence.api.BusinessServiceDao;
-import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
 import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeDao;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
 import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEntity;
 import org.opennms.netmgt.bsm.persistence.api.IPServiceEdgeEntity;
 import org.opennms.netmgt.bsm.persistence.api.functions.map.IdentityEntity;
 import org.opennms.netmgt.bsm.persistence.api.functions.map.MapFunctionDao;
-import org.opennms.netmgt.bsm.persistence.api.functions.reduce.MostCriticalEntity;
+import org.opennms.netmgt.bsm.persistence.api.functions.reduce.HighestSeverityEntity;
 import org.opennms.netmgt.bsm.persistence.api.functions.reduce.ReductionFunctionDao;
 import org.opennms.netmgt.dao.DatabasePopulator;
 import org.opennms.netmgt.model.OnmsMonitoredService;
@@ -87,7 +87,7 @@ public class BusinessServiceEdgeDaoIT {
     @Autowired
     private MapFunctionDao m_mapFunctionDao;
 
-    private MostCriticalEntity m_mostCritical;
+    private HighestSeverityEntity m_highestSeverity;
 
     private IdentityEntity m_identity;
 
@@ -101,8 +101,8 @@ public class BusinessServiceEdgeDaoIT {
         BeanUtils.assertAutowiring(this);
         m_databasePopulator.populateDatabase();
 
-        m_mostCritical = new MostCriticalEntity();
-        m_reductionFunctionDao.save(m_mostCritical);
+        m_highestSeverity = new HighestSeverityEntity();
+        m_reductionFunctionDao.save(m_highestSeverity);
         m_reductionFunctionDao.flush();
 
         m_identity = new IdentityEntity();
@@ -116,7 +116,7 @@ public class BusinessServiceEdgeDaoIT {
         BusinessServiceEntity bs = new BusinessServiceEntity();
         bs.setName("Web Servers");
         bs.setAttribute("dc", "RDU");
-        bs.setReductionFunction(m_mostCritical);
+        bs.setReductionFunction(m_highestSeverity);
         m_businessServiceDao.save(bs);
         m_businessServiceDao.flush();
 
@@ -150,6 +150,6 @@ public class BusinessServiceEdgeDaoIT {
 
         // Delete an edge
         m_businessServiceEdgeDao.delete(edge);
-        assertEquals(0, m_businessServiceEdgeDao.countAll()); 
+        assertEquals(0, m_businessServiceEdgeDao.countAll());
     }
 }

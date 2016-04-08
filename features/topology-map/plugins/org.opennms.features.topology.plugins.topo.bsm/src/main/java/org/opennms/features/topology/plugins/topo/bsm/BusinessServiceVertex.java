@@ -28,27 +28,54 @@
 
 package org.opennms.features.topology.plugins.topo.bsm;
 
-import org.opennms.netmgt.bsm.service.model.BusinessService;
+import java.util.Set;
 
-class BusinessServiceVertex extends AbstractBusinessServiceVertex {
+import org.opennms.netmgt.bsm.service.model.BusinessService;
+import org.opennms.netmgt.bsm.service.model.graph.GraphVertex;
+
+import com.google.common.collect.Sets;
+
+public class BusinessServiceVertex extends AbstractBusinessServiceVertex {
 
     private final Long serviceId;
 
-    public BusinessServiceVertex(BusinessService businessService) {
-        this("business-service:" + String.valueOf(businessService.getId()),
-                businessService.getName(),
-                businessService.getId());
+    public BusinessServiceVertex(BusinessService businessService, int level) {
+        this(businessService.getId(), businessService.getName(), level);
     }
 
-    private BusinessServiceVertex(String id, String name, Long serviceId) {
-        super(id, name);
+    public BusinessServiceVertex(GraphVertex graphVertex) {
+        this(graphVertex.getBusinessService(), graphVertex.getLevel());
+    }
+
+    public BusinessServiceVertex(Long serviceId, String name, int level) {
+        super(Type.BusinessService + ":" + serviceId, name, level);
         this.serviceId = serviceId;
         setLabel(name);
-        setTooltipText(String.format("BusinessService '%s'", name));
-        setIconKey("business-service");
+        setTooltipText(String.format("Business Service '%s'", name));
+        setIconKey("bsm.business-service");
     }
 
     public Long getServiceId() {
         return serviceId;
+    }
+
+    @Override
+    public Type getType() {
+        return Type.BusinessService;
+    }
+
+    @Override
+    public Set<String> getReductionKeys() {
+        return Sets.newHashSet();
+    }
+
+    @Override
+    public boolean isLeaf() {
+        return false;
+    }
+
+    @Override
+    public <T> T accept(BusinessServiceVertexVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

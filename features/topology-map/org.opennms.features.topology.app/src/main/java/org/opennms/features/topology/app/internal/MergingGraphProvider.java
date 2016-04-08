@@ -37,8 +37,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import org.opennms.features.topology.api.topo.DefaultVertexRef;
+
+import org.opennms.features.topology.api.browsers.ContentType;
+import org.opennms.features.topology.api.browsers.SelectionChangedListener;
 import org.opennms.features.topology.api.topo.Criteria;
+import org.opennms.features.topology.api.topo.DefaultVertexRef;
 import org.opennms.features.topology.api.topo.Edge;
 import org.opennms.features.topology.api.topo.EdgeListener;
 import org.opennms.features.topology.api.topo.EdgeProvider;
@@ -55,7 +58,7 @@ import org.slf4j.LoggerFactory;
 
 public class MergingGraphProvider implements GraphProvider, VertexListener, EdgeListener, ProviderListener {
 	
-	private static final GraphProvider NULL_PROVIDER = new NullProvider();
+	public static final GraphProvider NULL_PROVIDER = new NullProvider();
 	
 	/**
 	 * This provider is the bottom-level provider that we delegate to.
@@ -67,9 +70,8 @@ public class MergingGraphProvider implements GraphProvider, VertexListener, Edge
 	private final Set<VertexListener> m_vertexListeners = new CopyOnWriteArraySet<VertexListener>();
 	private final Set<EdgeListener> m_edgeListeners = new CopyOnWriteArraySet<EdgeListener>();
 	
-	public MergingGraphProvider(GraphProvider baseGraphProvider, ProviderManager providerManager) {
-		m_baseGraphProvider = baseGraphProvider;
-
+	public MergingGraphProvider(ProviderManager providerManager) {
+		m_baseGraphProvider = NULL_PROVIDER;
 		for(VertexProvider vertexProvider : providerManager.getVertexProviders()) {
 			addVertexProvider(vertexProvider);
 		}
@@ -109,7 +111,7 @@ public class MergingGraphProvider implements GraphProvider, VertexListener, Edge
 		
 		m_baseGraphProvider.addVertexListener(this);
 		m_baseGraphProvider.addEdgeListener(this);
-		
+
 		fireVertexChanged();
 		fireEdgeChanged();
 	}
@@ -553,7 +555,17 @@ public class MergingGraphProvider implements GraphProvider, VertexListener, Edge
 	public void removeEdgeListener(EdgeListener edgeListener) {
 		m_edgeListeners.remove(edgeListener);
 	}
-	
+
+	@Override
+	public SelectionChangedListener.Selection getSelection(List<VertexRef> selectedVertices, ContentType type) {
+		return m_baseGraphProvider.getSelection(selectedVertices, type);
+	}
+
+	@Override
+	public boolean contributesTo(ContentType type) {
+		return m_baseGraphProvider.contributesTo(type);
+	}
+
 	private static class NullProvider implements GraphProvider {
 
 		@Override
@@ -755,6 +767,16 @@ public class MergingGraphProvider implements GraphProvider, VertexListener, Edge
 		@Override
 		public void clearEdges() {
 			// Do nothing
+		}
+
+		@Override
+		public SelectionChangedListener.Selection getSelection(List<VertexRef> selectedVertices, ContentType type) {
+			return SelectionChangedListener.Selection.NONE;
+		}
+
+		@Override
+		public boolean contributesTo(ContentType type) {
+			return false;
 		}
 	}
 

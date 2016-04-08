@@ -51,7 +51,7 @@ import org.opennms.features.topology.api.GraphContainer;
 import org.opennms.features.topology.api.GraphVisitor;
 import org.opennms.features.topology.api.support.SemanticZoomLevelCriteria;
 import org.opennms.features.topology.api.support.VertexHopGraphProvider;
-import org.opennms.features.topology.api.support.VertexHopGraphProvider.FocusNodeHopCriteria;
+import org.opennms.features.topology.api.support.VertexHopGraphProvider.DefaultVertexHopCriteria;
 import org.opennms.features.topology.api.support.VertexHopGraphProvider.VertexHopCriteria;
 import org.opennms.features.topology.api.topo.AbstractEdgeRef;
 import org.opennms.features.topology.api.topo.AbstractVertex;
@@ -179,7 +179,8 @@ public class VEProviderGraphContainerTest {
 		ProviderManager providerManager = new ProviderManager();
 		providerManager.onEdgeProviderBind(m_edgeProvider);
 
-		GraphContainer graphContainer = new VEProviderGraphContainer(m_graphProvider, providerManager);
+		GraphContainer graphContainer = new VEProviderGraphContainer(providerManager);
+		graphContainer.setBaseTopology(m_graphProvider);
 		graphContainer.setSemanticZoomLevel(0);
 		
 		m_graphContainer = graphContainer;
@@ -205,7 +206,8 @@ public class VEProviderGraphContainerTest {
 		// Wrap the test GraphProvider in a VertexHopGraphProvider
 		ProviderManager providerManager = new ProviderManager();
 		providerManager.onEdgeProviderBind(m_edgeProvider);
-		GraphContainer graphContainer = new VEProviderGraphContainer(new VertexHopGraphProvider(m_graphProvider), providerManager);
+		GraphContainer graphContainer = new VEProviderGraphContainer(providerManager);
+		graphContainer.setBaseTopology(new VertexHopGraphProvider(m_graphProvider));
 		graphContainer.setSemanticZoomLevel(0);
 
 		m_graphContainer = graphContainer;
@@ -216,9 +218,8 @@ public class VEProviderGraphContainerTest {
 		assertEquals(0, graph.getDisplayEdges().size());
 
 		// Add one focus vertex
-		FocusNodeHopCriteria focusNodes = new FocusNodeHopCriteria("vertex");
-		focusNodes.add(new DefaultVertexRef("nodes", "v1"));
-		m_graphContainer.addCriteria(focusNodes);
+		DefaultVertexHopCriteria hopCriteria = new DefaultVertexHopCriteria(new DefaultVertexRef("nodes", "v1"));
+		m_graphContainer.addCriteria(hopCriteria);
 		// This needs to be 2 because there is a SemanticZoomLevelCriteria in there also
 		assertEquals(2, m_graphContainer.getCriteria().length);
 

@@ -36,7 +36,7 @@ public class ChildEdgeRequestDTO extends AbstractEdgeRequestDTO {
 
     private Long childId;
 
-    @XmlElement(name="childId",required = true)
+    @XmlElement(name="child-id",required = true)
     public Long getChildId() {
         return childId;
     }
@@ -59,5 +59,10 @@ public class ChildEdgeRequestDTO extends AbstractEdgeRequestDTO {
     @Override
     public int hashCode() {
         return super.hashCode() + java.util.Objects.hash(childId);
+    }
+
+    @Override
+    public void accept(EdgeRequestDTOVisitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -28,55 +28,46 @@
 
 package org.opennms.features.topology.plugins.topo.bsm;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 import org.opennms.features.topology.api.topo.AbstractVertex;
-import org.opennms.features.topology.api.topo.VertexRef;
+import org.opennms.features.topology.api.topo.LevelAware;
 
-abstract class AbstractBusinessServiceVertex extends AbstractVertex {
+public abstract class AbstractBusinessServiceVertex extends AbstractVertex implements LevelAware {
 
-    private final List<VertexRef> children = new ArrayList<>();
+    enum Type {
+        BusinessService,
+        IpService,
+        ReductionKey,
+    }
+
+    private final int level;
 
     /**
      * Creates a new {@link AbstractBusinessServiceVertex}.
-     *
-     * @param id the unique id of this vertex. Must be unique overall the namespace.
+     *  @param id the unique id of this vertex. Must be unique overall the namespace.
+     * @param label a human readable label
+     * @param level the level of the vertex in the Business Service Hierarchy. The root element is level 0.
+     * @param status
      */
-    protected AbstractBusinessServiceVertex(String id, String label) {
+    protected AbstractBusinessServiceVertex(String id, String label, int level) {
         super(BusinessServicesTopologyProvider.TOPOLOGY_NAMESPACE, id, label);
+        this.level = level;
         setIconKey(null);
         setLocked(false);
         setSelected(false);
     }
 
-    public void addChildren(AbstractVertex vertex) {
-        if (!children.contains(vertex)) {
-            children.add(vertex);
-            vertex.setParent(this);
-        }
+    @Override
+    public int getLevel() {
+        return level;
     }
 
-    public boolean isRoot() {
-        return getParent() == null;
-    }
+    public abstract boolean isLeaf();
 
-    public boolean isLeaf() {
-        return children.isEmpty();
-    }
+    public abstract Type getType();
 
-    public List<VertexRef> getChildren() {
-        return children;
-    }
+    public abstract Set<String> getReductionKeys();
 
-    public boolean isPartOf(String serviceId) {
-        return serviceId != null && serviceId.equals(getRoot().getId());
-    }
-
-    public AbstractBusinessServiceVertex getRoot() {
-        if (isRoot()) {
-            return this;
-        }
-        return ((AbstractBusinessServiceVertex) getParent()).getRoot();
-    }
+    public abstract <T> T accept(BusinessServiceVertexVisitor<T> visitor);
 }

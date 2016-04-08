@@ -42,9 +42,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -96,7 +96,7 @@ public class BusinessServiceEntity {
         m_id = id;
     }
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, unique = true)
     public String getName() {
         return m_name;
     }
@@ -162,7 +162,7 @@ public class BusinessServiceEntity {
                 .collect(Collectors.toSet());
     }
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "bsm_reduce_id")
     public AbstractReductionFunctionEntity getReductionFunction() {
         return m_reductionFunction;
@@ -218,32 +218,34 @@ public class BusinessServiceEntity {
 
     // Convenient method to add an ipservice edge
     public BusinessServiceEntity addIpServiceEdge(OnmsMonitoredService ipService, AbstractMapFunctionEntity mapFunction) {
-        return addIpServiceEdge(ipService, mapFunction, 1);
+        return addIpServiceEdge(ipService, mapFunction, 1, null);
     }
 
     // Convenient method to add an ipservice edge
-    public BusinessServiceEntity addIpServiceEdge(OnmsMonitoredService ipService, AbstractMapFunctionEntity mapFunction, int weight) {
+    public BusinessServiceEntity addIpServiceEdge(OnmsMonitoredService ipService, AbstractMapFunctionEntity mapFunction, int weight, String friendlyName) {
         IPServiceEdgeEntity edge = new IPServiceEdgeEntity();
         edge.setBusinessService(this);
         edge.setIpService(Objects.requireNonNull(ipService));
         edge.setWeight(weight);
         edge.setMapFunction(Objects.requireNonNull(mapFunction));
+        edge.setFriendlyName(friendlyName);
         addEdge(edge);
         return this;
     }
 
     // Convenient method to add a reduction key edge
     public BusinessServiceEntity addReductionKeyEdge(String reductionKey, AbstractMapFunctionEntity mapFunction) {
-        return addReductionKeyEdge(reductionKey, mapFunction, 1);
+        return addReductionKeyEdge(reductionKey, mapFunction, 1, null);
     }
 
     // Convenient method to add a reduction key edge
-    public BusinessServiceEntity addReductionKeyEdge(String reductionKey, AbstractMapFunctionEntity mapFunction, int weight) {
+    public BusinessServiceEntity addReductionKeyEdge(String reductionKey, AbstractMapFunctionEntity mapFunction, int weight, String friendlyName) {
         SingleReductionKeyEdgeEntity edge = new SingleReductionKeyEdgeEntity();
         edge.setBusinessService(this);
         edge.setReductionKey(Objects.requireNonNull(reductionKey));
         edge.setWeight(weight);
         edge.setMapFunction(Objects.requireNonNull(mapFunction));
+        edge.setFriendlyName(friendlyName);
         addEdge(edge);
         return this;
     }

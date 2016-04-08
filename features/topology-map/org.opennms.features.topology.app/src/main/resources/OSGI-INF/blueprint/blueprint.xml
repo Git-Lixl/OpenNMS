@@ -23,16 +23,11 @@
         </cm:default-properties>
     </cm:property-placeholder>
 
-    <reference id="topologyProvider" interface="org.opennms.features.topology.api.topo.GraphProvider" filter="|(label=Enhanced Linkd)(label=Linkd)"  availability="mandatory"/>
-
     <bean id="topologyApplication" class="org.opennms.features.topology.app.internal.TopologyUI" scope="prototype">
         <argument ref="commandManager"/>
         <argument ref="historyManager"/>
         <argument ref="veGraphContainer" />
         <argument ref="iconRepoManager"/>
-        <argument>
-            <bean class="org.opennms.features.topology.app.internal.DefaultSelectionManager"/>
-        </argument>
         <property name="widgetManager" ref="widgetManager"/>
         <property name="headerProvider" ref="onmsHeaderProvider" />
         <property name="showHeader" value="${showHeader}" />
@@ -40,7 +35,6 @@
     </bean>
 
     <bean id="veGraphContainer" class="org.opennms.features.topology.app.internal.VEProviderGraphContainer" scope="prototype">
-        <argument ref="topologyProvider" />
         <argument ref="providerManager" />
         <property name="bundleContext" ref="blueprintBundleContext" />
         <property name="autoRefreshSupport" ref="defaultAutoRefreshSupport"/>
@@ -127,39 +121,16 @@
         <value>org.osgi.service.cm.ManagedService</value>
       </interfaces>
       <service-properties>
-        <entry key="service.pid" value="org.opennms.features.topology.app.icons"/>
+        <entry key="service.pid" value="org.opennms.features.topology.app.icons.default"/>
       </service-properties>
-       <bean class="org.opennms.features.topology.api.support.ConfigurableIconRepository" />
+      <bean class="org.opennms.features.topology.api.support.DefaultIconRepository" />
     </service>
 
     <!-- Icon Repository Manager -->
     <bean id="iconRepoManager" class="org.opennms.features.topology.app.internal.support.IconRepositoryManager"/>
-    
     <reference-list interface="org.opennms.features.topology.api.IconRepository" availability="optional">
         <reference-listener bind-method="onBind" unbind-method="onUnbind" ref="iconRepoManager" />
     </reference-list>
-
-    <service interface="org.opennms.features.topology.api.IconRepository">
-        <bean class="org.opennms.features.topology.api.support.DefaultIconRepository">
-            <property name="iconMap">
-                <map>
-                    <entry key="default" value="generic" />
-                    <entry key="group" value="cloud"/>
-                    <entry key="cloud" value="cloud"/>
-                    
-                    <!-- vmware icon information has been moved into the vmware Topology Provider's blueprint.xml file -->
-					<!-- linkd icon information has been moved into the linkd ToPr's blueprint.xml file -->
-                </map>
-            </property>
-            <property name="SVGDefs">
-                <list>
-                    <value>theme://svg/default_icons.svg</value>
-                    <value>theme://svg/vmware_icons.svg</value>
-                    <value>theme://svg/open_icons.svg</value>
-                </list>
-            </property>
-        </bean>
-    </service>
     
     <bean id="providerManager" class="org.opennms.features.topology.app.internal.ProviderManager" />
     
@@ -292,6 +263,24 @@
             <entry key="operation.contextMenuLocation" value=""/>
         </service-properties>
         <bean class="org.opennms.features.topology.app.internal.operations.RedoLayoutOperation"/>
+    </service>
+
+    <service interface="org.opennms.features.topology.api.Operation" >
+        <service-properties>
+            <entry key="operation.menuLocation" value="Device"/>
+            <entry key="operation.label" value="Change Icon" />
+            <entry key="operation.contextMenuLocation" value=""/>
+        </service-properties>
+        <bean class="org.opennms.features.topology.app.internal.operations.icons.IconSelectionOperation"/>
+    </service>
+
+    <service interface="org.opennms.features.topology.api.Operation" >
+        <service-properties>
+            <entry key="operation.menuLocation" value="Device"/>
+            <entry key="operation.label" value="Reset Icon" />
+            <entry key="operation.contextMenuLocation" value=""/>
+        </service-properties>
+        <bean class="org.opennms.features.topology.app.internal.operations.icons.IconResetOperation"/>
     </service>
     
     <service interface="org.opennms.features.topology.api.Operation" >
@@ -439,5 +428,17 @@
         <reference-listener bind-method="onGraphProviderBind" unbind-method="onGraphProviderUnbind" ref="topologyServiceImpl"/>
     </reference-list>
 
+    <!-- Info Items -->
+    <service interface="org.opennms.features.topology.api.info.InfoPanelItem">
+        <bean class="org.opennms.features.topology.app.internal.ui.info.DefaultVertexInfoPanelItem" />
+    </service>
+    <service interface="org.opennms.features.topology.api.info.InfoPanelItem">
+        <bean class="org.opennms.features.topology.app.internal.ui.info.NodeInfoPanelItem" >
+            <argument ref="nodeDao"/>
+        </bean>
+    </service>
+    <service interface="org.opennms.features.topology.api.info.InfoPanelItem">
+        <bean class="org.opennms.features.topology.app.internal.ui.info.DefaultEdgeInfoPanelItem" />
+    </service>
 
 </blueprint>

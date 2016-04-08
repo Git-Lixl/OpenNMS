@@ -31,14 +31,13 @@ package org.opennms.netmgt.bsm.service.internal.edge;
 import java.util.Objects;
 
 import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
-import org.opennms.netmgt.bsm.persistence.api.functions.map.AbstractMapFunctionEntity;
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.internal.BusinessServiceImpl;
 import org.opennms.netmgt.bsm.service.internal.MapFunctionMapper;
 import org.opennms.netmgt.bsm.service.model.BusinessService;
 import org.opennms.netmgt.bsm.service.model.Status;
 import org.opennms.netmgt.bsm.service.model.edge.Edge;
-import org.opennms.netmgt.bsm.service.model.mapreduce.MapFunction;
+import org.opennms.netmgt.bsm.service.model.functions.map.MapFunction;
 
 public abstract class AbstractEdge<T extends BusinessServiceEdgeEntity> implements Edge {
 
@@ -72,13 +71,12 @@ public abstract class AbstractEdge<T extends BusinessServiceEdgeEntity> implemen
 
     @Override
     public Status getOperationalStatus() {
-        return getManager().getOperationalStatusForEdge(this);
+        return getManager().getOperationalStatus(this);
     }
 
     @Override
     public void setMapFunction(MapFunction mapFunction) {
-        AbstractMapFunctionEntity mapFunctionEntity = new MapFunctionMapper().toPersistenceFunction(mapFunction);
-        getEntity().setMapFunction(mapFunctionEntity);
+        m_manager.setMapFunction(this, mapFunction);
     }
 
     @Override
@@ -110,7 +108,7 @@ public abstract class AbstractEdge<T extends BusinessServiceEdgeEntity> implemen
         if (obj == null) return false;
         if (obj == this) return true;
         if (getClass() != obj.getClass()) return false;
-        final AbstractEdge other = (AbstractEdge) obj;
+        final AbstractEdge<?> other = (AbstractEdge<?>) obj;
         return Objects.equals(getEntity(), other.getEntity());
     }
 

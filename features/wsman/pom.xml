@@ -80,10 +80,24 @@
       <version>1.1.1</version>
       <exclusions>
         <exclusion>
-          <groupId>com.sun.xml.bind</groupId>
-          <artifactId>jaxb-impl</artifactId>
+          <groupId>org.apache.cxf</groupId>
+          <artifactId>cxf-rt-bindings-soap</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.cxf</groupId>
+          <artifactId>cxf-rt-databinding-jaxb</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.cxf</groupId>
+          <artifactId>cxf-rt-frontend-jaxws</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>cxf-dependencies</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

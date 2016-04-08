@@ -28,6 +28,7 @@
 
 package org.opennms.web.rest.v2.bsm.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -37,8 +38,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.opennms.web.rest.v2.bsm.model.edge.AbstractEdgeRequestDTO;
 import org.opennms.web.rest.v2.bsm.model.edge.ChildEdgeRequestDTO;
 import org.opennms.web.rest.v2.bsm.model.edge.IpServiceEdgeRequestDTO;
 import org.opennms.web.rest.v2.bsm.model.edge.ReductionKeyEdgeRequestDTO;
@@ -59,15 +63,15 @@ public class BusinessServiceRequestDTO {
     private Map<String, String> m_attributes = Maps.newLinkedHashMap();
 
     @XmlElement(name="ip-service-edge")
-    @XmlElementWrapper(name="ip-services-edges")
+    @XmlElementWrapper(name="ip-service-edges")
     private List<IpServiceEdgeRequestDTO> m_ipServices = Lists.newArrayList();
 
     @XmlElement(name="child-edge")
     @XmlElementWrapper(name="child-edges")
     private List<ChildEdgeRequestDTO> m_childServices = Lists.newArrayList();
 
-    @XmlElement(name="reductionkey-edge")
-    @XmlElementWrapper(name="reductionkey-edges")
+    @XmlElement(name="reduction-key-edge")
+    @XmlElementWrapper(name="reduction-key-edges")
     private List<ReductionKeyEdgeRequestDTO> reductionKeys = Lists.newArrayList();
 
     @XmlElement(name="reduce-function")
@@ -169,18 +173,38 @@ public class BusinessServiceRequestDTO {
     }
 
     public void addReductionKey(String reductionKey, MapFunctionDTO mapFunction, int weight) {
+        addReductionKey(reductionKey, mapFunction, weight, null);
+    }
+
+    public void addReductionKey(String reductionKey, MapFunctionDTO mapFunction, int weight, String friendlyName) {
         ReductionKeyEdgeRequestDTO edge = new ReductionKeyEdgeRequestDTO();
         edge.setReductionKey(reductionKey);
         edge.setMapFunction(mapFunction);
         edge.setWeight(weight);
+        edge.setFriendlyName(friendlyName);
         getReductionKeys().add(edge);
     }
 
     public void addIpService(int ipServiceId, MapFunctionDTO mapFunction, int weight) {
+        addIpService(ipServiceId, mapFunction, weight, null);
+    }
+
+    public void addIpService(int ipServiceId, MapFunctionDTO mapFunction, int weight, String friendlyName) {
         IpServiceEdgeRequestDTO edge = new IpServiceEdgeRequestDTO();
         edge.setIpServiceId(ipServiceId);
         edge.setMapFunction(mapFunction);
         edge.setWeight(weight);
+        edge.setFriendlyName(friendlyName);
         getIpServices().add(edge);
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public List<AbstractEdgeRequestDTO> getEdges() {
+        List<AbstractEdgeRequestDTO> edges = new ArrayList<>();
+        edges.addAll(getChildServices());
+        edges.addAll(getIpServices());
+        edges.addAll(getReductionKeys());
+        return edges;
     }
 }

@@ -34,17 +34,13 @@ import org.opennms.netmgt.bsm.persistence.api.IPServiceEdgeEntity;
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.internal.IpServiceImpl;
 import org.opennms.netmgt.bsm.service.model.IpService;
+import org.opennms.netmgt.bsm.service.model.edge.EdgeVisitor;
 import org.opennms.netmgt.bsm.service.model.edge.IpServiceEdge;
 
 public class IpServiceEdgeImpl extends AbstractEdge<IPServiceEdgeEntity> implements IpServiceEdge {
 
     public IpServiceEdgeImpl(BusinessServiceManager manager, IPServiceEdgeEntity entity) {
         super(manager, entity);
-    }
-
-    @Override
-    public Type getType() {
-        return Type.IP_SERVICE;
     }
 
     @Override
@@ -70,4 +66,18 @@ public class IpServiceEdgeImpl extends AbstractEdge<IPServiceEdgeEntity> impleme
                 .toString();
     }
 
+    @Override
+    public void setFriendlyName(String friendlyName) {
+        getEntity().setFriendlyName(friendlyName);
+    }
+
+    @Override
+    public String getFriendlyName() {
+        return getEntity().getFriendlyName();
+    }
+
+    @Override
+    public <T> T accept(EdgeVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
 }

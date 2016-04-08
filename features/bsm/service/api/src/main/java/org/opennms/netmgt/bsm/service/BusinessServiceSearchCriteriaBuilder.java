@@ -36,6 +36,7 @@ import java.util.stream.Stream;
 
 import org.opennms.netmgt.bsm.service.model.BusinessService;
 import org.opennms.netmgt.bsm.service.model.Status;
+import org.opennms.netmgt.bsm.service.model.graph.BusinessServiceGraph;
 
 /**
  * Criteria for searching for business services
@@ -82,7 +83,8 @@ public class BusinessServiceSearchCriteriaBuilder implements BusinessServiceSear
      */
     public enum Order {
         Name,
-        Severity;
+        Severity,
+        Level;
     }
 
     /**
@@ -171,7 +173,7 @@ public class BusinessServiceSearchCriteriaBuilder implements BusinessServiceSear
          * @return the instance created
          */
         public static <A, B> Pair<A, B> of(A a, B b) {
-            return new Pair(a, b);
+            return new Pair<A, B>(a, b);
         }
     }
 
@@ -219,10 +221,13 @@ public class BusinessServiceSearchCriteriaBuilder implements BusinessServiceSear
         }
 
         for (Pair<CompareOperator, Status> pair : m_severityFilters) {
-            s = s.filter(p -> pair.getA().check(businessServiceManager.getOperationalStatusForBusinessService(p).compareTo(pair.getB())));
+            s = s.filter(p -> pair.getA().check(businessServiceManager.getOperationalStatus(p).compareTo(pair.getB())));
         }
 
         Comparator<BusinessService> comparator = new Comparator<BusinessService>() {
+
+            private final BusinessServiceGraph graph = businessServiceManager.getGraph();
+
             @Override
             public int compare(BusinessService p1, BusinessService p2) {
                 switch (m_order) {
@@ -230,7 +235,11 @@ public class BusinessServiceSearchCriteriaBuilder implements BusinessServiceSear
                         return p1.getName().compareTo(p2.getName());
                     }
                     case Severity: {
-                        return businessServiceManager.getOperationalStatusForBusinessService(p1).compareTo(businessServiceManager.getOperationalStatusForBusinessService(p2));
+                        return businessServiceManager.getOperationalStatus(p1).compareTo(businessServiceManager.getOperationalStatus(p2));
+                    }
+                    case Level: {
+                        return Integer.compare(graph.getVertexByBusinessServiceId(p1.getId()).getLevel(),
+                                               graph.getVertexByBusinessServiceId(p2.getId()).getLevel());
                     }
                     default:
                         throw new IllegalArgumentException("Order not set");

@@ -43,6 +43,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -116,7 +117,6 @@ public class BusinessServiceEdgeEntity implements EdgeEntity {
         return m_weight;
     }
 
-    // TODO MVR make abstract (see class TODO above)
     @Override
     @Transient
     public Set<String> getReductionKeys() {
@@ -128,7 +128,7 @@ public class BusinessServiceEdgeEntity implements EdgeEntity {
         m_weight = weight;
     }
 
-    @ManyToOne(cascade = {CascadeType.ALL})
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "bsm_map_id")
     public AbstractMapFunctionEntity getMapFunction() {
         return m_mapFunction;
@@ -179,5 +179,12 @@ public class BusinessServiceEdgeEntity implements EdgeEntity {
                 && Objects.equals(getBusinessService().getId(), other.getBusinessService().getId())
                 && getMapFunction().equalsDefinition(other.getMapFunction());
         return equals;
+    }
+
+    @Override
+    public <T> T accept(EdgeEntityVisitor<T> visitor) {
+        // ALl sub classes MUST overwrite this properly, as this class cannot be abstract.
+        // This is due to how hibernate deals with inheritance strategies.
+        throw new IllegalStateException("Class '" + getClass().getName() + "' did not overwrite accept(EdgeEntityVisitor) method properly");
     }
 }

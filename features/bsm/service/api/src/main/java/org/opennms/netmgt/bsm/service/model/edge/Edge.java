@@ -32,25 +32,11 @@ import java.util.Set;
 
 import org.opennms.netmgt.bsm.service.model.BusinessService;
 import org.opennms.netmgt.bsm.service.model.Status;
-import org.opennms.netmgt.bsm.service.model.mapreduce.MapFunction;
+import org.opennms.netmgt.bsm.service.model.functions.map.MapFunction;
 
 public interface Edge {
 
     int DEFAULT_WEIGHT = 1;
-
-    enum Type {
-        CHILD_SERVICE,
-        IP_SERVICE,
-        REDUCTION_KEY,
-    }
-
-    Long getId();
-
-    Type getType();
-
-    Set<String> getReductionKeys();
-
-    MapFunction getMapFunction();
 
     BusinessService getSource();
 
@@ -60,9 +46,19 @@ public interface Edge {
 
     void setSource(BusinessService source);
 
-    int getWeight();
-
     void setWeight(int weight);
 
     void delete();
+
+    Long getId();
+
+    Set<String> getReductionKeys();
+
+    MapFunction getMapFunction();
+
+    int getWeight();
+
+    String getFriendlyName();
+
+    <T> T accept(EdgeVisitor<T> visitor);
 }

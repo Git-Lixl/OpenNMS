@@ -28,28 +28,61 @@
 
 package org.opennms.features.topology.plugins.topo.bsm;
 
+import java.util.Set;
+
 import org.opennms.netmgt.bsm.service.model.IpService;
+import org.opennms.netmgt.bsm.service.model.graph.GraphVertex;
 
 public class IpServiceVertex extends AbstractBusinessServiceVertex {
 
     private final Integer ipServiceId;
+    private final Set<String> reductionKeys;
 
-    public IpServiceVertex(IpService ipServiceDTO) {
-        this("ip-service:" + ipServiceDTO.getId(),
-                ipServiceDTO.getServiceName(),
-                Integer.valueOf(ipServiceDTO.getId()),
-                ipServiceDTO.getIpAddress());
+    public IpServiceVertex(IpService ipService, int level) {
+        this(ipService.getId(),
+            ipService.getServiceName(),
+            ipService.getIpAddress(),
+            ipService.getReductionKeys(),
+            ipService.getNodeId(),
+            level);
     }
 
-    private IpServiceVertex(String id, String ipServiceName, Integer ipServiceId, String ipAddress) {
-        super(id, ipServiceName);
+    public IpServiceVertex(GraphVertex graphVertex) {
+        this(graphVertex.getIpService(), graphVertex.getLevel());
+    }
+
+    private IpServiceVertex(int ipServiceId, String ipServiceName, String ipAddress, Set<String> reductionKeys, int nodeId, int level) {
+        super(Type.IpService + ":" + ipServiceId, ipServiceName, level);
         this.ipServiceId = ipServiceId;
+        this.reductionKeys = reductionKeys;
         setIpAddress(ipAddress);
         setLabel(ipServiceName);
-        setTooltipText(String.format("Service '%s', IP: %s", ipServiceName, ipAddress));
+        setTooltipText(String.format("IP Service '%s' on %s", ipServiceName, ipAddress));
+        setIconKey("bsm.ip-service");
+        setNodeID(nodeId);
     }
 
     public Integer getIpServiceId() {
         return ipServiceId;
+    }
+
+    @Override
+    public Type getType() {
+        return Type.IpService;
+    }
+
+    @Override
+    public boolean isLeaf() {
+        return true;
+    }
+
+    @Override
+    public Set<String> getReductionKeys() {
+        return reductionKeys;
+    }
+
+    @Override
+    public <T> T accept(BusinessServiceVertexVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

@@ -28,18 +28,29 @@
 
 package org.opennms.netmgt.bsm.service.model.functions.reduce;
 
-import java.util.HashMap;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import org.opennms.netmgt.bsm.service.model.Status;
-import org.opennms.netmgt.bsm.service.model.edge.Edge;
-import org.opennms.netmgt.bsm.service.model.mapreduce.ReductionFunction;
+import org.opennms.netmgt.bsm.service.model.functions.annotations.Function;
+import org.opennms.netmgt.bsm.service.model.functions.annotations.Parameter;
 
 import com.google.common.base.Preconditions;
 
+@Function(name="Threshold", description = "Uses the highest severity found more often than the given threshold.")
 public class Threshold implements ReductionFunction {
 
+    private static final Comparator<Status> HIGHEST_SEVERITY_FIRST = new Comparator<Status>() {
+        @Override
+        public int compare(Status s1, Status s2) {
+            return s2.compareTo(s1);
+        }
+    };
+
+    @Parameter(key="threshold", description = "The Threshold to use")
     private float m_threshold;
 
     public void setThreshold(float threshold) {
@@ -53,23 +64,37 @@ public class Threshold implements ReductionFunction {
     }
 
     @Override
-    public Optional<Status> reduce(Map<Edge, Status> edgeStatusMap) {
-        // define weight factor
-        final int weightSum = edgeStatusMap.keySet().stream().mapToInt(e -> e.getWeight()).sum();
-        final Map<Edge, Double> weightMap = new HashMap<>();
-        edgeStatusMap.keySet().forEach(e -> {
-            double weightFactor = (double) e.getWeight() / (double) weightSum;
-            weightMap.put(e, weightFactor);
-        });
-        // define status weight
-        Map<Status, Double> statusWeightMap = new HashMap<>();
-        for (Status eachStatus : Status.values()) {
-            double statusTotal = edgeStatusMap.entrySet().stream().filter(e -> e.getValue().isGreaterThanOrEqual(eachStatus)).mapToDouble(e -> weightMap.get(e.getKey())).sum();
-            statusWeightMap.put(eachStatus, statusTotal);
+    public Optional<Status> reduce(List<Status> statuses) {
+        // We increment the number of "hits" for a particular Status key
+        // when one of the inputs is greater or equals to that given key
+        // For example, reduce(Status.WARNING, Status.NORMAL) would build a map that looks like:
+        //   { 'WARNING': 1, 'NORMAL': 2, 'INDETERMINATE': 2 }
+        final Map<Status, Integer> hitsByStatus = new TreeMap<>(HIGHEST_SEVERITY_FIRST);
+        for (Status s : statuses) {
+            for (Status ss : Status.values()) {
+                if (ss.isGreaterThan(s)) {
+                    continue;
+                }
+
+                Integer count = hitsByStatus.get(ss);
+                if (count == null) {
+                    count = 1;
+                } else {
+                    count = count + 1;
+                }
+                hitsByStatus.put(ss, count);
+            }
         }
-        // get maximum severity
-        Optional<Status> reducedStatus = statusWeightMap.keySet().stream().sorted((o1, o2) -> -1 * o1.compareTo(o2)).filter(status -> statusWeightMap.get(status).doubleValue() >= m_threshold).findFirst();
-        return reducedStatus;
+
+        // Return status with the highest severity where the number of relative hits
+        // is greater than the configured threshold
+        for (Map.Entry<Status, Integer> statusWithHits : hitsByStatus.entrySet()) {
+            if (statusWithHits.getValue() / (double)statuses.size() >= m_threshold) {
+                return Optional.of(statusWithHits.getKey());
+            }
+        }
+
+        return Optional.empty();
     }
 
     @Override
@@ -77,5 +102,10 @@ public class Threshold implements ReductionFunction {
         return com.google.common.base.Objects.toStringHelper(this)
                 .add("threshold", m_threshold)
                 .toString();
+    }
+
+    @Override
+    public <T> T accept(ReduceFunctionVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

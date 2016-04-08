@@ -51,6 +51,11 @@ public class BusinessServiceVertexProviderTest {
             public String getLabel() {
                 return "localhost";
             }
+
+            @Override
+            public Integer getId() {
+                return 1;
+            }
         }).anyTimes();
         EasyMock.replay(managerMock);
 
@@ -59,20 +64,20 @@ public class BusinessServiceVertexProviderTest {
         BusinessService bs1 = new BusinessServiceImpl(managerMock, builder.toEntity());
         BusinessService bs2 = new BusinessServiceImpl(managerMock, builder.toEntity());
         BusinessService bs3 = new BusinessServiceImpl(managerMock, builder.id(11L).toEntity()); // is different
-        BusinessServiceVertex bsVertex1 = new BusinessServiceVertex(bs1);
-        BusinessServiceVertex bsVertex2 = new BusinessServiceVertex(bs2);
-        BusinessServiceVertex bsVertex3 = new BusinessServiceVertex(bs3);
+        BusinessServiceVertex bsVertex1 = new BusinessServiceVertex(bs1, 0);
+        BusinessServiceVertex bsVertex2 = new BusinessServiceVertex(bs2, 0);
+        BusinessServiceVertex bsVertex3 = new BusinessServiceVertex(bs3, 0);
 
         // create 2 ip Service vertices where all of them should be equal
         IpService ipService1 = new IpServiceImpl(managerMock, BsmTestUtils.createMonitoredService(1, 1, "127.0.0.1", "SSH"));
         IpService ipService2 = new IpServiceImpl(managerMock, BsmTestUtils.createMonitoredService(1, 1, "127.0.0.1", "SSH"));
-        IpServiceVertex ipServiceVertex1 = new IpServiceVertex(ipService1);
-        IpServiceVertex ipServiceVertex2 = new IpServiceVertex(ipService2);
+        IpServiceVertex ipServiceVertex1 = new IpServiceVertex(ipService1, 0);
+        IpServiceVertex ipServiceVertex2 = new IpServiceVertex(ipService2, 0);
 
         // create 3 reduction key vertices where 2 of them should be equal
-        ReductionKeyVertex rkVertex1 = new ReductionKeyVertex("key1");
-        ReductionKeyVertex rkVertex2 = new ReductionKeyVertex("key1");
-        ReductionKeyVertex rkVertex3 = new ReductionKeyVertex("key2");
+        ReductionKeyVertex rkVertex1 = new ReductionKeyVertex("key1", 0);
+        ReductionKeyVertex rkVertex2 = new ReductionKeyVertex("key1", 0);
+        ReductionKeyVertex rkVertex3 = new ReductionKeyVertex("key2", 0);
 
         // Add all the above vertices. Some of them even twice to ensure that the getRefId() methods work correctly
         BusinessServiceVertexProvider vertexProvider = new BusinessServiceVertexProvider(BusinessServicesTopologyProvider.TOPOLOGY_NAMESPACE);
