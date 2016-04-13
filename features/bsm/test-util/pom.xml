@@ -35,6 +35,7 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <!-- Test dependencies -->
         <dependency>

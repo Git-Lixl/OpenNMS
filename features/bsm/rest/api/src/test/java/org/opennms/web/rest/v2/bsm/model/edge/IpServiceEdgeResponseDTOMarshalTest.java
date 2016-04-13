@@ -74,26 +74,26 @@ public class IpServiceEdgeResponseDTOMarshalTest extends MarshalAndUnmarshalTest
                 edge,
                 "{" +
                 "  \"id\" : 1," +
-                "  \"operational-status\" : \"WARNING\"," +
-                "  \"map-function\" : {" +
+                "  \"operationalStatus\" : \"WARNING\"," +
+                "  \"mapFunction\" : {" +
                 "       \"type\" : \"SetTo\"," +
                 "       \"properties\" : {" +
                 "           \"key1\" : \"value1\"" +
                 "       }" +
                 "   }," +
                 "  \"location\" : \"/api/v2/business-services/edges/1\"," +
-                "  \"reduction-keys\" : [" +
+                "  \"reductionKeys\" : [" +
                 "       \"key1\", \"key2\""+
                 "   ]," +
                 "  \"weight\" : 20," +
-                "  \"ip-service\" : {" +
+                "  \"ipService\" : {" +
                 "       \"id\" : 17," +
                 "       \"location\" : \"/api/v2/business-services/ip-services/17\"," +
-                "       \"ip-address\" : \"1.1.1.1\"," +
-                "       \"node-label\" : \"dummy\"," +
-                "       \"service-name\" : \"ICMP\"" +
+                "       \"ipAddress\" : \"1.1.1.1\"," +
+                "       \"nodeLabel\" : \"dummy\"," +
+                "       \"serviceName\" : \"ICMP\"" +
                 "  }," +
-                "  \"friendly-name\" : \"ip-service-friendly-name\"" +
+                "  \"friendlyName\" : \"ip-service-friendly-name\"" +
                 "}",
                 "<ip-service-edge>\n" +
                 "   <id>1</id>\n" +

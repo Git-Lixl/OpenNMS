@@ -134,7 +134,6 @@ public class FunctionsManager {
 
     public MapFunction getMapFunction(MapFunctionDTO input) {
         Objects.requireNonNull(input);
-        @SuppressWarnings("unchecked")
         Class<? extends MapFunction> functionClass = (Class<? extends MapFunction>) findFunction(getMapFunctions(), input.getType());
         return createFunctionInstance(functionClass, input.getProperties());
     }
@@ -197,7 +196,6 @@ public class FunctionsManager {
 
     public ReductionFunction getReduceFunction(ReduceFunctionDTO input) {
         Objects.requireNonNull(input);
-        @SuppressWarnings("unchecked")
         Class<? extends ReductionFunction> functionClass = (Class<? extends ReductionFunction>) findFunction(getReduceFunctions(), input.getType());
         return createFunctionInstance(functionClass, input.getProperties());
     }
