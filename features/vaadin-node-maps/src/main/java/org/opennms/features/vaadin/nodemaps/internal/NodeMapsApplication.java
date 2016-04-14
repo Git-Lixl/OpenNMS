@@ -49,11 +49,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import com.github.wolfie.refresher.Refresher;
 import com.vaadin.annotations.JavaScript;
 import com.vaadin.annotations.StyleSheet;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
+import com.vaadin.event.UIEvents;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.AbsoluteLayout;
@@ -120,11 +120,10 @@ import com.vaadin.ui.VerticalSplitPanel;
 })
 public class NodeMapsApplication extends UI {
     private static final Logger LOG = LoggerFactory.getLogger(NodeMapsApplication.class);
-    // private static final int REFRESH_INTERVAL = 5 * 60 * 1000;
-    private static final int REFRESH_INTERVAL = 10 * 1000;
+    private static final int REFRESH_INTERVAL = 5 * 1000;
+
     private VerticalLayout m_rootLayout;
     private VerticalLayout m_layout;
-
     private MapWidgetComponent m_mapWidgetComponent;
     private OnmsHeaderProvider m_headerProvider;
     private String m_headerHtml;
@@ -280,7 +279,7 @@ public class NodeMapsApplication extends UI {
 
         createMapPanel(vaadinRequest.getParameter("search"));
         createRootLayout();
-        addRefresher();
+        setupAutoRefresher();
     }
 
     private void createMapPanel(final String searchString) {
@@ -341,10 +340,14 @@ public class NodeMapsApplication extends UI {
         }
     }
 
-    private void addRefresher() {
-        final Refresher refresher = new Refresher();
-        refresher.setRefreshInterval(REFRESH_INTERVAL);
-        addExtension(refresher);
+    public void setupAutoRefresher(){
+        setPollInterval(REFRESH_INTERVAL); //Pull every n seconds for view updates
+        addPollListener(new UIEvents.PollListener() {
+            @Override
+            public void poll(UIEvents.PollEvent event) {
+                m_mapWidgetComponent.refresh();
+            }
+        });
     }
 
     public void refresh() {

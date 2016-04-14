@@ -38,7 +38,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import com.github.wolfie.refresher.Refresher;
 import org.opennms.core.criteria.CriteriaBuilder;
 import org.opennms.core.criteria.restrictions.Restrictions;
 import org.opennms.features.geocoder.Coordinates;
@@ -66,15 +65,6 @@ import org.springframework.transaction.support.TransactionOperations;
  * @author Marcus Hellberg (marcus@vaadin.com)
  */
 public class MapWidgetComponent extends NodeMapComponent implements GeoAssetProvider {
-
-    private class DynamicUpdateRefresher implements Refresher.RefreshListener{
-        private static final long serialVersionUID = 801233170298353060L;
-
-        @Override
-        public void refresh(Refresher refresher) {
-            refreshView();
-        }
-    }
 
     private static final long serialVersionUID = -6364929103619363239L;
     private static final Logger LOG = LoggerFactory.getLogger(MapWidgetComponent.class);
@@ -137,23 +127,11 @@ public class MapWidgetComponent extends NodeMapComponent implements GeoAssetProv
             }
         }, 0, 5, TimeUnit.MINUTES);
         checkAclsEnabled();
-        setupAutoRefresher();
     }
 
     private void checkAclsEnabled() {
         String aclsPropValue = System.getProperty("org.opennms.web.aclsEnabled");
         m_aclsEnabled = aclsPropValue != null && aclsPropValue.equals("true");
-    }
-
-    public void setupAutoRefresher(){
-        Refresher refresher = new Refresher();
-        refresher.setRefreshInterval(5000); //Pull every two seconds for view updates
-        refresher.addListener(new DynamicUpdateRefresher());
-        addExtension(refresher);
-    }
-
-    public void refresh() {
-        refreshView();
     }
 
     @Override
@@ -165,10 +143,9 @@ public class MapWidgetComponent extends NodeMapComponent implements GeoAssetProv
         return nodes;
     }
 
-    private void refreshView() {
+    public void refresh() {
         if(m_aclsEnabled) {
             Map<Integer, String> nodes = getNodeDao().getAllLabelsById();
-
             Map<Integer, NodeEntry> aclOnlyNodes = new HashMap<Integer, NodeEntry>();
             for (Integer nodeId : nodes.keySet()) {
                 if (m_activeNodes.containsKey(nodeId)) aclOnlyNodes.put(nodeId, m_activeNodes.get(nodeId));

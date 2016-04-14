@@ -28,7 +28,6 @@
           </features>
           <bundles>
             <!-- Manually define non bundles to be included -->
-            <bundle>wrap:mvn:org.vaadin.addons/refresher/${vaadinAddonRefresherVersion}</bundle>
             <bundle>wrap:mvn:org.vaadin.addons/contextmenu/${vaadinAddonContextMenuVersion}</bundle>
             <bundle>wrap:mvn:org.vaadin.addon/confirmdialog/${vaadinAddonConfirmDialogVersion}</bundle>
           </bundles>
@@ -56,12 +55,6 @@
     <dependency>
       <groupId>com.vaadin</groupId>
       <artifactId>vaadin-shared</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>com.vaadin.external.google</groupId>
-          <artifactId>guava</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.vaadin</groupId>
@@ -80,7 +73,12 @@
       <artifactId>javax.servlet</artifactId>
       <scope>provided</scope>
     </dependency>
-    <!-- this override's vaadin's 16.x guava dependency -->
+    <!-- We MUST ensure that the 16.0.1.vaadin1 version is set as a dependency, as well as OpenNMS guava version -->
+    <dependency>
+      <groupId>com.vaadin.external.google</groupId>
+      <artifactId>guava</artifactId>
+      <version>16.0.1.vaadin1</version>
+    </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
@@ -106,10 +104,6 @@
     <dependency>
       <groupId>org.vaadin.addons</groupId>
       <artifactId>contextmenu</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.vaadin.addons</groupId>
-      <artifactId>refresher</artifactId>
     </dependency>
     <dependency>
       <groupId>org.vaadin.addon</groupId>

@@ -96,7 +96,6 @@ import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.wolfie.refresher.Refresher;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.vaadin.annotations.PreserveOnRefresh;
@@ -106,6 +105,7 @@ import com.vaadin.annotations.Title;
 import com.vaadin.data.Property;
 import com.vaadin.event.FieldEvents;
 import com.vaadin.event.ShortcutAction;
+import com.vaadin.event.UIEvents;
 import com.vaadin.server.DefaultErrorHandler;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page.UriFragmentChangedEvent;
@@ -151,14 +151,14 @@ import com.vaadin.ui.Window;
 })
 public class TopologyUI extends UI implements CommandUpdateListener, MenuItemUpdateListener, ContextMenuHandler, WidgetUpdateListener, WidgetContext, UriFragmentChangedListener, GraphContainer.ChangeListener, MapViewManagerListener, VertexUpdateListener, SelectionListener, VerticesUpdateManager.VerticesUpdateListener {
 
-    private class DynamicUpdateRefresher implements Refresher.RefreshListener {
+    private class DynamicUpdateRefresher implements UIEvents.PollListener {
         private final Object lockObject = new Object();
         private boolean m_refreshInProgress = false;
         private long m_lastUpdateTime = 0;
 
 
         @Override
-        public void refresh(Refresher refresher) {
+        public void poll(UIEvents.PollEvent event) {
              if (needsRefresh()) {
                 refreshUI();
             }
@@ -633,10 +633,8 @@ public class TopologyUI extends UI implements CommandUpdateListener, MenuItemUpd
 
     private void setupAutoRefresher() {
         if (m_graphContainer.hasAutoRefreshSupport()) {
-            Refresher refresher = new Refresher();
-            refresher.setRefreshInterval((int)m_graphContainer.getAutoRefreshSupport().getInterval() * 1000); // ask every 1 seconds for changes
-            refresher.addListener(new DynamicUpdateRefresher());
-            addExtension(refresher);
+            setPollInterval((int)m_graphContainer.getAutoRefreshSupport().getInterval() * 1000); // ask every <interval> seconds for changes
+            addPollListener(new DynamicUpdateRefresher());
         }
     }
 
