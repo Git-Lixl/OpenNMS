@@ -1,4 +1,5 @@
 /*global Requisition:true, bootbox:true */
+/*jshint eqnull:true */
 
 /**
 * @author Alejandro Galue <agalue@opennms.org>
@@ -19,14 +20,15 @@
   * @description The controller for manage a single requisition (add/edit)
   *
   * @requires $scope Angular local scope
-  * @requires $filter Angular requisitions list filter
+  * @requires $filter Angular filter
+  * @requires $cookies Angular cookies
   * @requires $window Document window
   * @requires $routeParams Angular route parameters
   * @requires RequisitionsService The requisitions service
   * @requires SynchronizeService The synchronize service
   * @requires growl The growl plugin for instant notifications
   */
-  .controller('RequisitionController', ['$scope', '$filter', '$window', '$routeParams', 'RequisitionsService', 'SynchronizeService', 'growl', function($scope, $filter, $window, $routeParams, RequisitionsService, SynchronizeService, growl) {
+  .controller('RequisitionController', ['$scope', '$filter', '$cookies', '$window', '$routeParams', 'RequisitionsService', 'SynchronizeService', 'growl', function($scope, $filter, $cookies, $window, $routeParams, RequisitionsService, SynchronizeService, growl) {
 
     /**
     * @description The timing status.
@@ -93,7 +95,7 @@
     * @description The total amount of items for pagination (defaults to 0)
     *
     * @ngdoc property
-    * @name RequisitionController#maxSize
+    * @name RequisitionController#totalItems
     * @propertyOf RequisitionController
     * @returns {integer} The total items
     */
@@ -144,7 +146,20 @@
     * @methodOf RequisitionController
     */
     $scope.synchronize = function() {
-      SynchronizeService.synchronize($scope.foreignSource, $scope.errorHandler);
+      SynchronizeService.synchronize($scope.requisition, $scope.errorHandler);
+    };
+
+    /**
+    * @description Returns the vertical layout suffix for nodes if enabled
+    *
+    * @name RequisitionController:getVerticalLayout
+    * @ngdoc method
+    * @methodOf RequisitionController
+    * @returns {string} URL suffix for vertical layout if enabled.
+    */
+    $scope.getVerticalLayout = function() {
+      var isVertical = $cookies.get('use_requisitions_node_vertical_layout');
+      return isVertical == 'true' ? '/vertical' : '';
     };
 
     /**
@@ -155,7 +170,7 @@
     * @methodOf RequisitionController
     */
     $scope.addNode = function() {
-      $window.location.href = '#/requisitions/' + $scope.foreignSource + '/nodes/__new__';
+      $window.location.href = '#/requisitions/' + $scope.foreignSource + '/nodes/__new__' + $scope.getVerticalLayout();
     };
 
     /**
@@ -168,7 +183,7 @@
     * @param {object} The node's object to edit
     */
     $scope.editNode = function(node) {
-      $window.location.href = '#/requisitions/' + $scope.foreignSource + '/nodes/' + node.foreignId;
+      $window.location.href = '#/requisitions/' + $scope.foreignSource + '/nodes/' + node.foreignId + $scope.getVerticalLayout();
     };
 
     /**
@@ -193,22 +208,74 @@
       });
     };
 
+   /**
+    * @description Updates the pagination variables for the nodes.
+    *
+    * @name RequisitionController:updateFilteredNodes
+    * @ngdoc method
+    * @methodOf RequisitionController
+    */
+    $scope.updateFilteredNodes = function() {
+      $scope.currentPage = 1;
+      $scope.totalItems = $scope.filteredNodes.length;
+      $scope.numPages = Math.ceil($scope.totalItems / $scope.pageSize);
+    };
+
+    /**
+    * @description Refreshes the deployed statistics for the requisition from the server
+    *
+    * @name RequisitionController:refreshDeployedStats
+    * @ngdoc method
+    * @methodOf RequisitionController
+    */
+    $scope.refreshDeployedStats = function() {
+      RequisitionsService.startTiming();
+      RequisitionsService.updateDeployedStatsForRequisition($scope.requisition).then(
+        function() { // success
+          growl.success('The deployed statistics has been updated.');
+        },
+        $scope.errorHandler
+      );
+    };
+
+    /**
+    * @description Refreshes the currently loaded requisition from the server
+    *
+    * @name RequisitionController:refreshRequisition
+    * @ngdoc method
+    * @methodOf RequisitionController
+    */
+    $scope.refreshRequisition = function() {
+      bootbox.confirm('Are you sure you want to reload the requisition?<br/>All current changes will be lost.', function(ok) {
+        if (ok) {
+          RequisitionsService.startTiming();
+          $scope.requisition = new Requisition({});
+          RequisitionsService.removeRequisitionFromCache();
+          $scope.initialize(function() {
+            $scope.refreshDeployedStats();
+          });
+        }
+      });
+    };
+
     /**
     * @description Initializes the local requisition from the server
     *
     * @name RequisitionController:initialize
     * @ngdoc method
     * @methodOf RequisitionController
+    * @param {function} customHandler An optional method to be called after the initialization is done.
     */
-    $scope.initialize = function() {
+    $scope.initialize = function(customHandler) {
       growl.success('Retrieving requisition ' + $scope.foreignSource + '...');
       RequisitionsService.getRequisition($scope.foreignSource).then(
         function(requisition) { // success
-          $scope.currentPage = 1;
           $scope.requisition = requisition;
-          $scope.totalItems = requisition.nodes.length;
-          $scope.numPages = Math.ceil($scope.totalItems / $scope.pageSize);
           $scope.filteredNodes = requisition.nodes;
+          $scope.updateFilteredNodes();
+          if (customHandler != null) {
+            customHandler();
+          }
         },
         $scope.errorHandler
       );
@@ -217,15 +284,13 @@
     /**
     * @description Watch for filter changes in order to update the nodes list and updates the pagination control
     *
-    * @name RequisitionController:regFilter
+    * @name RequisitionController:reqFilter
     * @ngdoc event
     * @methodOf RequisitionController
     */
     $scope.$watch('reqFilter', function() {
-      $scope.currentPage = 1;
       $scope.filteredNodes = $filter('filter')($scope.requisition.nodes, $scope.reqFilter);
-      $scope.totalItems = $scope.filteredNodes.length;
-      $scope.numPages = Math.ceil($scope.totalItems / $scope.pageSize);
+      $scope.updateFilteredNodes();
     });
 
     // Initialization

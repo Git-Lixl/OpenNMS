@@ -242,6 +242,26 @@ external JMS listener.
 %{extrainfo2}
 
 
+%package plugin-provisioning-map
+Summary:	Obsolete: Map Provisioning Adapter
+Group:		Applications/System
+Requires(pre):	%{name}-core = %{version}-%{release}
+Requires:	%{name}-core = %{version}-%{release}
+
+%description plugin-provisioning-map
+The map provisioning adapter is no longer part of OpenNMS.
+
+
+%package plugin-provisioning-link
+Summary:	Obsolete: Link Provisioning Adapter
+Group:		Applications/System
+Requires(pre):	%{name}-core = %{version}-%{release}
+Requires:	%{name}-core = %{version}-%{release}
+
+%description plugin-provisioning-link
+The map provisioning adapter is no longer part of OpenNMS.
+
+
 %package plugin-provisioning-dns
 Summary:	DNS Provisioning Adapter
 Group:		Applications/System
@@ -448,7 +468,6 @@ VTD-XML is very fast GPL library for parsing XMLs with XPath Suppoer.
 %{extrainfo}
 %{extrainfo2}
 
-
 %prep
 
 tar -xvzf $RPM_SOURCE_DIR/%{name}-source-%{version}-%{release}.tar.gz -C $RPM_BUILD_DIR
@@ -645,7 +664,6 @@ find $RPM_BUILD_ROOT%{instprefix}/lib ! -type d | \
 	sed -e "s|^$RPM_BUILD_ROOT|%attr(755,root,root) |" | \
 	grep -v 'gnu-crypto' | \
 	grep -v 'jdhcp' | \
-	grep -v 'jira' | \
 	grep -v 'jradius' | \
 	grep -v 'ncs-' | \
 	grep -v 'opennms-alarm-northbounder-jms' | \
@@ -666,6 +684,7 @@ find $RPM_BUILD_ROOT%{instprefix}/lib ! -type d | \
 	sort >> %{_tmppath}/files.main
 find $RPM_BUILD_ROOT%{instprefix}/system ! -type d | \
     sed -e "s|^$RPM_BUILD_ROOT|%attr(755,root,root) |" | \
+	grep -v 'jira-' | \
     sort >> %{_tmppath}/files.main
 # Put the etc, lib, and system subdirectories into the package
 find $RPM_BUILD_ROOT%{instprefix}/etc $RPM_BUILD_ROOT%{instprefix}/lib $RPM_BUILD_ROOT%{instprefix}/system -type d | \
@@ -775,7 +794,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files plugin-ticketer-jira
 %defattr(664 root root 775)
-%{instprefix}/lib/jira-*.jar
+%{instprefix}/system/org/opennms/features/jira-troubleticketer/*/jira-*.jar
+%{instprefix}/system/org/opennms/features/jira-client/*/jira-*.jar
 %config(noreplace) %{instprefix}/etc/jira.properties
 %{sharedir}/etc-pristine/jira.properties
 
@@ -819,7 +839,6 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{instprefix}/etc/examples/3gpp-juniper/xml-*.xml
 %config(noreplace) %{instprefix}/etc/examples/3gpp-juniper/*datacollection*/3gpp*
 %config(noreplace) %{instprefix}/etc/examples/3gpp-juniper/snmp-graph.properties.d/3gpp*
-%config(noreplace) %{instprefix}/etc/examples/opennms-mx4j/*
 %{instprefix}/lib/org.opennms.protocols.xml-*.jar
 %attr(755,root,root) %{instprefix}/contrib/xml-collector/3gpp*
 %{sharedir}/etc-pristine/xml-*.xml
@@ -972,9 +991,13 @@ if [ -d "$ROOT_INST/data" ]; then
 fi
 echo "done"
 
+if [ ! -e "$ROOT_INST/etc/java.conf" ]; then
+	"$ROOT_INST/bin/runjava" "-s"
+fi
+
 echo ""
 echo " *** Installation complete.  You must still run the installer at"
-echo " *** \$OPENNMS_HOME/bin/install to be sure your database is up"
+echo " *** \$OPENNMS_HOME/bin/install -dis to be sure your database is up"
 echo " *** to date before you start %{_descr}.  See the install guide at"
 echo " *** http://www.opennms.org/wiki/Installation:RPM and the"
 echo " *** release notes for details."

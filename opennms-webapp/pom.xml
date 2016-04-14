@@ -71,7 +71,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.16</version>
         <configuration>
           <skipITs>${skipITs}</skipITs>
           <reuseForks>false</reuseForks>
@@ -555,6 +554,12 @@
       <scope>${onmsLibScope}</scope>
     </dependency>
     <dependency>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>jrrd2-dependencies</artifactId>
+      <scope>${onmsLibScope}</scope>
+      <type>pom</type>
+    </dependency>
+    <dependency>
       <groupId>org.opennms</groupId>
       <artifactId>opennms-rrdtool-api</artifactId>
       <scope>${onmsLibScope}</scope>
@@ -670,6 +675,12 @@
       <scope>${onmsLibScope}</scope>
     </dependency>
     <dependency>
+      <groupId>org.opennms.features</groupId>
+      <artifactId>org.opennms.features.discovery</artifactId>
+      <version>${project.version}</version>
+      <scope>${onmsLibScope}</scope>
+    </dependency>
+    <dependency>
       <groupId>org.opennms.features.poller</groupId>
       <artifactId>org.opennms.features.poller.remote</artifactId>
       <scope>${onmsLibScope}</scope>
@@ -717,6 +728,12 @@
     <dependency>
       <groupId>org.opennms.features</groupId>
       <artifactId>org.opennms.features.system-report</artifactId>
+      <scope>${onmsLibScope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features.bsm</groupId>
+      <artifactId>org.opennms.features.bsm.service.api</artifactId>
+      <version>${project.version}</version>
       <scope>${onmsLibScope}</scope>
     </dependency>
 

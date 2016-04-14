@@ -52,7 +52,7 @@
   
   public void init() throws ServletException {
     m_webAppContext = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
-    m_resourceService = (ResourceService) m_webAppContext.getBean("resourceService", ResourceService.class);
+    m_resourceService = m_webAppContext.getBean("resourceService", ResourceService.class);
   }
 %>
 
@@ -259,8 +259,6 @@ if (request.isUserInRole( Authentication.ROLE_ADMIN )) {
         <jsp:param name="ifIndex" value="<%=ifIndex%>" />
       </jsp:include>
     <% } %>
-    <!-- STP Info box -->
-    <jsp:include page="/includes/interfaceSTP-box.jsp" flush="false" />
 
   </div> <!-- right content -->
 

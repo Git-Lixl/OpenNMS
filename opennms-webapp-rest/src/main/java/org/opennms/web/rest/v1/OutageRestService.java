@@ -29,6 +29,7 @@
 package org.opennms.web.rest.v1;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -38,6 +39,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.opennms.core.criteria.Alias.JoinType;
@@ -46,6 +48,7 @@ import org.opennms.core.criteria.restrictions.Restrictions;
 import org.opennms.netmgt.dao.api.OutageDao;
 import org.opennms.netmgt.model.OnmsOutage;
 import org.opennms.netmgt.model.OnmsOutageCollection;
+import org.opennms.netmgt.model.outage.OutageSummary;
 import org.opennms.netmgt.model.outage.OutageSummaryCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -91,9 +94,11 @@ public class OutageRestService extends OnmsRestService {
             if (parms.containsKey("limit")) {
                 limit = Integer.parseInt(parms.getFirst("limit"));
             }
-            return Response.ok(new OutageSummaryCollection(m_outageDao.getNodeOutageSummaries(limit))).build();
+            final List<OutageSummary> collection = m_outageDao.getNodeOutageSummaries(limit);
+            return collection == null ? Response.status(Status.NOT_FOUND).build() : Response.ok(new OutageSummaryCollection(collection)).build();
         } else {
-            return Response.ok(m_outageDao.get(Integer.valueOf(outageId))).build();
+            final OnmsOutage outage = m_outageDao.get(Integer.valueOf(outageId));
+            return outage == null ? Response.status(Status.NOT_FOUND).build() : Response.ok(outage).build();
         }
     }
 

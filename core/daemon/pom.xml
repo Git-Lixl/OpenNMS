@@ -16,6 +16,26 @@
   <properties>
     <skipITs>true</skipITs>
   </properties>
+  <profiles>
+    <profile>
+      <id>default-tools.jar</id>
+      <activation>
+        <property>
+          <name>java.vendor</name>
+          <value>Oracle Corporation</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.sun</groupId>
+          <artifactId>tools</artifactId>
+          <version>1.8.0</version>
+          <scope>system</scope>
+          <systemPath>${java.home}/../lib/tools.jar</systemPath>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
   <build>
     <plugins>
       <plugin>
@@ -27,6 +47,8 @@
             <Bundle-RequiredExecutionEnvironment>JavaSE-1.8</Bundle-RequiredExecutionEnvironment>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Version>${project.version}</Bundle-Version>
+            <!-- Declare the Attach API as an optional dependency -->
+            <Import-Package>com.sun.tools.attach;resolution:=optional,*</Import-Package>
             <Export-Package>org.opennms.netmgt.daemon.*;org.opennms.netmgt.vmmgr.*;version="${project.version}"</Export-Package>
           </instructions>
         </configuration>
@@ -50,8 +72,16 @@
   </build>
   <dependencies>
     <dependency>
+      <groupId>com.sun</groupId>
+      <artifactId>tools</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.opennms.core</groupId>
       <artifactId>org.opennms.core.logging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-bootstrap</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opennms</groupId>
@@ -103,6 +133,7 @@
     <dependency>
       <groupId>mx4j</groupId>
       <artifactId>mx4j-tools</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

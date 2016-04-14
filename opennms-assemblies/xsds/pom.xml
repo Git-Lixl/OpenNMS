@@ -57,6 +57,12 @@
       <classifier>xsds</classifier>
     </dependency>
     <dependency>
+      <groupId>org.opennms.features.bsm</groupId>
+      <artifactId>org.opennms.features.bsm.rest.api</artifactId>
+      <version>${project.version}</version>
+      <classifier>xsds</classifier>
+    </dependency>
+    <dependency>
       <groupId>org.opennms</groupId>
       <artifactId>opennms-config-jaxb</artifactId>
       <version>${project.version}</version>
@@ -137,6 +143,42 @@
     <dependency>
       <groupId>org.opennms.protocols</groupId>
       <artifactId>org.opennms.protocols.xmp</artifactId>
+      <version>${project.version}</version>
+      <classifier>xsds</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-alarm-api</artifactId>
+      <version>${project.version}</version>
+      <classifier>xsds</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-alarm-northbounder-email</artifactId>
+      <version>${project.version}</version>
+      <classifier>xsds</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-alarm-northbounder-syslog</artifactId>
+      <version>${project.version}</version>
+      <classifier>xsds</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-alarm-northbounder-snmptrap</artifactId>
+      <version>${project.version}</version>
+      <classifier>xsds</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-alarm-northbounder-jms</artifactId>
+      <version>${project.version}</version>
+      <classifier>xsds</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features</groupId>
+      <artifactId>org.opennms.features.wsman</artifactId>
       <version>${project.version}</version>
       <classifier>xsds</classifier>
     </dependency>

@@ -11,8 +11,11 @@
   <name>OpenNMS Features</name>
   <modules>
 
-    <!-- ActiveMQ broker and JMS features -->
+    <!-- ActiveMQ broker -->
     <module>activemq</module>
+
+    <!-- AMQP Event Gateway and Alarm Northbounder -->
+    <module>amqp</module>
 
     <!-- OpenNMS Provisioning API and implementations -->
     <module>provisioning</module>
@@ -23,10 +26,14 @@
     <!-- Events -->
     <module>events</module>
 
+    <!-- Executor factories -->
+    <module>executor-factory</module>
+
     <!-- OpenNMS Collection API and implementations -->
     <module>collection</module>
     <module>jdbc-collector</module>
     <module>juniper-tca-collector</module>
+    <module>wsman</module>
 
     <!-- Discovery -->
     <module>discovery</module>
@@ -45,6 +52,9 @@
 
     <!-- OpenNMS Resource CLI tool -->
     <module>resource-cli</module>
+
+    <!-- OpenNMS rest commons module -->
+    <module>rest-commons</module>
 
     <!-- OpenNMS OSGI Core -->
     <module>opennms-osgi-core</module>
@@ -72,6 +82,7 @@
 
     <!-- Newts -->
     <module>newts</module>
+    <module>newts-repository-converter</module>
 
     <!-- GWT UI plugins -->
     <module>node-page-list</module>
@@ -90,6 +101,9 @@
     <!-- OpenNMS Vaadin Themes -->
     <module>themes</module>
 
+    <!-- Vaadin Feature -->
+    <module>vaadin</module>
+
     <!-- Generic Vaadin components -->
     <module>vaadin-components</module>
 
@@ -99,6 +113,9 @@
 
     <!-- OpenNMS Vaadin Surveillance Views -->
     <module>vaadin-surveillance-views</module>
+
+    <!-- Data Choices -->
+    <module>datachoices</module>
 
     <!-- Other projects -->
     <module>geocoder</module>
@@ -110,5 +127,12 @@
 
     <!-- Elasticsearch event-forwarder-->
     <module>elasticsearch</module>
+
+    <!-- Business Service Monitor -->
+    <module>bsm</module>
+
+    <!-- Minion -->
+    <module>minion</module>
+    <module>scv</module>
   </modules>
 </project>

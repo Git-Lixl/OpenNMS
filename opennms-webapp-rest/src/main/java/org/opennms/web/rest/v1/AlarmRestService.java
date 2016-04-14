@@ -51,6 +51,7 @@ import org.opennms.netmgt.model.AckAction;
 import org.opennms.netmgt.model.OnmsAcknowledgment;
 import org.opennms.netmgt.model.OnmsAlarm;
 import org.opennms.netmgt.model.OnmsAlarmCollection;
+import org.opennms.netmgt.model.alarm.AlarmSummary;
 import org.opennms.netmgt.model.alarm.AlarmSummaryCollection;
 import org.opennms.web.api.Authentication;
 import org.opennms.web.rest.support.MultivaluedMapImpl;
@@ -81,12 +82,14 @@ public class AlarmRestService extends AlarmRestServiceBase {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_ATOM_XML})
     @Path("{alarmId}")
     @Transactional
-    public Response getAlarm(@Context SecurityContext securityContext, @PathParam("alarmId") final String alarmId) {
+    public Response getAlarm(@Context SecurityContext securityContext, @PathParam("alarmId") final Integer alarmId) {
         assertUserReadCredentials(securityContext);
         if ("summaries".equals(alarmId)) {
-            return Response.ok(new AlarmSummaryCollection(m_alarmDao.getNodeAlarmSummaries())).build();
+            final List<AlarmSummary> collection = m_alarmDao.getNodeAlarmSummaries();
+            return collection == null ? Response.status(Status.NOT_FOUND).build() : Response.ok(new AlarmSummaryCollection(collection)).build();
         } else {
-            return Response.ok(m_alarmDao.get(Integer.valueOf(alarmId))).build();
+            final OnmsAlarm alarm = m_alarmDao.get(alarmId);
+            return alarm == null ? Response.status(Status.NOT_FOUND).build() : Response.ok(alarm).build();
         }
     }
 
@@ -142,12 +145,12 @@ public class AlarmRestService extends AlarmRestServiceBase {
     @Path("{alarmId}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
-    public Response updateAlarm(@Context final UriInfo uriInfo, @Context final SecurityContext securityContext, @PathParam("alarmId") final Integer alarmId, final MultivaluedMapImpl formProperties) {
+    public Response updateAlarm(@Context final SecurityContext securityContext, @PathParam("alarmId") final Integer alarmId, final MultivaluedMapImpl formProperties) {
         writeLock();
 
         try {
             if (alarmId == null) {
-                throw new IllegalArgumentException("Unable to determine alarm ID to update based on query path.");
+                return getBadRequestResponse("Unable to determine alarm ID to update based on query path.");
             }
 
             final String ackValue = formProperties.getFirst("ack");
@@ -161,7 +164,7 @@ public class AlarmRestService extends AlarmRestServiceBase {
 
             final OnmsAlarm alarm = m_alarmDao.get(alarmId);
             if (alarm == null) {
-                throw new IllegalArgumentException("Unable to locate alarm with ID '" + alarmId + "'");
+                return getBadRequestResponse("Unable to locate alarm with ID '" + alarmId + "'");
             }
 
             final String ackUser = ackUserValue == null ? securityContext.getUserPrincipal().getName() : ackUserValue;
@@ -184,10 +187,10 @@ public class AlarmRestService extends AlarmRestServiceBase {
                     acknowledgement.setAckAction(AckAction.CLEAR);
                 }
             } else {
-                throw new IllegalArgumentException("Must supply one of the 'ack', 'escalate', or 'clear' parameters, set to either 'true' or 'false'.");
+                return getBadRequestResponse("Must supply one of the 'ack', 'escalate', or 'clear' parameters, set to either 'true' or 'false'.");
             }
             m_ackDao.processAck(acknowledgement);
-            return Response.seeOther(getRedirectUri(uriInfo)).build();
+            return Response.noContent().build();
         } finally {
             writeUnlock();
         }
@@ -204,7 +207,7 @@ public class AlarmRestService extends AlarmRestServiceBase {
     @PUT
     @Transactional
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response updateAlarms(@Context final UriInfo uriInfo, @Context final SecurityContext securityContext, final MultivaluedMapImpl formProperties) {
+    public Response updateAlarms(@Context final SecurityContext securityContext, final MultivaluedMapImpl formProperties) {
         writeLock();
 
         try {
@@ -243,16 +246,12 @@ public class AlarmRestService extends AlarmRestServiceBase {
                         acknowledgement.setAckAction(AckAction.CLEAR);
                     }
                 } else {
-                    throw new IllegalArgumentException("Must supply one of the 'ack', 'escalate', or 'clear' parameters, set to either 'true' or 'false'.");
+                    throw getException(Status.BAD_REQUEST, "Must supply one of the 'ack', 'escalate', or 'clear' parameters, set to either 'true' or 'false'.");
                 }
                 m_ackDao.processAck(acknowledgement);
             }
 
-            if (alarms.size() == 1) {
-                return Response.seeOther(getRedirectUri(uriInfo, alarms.get(0).getId())).build();
-            } else {
-                return Response.seeOther(getRedirectUri(uriInfo)).build();
-            }
+            return alarms == null || alarms.isEmpty() ? Response.notModified().build() : Response.noContent().build();
         } finally {
             writeUnlock();
         }
@@ -271,7 +270,7 @@ public class AlarmRestService extends AlarmRestServiceBase {
             return;
         }
         // otherwise
-        throw new WebApplicationException(new IllegalArgumentException("User '" + currentUser + "', is not allowed to read alarms."), Status.FORBIDDEN);
+        throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("User '" + currentUser + "', is not allowed to read alarms.").type(MediaType.TEXT_PLAIN).build());
     }
 
     private static void assertUserEditCredentials(final SecurityContext securityContext, final String ackUser) {
@@ -283,7 +282,7 @@ public class AlarmRestService extends AlarmRestServiceBase {
         }
         if (securityContext.isUserInRole(Authentication.ROLE_READONLY)) {
             // read only is not allowed to edit
-            throw new WebApplicationException(new IllegalArgumentException("User '" + currentUser + "', is a read-only user!"), Status.FORBIDDEN);
+            throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("User '" + currentUser + "', is a read-only user!").type(MediaType.TEXT_PLAIN).build());
         }
         if (securityContext.isUserInRole(Authentication.ROLE_REST) ||
                 securityContext.isUserInRole(Authentication.ROLE_USER) ||
@@ -295,7 +294,7 @@ public class AlarmRestService extends AlarmRestServiceBase {
             }
         }
         // otherwise
-        throw new WebApplicationException(new IllegalArgumentException("User '" + currentUser + "', is not allowed to perform updates to alarms as user '" + ackUser + "'"), Status.FORBIDDEN);
+        throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("User '" + currentUser + "', is not allowed to perform updates to alarms as user '" + ackUser + "'").type(MediaType.TEXT_PLAIN).build());
     }
 
 }

@@ -33,7 +33,7 @@ import org.opennms.features.vaadin.jmxconfiggenerator.data.SelectableBeanItemCon
 import org.opennms.features.vaadin.jmxconfiggenerator.data.SelectionChangedListener;
 import org.opennms.features.vaadin.jmxconfiggenerator.data.SelectionValueChangedListener;
 import org.opennms.features.vaadin.jmxconfiggenerator.data.UiModel;
-import org.opennms.features.vaadin.jmxconfiggenerator.ui.ConfirmationDialog;
+import org.opennms.netmgt.vaadin.core.ConfirmationDialog;
 import org.opennms.features.vaadin.jmxconfiggenerator.ui.mbeans.validation.ValidationManager;
 import org.opennms.features.vaadin.jmxconfiggenerator.ui.mbeans.validation.ValidationResult;
 import org.opennms.xmlns.xsd.config.jmx_datacollection.Attrib;
@@ -265,7 +265,6 @@ public class MBeansController implements SelectionManager, NameProvider, Selecti
 		for (Object childItemId : mbeansContainer.getChildren(itemId)) {
 			handleSelectDeselect(mbeansContainer.getItem(childItemId), childItemId, select);
 		}
-		defaultNameProvider.invalidateCache();
 		validate(); // we changed the amount of elements considered for validation, so we have to update everything
 	}
 
@@ -361,7 +360,6 @@ public class MBeansController implements SelectionManager, NameProvider, Selecti
 		mbeansTree.setComponentError(null); // reset any errors which might be there
 		currentSelection.reset();
 		mbeansContentPanel.reset();
-		defaultNameProvider.invalidateCache();
 		for (AttributesContainerCache eachCache : attributesContainerCacheMap.values()) {
 			eachCache.clear();
 		}

@@ -37,6 +37,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.opennms.core.criteria.CriteriaBuilder;
@@ -74,15 +76,19 @@ public class AcknowledgmentRestService extends OnmsRestService {
     /**
      * <p>getAcknowledgment</p>
      *
-     * @param alarmId a {@link java.lang.String} object.
+     * @param alarmId a {@link java.lang.Integer} object.
      * @return a {@link org.opennms.netmgt.model.OnmsAcknowledgment} object.
      */
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_ATOM_XML})
     @Path("{id}")
     @Transactional
-    public OnmsAcknowledgment getAcknowledgment(@PathParam("id") String alarmId) {
-        return m_ackDao.get(new Integer(alarmId));
+    public OnmsAcknowledgment getAcknowledgment(@PathParam("id") Integer alarmId) {
+        final OnmsAcknowledgment ack = m_ackDao.get(alarmId);
+        if (ack == null) {
+            throw getException(Status.NOT_FOUND, "Acknowledgement object {} was not found.", Integer.toString(alarmId));
+        }
+        return ack;
     }
     
     /**
@@ -124,12 +130,12 @@ public class AcknowledgmentRestService extends OnmsRestService {
      *
      * @param alarmId a {@link java.lang.String} object.
      * @param action a {@link java.lang.String} object.
-     * @return a {@link org.opennms.netmgt.model.OnmsAcknowledgment} object.
+     * @return a {@link javax.ws.rs.core.Response} object.
      */
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
-    public OnmsAcknowledgment acknowledge(MultivaluedMap<String, String> formParams) {
+    public Response acknowledge(MultivaluedMap<String, String> formParams) {
         String alarmId = formParams.getFirst("alarmId");
         String notifId = formParams.getFirst("notifId");
         String action = formParams.getFirst("action");
@@ -138,14 +144,28 @@ public class AcknowledgmentRestService extends OnmsRestService {
         }
         OnmsAcknowledgment ack = null;
         if (alarmId == null && notifId == null) {
-            throw new IllegalArgumentException("You must supply either an alarmId or notifId!");
+            return getBadRequestResponse("You must supply either an alarmId or notifId");
         } else if (alarmId != null && notifId != null) {
-            throw new IllegalArgumentException("You cannot supply both an alarmId and a notifId!");
+            return getBadRequestResponse("You cannot supply both an alarmId and a notifId");
         } else if (alarmId != null) {
-            final OnmsAlarm alarm = m_alarmDao.get(Integer.valueOf(alarmId));
+            final Integer numericAlarmId = getNumericValue(alarmId);
+            if (numericAlarmId == null) {
+                return getBadRequestResponse("The alarmId has to be an integer value");
+            }
+            final OnmsAlarm alarm = m_alarmDao.get(numericAlarmId);
+            if (alarm == null) {
+                return Response.notModified().build();
+            }
             ack = new OnmsAcknowledgment(alarm);
         } else if (notifId != null) {
-            final OnmsNotification notification = m_notificationDao.get(Integer.valueOf(notifId));
+            final Integer numericNotifId = getNumericValue(notifId);
+            if (numericNotifId == null) {
+                return getBadRequestResponse("The notifId has to be an integer value");
+            }
+            final OnmsNotification notification = m_notificationDao.get(numericNotifId);
+            if (notification == null) {
+                return Response.notModified().build();
+            }
             ack = new OnmsAcknowledgment(notification);
         }
         
@@ -158,12 +178,11 @@ public class AcknowledgmentRestService extends OnmsRestService {
         } else if ("esc".equals(action)) {
             ack.setAckAction(AckAction.ESCALATE);
         } else {
-            throw new IllegalArgumentException(
-            "Must supply the 'action' parameter, set to either 'ack, 'unack', 'clear', or 'esc'");
+            return getBadRequestResponse("Must supply the action parameter, set to either 'ack, 'unack', 'clear', or 'esc'");
         }
 
         m_ackDao.processAck(ack);
-        return ack;
+        return Response.ok(ack).build();
     }
 
     private static CriteriaBuilder getQueryFilters(MultivaluedMap<String,String> params) {

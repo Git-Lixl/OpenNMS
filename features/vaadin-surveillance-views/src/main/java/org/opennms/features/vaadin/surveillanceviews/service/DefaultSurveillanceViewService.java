@@ -410,18 +410,11 @@ public class DefaultSurveillanceViewService implements SurveillanceViewService {
      */
     @Override
     public Map<OnmsResourceType, List<OnmsResource>> getResourceTypeMapForNodeId(int nodeId) {
-        return getResourceTypeMapForNodeId(String.valueOf(nodeId));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Map<OnmsResourceType, List<OnmsResource>> getResourceTypeMapForNodeId(final String nodeId) {
         return m_transactionOperations.execute(new TransactionCallback<Map<OnmsResourceType, List<OnmsResource>>>() {
             @Override
             public Map<OnmsResourceType, List<OnmsResource>> doInTransaction(TransactionStatus transactionStatus) {
-                OnmsResource resource = m_resourceDao.getResourceById("node[" + nodeId + "]");
+                OnmsNode node = m_nodeDao.get(nodeId);
+                OnmsResource resource = m_resourceDao.getResourceForNode(node);
 
                 Map<OnmsResourceType, List<OnmsResource>> resourceTypeMap = new LinkedHashMap<OnmsResourceType, List<OnmsResource>>();
                 for (OnmsResource childResource : resource.getChildResources()) {
@@ -434,6 +427,14 @@ public class DefaultSurveillanceViewService implements SurveillanceViewService {
                 return resourceTypeMap;
             }
         });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<OnmsResourceType, List<OnmsResource>> getResourceTypeMapForNodeId(final String nodeId) {
+        return getResourceTypeMapForNodeId(Integer.parseInt(nodeId));
     }
 
     /**
@@ -485,7 +486,7 @@ public class DefaultSurveillanceViewService implements SurveillanceViewService {
 
         View defaultView = SurveillanceViewProvider.getInstance().getDefaultView();
         if (defaultView == null) {
-            String message = "There is no default surveillance view and we could not find a surviellance view for the user's username ('" + username + "') or any of their groups";
+            String message = "There is no default surveillance view and we could not find a surveillance view for the user's username ('" + username + "') or any of their groups";
             LOG.warn(message);
             throw new ObjectRetrievalFailureException(View.class, message);
         }

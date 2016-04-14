@@ -18,7 +18,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.16</version>
         <configuration>
           <skipITs>${skipITs}</skipITs>
           <argLine>-Xmx1g -Djava.endorsed.dirs=${basedir}/target/endorsed</argLine>
@@ -118,6 +117,21 @@
     <dependency>
       <groupId>org.opennms.features.collection</groupId>
       <artifactId>org.opennms.features.collection.persistence.rrd</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-alarm-northbounder-email</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-alarm-northbounder-syslog</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-alarm-northbounder-snmptrap</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

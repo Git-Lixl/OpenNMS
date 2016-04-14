@@ -19,14 +19,14 @@
   * @requires $scope Angular local scope
   * @requires $routeParams Angular route parameters
   * @requires $window Document window
-  * @requires $modal Angular modal
+  * @requires $uibModal Angular UI modal
+  * @required filterFilter the Angular filter
   * @requires RequisitionsService The requisitions service
-  * @requires EmptyTypeaheadService The empty typeahead Service
   * @requires growl The growl plugin for instant notifications
   *
   * @description The controller for manage foreign source definitions (i.e. policies and detectors)
   */
-  .controller('ForeignSourceController', ['$scope', '$routeParams', '$window', '$modal', 'RequisitionsService', 'EmptyTypeaheadService', 'growl', function($scope, $routeParams, $window, $modal, RequisitionsService, EmptyTypeaheadService, growl) {
+  .controller('ForeignSourceController', ['$scope', '$routeParams', '$window', '$uibModal', 'filterFilter', 'RequisitionsService', 'growl', function($scope, $routeParams, $window, $uibModal, filterFilter, RequisitionsService, growl) {
 
     /**
     * @description The timing status.
@@ -57,25 +57,97 @@
     * @propertyOf ForeignSourceController
     * @returns {object} The foreign source definition
     */
-    $scope.foreignSourceDef = {};
+    $scope.foreignSourceDef = { detectors: [], policies: [] };
 
     /**
-    * @description fieldComparator method from EmptyTypeaheadService
+    * @description The filteres object (used to track the content of the search fields)
     *
-    * @ngdoc method
-    * @name ForeignSourceController#fieldComparator
-    * @methodOf AssetController
+    * @ngdoc property
+    * @name ForeignSourceController#filters
+    * @propertyOf ForeignSourceController
+    * @returns {object} The filteres object
     */
-    $scope.fieldComparator = EmptyTypeaheadService.fieldComparator;
+    $scope.filters = { detector: null, policy: null };
 
     /**
-    * @description onFocus method from EmptyTypeaheadService
+    * @description The filtered list of detectors
     *
-    * @ngdoc method
-    * @name ForeignSourceController#onFocus
-    * @methodOf AssetController
+    * @ngdoc property
+    * @name ForeignSourceController#filteredDetectors
+    * @propertyOf ForeignSourceController
+    * @returns {array} The filtered array
     */
-    $scope.onFocus = EmptyTypeaheadService.onFocus;
+    $scope.filteredDetectors = [];
+
+    /**
+    * @description The amount of detectors per page for pagination (defaults to 10)
+    *
+    * @ngdoc property
+    * @name ForeignSourceController#detectorsPageSize
+    * @propertyOf ForeignSourceController
+    * @returns {integer} The page size
+    */
+    $scope.detectorsPageSize = 10;
+
+    /**
+    * @description The maximum size of detector pages for pagination (defaults to 5)
+    *
+    * @ngdoc property
+    * @name ForeignSourceController#detectorsMaxSize
+    * @propertyOf ForeignSourceController
+    * @returns {integer} The maximum size
+    */
+    $scope.detectorsMaxSize = 5;
+
+    /**
+    * @description The total amount of detectors for pagination (defaults to 0)
+    *
+    * @ngdoc property
+    * @name ForeignSourceController#detectorsTotalItems
+    * @propertyOf ForeignSourceController
+    * @returns {integer} The total detectors
+    */
+    $scope.detectorsTotalItems = 0;
+
+    /**
+    * @description The filtered list of policies
+    *
+    * @ngdoc property
+    * @name ForeignSourceController#filteredPolicies
+    * @propertyOf ForeignSourceController
+    * @returns {array} The filtered array
+    */
+    $scope.filteredPolicies = [];
+
+    /**
+    * @description The amount of policies per page for pagination (defaults to 10)
+    *
+    * @ngdoc property
+    * @name ForeignSourceController#policiesPageSize
+    * @propertyOf ForeignSourceController
+    * @returns {integer} The page size
+    */
+    $scope.policiesPageSize = 10;
+
+    /**
+    * @description The maximum size of policies pages for pagination (defaults to 5)
+    *
+    * @ngdoc property
+    * @name ForeignSourceController#policiesMaxSize
+    * @propertyOf ForeignSourceController
+    * @returns {integer} The maximum size
+    */
+    $scope.policiesMaxSize = 5;
+
+    /**
+    * @description The total amount of policies for pagination (defaults to 0)
+    *
+    * @ngdoc property
+    * @name ForeignSourceController#policiesTotalItems
+    * @propertyOf ForeignSourceController
+    * @returns {integer} The total policies
+    */
+    $scope.policiesTotalItems = 0;
 
     /**
     * @description Goes to specific URL warning about changes if exist.
@@ -152,26 +224,60 @@
     };
 
     /**
+    * @description Returns the index of a policy
+    *
+    * @name ForeignSourceController:indexOfPolicy
+    * @ngdoc method
+    * @methodOf ForeignSourceController
+    * @param {object} policy The policy object
+    */
+    $scope.indexOfPolicy = function(policy) {
+      for (var i = 0; i < $scope.foreignSourceDef.policies.length; i++) {
+        if ($scope.foreignSourceDef.policies[i].name === policy.name) {
+          return i;
+        }
+      }
+      return -1;
+    };
+
+    /**
+    * @description Returns the index of a detector
+    *
+    * @name ForeignSourceController:indexOfDetector
+    * @ngdoc method
+    * @methodOf ForeignSourceController
+    * @param {object} policy The detector object
+    */
+    $scope.indexOfDetector = function(detector) {
+      for (var i = 0; i < $scope.foreignSourceDef.detectors.length; i++) {
+        if ($scope.foreignSourceDef.detectors[i].name === detector.name) {
+          return i;
+        }
+      }
+      return -1;
+    };
+
+    /**
     * @description Opens the modal window to add/edit a policy
     *
     * @name ForeignSourceController:editPolicy
     * @ngdoc method
     * @methodOf ForeignSourceController
-    * @param {integer} index The index of the policy to edit
+    * @param {object} policy The policy object to edit
     * @param {boolean} isNew true, if the policy is new
     */
-    $scope.editPolicy = function(index, isNew) {
+    $scope.editPolicy = function(policy, isNew) {
       var form = this.fsForm;
-      var policyToEdit = $scope.foreignSourceDef.policies[index];
-      $modal.open({
-        backdrop: true,
+      $uibModal.open({
+        backdrop: 'static',
+        keyboard: false,
         controller: 'PolicyController',
         templateUrl: 'views/policy.html',
         resolve: {
-          policy: function() { return angular.copy(policyToEdit); }
+          policy: function() { return angular.copy(policy); }
         }
       }).result.then(function(result) {
-        angular.copy(result, policyToEdit);
+        angular.copy(result, policy);
         form.$dirty = true;
       }, function() {
         if (isNew) {
@@ -186,11 +292,14 @@
     * @name ForeignSourceController:removePolicy
     * @ngdoc method
     * @methodOf ForeignSourceController
-    * @param {integer} index The index of the policy to remove
+    * @param {object} policy The policy object to remove
     */
-    $scope.removePolicy = function(index) {
-      $scope.foreignSourceDef.policies.splice(index, 1);
-      this.fsForm.$dirty = true;
+    $scope.removePolicy = function(policy) {
+      var index = $scope.indexOfPolicy(policy);
+      if (index > -1) {
+        $scope.foreignSourceDef.policies.splice(index, 1);
+        this.fsForm.$dirty = true;
+      }
     };
 
     /**
@@ -202,7 +311,8 @@
     */
     $scope.addPolicy = function() {
       $scope.foreignSourceDef.policies.push({ 'name': '', 'class': '', 'parameter': [] });
-      $scope.editPolicy($scope.foreignSourceDef.policies.length - 1, true);
+      var index = $scope.foreignSourceDef.policies.length - 1;
+      $scope.editPolicy($scope.foreignSourceDef.policies[index], true);
     };
 
     /**
@@ -211,21 +321,21 @@
     * @name ForeignSourceController:editDetector
     * @ngdoc method
     * @methodOf ForeignSourceController
-    * @param {integer} index The index of the detector to edit
+    * @param {object} detector The detector object to edit
     * @param {boolean} isNew true, if the detector is new
     */
-    $scope.editDetector = function(index, isNew) {
+    $scope.editDetector = function(detector, isNew) {
       var form = this.fsForm;
-      var detectorToEdit = $scope.foreignSourceDef.detectors[index];
-      $modal.open({
-        backdrop: true,
+      $uibModal.open({
+        backdrop: 'static',
+        keyboard: false,
         controller: 'DetectorController',
         templateUrl: 'views/detector.html',
         resolve: {
-          detector: function() { return angular.copy(detectorToEdit); }
+          detector: function() { return angular.copy(detector); }
         }
       }).result.then(function(result) {
-        angular.copy(result, detectorToEdit);
+        angular.copy(result, detector);
         form.$dirty = true;
       }, function() {
         if (isNew) {
@@ -240,11 +350,14 @@
     * @name ForeignSourceController:removeDetector
     * @ngdoc method
     * @methodOf ForeignSourceController
-    * @param {integer} index The index of the detector to remove
+    * @param {object} detector The detector object to remove
     */
-    $scope.removeDetector = function(index) {
-      $scope.foreignSourceDef.detectors.splice(index, 1);
-      this.fsForm.$dirty = true;
+    $scope.removeDetector = function(detector) {
+      var index = $scope.indexOfDetector(detector);
+      if (index > -1) {
+        $scope.foreignSourceDef.detectors.splice(index, 1);
+        this.fsForm.$dirty = true;
+      }
     };
 
     /**
@@ -256,7 +369,8 @@
     */
     $scope.addDetector = function() {
       $scope.foreignSourceDef.detectors.push({ 'name': '', 'class': '', 'parameter': [] });
-      $scope.editDetector($scope.foreignSourceDef.detectors.length - 1, true);
+      var index = $scope.foreignSourceDef.detectors.length - 1;
+      $scope.editDetector($scope.foreignSourceDef.detectors[index], true);
     };
 
     /**
@@ -279,26 +393,104 @@
     };
 
     /**
-    * @description Refreshes the local node from the server
+    * @description Resets to the default set of detectors and policies
     *
-    * @name ForeignSourceController:refresh
+    * @name ForeignSourceController:reset
     * @ngdoc method
     * @methodOf ForeignSourceController
     */
-    $scope.refresh = function() {
+    $scope.reset = function() {
+      bootbox.confirm('Are you sure you want to reset the foreign source definition to the default ?', function(ok) {
+        if (ok) {
+          RequisitionsService.startTiming();
+          RequisitionsService.deleteForeignSourceDefinition($scope.foreignSource).then(
+            function() { // success
+              growl.success('The foreign source definition for ' + $scope.foreignSource + 'has been reseted.');
+              $scope.initialize();
+            },
+            $scope.errorHandler
+          );
+        }
+      });
+    };
+
+    /**
+    * @description Updates the pagination variables for the policies.
+    *
+    * @name ForeignSourceController:updateFilteredPolicies
+    * @ngdoc method
+    * @methodOf ForeignSourceController
+    */
+    $scope.updateFilteredPolicies = function() {
+      $scope.policiesCurrentPage = 1;
+      $scope.policiesTotalItems = $scope.filteredPolicies.length;
+      $scope.policiesNumPages = Math.ceil($scope.policiesTotalItems / $scope.policiesPageSize);
+    };
+
+    /**
+    * @description Updates the pagination variables for the detectors.
+    *
+    * @name ForeignSourceController:updateFilteredDetectors
+    * @ngdoc method
+    * @methodOf ForeignSourceController
+    */
+    $scope.updateFilteredDetectors = function() {
+      $scope.detectorsCurrentPage = 1;
+      $scope.detectorsTotalItems = $scope.filteredDetectors.length;
+      $scope.detectorsNumPages = Math.ceil($scope.detectorsTotalItems / $scope.detectorsPageSize);
+    };
+
+    /**
+    * @description Initialized the local foreign source definition from the server
+    *
+    * @name ForeignSourceController:initialize
+    * @ngdoc method
+    * @methodOf ForeignSourceController
+    */
+    $scope.initialize = function() {
       growl.success('Retrieving definition for requisition ' + $scope.foreignSource + '...');
       RequisitionsService.getForeignSourceDefinition($scope.foreignSource).then(
-        function(data) { // success
-          $scope.foreignSourceDef = data;
+        function(foreignSourceDef) { // success
+          $scope.foreignSourceDef = foreignSourceDef;
+          // Updating pagination variables for detectors.
+          $scope.filteredDetectors = $scope.foreignSourceDef.detectors;
+          $scope.updateFilteredDetectors();
+          // Updating pagination variables for policies.
+          $scope.filteredPolicies = $scope.foreignSourceDef.policies;
+          $scope.updateFilteredPolicies();
         },
         $scope.errorHandler
       );
     };
 
+    /**
+    * @description Watch for filter changes in order to update the detector list and updates the pagination control
+    *
+    * @name ForeignSourceController:detectorFilter
+    * @ngdoc event
+    * @methodOf ForeignSourceController
+    */
+    $scope.$watch('filters.detector', function() {
+      $scope.filteredDetectors = filterFilter($scope.foreignSourceDef.detectors, $scope.filters.detector);
+      $scope.updateFilteredDetectors();
+    });
+
+    /**
+    * @description Watch for filter changes in order to update the policy list and updates the pagination control
+    *
+    * @name ForeignSourceController:policyFilter
+    * @ngdoc event
+    * @methodOf ForeignSourceController
+    */
+    $scope.$watch('filters.policy', function() {
+      $scope.filteredPolicies = filterFilter($scope.foreignSourceDef.policies, $scope.filters.policy);
+      $scope.updateFilteredPolicies();
+    });
+
     // Initialization
 
     if ($scope.foreignSource) {
-      $scope.refresh();
+      $scope.initialize();
     }
   }]);
 
