@@ -1,21 +1,20 @@
 package org.opennms.features.elasticsearch.eventforwarder.internal;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
-import org.apache.camel.component.elasticsearch.ElasticsearchConfiguration;
 import org.apache.camel.component.bean.BeanInvocation;
+import org.apache.camel.component.elasticsearch.ElasticsearchConstants;
 import org.opennms.netmgt.alarmd.api.NorthboundAlarm;
-import org.opennms.netmgt.events.api.EventConstants;
 import org.opennms.netmgt.model.OnmsSeverity;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.event.Parm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This bean is camel processor that translates the incoming OpenNMS event into a HashMap
@@ -110,8 +109,8 @@ public class ESHeaders {
             indexName = idxName.apply(remainder);
         }
         logger.trace("Computing indexName from @timestamp: " + body.get("@timestamp") + " yelds " + indexName);
-        exchange.getOut().setHeader(ElasticsearchConfiguration.PARAM_INDEX_NAME, indexName);
-        exchange.getOut().setHeader(ElasticsearchConfiguration.PARAM_INDEX_TYPE, indexType);
+        exchange.getOut().setHeader(ElasticsearchConstants.PARAM_INDEX_NAME, indexName);
+        exchange.getOut().setHeader(ElasticsearchConstants.PARAM_INDEX_TYPE, indexType);
         exchange.getOut().setBody(body);
     }
 
