@@ -30,8 +30,6 @@ package org.opennms.netmgt.collectd;
 
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.InetAddress;
-import java.nio.file.Path;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,22 +38,16 @@ import org.opennms.core.db.DataSourceFactory;
 import org.opennms.core.utils.AlphaNumeric;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.ParameterMap;
-import org.opennms.netmgt.collection.api.AttributeGroupType;
 import org.opennms.netmgt.collection.api.CollectionAgent;
-import org.opennms.netmgt.collection.api.CollectionAttribute;
-import org.opennms.netmgt.collection.api.CollectionAttributeType;
-import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.CollectionSet;
-import org.opennms.netmgt.collection.api.Persister;
 import org.opennms.netmgt.collection.api.ServiceCollector;
 import org.opennms.netmgt.collection.api.ServiceParameters.ParameterName;
-import org.opennms.netmgt.collection.support.AbstractCollectionAttribute;
-import org.opennms.netmgt.collection.support.AbstractCollectionAttributeType;
-import org.opennms.netmgt.collection.support.AbstractCollectionResource;
-import org.opennms.netmgt.collection.support.SingleResourceCollectionSet;
+import org.opennms.netmgt.collection.support.builder.AttributeType;
+import org.opennms.netmgt.collection.support.builder.CollectionSetBuilder;
+import org.opennms.netmgt.collection.support.builder.InterfaceLevelResource;
+import org.opennms.netmgt.collection.support.builder.NodeLevelResource;
 import org.opennms.netmgt.config.JMXDataCollectionConfigFactory;
 import org.opennms.netmgt.config.collectd.jmx.Attrib;
-import org.opennms.netmgt.config.collectd.jmx.Mbean;
 import org.opennms.netmgt.dao.jmx.JmxConfigDao;
 import org.opennms.netmgt.events.api.EventProxy;
 import org.opennms.netmgt.jmx.JmxCollector;
@@ -64,6 +56,7 @@ import org.opennms.netmgt.jmx.JmxSampleProcessor;
 import org.opennms.netmgt.jmx.JmxUtils;
 import org.opennms.netmgt.jmx.connection.JmxConnectors;
 import org.opennms.netmgt.jmx.impl.DefaultJmxCollector;
+import org.opennms.netmgt.jmx.samples.AbstractJmxSample;
 import org.opennms.netmgt.jmx.samples.JmxAttributeSample;
 import org.opennms.netmgt.jmx.samples.JmxCompositeSample;
 import org.opennms.netmgt.rrd.RrdRepository;
@@ -284,9 +277,13 @@ public abstract class JMXCollector implements ServiceCollector {
         final String collDir = JmxUtils.getCollectionDirectory(stringMap, friendlyName, serviceName);
         final int retries = ParameterMap.getKeyedInteger(map, ParameterName.RETRY.toString(), 3);
 
-        // result objects
-        final JMXCollectionResource collectionResource = new JMXCollectionResource(agent, collDir);
-        final SingleResourceCollectionSet collectionSet = new SingleResourceCollectionSet(collectionResource, new Date());
+        // Metrics collected from JMX are currently modeled as "interface" resources with
+        // the interface name set to the service name
+        final NodeLevelResource nodeResource = new NodeLevelResource(agent.getNodeId());
+        final InterfaceLevelResource ifResource = new InterfaceLevelResource(nodeResource, collDir);
+
+        // Used to gather the results
+        final CollectionSetBuilder collectionSetBuilder = new CollectionSetBuilder(agent);
 
         LOG.debug("connecting to {} on node ID {}", InetAddressUtils.str(ipaddr), nodeInfo.getNodeId());
 
@@ -302,47 +299,53 @@ public abstract class JMXCollector implements ServiceCollector {
             final JmxCollector jmxCollector = new DefaultJmxCollector();
             ((DefaultJmxCollector) jmxCollector).setJmxConfigDao(m_jmxConfigDao);
             jmxCollector.collect(config, new JmxSampleProcessor() {
-
-                private final Map<String, AttributeGroupType> groupNameAttributeGroupTypeMap = new HashMap<>();
-
                 @Override
                 public void process(JmxAttributeSample attributeSample) {
                     final String objectName = attributeSample.getMbean().getObjectname();
                     final String attributeName = attributeSample.getCollectedAttribute().getName();
-                    final AttributeGroupType attribGroupType = getAttributeGroupType(attributeSample.getMbean());
-
-                    JMXDataSource ds = nodeInfo.getDsMap().get(objectName + "|" + attributeName);
-                    JMXCollectionAttributeType attribType = new JMXCollectionAttributeType(ds, attribGroupType);
-                    collectionResource.setAttributeValue(attribType, attributeSample.getCollectedValueAsString());
+                    final JMXDataSource ds = nodeInfo.getDsMap().get(objectName + "|" + attributeName);
+                    addNumericAttributeToCollectionSet(ds, attributeSample);
                 }
 
                 @Override
                 public void process(JmxCompositeSample compositeSample) {
                     final String objectName = compositeSample.getMbean().getObjectname();
                     final String attributeName = compositeSample.getCollectedAttribute().getName();
-                    final AttributeGroupType attribGroupType = getAttributeGroupType(compositeSample.getMbean());
-
-                    JMXDataSource ds = nodeInfo.getDsMap().get(objectName + "|" + attributeName + "|" + compositeSample.getCompositeKey());
-                    JMXCollectionAttributeType attribType = new JMXCollectionAttributeType(ds, attribGroupType);
-                    collectionResource.setAttributeValue(attribType, compositeSample.getCollectedValueAsString());
+                    final JMXDataSource ds = nodeInfo.getDsMap().get(objectName + "|" + attributeName + "|" + compositeSample.getCompositeKey());
+                    addNumericAttributeToCollectionSet(ds, compositeSample);
                 }
 
-                private AttributeGroupType getAttributeGroupType(Mbean mbean) {
-                    //All JMX collected values are per node
-                    final String groupName = JmxUtils.getGroupName(stringMap, mbean);
-                    if (!groupNameAttributeGroupTypeMap.containsKey(groupName)) {
-                        final AttributeGroupType attribGroupType = new AttributeGroupType(fixGroupName(groupName), AttributeGroupType.IF_TYPE_ALL);
-                        groupNameAttributeGroupTypeMap.put(groupName, attribGroupType);
+                private void addNumericAttributeToCollectionSet(JMXDataSource ds, AbstractJmxSample sample) {
+                    final String groupName = fixGroupName(JmxUtils.getGroupName(stringMap, sample.getMbean()));
+
+                    // Only numeric data comes back from JMX in data collection
+                    final AttributeType type = AttributeType.parse(ds.getType());
+                    final String valueAsString = sample.getCollectedValueAsString();
+                    Double value = Double.NaN;
+                    if (valueAsString != null) {
+                        try {
+                            value = Double.parseDouble(valueAsString);
+                        } catch (NumberFormatException nfe) {
+                            // pass
+                        }
                     }
-                    return groupNameAttributeGroupTypeMap.get(groupName);
+
+                    // Construct the metric identifier (used by NRTG)
+                    String metricId = groupName;
+                    metricId = metricId.replace("_type_", ":type=");
+                    metricId = metricId.replace("_", ".");
+                    metricId = metricId.concat(".");
+                    metricId = metricId.concat(ds.getName());
+                    metricId = "JMX_".concat(metricId);
+
+                    collectionSetBuilder.withIdentifiedNumericAttribute(ifResource, groupName, ds.getName(), value, type, metricId);
                 }
             });
         } catch (final Exception e) {
             LOG.debug("{} Collector.collect: IOException while collecting address: {}", serviceName, agent.getAddress(), e);
         }
 
-        collectionSet.setStatus(ServiceCollector.COLLECTION_SUCCEEDED);
-        return collectionSet;
+        return collectionSetBuilder.build();
     }
 
     /**
@@ -449,112 +452,6 @@ public abstract class JMXCollector implements ServiceCollector {
         }
 
         return dsList;
-    }
-
-    private static class JMXCollectionAttributeType extends AbstractCollectionAttributeType {
-        private final JMXDataSource m_dataSource;
-        private final String m_name;
-
-        public JMXCollectionAttributeType(JMXDataSource dataSource, AttributeGroupType groupType) {
-            super(groupType);
-            m_dataSource = dataSource;
-            m_name = dataSource.getName();
-        }
-
-        @Override
-        public void storeAttribute(CollectionAttribute attribute, Persister persister) {
-            //Only numeric data comes back from JMX in data collection
-            persister.persistNumericAttribute(attribute);
-        }
-
-        @Override
-        public String getName() {
-            return m_name;
-        }
-
-        @Override
-        public String getType() {
-            return m_dataSource.getType();
-        }
-
-    }
-
-    private static class JMXCollectionAttribute extends AbstractCollectionAttribute {
-
-        private final String m_value;
-
-        JMXCollectionAttribute(JMXCollectionResource resource, CollectionAttributeType attribType, String value) {
-            super(attribType, resource);
-            m_value = value;
-        }
-
-        @Override
-        public Double getNumericValue() {
-            try {
-                return Double.parseDouble(m_value);
-            } catch (NumberFormatException|NullPointerException e) {
-                return null;
-            }
-        }
-
-        @Override
-        public String getStringValue() {
-            return m_value;
-        }
-
-        @Override
-        public String toString() {
-            return "alias " + getName() + ", value " + m_value + ", resource "
-                    + m_resource + ", attributeType " + m_attribType;
-        }
-
-        @Override
-        public String getMetricIdentifier() {
-            String metricId = m_attribType.getGroupType().getName();
-            metricId = metricId.replace("_type_", ":type=");
-            metricId = metricId.replace("_", ".");
-            metricId = metricId.concat(".");
-            metricId = metricId.concat(getName());
-            return "JMX_".concat(metricId);
-        }
-    }
-
-
-    public static class JMXCollectionResource extends AbstractCollectionResource {
-        private final String m_resourceName;
-        private final int m_nodeId;
-
-        public JMXCollectionResource(CollectionAgent agent, String resourceName) {
-            super(agent);
-            m_resourceName = resourceName;
-            m_nodeId = agent.getNodeId();
-        }
-
-        @Override
-        public String toString() {
-            return "node[" + m_nodeId + ']';
-        }
-
-        public void setAttributeValue(CollectionAttributeType type, String value) {
-            JMXCollectionAttribute attr = new JMXCollectionAttribute(this, type, value);
-            addAttribute(attr);
-        }
-
-        @Override
-        public Path getPath() {
-            return super.getPath().resolve(m_resourceName);
-        }
-
-        @Override
-        public String getResourceTypeName() {
-            return CollectionResource.RESOURCE_TYPE_NODE; //All node resources for JMX; nothing of interface or "indexed resource" type
-        }
-
-        @Override
-        public String getInstance() {
-            return null; //For node type resources, use the default instance
-        }
-
     }
 
     /**
