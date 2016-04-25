@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
+import org.opennms.core.collection.test.CollectionSetUtils;
 import org.opennms.core.wsman.WSManClientFactory;
 import org.opennms.netmgt.collection.api.CollectionAgent;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
@@ -46,7 +47,6 @@ import org.opennms.netmgt.collection.api.CollectionException;
 import org.opennms.netmgt.collection.api.CollectionInitializationException;
 import org.opennms.netmgt.collection.api.CollectionSet;
 import org.opennms.netmgt.collection.api.ServiceCollector;
-import org.opennms.netmgt.collection.support.AbstractCollectionSetVisitor;
 import org.opennms.netmgt.collection.support.builder.CollectionSetBuilder;
 import org.opennms.netmgt.collection.support.builder.NodeLevelResource;
 import org.opennms.netmgt.collection.support.builder.Resource;
@@ -100,7 +100,7 @@ public class WSManCollectorTest {
         WsManCollector.processEnumerationResults(group, builder, resource, nodes);
 
         // Verify
-        Map<String, CollectionAttribute> attributesByName = getAttributes(builder.build());
+        Map<String, CollectionAttribute> attributesByName = CollectionSetUtils.getAttributesByName(builder.build());
         assertFalse("The CollectionSet should not contain attributes for missing values.", attributesByName.containsKey("GaugeWithoutValue"));
         assertFalse("The CollectionSet should not contain attributes for missing values.", attributesByName.containsKey("StringWithoutValue"));
         assertEquals(42.1, attributesByName.get("GaugeWithValue").getNumericValue().doubleValue(), 2);
@@ -159,7 +159,7 @@ public class WSManCollectorTest {
         WsManCollector.processEnumerationResults(group, builder, resource, nodes);
 
         // Verify
-        Map<String, CollectionAttribute> attributesByName = getAttributes(builder.build());
+        Map<String, CollectionAttribute> attributesByName = CollectionSetUtils.getAttributesByName(builder.build());
         assertEquals("C7BBBP1", attributesByName.get("ServiceTag").getStringValue());
     }
 
@@ -203,7 +203,7 @@ public class WSManCollectorTest {
         WsManCollector.processEnumerationResults(group, builder, resource, nodes);
 
         // Verify
-        Map<String, CollectionAttribute> attributesByName = getAttributes(builder.build());
+        Map<String, CollectionAttribute> attributesByName = CollectionSetUtils.getAttributesByName(builder.build());
         assertEquals(Double.valueOf(260), attributesByName.get("sysBoardInletTemp").getNumericValue());
         assertEquals(Double.valueOf(370), attributesByName.get("sysBoardExhaustTemp").getNumericValue());
     }
@@ -238,7 +238,7 @@ public class WSManCollectorTest {
         CollectionSet collectionSet = collector.collect(agent, null, collectionParams);
 
         assertEquals(ServiceCollector.COLLECTION_SUCCEEDED, collectionSet.getStatus());
-        assertEquals(0, getAttributes(collectionSet).size());
+        assertEquals(0, CollectionSetUtils.getAttributesByName(collectionSet).size());
     }
 
     private static void addAttribute(Group group, String name, String alias, String type) {
@@ -249,14 +249,5 @@ public class WSManCollectorTest {
         group.addAttrib(attr);
     }
 
-    private static Map<String, CollectionAttribute> getAttributes(CollectionSet collectionSet) {
-        final Map<String, CollectionAttribute> attributesByName = Maps.newHashMap();
-        collectionSet.visit(new AbstractCollectionSetVisitor() {
-            @Override
-            public void visitAttribute(CollectionAttribute attribute) {
-                attributesByName.put(attribute.getName(), attribute);
-            }
-        });
-        return attributesByName;
-    }
+
 }
