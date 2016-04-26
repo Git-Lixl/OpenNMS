@@ -36,6 +36,10 @@
         </exclusion>
         <exclusion>
           <groupId>org.eclipse.jetty.aggregate</groupId>
+          <artifactId>jetty-all</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.jetty.aggregate</groupId>
           <artifactId>jetty-all-server</artifactId>
         </exclusion>
         <exclusion>
@@ -71,6 +75,10 @@
         <exclusion>
           <groupId>org.springframework</groupId>
           <artifactId>spring-expression</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-jms</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.springframework</groupId>
@@ -118,6 +126,10 @@
         </exclusion>
         <exclusion>
           <groupId>org.eclipse.jetty.aggregate</groupId>
+          <artifactId>jetty-all</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.jetty.aggregate</groupId>
           <artifactId>jetty-all-server</artifactId>
         </exclusion>
         <exclusion>
@@ -153,6 +165,10 @@
         <exclusion>
           <groupId>org.springframework</groupId>
           <artifactId>spring-expression</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-jms</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.springframework</groupId>

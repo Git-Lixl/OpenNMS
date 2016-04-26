@@ -1239,7 +1239,7 @@
     <asciidoctorVersion>1.5.3</asciidoctorVersion>
     <asciidoctorjVersion>1.5.4</asciidoctorjVersion>
     <asciidoctorjPdfVersion>1.5.0-alpha.11</asciidoctorjPdfVersion>
-    <activemqVersion>5.10.0</activemqVersion>
+    <activemqVersion>5.13.2</activemqVersion>
     <atomikosVersion>3.9.2</atomikosVersion>
     <batikVersion>1.7</batikVersion>
     <camelVersion>2.17.0</camelVersion>
@@ -1305,7 +1305,7 @@
     <xmlApisVersion>1.4.01</xmlApisVersion>
     <wsdl4jVersion>1.6.3</wsdl4jVersion>
 
-    <springVersion>4.0.7.RELEASE_1</springVersion>
+    <springVersion>4.1.6.RELEASE_1</springVersion>
     <!-- ALWAYS change aspectj to match the version referenced in the spring poms -->
     <aspectjVersion>1.7.4</aspectjVersion>
     <springWebFlowVersion>2.3.4.RELEASE</springWebFlowVersion>
