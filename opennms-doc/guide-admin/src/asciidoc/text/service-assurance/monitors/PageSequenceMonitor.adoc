@@ -46,7 +46,7 @@ Additionally, it is possible to configure a page sequence containing a path thro
 | `retry`          | The number of retries to attempt when a packet fails to respond in the given timeout  | optional | `0`
 | `strict-timeout` | ??                                                                                    | optional | `false`
 | `page-sequence`  | Definition of the page-sequence to execute, see table with _Page Sequence Parameter_  | required | `-`
-| `sequence-retry` | ??                                                                                    | ??       | ??
+| `sequence-retry` | ??                                                                                    | optional | `0`
 |===
 
 .Page Sequence Parameter
@@ -71,8 +71,7 @@ Additionally, it is possible to configure a page sequence containing a path thro
                                Please use this option carefully, for self-signed certificates import the CA certificate
                                in the JVM and don't just disable it.                                                      | optional | `false`
 | `port`                     | Port of the web server connecting to                                                       | optional | `80`
-| `query`                    | ?                                                                                          | `-`      | `-`
-| `fragment`                 | ?                                                                                          | `-`      | `-`
+| `query`                    | ??                                                                                         | `-`      | `-`
 | `failureMatch`             | Text to look for in the response body.
                                This is a _Regular Expression_ matched against every line, and it will be considered a
                                failure at the first match and sets the service with this monitor _Down_.                  | `-`      | `-`
