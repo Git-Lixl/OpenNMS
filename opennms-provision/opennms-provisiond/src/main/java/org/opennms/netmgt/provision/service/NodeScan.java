@@ -390,7 +390,6 @@ public class NodeScan implements Scan {
 
         public void detectIpAddressTable(final BatchTask currentPhase) {
             final OnmsNode node = getNode();
-
             LOG.debug("Attempting to scan the IPAddress table for node {}", node);
 
             // mark all provisioned interfaces as 'in need of scanning' so we can mark them
