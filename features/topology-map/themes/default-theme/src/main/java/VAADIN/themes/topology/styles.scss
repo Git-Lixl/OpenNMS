@@ -1,0 +1,8 @@
+// Import all the mixins for this theme
+@import "addons.scss";
+@import "topology.css"; /* hard include it, should be a SCSS file as well */
+
+.topology {
+  @include addons;
+  // we do not include topology here, as it is not yet converted to SCSS
+}

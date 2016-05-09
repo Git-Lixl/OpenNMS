@@ -142,7 +142,7 @@ import com.vaadin.ui.VerticalSplitPanel;
 import com.vaadin.ui.Window;
 
 @SuppressWarnings("serial")
-@Theme("topo_default")
+@Theme("topology")
 @Title("OpenNMS Topology Map")
 @PreserveOnRefresh
 @StyleSheet(value = {
@@ -880,6 +880,7 @@ public class TopologyUI extends UI implements CommandUpdateListener, MenuItemUpd
 
         //Vertical Layout for all tools on right side
         VerticalLayout toollayout = new VerticalLayout();
+        toollayout.setSizeUndefined();
         toollayout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
         toollayout.setSpacing(true);
 
@@ -902,6 +903,7 @@ public class TopologyUI extends UI implements CommandUpdateListener, MenuItemUpd
 
     private HorizontalLayout createLocationToolLayout() {
         HorizontalLayout layout = new HorizontalLayout();
+        layout.setSizeUndefined();
         layout.setSpacing(true);
         layout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
 

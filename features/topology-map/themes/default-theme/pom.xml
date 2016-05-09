@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
     <artifactId>themes</artifactId>
     <groupId>org.opennms.features.topology</groupId>
     <version>18.0.0-SNAPSHOT</version>
   </parent>
-
     <groupId>org.opennms.features.topology.themes</groupId>
     <artifactId>default-theme</artifactId>
     <packaging>bundle</packaging>
@@ -17,7 +14,6 @@
         <bundle.symbolicname>org.opennms.features.topology.themes.default-theme</bundle.symbolicname>
     </properties>
     <description>This is an OSGi bundle created with the OpenNMS Operation archetype</description>
-    
     <dependencies>
         <dependency>
             <groupId>org.opennms.osgi.features.topology</groupId>
@@ -29,15 +25,19 @@
             <artifactId>vaadin</artifactId>
             <type>pom</type>
         </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-themes</artifactId>
+            <version>${vaadinVersion}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
-
     <build>
         <resources>
             <resource>
                 <directory>src/main/java</directory>
             </resource>
         </resources>
-        
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -52,7 +52,39 @@
                     </instructions>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-maven-plugin</artifactId>
+                <version>${vaadin.plugin.version}</version>
+                <configuration>
+                    <warSourceDirectory>${basedir}/src/main/java</warSourceDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>update-theme</goal>
+                            <goal>compile-theme</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.6.1</version>
+                <!-- Clean up also any pre-compiled themes -->
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>src/main/java/VAADIN/themes</directory>
+                            <includes>
+                                <include>**/styles.css</include>
+                                <include>**/styles.scss.cache</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-
 </project>
