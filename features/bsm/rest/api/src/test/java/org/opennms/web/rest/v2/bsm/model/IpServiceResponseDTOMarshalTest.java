@@ -59,9 +59,9 @@ public class IpServiceResponseDTOMarshalTest extends MarshalAndUnmarshalTest<IpS
                 "{" +
                 "   \"id\" : 17," +
                 "   \"location\" : \"/api/v2/business-services/ip-services/17\"," +
-                "   \"ipAddress\" : \"1.1.1.1\"," +
-                "   \"nodeLabel\" : \"dummy\"," +
-                "   \"serviceName\" : \"ICMP\"" +
+                "   \"ip-address\" : \"1.1.1.1\"," +
+                "   \"node-label\" : \"dummy\"," +
+                "   \"service-name\" : \"ICMP\"" +
                 "}",
                 "<ip-service>\n" +
                 "   <id>17</id>\n" +
