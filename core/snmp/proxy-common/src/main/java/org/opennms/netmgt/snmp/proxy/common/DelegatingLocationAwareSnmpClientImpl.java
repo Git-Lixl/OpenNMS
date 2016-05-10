@@ -112,6 +112,11 @@ public class DelegatingLocationAwareSnmpClientImpl implements LocationAwareSnmpC
     }
 
     protected SnmpRequestExecutor getSnmpRequestExecutor(String location) {
+        // HACK
+        if (System.getProperty("org.opennms.snmp.location.hack") != null) {
+            return remoteSnmpRequestExecutor;
+        }
+
         if (location == null || (identity != null && identity.getLocation().equals(location))) {
             return localSnmpRequestExecutor;
         } else {

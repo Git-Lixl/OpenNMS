@@ -54,6 +54,12 @@ public class SnmpRequestExecutorCamelImpl implements SnmpRequestExecutor {
 
     @Override
     public CompletableFuture<SnmpResponseDTO> execute(SnmpRequestDTO request) {
+        // HACK
+        String locationHack = System.getProperty("org.opennms.snmp.location.hack");
+        if (locationHack != null && request.getLocation() == null) {
+            request.setLocation(locationHack);
+        }
+
         final CompletableFuture<SnmpResponseDTO> future = new CompletableFuture<SnmpResponseDTO>();
         template.asyncCallbackSendBody(endpoint, request, new Synchronization() {
             @Override
