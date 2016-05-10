@@ -35,6 +35,7 @@ import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.events.api.EventForwarder;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,7 @@ public class ForceRescanScan implements Scan {
     private EventForwarder m_eventForwarder;
     private SnmpAgentConfigFactory m_agentConfigFactory;
     private DefaultTaskCoordinator m_taskCoordinator;
+    private final LocationAwareSnmpClient m_locationAwareSnmpClient;
 
     /**
      * <p>Constructor for NewSuspectScan.</p>
@@ -61,12 +63,15 @@ public class ForceRescanScan implements Scan {
      * @param agentConfigFactory a {@link org.opennms.netmgt.config.api.SnmpAgentConfigFactory} object.
      * @param taskCoordinator a {@link org.opennms.core.tasks.DefaultTaskCoordinator} object.
      */
-    public ForceRescanScan(final Integer nodeId, final ProvisionService provisionService, final EventForwarder eventForwarder, final SnmpAgentConfigFactory agentConfigFactory, final DefaultTaskCoordinator taskCoordinator) {
+    public ForceRescanScan(final Integer nodeId, final ProvisionService provisionService,
+            final EventForwarder eventForwarder, final SnmpAgentConfigFactory agentConfigFactory,
+            final DefaultTaskCoordinator taskCoordinator, final LocationAwareSnmpClient locationAwareSnmpClient) {
         m_nodeId = nodeId;
         m_provisionService = provisionService;
         m_eventForwarder = eventForwarder;
         m_agentConfigFactory = agentConfigFactory;
         m_taskCoordinator = taskCoordinator;
+        m_locationAwareSnmpClient = locationAwareSnmpClient;
     }
 
     @Override
@@ -99,9 +104,9 @@ public class ForceRescanScan implements Scan {
                 LOG.info("The node with ID {} does not have any IP addresses", m_nodeId);
             } else {
                 phase.getBuilder().addSequence(
-                    new NodeInfoScan(node, iface.getIpAddress(), node.getForeignSource(), createScanProgress(), m_agentConfigFactory, m_provisionService, node.getId()),
+                    new NodeInfoScan(node, iface.getIpAddress(), node.getForeignSource(), createScanProgress(), m_agentConfigFactory, m_provisionService, node.getId(), m_locationAwareSnmpClient),
                     new IpInterfaceScan(node.getId(), iface.getIpAddress(), node.getForeignSource(), m_provisionService),
-                    new NodeScan(node.getId(), node.getForeignSource(), node.getForeignId(), m_provisionService, m_eventForwarder, m_agentConfigFactory, m_taskCoordinator)
+                    new NodeScan(node.getId(), node.getForeignSource(), node.getForeignId(), m_provisionService, m_eventForwarder, m_agentConfigFactory, m_taskCoordinator, m_locationAwareSnmpClient)
                 );
             }
         } else {

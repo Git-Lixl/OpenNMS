@@ -31,12 +31,11 @@
  */
 package org.opennms.netmgt.provision.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.opennms.core.tasks.BatchTask;
 import org.opennms.core.tasks.RunInBatch;
@@ -45,8 +44,10 @@ import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.provision.NodePolicy;
 import org.opennms.netmgt.provision.service.snmp.SystemGroup;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
-import org.opennms.netmgt.snmp.SnmpUtils;
-import org.opennms.netmgt.snmp.SnmpWalker;
+import org.opennms.netmgt.snmp.SnmpResult;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 final class NodeInfoScan implements RunInBatch {
@@ -60,9 +61,11 @@ final class NodeInfoScan implements RunInBatch {
     private boolean restoreCategories = false;
     private final ProvisionService m_provisionService;
     private final ScanProgress m_scanProgress;
-    
+    private final LocationAwareSnmpClient m_locationAwareSnmpClient;
 
-    NodeInfoScan(OnmsNode node, InetAddress agentAddress, String foreignSource, ScanProgress scanProgress, SnmpAgentConfigFactory agentConfigFactory, ProvisionService provisionService, Integer nodeId){
+    NodeInfoScan(OnmsNode node, InetAddress agentAddress, String foreignSource, ScanProgress scanProgress,
+            SnmpAgentConfigFactory agentConfigFactory, ProvisionService provisionService, Integer nodeId,
+            final LocationAwareSnmpClient locationAwareSnmpClient) {
         m_node = node;
         m_agentAddress = agentAddress;
         m_foreignSource = foreignSource;
@@ -70,6 +73,7 @@ final class NodeInfoScan implements RunInBatch {
         m_agentConfigFactory = agentConfigFactory;
         m_provisionService = provisionService;
         m_nodeId = nodeId;
+        m_locationAwareSnmpClient = Objects.requireNonNull(locationAwareSnmpClient);
     }
 
     /** {@inheritDoc} */
@@ -131,28 +135,20 @@ final class NodeInfoScan implements RunInBatch {
         Assert.notNull(getAgentConfigFactory(), "agentConfigFactory was not injected");
         InetAddress primaryAddress = getAgentAddress();
         SnmpAgentConfig agentConfig = getAgentConfig(primaryAddress);
-        
+
         SystemGroup systemGroup = new SystemGroup(primaryAddress);
-        
-        SnmpWalker walker = SnmpUtils.createWalker(agentConfig, "systemGroup", systemGroup);
-        walker.start();
-        
+
+        final CompletableFuture<List<SnmpResult>> future = m_locationAwareSnmpClient.walk(agentConfig, systemGroup.getBaseOids())
+                .atLocation(null)
+                .withDescription("systemGroup")
+                .execute();
+
         try {
-        
-            walker.waitFor();
-        
-            if (walker.timedOut()) {
-                abort("Aborting node scan : Agent timed out while scanning the system table");
-            }
-            else if (walker.failed()) {
-                abort("Aborting node scan : Agent failed while scanning the system table: " + walker.getErrorMessage());
-            } else {
-        
-                systemGroup.updateSnmpDataForNode(getNode());
-            }
-        
+            systemGroup.processResults(future.get());
+            systemGroup.updateSnmpDataForNode(getNode());
+
             List<NodePolicy> nodePolicies = getProvisionService().getNodePoliciesForForeignSource(getEffectiveForeignSource());
-            
+
             OnmsNode node = null;
             if (isAborted()) {
                 if (getNodeId() != null && nodePolicies.size() > 0) {
@@ -179,9 +175,11 @@ final class NodeInfoScan implements RunInBatch {
             } else {
                 setNode(node);
             }
-        
-        } catch (final InterruptedException e) {
-            abort("Aborting node scan : Scan thread interrupted!");
+        } catch (ExecutionException e) {
+            LOG.info("SNMP Walk failed while scanning the system table on {}.", agentConfig, e);
+            abort("Aborting node scan : Agent failed or timed out while scanning the system table : " + e.getMessage());
+        } catch (InterruptedException e) {
+            abort("Aborting node scan : Scan thread failed while waiting for the system table");
             Thread.currentThread().interrupt();
         }
     }

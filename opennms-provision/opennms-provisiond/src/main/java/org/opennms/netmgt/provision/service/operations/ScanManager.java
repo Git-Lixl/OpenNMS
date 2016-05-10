@@ -124,7 +124,7 @@ public class ScanManager {
     }
 
     void updateSnmpData(final OnmsNode node) {
-        
+        LOG.error("MOO: UPDATE SNMP DATA CALLED ON {} WITH ADDRESS {}", node, m_address);
         try {
 
             m_systemGroup = new SystemGroup(m_address);

@@ -63,6 +63,7 @@ import org.opennms.netmgt.provision.service.lifecycle.LifeCycleRepository;
 import org.opennms.netmgt.provision.service.operations.NoOpProvisionMonitor;
 import org.opennms.netmgt.provision.service.operations.ProvisionMonitor;
 import org.opennms.netmgt.provision.service.operations.RequisitionImport;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.event.Parm;
 import org.slf4j.Logger;
@@ -96,12 +97,15 @@ public class Provisioner implements SpringServiceDaemon {
     private final Map<Integer, ScheduledFuture<?>> m_scheduledNodes = new ConcurrentHashMap<Integer, ScheduledFuture<?>>();
     private volatile EventForwarder m_eventForwarder;
     private SnmpAgentConfigFactory m_agentConfigFactory;
-    
+
     private volatile TimeTrackingMonitor m_stats;
     
     @Autowired
     private ProvisioningAdapterManager m_manager;
-    
+
+    @Autowired
+    private LocationAwareSnmpClient m_locationAwareSnmpClient;
+
     private ImportScheduler m_importSchedule;
 
     /**
@@ -266,7 +270,7 @@ public class Provisioner implements SpringServiceDaemon {
      */
     public NodeScan createNodeScan(Integer nodeId, String foreignSource, String foreignId) {
         LOG.info("createNodeScan called");
-        return new NodeScan(nodeId, foreignSource, foreignId, m_provisionService, m_eventForwarder, m_agentConfigFactory, m_taskCoordinator);
+        return new NodeScan(nodeId, foreignSource, foreignId, m_provisionService, m_eventForwarder, m_agentConfigFactory, m_taskCoordinator, m_locationAwareSnmpClient);
     }
 
     /**
@@ -277,7 +281,7 @@ public class Provisioner implements SpringServiceDaemon {
      */
     public NewSuspectScan createNewSuspectScan(InetAddress ipAddress, String foreignSource) {
         LOG.info("createNewSuspectScan called with IP: "+ipAddress+ "and foreignSource"+foreignSource == null ? "null" : foreignSource);
-        return new NewSuspectScan(ipAddress, m_provisionService, m_eventForwarder, m_agentConfigFactory, m_taskCoordinator, foreignSource);
+        return new NewSuspectScan(ipAddress, m_provisionService, m_eventForwarder, m_agentConfigFactory, m_taskCoordinator, foreignSource, m_locationAwareSnmpClient);
     }
 
     /**
@@ -288,7 +292,7 @@ public class Provisioner implements SpringServiceDaemon {
      */
     public ForceRescanScan createForceRescanScan(Integer nodeId) {
         LOG.info("createForceRescanScan called with nodeId: "+nodeId);
-        return new ForceRescanScan(nodeId, m_provisionService, m_eventForwarder, m_agentConfigFactory, m_taskCoordinator);
+        return new ForceRescanScan(nodeId, m_provisionService, m_eventForwarder, m_agentConfigFactory, m_taskCoordinator, m_locationAwareSnmpClient);
     }
 
     //Helper functions for the schedule

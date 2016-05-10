@@ -31,6 +31,7 @@ package org.opennms.netmgt.provision.service;
 import static org.opennms.core.utils.InetAddressUtils.str;
 
 import java.net.InetAddress;
+import java.util.Objects;
 
 import org.opennms.core.tasks.BatchTask;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
@@ -39,6 +40,7 @@ import org.opennms.core.tasks.Task;
 import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.events.api.EventForwarder;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +58,8 @@ public class NewSuspectScan implements Scan {
     private SnmpAgentConfigFactory m_agentConfigFactory;
     private DefaultTaskCoordinator m_taskCoordinator;
 	private String m_foreignSource;
-	
+    private final LocationAwareSnmpClient m_locationAwareSnmpClient;
+
     /**
      * <p>Constructor for NewSuspectScan.</p>
      *
@@ -66,15 +69,18 @@ public class NewSuspectScan implements Scan {
      * @param agentConfigFactory a {@link org.opennms.netmgt.config.api.SnmpAgentConfigFactory} object.
      * @param taskCoordinator a {@link org.opennms.core.tasks.DefaultTaskCoordinator} object.
      */
-    public NewSuspectScan(final InetAddress ipAddress, final ProvisionService provisionService, final EventForwarder eventForwarder, final SnmpAgentConfigFactory agentConfigFactory, final DefaultTaskCoordinator taskCoordinator, String foreignSource) {
+    public NewSuspectScan(final InetAddress ipAddress, final ProvisionService provisionService,
+            final EventForwarder eventForwarder, final SnmpAgentConfigFactory agentConfigFactory,
+            final DefaultTaskCoordinator taskCoordinator, String foreignSource, final LocationAwareSnmpClient locationAwareSnmpClient) {
         m_ipAddress = ipAddress;
         m_provisionService = provisionService;
         m_eventForwarder = eventForwarder;
         m_agentConfigFactory = agentConfigFactory;
         m_taskCoordinator = taskCoordinator;
         m_foreignSource = foreignSource;
+        m_locationAwareSnmpClient = Objects.requireNonNull(locationAwareSnmpClient);
     }
-    
+
     @Override
     public Task createTask() {
         return m_taskCoordinator.createBatch().add(this).get();
@@ -99,9 +105,9 @@ public class NewSuspectScan implements Scan {
         if (node != null) {
 
         	phase.getBuilder().addSequence(
-        			new NodeInfoScan(node, m_ipAddress, null, createScanProgress(), m_agentConfigFactory, m_provisionService, null),
+        			new NodeInfoScan(node, m_ipAddress, null, createScanProgress(), m_agentConfigFactory, m_provisionService, null, m_locationAwareSnmpClient),
         			new IpInterfaceScan(node.getId(), m_ipAddress, null, m_provisionService),
-				new NodeScan(node.getId(), null, null, m_provisionService, m_eventForwarder, m_agentConfigFactory, m_taskCoordinator),
+				new NodeScan(node.getId(), null, null, m_provisionService, m_eventForwarder, m_agentConfigFactory, m_taskCoordinator, m_locationAwareSnmpClient),
 				new RunInBatch() {
 					@Override
 					public void run(BatchTask batch) {

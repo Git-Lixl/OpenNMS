@@ -30,6 +30,9 @@ package org.opennms.netmgt.provision.service.snmp;
 
 
 import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +40,10 @@ import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.provision.service.operations.ScanResource;
 import org.opennms.netmgt.snmp.AggregateTracker;
 import org.opennms.netmgt.snmp.NamedSnmpVar;
+import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.SnmpStore;
+import org.opennms.netmgt.snmp.proxy.ProxiableTracker;
 
 /**
  * <P>
@@ -51,7 +56,7 @@ import org.opennms.netmgt.snmp.SnmpStore;
  * @author <A HREF="mailto:weave@oculan.com">Weave </A>
  * @see <A HREF="http://www.ietf.org/rfc/rfc1213.txt">RFC1213 </A>
  */
-public final class SystemGroup extends AggregateTracker {
+public final class SystemGroup extends AggregateTracker implements ProxiableTracker {
     private static final Logger LOG = LoggerFactory.getLogger(SystemGroup.class);
 
     //
@@ -306,4 +311,16 @@ public final class SystemGroup extends AggregateTracker {
         updateSnmpDataForResource(sr);
     }
 
+    @Override
+    public List<SnmpObjId> getBaseOids() {
+        return Arrays.stream(ms_elemList)
+            .map(el -> el.getSnmpObjId())
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public void processResults(List<SnmpResult> results) {
+        // Store each result
+        results.forEach(res -> storeResult(res));
+    }
 }
