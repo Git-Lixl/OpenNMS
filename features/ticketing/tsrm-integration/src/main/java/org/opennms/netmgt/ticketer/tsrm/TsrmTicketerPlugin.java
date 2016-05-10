@@ -311,69 +311,98 @@ public class TsrmTicketerPlugin implements Plugin {
     private void updateIncidentWithTicket(SHSIMPINCINCIDENTType incident,
             Ticket ticket) {
 
-        MXStringType affectedPerson = new MXStringType();
-        affectedPerson.setValue(ticket.getAttribute(AFFECTED_PERSON));
-        incident.setAFFECTEDPERSON(affectedPerson);
+        if (!StringUtils.isEmpty(ticket.getAttribute(AFFECTED_PERSON))) {
+            MXStringType affectedPerson = new MXStringType();
+            affectedPerson.setValue(ticket.getAttribute(AFFECTED_PERSON));
+            incident.setAFFECTEDPERSON(affectedPerson);
+        }
 
-        MXStringType assetNum = new MXStringType();
-        assetNum.setValue(ticket.getAttribute(ASSET_NUM));
-        incident.setASSETNUM(assetNum);
+        if (!StringUtils.isEmpty(ticket.getAttribute(ASSET_NUM))) {
+            MXStringType assetNum = new MXStringType();
+            assetNum.setValue(ticket.getAttribute(ASSET_NUM));
+            incident.setASSETNUM(assetNum);
+        }
 
-        MXStringType classId = new MXStringType();
-        classId.setValue(ticket.getAttribute(CLASS_ID));
-        incident.setCLASS(classId);
+        if (!StringUtils.isEmpty(ticket.getAttribute(CLASS_ID))) {
+            MXStringType classId = new MXStringType();
+            classId.setValue(ticket.getAttribute(CLASS_ID));
+            incident.setCLASS(classId);
+        }
 
-        MXStringType classStructureId = new MXStringType();
-        classStructureId.setValue(ticket.getAttribute(CLASS_STRUCTURE_ID));
-        incident.setCLASSSTRUCTUREID(classStructureId);
+        if (!StringUtils.isEmpty(ticket.getAttribute(CLASS_STRUCTURE_ID))) {
+            MXStringType classStructureId = new MXStringType();
+            classStructureId.setValue(ticket.getAttribute(CLASS_STRUCTURE_ID));
+            incident.setCLASSSTRUCTUREID(classStructureId);
+        }
 
-        MXStringType commodity = new MXStringType();
-        commodity.setValue(ticket.getAttribute(COMMODITY));
-        incident.setCOMMODITY(commodity);
+        if (!StringUtils.isEmpty(ticket.getAttribute(COMMODITY))) {
+            MXStringType commodity = new MXStringType();
+            commodity.setValue(ticket.getAttribute(COMMODITY));
+            incident.setCOMMODITY(commodity);
+        }
 
-        MXStringType description = new MXStringType();
-        description.setValue(ticket.getSummary());
-        incident.setDESCRIPTION(description);
+        if (!StringUtils.isEmpty(ticket.getSummary())) {
+            MXStringType description = new MXStringType();
+            description.setValue(ticket.getSummary());
+            incident.setDESCRIPTION(description);
+        }
 
-        MXStringType longDescription = new MXStringType();
-        longDescription.setValue(ticket.getDetails());
-        incident.setDESCRIPTIONLONGDESCRIPTION(longDescription);
+        if (!StringUtils.isEmpty(ticket.getDetails())) {
+            MXStringType longDescription = new MXStringType();
+            longDescription.setValue(ticket.getDetails());
+            incident.setDESCRIPTIONLONGDESCRIPTION(longDescription);
+        }
 
-        MXStringType location = new MXStringType();
-        location.setValue(ticket.getAttribute(LOCATION));
-        incident.setLOCATION(location);
+        if (!StringUtils.isEmpty(ticket.getAttribute(LOCATION))) {
+            MXStringType location = new MXStringType();
+            location.setValue(ticket.getAttribute(LOCATION));
+            incident.setLOCATION(location);
+        }
+        if (!StringUtils.isEmpty(ticket.getAttribute(OWNER_GROUP))) {
+            MXStringType ownerGroup = new MXStringType();
+            ownerGroup.setValue(ticket.getAttribute(OWNER_GROUP));
+            incident.setOWNERGROUP(ownerGroup);
+        }
 
-        MXStringType ownerGroup = new MXStringType();
-        ownerGroup.setValue(ticket.getAttribute(OWNER_GROUP));
-        incident.setOWNERGROUP(ownerGroup);
+        if (!StringUtils.isEmpty(ticket.getUser())) {
+            MXStringType reportedBy = new MXStringType();
+            reportedBy.setValue(ticket.getUser());
+            incident.setREPORTEDBY(reportedBy);
+        }
 
-        MXStringType reportedBy = new MXStringType();
-        reportedBy.setValue(ticket.getUser());
-        incident.setREPORTEDBY(reportedBy);
+        if (!StringUtils.isEmpty(ticket.getAttribute(SHS_CALLER_TYPE))) {
+            MXStringType shsCallerType = new MXStringType();
+            shsCallerType.setValue(ticket.getAttribute(SHS_CALLER_TYPE));
+            incident.setSHSCALLERTYPE(shsCallerType);
+        }
 
-        MXStringType shsCallerType = new MXStringType();
-        shsCallerType.setValue(ticket.getAttribute(SHS_CALLER_TYPE));
-        incident.setSHSCALLERTYPE(shsCallerType);
+        if (!StringUtils.isEmpty(ticket.getAttribute(SHS_REASON_FOR_OUTAGE))) {
+            MXStringType shsReasonForOutage = new MXStringType();
+            shsReasonForOutage.setValue(ticket.getAttribute(SHS_REASON_FOR_OUTAGE));
+            incident.setSHSREASONFOROUTAGE(shsReasonForOutage);
+        }
 
-        MXStringType shsReasonForOutage = new MXStringType();
-        shsReasonForOutage.setValue(ticket.getAttribute(SHS_REASON_FOR_OUTAGE));
-        incident.setSHSREASONFOROUTAGE(shsReasonForOutage);
+        if (!StringUtils.isEmpty(ticket.getAttribute(SHS_RESOLUTION))) {
+            MXStringType shsResolution = new MXStringType();
+            shsResolution.setValue(ticket.getAttribute(SHS_RESOLUTION));
+            incident.setSHSRESOLUTION(shsResolution);
+        }
 
-        MXStringType shsResolution = new MXStringType();
-        shsResolution.setValue(ticket.getAttribute(SHS_RESOLUTION));
-        incident.setSHSRESOLUTION(shsResolution);
-
-        MXStringType shsRoomNumber = new MXStringType();
-        shsRoomNumber.setValue(ticket.getAttribute(SHS_ROOM_NUMBER));
-        incident.setSHSROOMNUMBER(shsRoomNumber);
-
-        MXStringType siteId = new MXStringType();
-        siteId.setValue(ticket.getAttribute(SITE_ID));
-        incident.setSITEID(siteId);
-
-        MXStringType source = new MXStringType();
-        source.setValue(ticket.getAttribute(SOURCE));
-        incident.setSOURCE(source);
+        if (!StringUtils.isEmpty(ticket.getAttribute(SHS_ROOM_NUMBER))) {
+            MXStringType shsRoomNumber = new MXStringType();
+            shsRoomNumber.setValue(ticket.getAttribute(SHS_ROOM_NUMBER));
+            incident.setSHSROOMNUMBER(shsRoomNumber);
+        }
+        if (!StringUtils.isEmpty(ticket.getAttribute(SITE_ID))) {
+            MXStringType siteId = new MXStringType();
+            siteId.setValue(ticket.getAttribute(SITE_ID));
+            incident.setSITEID(siteId);
+        }
+        if (!StringUtils.isEmpty(ticket.getAttribute(SOURCE))) {
+            MXStringType source = new MXStringType();
+            source.setValue(ticket.getAttribute(SOURCE));
+            incident.setSOURCE(source);
+        }
 
         MXStringType status = new MXStringType();
         try {
