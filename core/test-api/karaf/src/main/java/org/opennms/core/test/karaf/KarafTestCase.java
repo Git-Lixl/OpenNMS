@@ -30,6 +30,7 @@ package org.opennms.core.test.karaf;
 
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.provision;
+import static org.ops4j.pax.exam.CoreOptions.systemPackages;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.debugConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
@@ -39,6 +40,7 @@ import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
@@ -58,6 +60,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption;
+import org.ops4j.pax.exam.options.MavenUrlReference;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -68,6 +71,15 @@ import org.slf4j.LoggerFactory;
 public abstract class KarafTestCase {
 
     private static Logger LOG = LoggerFactory.getLogger(KarafTestCase.class);
+
+    public static final String MIN_RMI_SERVER_PORT = "44444";
+    public static final String MAX_RMI_SERVER_PORT = "66666";
+    public static final String MIN_HTTP_PORT = "9080";
+    public static final String MAX_HTTP_PORT = "9999";
+    public static final String MIN_RMI_REG_PORT = "1099";
+    public static final String MAX_RMI_REG_PORT = "9999";
+    public static final String MIN_SSH_PORT = "8101";
+    public static final String MAX_SSH_PORT = "8888";
 
     private static String getKarafVersion() {
         final String karafVersion = System.getProperty("karafVersion", "2.4.0");
@@ -93,6 +105,15 @@ public abstract class KarafTestCase {
         return probe;
     }
 
+    private static int getAvailablePort(int min, int max) {
+        for (int i = min; i <= max; i++) {
+            try (ServerSocket socket = new ServerSocket(i)) {
+                return socket.getLocalPort();
+            } catch (Throwable e) {}
+        }
+        throw new IllegalStateException("Can't find an available network port");
+    }
+
     /**
      * This is the default {@link Configuration} for any Pax Exam tests that
      * use this abstract base class. If you wish to add more Configuration parameters,
@@ -110,14 +131,15 @@ public abstract class KarafTestCase {
     }
 
     protected Option[] configAsArray() {
+        String httpPort = Integer.toString(getAvailablePort(Integer.parseInt(MIN_HTTP_PORT), Integer.parseInt(MAX_HTTP_PORT)));
+        String rmiRegistryPort = Integer.toString(getAvailablePort(Integer.parseInt(MIN_RMI_REG_PORT), Integer.parseInt(MAX_RMI_REG_PORT)));
+        String rmiServerPort = Integer.toString(getAvailablePort(Integer.parseInt(MIN_RMI_SERVER_PORT), Integer.parseInt(MAX_RMI_SERVER_PORT)));
+        String sshPort = Integer.toString(getAvailablePort(Integer.parseInt(MIN_SSH_PORT), Integer.parseInt(MAX_SSH_PORT)));
+
         Option[] options = new Option[]{
             // Use Karaf as the container
             karafDistributionConfiguration().frameworkUrl(
-                maven()
-                    .groupId("org.apache.karaf")
-                    .artifactId("apache-karaf")
-                    .type("tar.gz")
-                    .version(getKarafVersion()))
+                getFrameworkUrl())
                 .karafVersion(getKarafVersion())
                 .name("Apache Karaf")
                 .unpackDirectory(new File("target/paxexam/")
@@ -169,15 +191,48 @@ public abstract class KarafTestCase {
 
             //editConfigurationFilePut("etc/org.apache.karaf.features.cfg", "featuresBoot", "config,ssh,http,http-whiteboard,exam"),
 
-            // Change the SSH port so that it doesn't conflict with a running OpenNMS instance
-            editConfigurationFilePut("etc/org.apache.karaf.shell.cfg", "sshPort", "8201")
+            // Change the all network ports so they don't conflict with a running OpenNMS instance
+            // or previously run Karaf integration tests
+            editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", httpPort),
+            editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiRegistryPort", rmiRegistryPort),
+            editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", rmiServerPort),
+            editConfigurationFilePut("etc/org.apache.karaf.shell.cfg", "sshPort", sshPort),
+
+            // This port is already being allocated according to an org.ops4j.net.FreePort call
+            //editConfigurationFilePut("etc/system.properties", "org.ops4j.pax.exam.rbc.rmi.port", paxExamRmiRegistryPort),
         };
 
         if (Boolean.valueOf(System.getProperty("debug"))) {
             options = Arrays.copyOf(options, options.length + 1);
             options[options.length -1] = debugConfiguration("8889", true);
         }
+
+        String[] systemPackages = getSystemPackages();
+        if (systemPackages.length > 0) {
+            options = Arrays.copyOf(options, options.length + 1);
+            options[options.length -1] = systemPackages(systemPackages);
+        }
+
         return options;
+    }
+
+    /**
+     * Use the vanilla Apache Karaf container. Override this method to use
+     * a different Karaf-compatible framework artifact.
+     */
+    protected MavenUrlReference getFrameworkUrl() {
+        return maven()
+                .groupId("org.apache.karaf")
+                .artifactId("apache-karaf")
+                .type("tar.gz")
+                .version(getKarafVersion());
+    }
+
+    /**
+     * Override this method to add system packages to the test container.
+     */
+    protected String[] getSystemPackages() {
+        return new String[0];
     }
 
     protected void addFeaturesUrl(String url) {
