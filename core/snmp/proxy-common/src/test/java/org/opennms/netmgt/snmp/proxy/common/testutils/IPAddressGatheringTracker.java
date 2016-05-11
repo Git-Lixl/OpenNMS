@@ -31,6 +31,8 @@ package org.opennms.netmgt.snmp.proxy.common.testutils;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.opennms.netmgt.provision.service.snmp.trackers.IPAddressTableTracker;
+
 import com.google.common.collect.Lists;
 
 public class IPAddressGatheringTracker extends IPAddressTableTracker {

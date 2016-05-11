@@ -34,16 +34,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.netmgt.provision.service.operations.ScanResource;
 import org.opennms.netmgt.snmp.AggregateTracker;
 import org.opennms.netmgt.snmp.NamedSnmpVar;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.SnmpStore;
 import org.opennms.netmgt.snmp.proxy.ProxiableTracker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <P>
@@ -56,7 +54,7 @@ import org.opennms.netmgt.snmp.proxy.ProxiableTracker;
  * @author <A HREF="mailto:weave@oculan.com">Weave </A>
  * @see <A HREF="http://www.ietf.org/rfc/rfc1213.txt">RFC1213 </A>
  */
-public final class SystemGroup extends AggregateTracker implements ProxiableTracker {
+public class SystemGroup extends AggregateTracker implements ProxiableTracker {
     private static final Logger LOG = LoggerFactory.getLogger(SystemGroup.class);
 
     //
@@ -283,32 +281,6 @@ public final class SystemGroup extends AggregateTracker implements ProxiableTrac
     @Override
     protected void reportNoSuchNameErr(String msg) {
         LOG.info("Error retrieving systemGroup from {}. {}", msg, m_address);
-    }
-
-    /**
-     * <p>updateSnmpDataForResource</p>
-     *
-     * @param sr a {@link org.opennms.netmgt.provision.service.operations.ScanResource} object.
-     */
-    public void updateSnmpDataForResource(ScanResource sr) {
-        if (!failed()) {
-            sr.setAttribute("sysName", getSysName());
-            sr.setAttribute("sysContact", getSysContact());
-            sr.setAttribute("sysDescription", getSysDescr());
-            sr.setAttribute("sysLocation", getSysLocation());
-            sr.setAttribute("sysObjectId", getSysObjectID());
-        }
-    }
-
-    /**
-     * <p>updateSnmpDataForNode</p>
-     *
-     * @param node a {@link org.opennms.netmgt.model.OnmsNode} object.
-     */
-    public void updateSnmpDataForNode(OnmsNode node) {
-        ScanResource sr = new ScanResource("SNMP");
-        sr.setNode(node);
-        updateSnmpDataForResource(sr);
     }
 
     @Override

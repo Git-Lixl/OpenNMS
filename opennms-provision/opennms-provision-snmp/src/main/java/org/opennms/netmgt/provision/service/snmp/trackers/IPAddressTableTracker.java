@@ -26,7 +26,7 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.snmp.proxy.common.testutils;
+package org.opennms.netmgt.provision.service.snmp.trackers;
 
 import static org.opennms.core.utils.InetAddressUtils.getInetAddress;
 import static org.opennms.core.utils.InetAddressUtils.normalize;
@@ -49,11 +49,10 @@ import org.opennms.netmgt.snmp.SnmpValue;
 import org.opennms.netmgt.snmp.TableTracker;
 
 /**
- * Pristine copy of org.opennms.netmgt.provision.service.IPAddressTableTracker
- *
- * Used to valide that the proxy APIs returns the same results as the original SnmpUtil APIs.
+ * PhysInterfaceTableTracker
  *
  * @author brozow
+ * @version $Id: $
  */
 public class IPAddressTableTracker extends TableTracker {
     private static final Logger LOG = LoggerFactory.getLogger(IPAddressTableTracker.class);
@@ -87,7 +86,7 @@ public class IPAddressTableTracker extends TableTracker {
         IP_ADDRESS_TYPE_INDEX
     };
     
-    static class IPAddressRow extends SnmpRowResult {
+    public static class IPAddressRow extends SnmpRowResult {
 
         public IPAddressRow(final int columnCount, final SnmpInstId instance) {
             super(columnCount, instance);
@@ -272,7 +271,7 @@ public class IPAddressTableTracker extends TableTracker {
     /**
      * <p>processIPInterfaceRow</p>
      *
-     * @param row a {@link org.opennms.netmgt.provision.service.IPAddressTableTracker.IPAddressRow} object.
+     * @param row a {@link org.opennms.netmgt.provision.service.snmp.trackers.IPAddressTableTracker.IPAddressRow} object.
      */
     public void processIPAddressRow(final IPAddressRow row) {
         

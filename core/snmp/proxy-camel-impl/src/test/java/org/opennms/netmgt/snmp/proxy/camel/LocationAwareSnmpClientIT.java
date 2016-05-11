@@ -57,7 +57,6 @@ import org.opennms.netmgt.snmp.SnmpWalker;
 import org.opennms.netmgt.snmp.proxy.common.DelegatingLocationAwareSnmpClientImpl;
 import org.opennms.netmgt.snmp.proxy.common.SnmpRequestDTO;
 import org.opennms.netmgt.snmp.proxy.common.SnmpRequestExecutor;
-import org.opennms.netmgt.snmp.proxy.common.SnmpResponseDTO;
 import org.opennms.netmgt.snmp.proxy.common.testutils.ExpectedResults;
 import org.opennms.netmgt.snmp.proxy.common.testutils.IPAddressGatheringTracker;
 import org.opennms.test.JUnitConfigurationEnvironment;
@@ -172,8 +171,7 @@ public class LocationAwareSnmpClientIT {
                 .bean(SnmpRequestDTO.Unmarshal.class)
                 .convertBodyTo(SnmpRequestDTO.class)
                 .setExchangePattern(ExchangePattern.InOut)
-                .process(snmpRequestExecutorCamelAsync)
-                .bean(SnmpResponseDTO.Marshal.class);
+                .process(snmpRequestExecutorCamelAsync);
             };
         });
         mockDiscoverer.start();

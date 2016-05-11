@@ -40,11 +40,11 @@ import org.slf4j.LoggerFactory;
 import org.opennms.netmgt.config.SnmpPeerFactory;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.provision.service.ScanResourceSystemGroup;
 import org.opennms.netmgt.provision.service.snmp.IfTable;
 import org.opennms.netmgt.provision.service.snmp.IfXTable;
 import org.opennms.netmgt.provision.service.snmp.IpAddrTable;
 import org.opennms.netmgt.provision.service.snmp.IpAddressTable;
-import org.opennms.netmgt.provision.service.snmp.SystemGroup;
 import org.opennms.netmgt.snmp.AggregateTracker;
 import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
@@ -56,7 +56,7 @@ public class ScanManager {
     private static final Logger LOG = LoggerFactory.getLogger(ScanManager.class);
     
     private final InetAddress m_address;
-    private SystemGroup m_systemGroup;
+    private ScanResourceSystemGroup m_systemGroup;
     private IfTable m_ifTable;
     private IpAddrTable m_ipAddrTable;
     private IpAddressTable m_ipAddressTable;
@@ -71,7 +71,7 @@ public class ScanManager {
      *
      * @return a {@link org.opennms.netmgt.provision.service.snmp.SystemGroup} object.
      */
-    public SystemGroup getSystemGroup() {
+    public ScanResourceSystemGroup getSystemGroup() {
         return m_systemGroup;
     }
 
@@ -127,7 +127,7 @@ public class ScanManager {
         LOG.error("MOO: UPDATE SNMP DATA CALLED ON {} WITH ADDRESS {}", node, m_address);
         try {
 
-            m_systemGroup = new SystemGroup(m_address);
+            m_systemGroup = new ScanResourceSystemGroup(m_address);
 
             final Set<SnmpInstId> ipAddrs = new TreeSet<SnmpInstId>();
             final Set<InetAddress> ipAddresses = new HashSet<InetAddress>();

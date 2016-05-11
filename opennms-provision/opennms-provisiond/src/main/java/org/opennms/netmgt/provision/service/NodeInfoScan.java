@@ -42,7 +42,6 @@ import org.opennms.core.tasks.RunInBatch;
 import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.provision.NodePolicy;
-import org.opennms.netmgt.provision.service.snmp.SystemGroup;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
@@ -136,7 +135,7 @@ final class NodeInfoScan implements RunInBatch {
         InetAddress primaryAddress = getAgentAddress();
         SnmpAgentConfig agentConfig = getAgentConfig(primaryAddress);
 
-        SystemGroup systemGroup = new SystemGroup(primaryAddress);
+        ScanResourceSystemGroup systemGroup = new ScanResourceSystemGroup(primaryAddress);
 
         final CompletableFuture<List<SnmpResult>> future = m_locationAwareSnmpClient.walk(agentConfig, systemGroup.getBaseOids())
                 .atLocation(null)

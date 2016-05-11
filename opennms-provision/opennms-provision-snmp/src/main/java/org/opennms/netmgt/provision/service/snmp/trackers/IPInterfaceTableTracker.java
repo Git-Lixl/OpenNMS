@@ -26,7 +26,7 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.provision.service;
+package org.opennms.netmgt.provision.service.snmp.trackers;
 
 import java.net.InetAddress;
 
@@ -72,7 +72,7 @@ public class IPInterfaceTableTracker extends TableTracker {
         IP_ADDR_ENT_BCASTADDR
     };
     
-    static class IPInterfaceRow extends SnmpRowResult {
+    public static class IPInterfaceRow extends SnmpRowResult {
 
         public IPInterfaceRow(int columnCount, SnmpInstId instance) {
             super(columnCount, instance);
@@ -171,7 +171,7 @@ public class IPInterfaceTableTracker extends TableTracker {
     /**
      * <p>processIPInterfaceRow</p>
      *
-     * @param row a {@link org.opennms.netmgt.provision.service.IPInterfaceTableTracker.IPInterfaceRow} object.
+     * @param row a {@link org.opennms.netmgt.provision.service.snmp.trackers.IPInterfaceTableTracker.IPInterfaceRow} object.
      */
     public void processIPInterfaceRow(IPInterfaceRow row) {
         

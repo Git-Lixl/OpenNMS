@@ -49,6 +49,11 @@
       <artifactId>opennms-provision-persistence</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-provision-snmp</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.opennms.core</groupId>
       <artifactId>org.opennms.core.tasks</artifactId>
     </dependency>

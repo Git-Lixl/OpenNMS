@@ -26,7 +26,7 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.provision.service;
+package org.opennms.netmgt.provision.service.snmp.trackers;
 
 import org.opennms.core.utils.InetAddressUtils;
 
@@ -110,7 +110,7 @@ public class PhysInterfaceTableTracker extends TableTracker {
         IF_HIGH_SPEED
     };
     
-    static class PhysicalInterfaceRow extends SnmpRowResult {
+    public static class PhysicalInterfaceRow extends SnmpRowResult {
 
         public PhysicalInterfaceRow(final int columnCount, final SnmpInstId instance) {
             super(columnCount, instance);
@@ -259,7 +259,7 @@ public class PhysInterfaceTableTracker extends TableTracker {
     /**
      * <p>processPhysicalInterfaceRow</p>
      *
-     * @param row a {@link org.opennms.netmgt.provision.service.PhysInterfaceTableTracker.PhysicalInterfaceRow} object.
+     * @param row a {@link org.opennms.netmgt.provision.service.snmp.trackers.PhysInterfaceTableTracker.PhysicalInterfaceRow} object.
      */
     public void processPhysicalInterfaceRow(final PhysicalInterfaceRow row) {
         

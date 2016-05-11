@@ -35,7 +35,7 @@ import java.net.InetAddress;
 import org.opennms.core.utils.InetAddressUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.opennms.netmgt.provision.service.IPAddressTableTracker;
+import org.opennms.netmgt.provision.service.snmp.trackers.IPAddressTableTracker;
 import org.opennms.netmgt.snmp.NamedSnmpVar;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpResult;
