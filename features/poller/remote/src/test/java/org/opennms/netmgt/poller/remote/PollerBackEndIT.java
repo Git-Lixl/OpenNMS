@@ -41,6 +41,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Resource;
 
@@ -61,11 +62,11 @@ import org.opennms.netmgt.dao.api.ServiceTypeDao;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsLocationMonitor;
 import org.opennms.netmgt.model.OnmsLocationMonitor.MonitorStatus;
-import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.opennms.netmgt.model.OnmsLocationSpecificStatus;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsServiceType;
+import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.opennms.netmgt.poller.DistributionContext;
 import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitorLocator;
@@ -134,7 +135,7 @@ public class PollerBackEndIT implements InitializingBean {
     public void setUp(){
         MockLogAppender.setupLogging();
 
-        OnmsMonitoringLocation location = new OnmsMonitoringLocation("RDU", "East Coast", new String[] { "example1" }, new String[0], "Research Triangle Park, NC", 35.715751f, -79.16262f, 1L, "odd");
+        OnmsMonitoringLocation location = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "RDU", "East Coast", new String[] { "example1" }, new String[0], "Research Triangle Park, NC", 35.715751f, -79.16262f, 1L, "odd");
         m_monitoringLocationDao.saveOrUpdate(location);
     }
 

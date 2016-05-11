@@ -38,8 +38,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import org.opennms.core.network.InetAddressXmlAdapter;
 import org.opennms.core.xml.JaxbMapAdapter;
+import org.opennms.core.xml.adapters.InetAddressXmlAdapter;
 
 
 @XmlRootElement(name="agent")

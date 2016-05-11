@@ -26,11 +26,13 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.core.network;
+package org.opennms.core.xml.adapters;
 
 import java.net.InetAddress;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
+
+import org.opennms.core.network.IPAddress;
 
 public class InetAddressXmlAdapter extends XmlAdapter<String, InetAddress> {
 

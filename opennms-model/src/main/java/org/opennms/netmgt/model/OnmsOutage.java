@@ -54,7 +54,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Type;
-import org.opennms.core.network.InetAddressXmlAdapter;
+import org.opennms.core.xml.adapters.InetAddressXmlAdapter;
 import org.springframework.core.style.ToStringCreator;
 
 
