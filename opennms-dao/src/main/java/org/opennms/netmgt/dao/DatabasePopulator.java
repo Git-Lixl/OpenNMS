@@ -268,7 +268,7 @@ public class DatabasePopulator {
         }
         for (final OnmsMonitoringLocation location : m_monitoringLocationDao.findAll()) {
             // Don't delete the default localhost monitoring location
-            if (!MonitoringLocationDao.DEFAULT_MONITORING_LOCATION_ID.equals(location.getLocationName())) {
+            if (!MonitoringLocationDao.DEFAULT_MONITORING_LOCATION_ID.equals(location.getId())) {
                 m_monitoringLocationDao.delete(location);
             }
         }

@@ -71,6 +71,7 @@ public class InstallerDbIT extends TemporaryDatabaseITCase {
 
     private ByteArrayOutputStream m_outputStream;
 
+    private static final String DEFAULT_MONITORING_LOCATION_ID = "00000000-0000-0000-0000-000000000001"; // MonitoringLocationDao.DEFAULT_MONITORING_LOCATION_ID
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -1628,7 +1629,7 @@ public class InstallerDbIT extends TemporaryDatabaseITCase {
 
         // org.opennms.netmgt.dao.api.MonitoringLocationDao.DEFAULT_MONITORING_LOCATION_ID
         executeSQL("INSERT INTO node ( location, nodeId, nodeCreateTime ) "
-                   + "VALUES ( 'localhost', 1, now() )");
+                   + "VALUES ( '" + DEFAULT_MONITORING_LOCATION_ID + "', 1, now() )");
         executeSQL("INSERT INTO snmpInterface ( nodeID, snmpIfIndex ) "
                    + "VALUES ( 1, 1 )");
         

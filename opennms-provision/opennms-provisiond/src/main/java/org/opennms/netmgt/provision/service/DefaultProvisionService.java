@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
@@ -218,7 +217,7 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
         if (node.getLocation() == null) {
             node.setLocation(m_monitoringLocationDao.getDefaultLocation());
         } else {
-            node.setLocation(createLocationIfNecessary(node.getLocation().getLocationName()));
+            node.setLocation(createLocationIfNecessary(node.getLocation().getId()));
         }
     }
 
@@ -716,15 +715,15 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
     }
 
     @Override
-    public OnmsMonitoringLocation createLocationIfNecessary(final String locationName) {
-        if (locationName == null) {
+    public OnmsMonitoringLocation createLocationIfNecessary(final String locationId) {
+        if (locationId == null) {
             return createLocationIfNecessary(MonitoringLocationDao.DEFAULT_MONITORING_LOCATION_ID);
         } else {
             OnmsMonitoringLocation location = new OnmsMonitoringLocation();
-            location.setId(UUID.randomUUID().toString());
-            location.setLocationName(locationName);
+            location.setId(locationId);
+            location.setLocationName(locationId);
             // NMS-7968: Set monitoring area too because it is a non-null field
-            location.setMonitoringArea(locationName);
+            location.setMonitoringArea(locationId);
             return createLocationDefIfNecessary(location);
         }
     }
@@ -734,7 +733,7 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
 
             @Override
             protected OnmsMonitoringLocation query() {
-                return m_dao.get(location.getLocationName());
+                return m_dao.get(location.getId());
             }
 
             @Override
@@ -1134,7 +1133,7 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
 
             @Override
             protected OnmsNode doInsert() {
-                node.setLocation(createLocationIfNecessary(node.getLocation() == null ? null : node.getLocation().getLocationName()));
+                node.setLocation(createLocationIfNecessary(node.getLocation() == null ? null : node.getLocation().getId()));
                 return saveOrUpdate(node);
             }
         }.execute();

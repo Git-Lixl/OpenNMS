@@ -128,7 +128,7 @@ public class LocationMonitorDaoHibernateIT implements InitializingBean {
         ThrowableAnticipator ta = new ThrowableAnticipator();
         ta.anticipate(new IllegalArgumentException(ThrowableAnticipator.IGNORE_MESSAGE));
         try {
-            m_monitoringLocationDao.getByLocationName(null);
+            m_monitoringLocationDao.get(null);
         } catch (Throwable t) {
             ta.throwableReceived(t);
         }
