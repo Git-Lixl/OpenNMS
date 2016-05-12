@@ -33,19 +33,25 @@ import java.util.List;
 
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpObjId;
-import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.SnmpValue;
-import org.opennms.netmgt.snmp.proxy.common.SnmpRequestDTO.Type;
 
 public class SNMPSingleGetBuilder extends AbstractSNMPRequestBuilder<SnmpValue> {
 
     public SNMPSingleGetBuilder(DelegatingLocationAwareSnmpClientImpl client, SnmpAgentConfig agent, SnmpObjId oid) {
-        super(client, agent, Type.GET, Collections.singletonList(oid));
+        super(client, agent, buildGetRequests(oid), Collections.emptyList());
+    }
+
+    private static List<SnmpGetRequestDTO> buildGetRequests(SnmpObjId oid) {
+        final SnmpGetRequestDTO getRequest = new SnmpGetRequestDTO();
+        getRequest.setOids(Collections.singletonList(oid));
+        return Collections.singletonList(getRequest);
     }
 
     @Override
-    protected SnmpValue processResults(List<SnmpResult> result) {
-        return result.stream().findFirst()
+    protected SnmpValue processResponse(SnmpMultiResponseDTO response) {
+        return response.getResponses().stream()
+                .flatMap(res -> res.getResults().stream())
+                .findFirst()
                 .map(res -> res.getValue())
                 .orElse(null);
     }

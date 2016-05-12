@@ -37,20 +37,31 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import org.opennms.netmgt.snmp.SnmpResult;
+import org.opennms.netmgt.snmp.SnmpObjId;
+import org.opennms.netmgt.snmp.SnmpObjIdXmlAdapter;
 
-@XmlRootElement(name="snmp-response")
+@XmlRootElement(name="snmp-walk-request")
 @XmlAccessorType(XmlAccessType.NONE)
-public class SnmpResponseDTO {
+public class SnmpWalkRequestDTO {
+
+    public static boolean DEFAULT_SINGLE_INSTANCE = false;
 
     @XmlAttribute(name="correlation-id")
     private Integer correlationId;
 
-    @XmlElement(name="result")
-    private List<SnmpResult> results = new ArrayList<>(0);
+    @XmlElement(name="oid")
+    @XmlJavaTypeAdapter(SnmpObjIdXmlAdapter.class)
+    private List<SnmpObjId> oids = new ArrayList<>(0);
 
-    public int getCorrelationId() {
+    @XmlAttribute(name="max-repetitions")
+    private Integer maxRepetitions;
+    
+    @XmlAttribute(name="single-instance")
+    private Boolean singleInstance;
+
+    public Integer getCorrelationId() {
         return correlationId;
     }
 
@@ -58,17 +69,37 @@ public class SnmpResponseDTO {
         this.correlationId = correlationId;
     }
 
-    public void setResults(List<SnmpResult> results) {
-        this.results = results;
+    public List<SnmpObjId> getOids() {
+        return oids;
     }
 
-    public List<SnmpResult> getResults() {
-        return results;
+    public void setOids(List<SnmpObjId> oids) {
+        this.oids = oids;
+    }
+
+    public void setMaxRepetitions(Integer maxRepetitions) {
+        this.maxRepetitions = maxRepetitions;
+    }
+
+    public Integer getMaxRepetitions() {
+        return maxRepetitions;
+    }
+
+    public void setSingleInstance(Boolean singleInstance) {
+        this.singleInstance = singleInstance;
+    }
+
+    public Boolean getSingleInstance() {
+        return singleInstance;
+    }
+
+    public boolean isSingleInstance() {
+        return singleInstance != null ? singleInstance : DEFAULT_SINGLE_INSTANCE;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(correlationId, results);
+        return Objects.hash(correlationId, oids, maxRepetitions, singleInstance);
     }
 
     @Override
@@ -79,8 +110,10 @@ public class SnmpResponseDTO {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        final SnmpResponseDTO other = (SnmpResponseDTO) obj;
+        final SnmpWalkRequestDTO other = (SnmpWalkRequestDTO) obj;
         return Objects.equals(this.correlationId, other.correlationId)
-                && Objects.equals(this.results, other.results);
+                && Objects.equals(this.oids, other.oids)
+                && Objects.equals(this.maxRepetitions, other.maxRepetitions)
+                && Objects.equals(this.singleInstance, other.singleInstance);
     }
 }

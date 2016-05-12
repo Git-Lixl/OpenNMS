@@ -31,28 +31,27 @@ package org.opennms.netmgt.snmp.proxy.common;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
-import org.opennms.netmgt.snmp.SnmpObjId;
-import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.proxy.SNMPRequestBuilder;
-import org.opennms.netmgt.snmp.proxy.common.SnmpRequestDTO.Type;
 
 public abstract class AbstractSNMPRequestBuilder<T> implements SNMPRequestBuilder<T> {
 
     private final DelegatingLocationAwareSnmpClientImpl client;
     private final SnmpAgentConfig agent;
-    private final Type type;
-    private final List<SnmpObjId> oids;
+    private List<SnmpGetRequestDTO> gets;
+    private List<SnmpWalkRequestDTO> walks;
     private String location;
     private String description;
+    private Long timeoutInMilliseconds;
 
     public AbstractSNMPRequestBuilder(DelegatingLocationAwareSnmpClientImpl client,
-            SnmpAgentConfig agent, Type type, List<SnmpObjId> oids) {
+            SnmpAgentConfig agent, List<SnmpGetRequestDTO> gets, List<SnmpWalkRequestDTO> walks) {
         this.client = Objects.requireNonNull(client);
         this.agent = Objects.requireNonNull(agent);
-        this.type = Objects.requireNonNull(type);
-        this.oids = Objects.requireNonNull(oids);
+        this.gets = Objects.requireNonNull(gets);
+        this.walks = Objects.requireNonNull(walks);
     }
 
     @Override
@@ -68,18 +67,25 @@ public abstract class AbstractSNMPRequestBuilder<T> implements SNMPRequestBuilde
     }
 
     @Override
+    public SNMPRequestBuilder<T> withTimeout(long duration, TimeUnit unit) {
+        // TODO: Use this to set the JMS timeout
+        timeoutInMilliseconds  = unit.toMillis(duration);
+        return this;
+    }
+
+    @Override
     public CompletableFuture<T> execute() {
         final SnmpRequestDTO snmpRequestDTO = new SnmpRequestDTO();
         snmpRequestDTO.setLocation(location);
         snmpRequestDTO.setAgent(agent);
         snmpRequestDTO.setDescription(description);
-        snmpRequestDTO.setType(type);
-        snmpRequestDTO.setOids(oids);
+        snmpRequestDTO.setGetRequests(gets);
+        snmpRequestDTO.setWalkRequests(walks);
         return client.getSnmpRequestExecutor(location)
                 .execute(snmpRequestDTO)
-                // Different types of requests can process the results differently
-                .thenApply(res -> processResults(res.getResults()));
+                // Different types of requests can process the responses differently
+                .thenApply(res -> processResponse(res));
     }
 
-    protected abstract T processResults(List<SnmpResult> result);
+    protected abstract T processResponse(SnmpMultiResponseDTO response);
 }

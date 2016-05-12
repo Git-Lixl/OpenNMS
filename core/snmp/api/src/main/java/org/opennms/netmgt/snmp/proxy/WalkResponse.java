@@ -26,61 +26,28 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.snmp.proxy.common;
+package org.opennms.netmgt.snmp.proxy;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.opennms.netmgt.snmp.SnmpResult;
 
-@XmlRootElement(name="snmp-response")
-@XmlAccessorType(XmlAccessType.NONE)
-public class SnmpResponseDTO {
+public class WalkResponse {
 
-    @XmlAttribute(name="correlation-id")
-    private Integer correlationId;
+    private final List<SnmpResult> results;
+    private final int correlationId;
 
-    @XmlElement(name="result")
-    private List<SnmpResult> results = new ArrayList<>(0);
+    public WalkResponse(List<SnmpResult> results, int correlationId) {
+        this.results = Objects.requireNonNull(results);
+        this.correlationId = correlationId;
+    }
 
     public int getCorrelationId() {
         return correlationId;
     }
 
-    public void setCorrelationId(Integer correlationId) {
-        this.correlationId = correlationId;
-    }
-
-    public void setResults(List<SnmpResult> results) {
-        this.results = results;
-    }
-
     public List<SnmpResult> getResults() {
         return results;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(correlationId, results);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        final SnmpResponseDTO other = (SnmpResponseDTO) obj;
-        return Objects.equals(this.correlationId, other.correlationId)
-                && Objects.equals(this.results, other.results);
     }
 }

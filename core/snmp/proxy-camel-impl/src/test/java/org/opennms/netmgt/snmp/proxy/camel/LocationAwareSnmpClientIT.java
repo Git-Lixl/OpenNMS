@@ -55,7 +55,6 @@ import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpUtils;
 import org.opennms.netmgt.snmp.SnmpWalker;
 import org.opennms.netmgt.snmp.proxy.common.DelegatingLocationAwareSnmpClientImpl;
-import org.opennms.netmgt.snmp.proxy.common.SnmpRequestDTO;
 import org.opennms.netmgt.snmp.proxy.common.SnmpRequestExecutor;
 import org.opennms.netmgt.snmp.proxy.common.testutils.ExpectedResults;
 import org.opennms.netmgt.snmp.proxy.common.testutils.IPAddressGatheringTracker;
@@ -144,10 +143,10 @@ public class LocationAwareSnmpClientIT {
     @Test
     public void canWalkIpAddressTableViaCurrentLocation() throws UnknownHostException, InterruptedException, ExecutionException {
         final IPAddressGatheringTracker tracker = new IPAddressGatheringTracker();
-        tracker.processResults(locationAwareSnmpClient.walk(agentConfig, tracker.getBaseOids())
-                .withDescription(tracker.getDescription())
-                .atLocation(identity.getLocation())
-                .execute().get());
+        locationAwareSnmpClient.walk(agentConfig, tracker)
+            .withDescription(tracker.getDescription())
+            .atLocation(identity.getLocation())
+            .execute().get();
         ExpectedResults.compareToKnownIpAddressList(tracker.getIpAddresses());
     }
 
@@ -168,8 +167,6 @@ public class LocationAwareSnmpClientIT {
             @Override
             public void configure() throws Exception {
                 from("queuingservice:snmp-proxy@" + REMOTE_LOCATION_NAME)
-                .bean(SnmpRequestDTO.Unmarshal.class)
-                .convertBodyTo(SnmpRequestDTO.class)
                 .setExchangePattern(ExchangePattern.InOut)
                 .process(snmpRequestExecutorCamelAsync);
             };
@@ -177,10 +174,10 @@ public class LocationAwareSnmpClientIT {
         mockDiscoverer.start();
 
         final IPAddressGatheringTracker tracker = new IPAddressGatheringTracker();
-        tracker.processResults(locationAwareSnmpClient.walk(agentConfig, tracker.getBaseOids())
-                .withDescription(tracker.getDescription())
-                .atLocation(REMOTE_LOCATION_NAME)
-                .execute().get());
+        locationAwareSnmpClient.walk(agentConfig, tracker)
+            .withDescription(tracker.getDescription())
+            .atLocation(REMOTE_LOCATION_NAME)
+            .execute().get();
         ExpectedResults.compareToKnownIpAddressList(tracker.getIpAddresses());
 
         mockDiscoverer.stop();

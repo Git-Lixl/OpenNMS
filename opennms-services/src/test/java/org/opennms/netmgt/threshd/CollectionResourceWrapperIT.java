@@ -78,6 +78,7 @@ import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.netmgt.snmp.SnmpInstId;
 import org.opennms.netmgt.snmp.SnmpUtils;
 import org.opennms.netmgt.snmp.SnmpValue;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 
 /**
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a>
@@ -89,10 +90,13 @@ public class CollectionResourceWrapperIT {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
+    private LocationAwareSnmpClient m_locationAwareSnmpClient;
+
     @Before
     public void setUp() throws Exception {
         CollectionResourceWrapper.s_cache.clear();
         MockLogAppender.setupLogging();
+        m_locationAwareSnmpClient = EasyMock.createMock(LocationAwareSnmpClient.class);
     }
 
     @After
@@ -386,7 +390,7 @@ public class CollectionResourceWrapperIT {
 
         // Creating IfResourceType
         MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();        
-        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig);
+        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig, m_locationAwareSnmpClient);
         IfResourceType resourceType = new IfResourceType(agent, collection);
 
         // Creating Resource
@@ -418,7 +422,7 @@ public class CollectionResourceWrapperIT {
     public void testGenericResource() throws Exception {
         SnmpCollectionAgent agent = createCollectionAgent();
         MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();
-        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig);
+        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig, m_locationAwareSnmpClient);
         ResourceType rt = new ResourceType();
         rt.setName("hrStorageIndex");
         rt.setLabel("host-resources storage");
@@ -448,7 +452,7 @@ public class CollectionResourceWrapperIT {
     public void testNumericFields() throws Exception {
         SnmpCollectionAgent agent = createCollectionAgent();
         MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();
-        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig);
+        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig, m_locationAwareSnmpClient);
         ResourceType rt = new ResourceType();
         rt.setName("dskIndex");
         rt.setLabel("Disk Table Index (UCD-SNMP MIB)");
@@ -483,7 +487,7 @@ public class CollectionResourceWrapperIT {
 
     private SnmpCollectionResource createNodeResource(SnmpCollectionAgent agent) {
         MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();        
-        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig);
+        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig, m_locationAwareSnmpClient);
         NodeResourceType resourceType = new NodeResourceType(agent, collection);
         return new NodeInfo(resourceType, agent);
     }

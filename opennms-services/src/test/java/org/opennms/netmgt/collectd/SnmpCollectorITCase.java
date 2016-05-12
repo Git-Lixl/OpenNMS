@@ -35,6 +35,8 @@ import static org.junit.Assert.fail;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.easymock.EasyMock;
 import org.junit.After;
@@ -60,6 +62,9 @@ import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpUtils;
 import org.opennms.netmgt.snmp.SnmpWalker;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
+import org.opennms.netmgt.snmp.proxy.common.DelegatingLocationAwareSnmpClientImpl;
+import org.opennms.netmgt.snmp.proxy.common.SnmpRequestExecutorLocalImpl;
 import org.opennms.test.mock.EasyMockUtils;
 import org.springframework.core.io.ClassPathResource;
 
@@ -95,12 +100,14 @@ public abstract class SnmpCollectorITCase extends OpenNMSITCase {
     protected OnmsIpInterface m_iface;
     
     protected SnmpCollectionAgent m_agent;
-    private SnmpWalker m_walker;
+    private CompletableFuture<CollectionTracker> m_future;
     protected SnmpCollectionSet m_collectionSet;
     
     protected MockSnmpAgent m_mockAgent;
     protected IpInterfaceDao m_ifaceDao;
     protected EasyMockUtils m_easyMockUtils;
+
+    protected LocationAwareSnmpClient m_locationAwareSnmpClient;
     
     @Override
     public void setVersion(int version) {
@@ -126,8 +133,11 @@ public abstract class SnmpCollectorITCase extends OpenNMSITCase {
         m_easyMockUtils = new EasyMockUtils();
         m_ifaceDao = m_easyMockUtils.createMock(IpInterfaceDao.class);
 
+        DelegatingLocationAwareSnmpClientImpl snmpClient = new DelegatingLocationAwareSnmpClientImpl();
+        snmpClient.setLocalSnmpRequestExecutor(new SnmpRequestExecutorLocalImpl());
+        m_locationAwareSnmpClient = snmpClient;
+
         createAgent(1, PrimaryType.PRIMARY);
-        
     }
 
     @After
@@ -296,7 +306,7 @@ public abstract class SnmpCollectorITCase extends OpenNMSITCase {
     
     protected void initializeAgent() throws CollectionInitializationException {
         ServiceParameters params = new ServiceParameters(new HashMap<String, Object>());
-        OnmsSnmpCollection snmpCollection = new OnmsSnmpCollection(m_agent, params, m_config);
+        OnmsSnmpCollection snmpCollection = new OnmsSnmpCollection(m_agent, params, m_config, m_locationAwareSnmpClient);
         m_collectionSet = snmpCollection.createCollectionSet(m_agent);
         m_agent.validateAgent();
     }
@@ -306,11 +316,12 @@ public abstract class SnmpCollectorITCase extends OpenNMSITCase {
     }
 
     protected void createWalker(CollectionTracker collector) {
-        m_walker = SnmpUtils.createWalker(m_agent.getAgentConfig(), getClass().getSimpleName(), collector);
-        m_walker.start();
+        m_future = m_locationAwareSnmpClient.walk(m_agent.getAgentConfig(), collector)
+            .withDescription(getClass().getSimpleName())
+            .execute();
     }
 
-    protected void waitForSignal() throws InterruptedException {
-        m_walker.waitFor();
+    protected void waitForSignal() throws InterruptedException, ExecutionException {
+        m_future.get();
     }
 }

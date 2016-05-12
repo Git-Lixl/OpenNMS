@@ -43,7 +43,6 @@ import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.provision.NodePolicy;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
-import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,13 +136,13 @@ final class NodeInfoScan implements RunInBatch {
 
         ScanResourceSystemGroup systemGroup = new ScanResourceSystemGroup(primaryAddress);
 
-        final CompletableFuture<List<SnmpResult>> future = m_locationAwareSnmpClient.walk(agentConfig, systemGroup.getBaseOids())
+        final CompletableFuture<ScanResourceSystemGroup> future = m_locationAwareSnmpClient.walk(agentConfig, systemGroup)
                 .atLocation(null)
                 .withDescription("systemGroup")
                 .execute();
 
         try {
-            systemGroup.processResults(future.get());
+            future.get();
             systemGroup.updateSnmpDataForNode(getNode());
 
             List<NodePolicy> nodePolicies = getProvisionService().getNodePoliciesForForeignSource(getEffectiveForeignSource());

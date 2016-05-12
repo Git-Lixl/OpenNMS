@@ -31,8 +31,16 @@ package org.opennms.netmgt.snmp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.opennms.netmgt.snmp.proxy.WalkRequest;
+import org.opennms.netmgt.snmp.proxy.WalkResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AggregateTracker extends CollectionTracker {
+    private static final Logger LOG = LoggerFactory.getLogger(AggregateTracker.class);
 
     private static class ChildTrackerPduBuilder extends PduBuilder {
         private List<SnmpObjId> m_oids = new ArrayList<SnmpObjId>();
@@ -318,5 +326,34 @@ public class AggregateTracker extends CollectionTracker {
         // construct a response processor that tracks the changes and informs the response processors
         // for the child trackers
         return new ChildTrackerResponseProcessor(parentBuilder, builders, nonRepeaters, repeaters);
+    }
+
+    @Override
+    public List<WalkRequest> getWalkRequests() {
+        final List<WalkRequest> walkRequests = new ArrayList<>();
+        for (int k = 0; k < m_children.length; k++) {
+            for (WalkRequest walkRequest : m_children[k].getWalkRequests()) {
+                walkRequest.setCorrelationId(k);
+                walkRequests.add(walkRequest);
+            }
+        }
+        return walkRequests;
+    }
+
+    @Override
+    public void handleWalkResponses(List<WalkResponse> responses) {
+        // Group the responses by correlation id
+        Map<Integer, List<WalkResponse>> responsesByCorrelationId = responses.stream()
+                .collect(Collectors.groupingBy(res -> res.getCorrelationId()));
+        // Store the results in the appropriate child trackers
+        responsesByCorrelationId.entrySet().stream()
+            .forEach(entry -> {
+                if (entry.getKey() > (m_children.length  -1)) {
+                    LOG.warn("Invalid correlation id on response: {}, {}, {}",
+                            entry, responses, m_children.length);
+                } else {
+                    m_children[entry.getKey()].handleWalkResponses(responses);
+                }
+            });
     }
 }

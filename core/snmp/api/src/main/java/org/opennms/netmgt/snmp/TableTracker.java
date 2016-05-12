@@ -35,11 +35,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.opennms.netmgt.snmp.proxy.ProxiableTracker;
+import org.opennms.netmgt.snmp.proxy.WalkRequest;
+import org.opennms.netmgt.snmp.proxy.WalkResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TableTracker extends CollectionTracker implements RowCallback, RowResultFactory, ProxiableTracker {
+public class TableTracker extends CollectionTracker implements RowCallback, RowResultFactory {
 
 	private static final transient Logger LOG = LoggerFactory.getLogger(TableTracker.class);
 
@@ -195,19 +196,28 @@ public class TableTracker extends CollectionTracker implements RowCallback, RowR
     }
 
     @Override
-    public List<SnmpObjId> getBaseOids() {
+    public List<WalkRequest> getWalkRequests() {
         return m_columnTrackers.stream()
-                    .map(c -> c.getBase())
-                    .collect(Collectors.toList());
+                .map(c -> {
+                    WalkRequest walkRequest = new WalkRequest(c.getBase());
+                    walkRequest.setMaxRepetitions(c.getMaxRepetitions());
+                    return walkRequest;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
-    public void processResults(List<SnmpResult> results) {
+    public void handleWalkResponses(List<WalkResponse> responses) {
         // Store each result
-        results.forEach(res -> storeResult(res));
+        responses.stream()
+            .flatMap(res -> res.getResults().stream())
+            .forEach(res -> storeResult(res));
         // Mark all of the base columns as completed
-        getBaseOids().forEach(base -> m_tableResult.columnFinished(base));
+        m_columnTrackers.stream()
+            .map(c -> c.getBase())
+            .forEach(base -> m_tableResult.columnFinished(base));
         // Mark the table as completed
         m_tableResult.tableFinished();
+            
     }
 }

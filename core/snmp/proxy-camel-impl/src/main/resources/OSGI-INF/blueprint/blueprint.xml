@@ -34,19 +34,12 @@
 
     <bean id="unmarshalProcessor" class="org.opennms.netmgt.snmp.proxy.common.SnmpRequestDTO.Unmarshal" />
 
-    <bean id="marshalProcessor" class="org.opennms.netmgt.snmp.proxy.common.SnmpResponseDTO.Marshal" />
-
     <camelContext id="snmpProxy" xmlns="http://camel.apache.org/schema/blueprint">
         <propertyPlaceholder id="properties" location="blueprint:snmpProxyProperties" />
         <route id="snmpRequestExecutor">
             <from uri="queuingservice:snmp-proxy@{{monitoringLocationName}}" />
-            <!-- Unmarshal the request -->
-            <bean ref="unmarshalProcessor" />
             <setExchangePattern pattern="InOut" />
             <process ref="asyncSnmpRequestProcesor" />
-            <!-- Marshal the response 
-            <bean ref="marshalProcessor" />
-            -->
         </route>
     </camelContext>
 </blueprint>

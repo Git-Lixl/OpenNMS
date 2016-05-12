@@ -30,6 +30,7 @@ package org.opennms.netmgt.snmp.proxy;
 
 import java.util.List;
 
+import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpResult;
@@ -49,6 +50,8 @@ public interface LocationAwareSnmpClient {
     SNMPRequestBuilder<List<SnmpResult>> walk(SnmpAgentConfig agent, SnmpObjId... oids);
 
     SNMPRequestBuilder<List<SnmpResult>> walk(SnmpAgentConfig agent, List<SnmpObjId> oids);
+
+    <T extends CollectionTracker> SNMPRequestBuilder<T> walk(SnmpAgentConfig agent, T tracker);
 
     SNMPRequestBuilder<SnmpValue> get(SnmpAgentConfig agent, String oid);
 

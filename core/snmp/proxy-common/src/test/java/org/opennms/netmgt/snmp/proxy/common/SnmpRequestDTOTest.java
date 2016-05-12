@@ -37,8 +37,6 @@ import org.junit.runners.Parameterized.Parameters;
 import org.opennms.core.test.xml.XmlTestNoCastor;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpObjId;
-import org.opennms.netmgt.snmp.proxy.common.SnmpRequestDTO;
-import org.opennms.netmgt.snmp.proxy.common.SnmpRequestDTO.Type;
 
 import com.google.common.collect.Lists;
 
@@ -54,7 +52,7 @@ public class SnmpRequestDTOTest extends XmlTestNoCastor<SnmpRequestDTO> {
                 {
                     getSnmpWalkRequest(),
                     "<?xml version=\"1.0\"?>\n" +
-                    "<snmp-request description=\"IP address tables\" location=\"dc2\" type=\"WALK\">\n" +
+                    "<snmp-request description=\"some random oids\" location=\"dc2\">\n" +
                       "<agent>\n" +
                          "<authPassPhrase>0p3nNMSv3</authPassPhrase>\n" +
                          "<authProtocol>MD5</authProtocol>\n" +
@@ -74,9 +72,17 @@ public class SnmpRequestDTOTest extends XmlTestNoCastor<SnmpRequestDTO> {
                          "<writeCommunity>private</writeCommunity>\n" +
                          "<address>192.168.0.2</address>\n" +
                       "</agent>\n" +
-                      "<oid>.1.3.6.1.2.1.4.34.1.3</oid>\n" +
-                      "<oid>.1.3.6.1.2.1.4.34.1.5</oid>\n" +
-                      "<oid>.1.3.6.1.2.1.4.34.1.4</oid>\n" +
+                      "<get correlation-id=\"44\">\n" +
+                         "<oid>.1.3.6.1.2.1.3.1.3.0</oid>\n" +
+                      "</get>\n" +
+                      "<walk correlation-id=\"42\" max-repetitions=\"4\">\n" +
+                         "<oid>.1.3.6.1.2.1.4.34.1.3</oid>\n" +
+                         "<oid>.1.3.6.1.2.1.4.34.1.5</oid>\n" +
+                         "<oid>.1.3.6.1.2.1.4.34.1.4</oid>\n" +
+                      "</walk>\n" +
+                      "<walk correlation-id=\"43\" single-instance=\"true\">\n" +
+                         "<oid>.1.3.6.1.2.1.3.1.3.0</oid>\n" +
+                      "</walk>\n" +
                     "</snmp-request>"
                 }
         });
@@ -86,17 +92,34 @@ public class SnmpRequestDTOTest extends XmlTestNoCastor<SnmpRequestDTO> {
         final SnmpAgentConfig agent = new SnmpAgentConfig();
         agent.setAddress(InetAddress.getByName("192.168.0.2"));
 
-        final SnmpRequestDTO walkRequest = new SnmpRequestDTO();
-        walkRequest.setType(Type.WALK);
-        walkRequest.setDescription("IP address tables");
+        final SnmpWalkRequestDTO walkRequest = new SnmpWalkRequestDTO();
+        walkRequest.setCorrelationId(42);
+        walkRequest.setMaxRepetitions(4);
         walkRequest.setOids(Lists.newArrayList(
                 SnmpObjId.get(SnmpObjId.get(".1.3.6.1.2.1.4.34.1"), "3"),
                 SnmpObjId.get(SnmpObjId.get(".1.3.6.1.2.1.4.34.1"), "5"),
                 SnmpObjId.get(SnmpObjId.get(".1.3.6.1.2.1.4.34.1"), "4")
         ));
-        walkRequest.setLocation("dc2");
-        walkRequest.setAgent(agent);
 
-        return walkRequest;
+        SnmpWalkRequestDTO singleInstanceWalkRequest = new SnmpWalkRequestDTO();
+        singleInstanceWalkRequest.setCorrelationId(43);
+        singleInstanceWalkRequest.setSingleInstance(true);
+        singleInstanceWalkRequest.setOids(Lists.newArrayList(
+                SnmpObjId.get(SnmpObjId.get(".1.3.6.1.2.1.3.1.3"), "0")
+        ));
+
+        final SnmpGetRequestDTO getRequest = new SnmpGetRequestDTO();
+        getRequest.setCorrelationId(44);
+        getRequest.setOids(Lists.newArrayList(
+                SnmpObjId.get(SnmpObjId.get(".1.3.6.1.2.1.3.1.3"), "0")
+        ));
+
+        final SnmpRequestDTO snmpRequest = new SnmpRequestDTO();
+        snmpRequest.setDescription("some random oids");
+        snmpRequest.setLocation("dc2");
+        snmpRequest.setAgent(agent);
+        snmpRequest.setWalkRequests(Lists.newArrayList(walkRequest, singleInstanceWalkRequest));
+        snmpRequest.setGetRequests(Lists.newArrayList(getRequest));
+        return snmpRequest;
     }
 }

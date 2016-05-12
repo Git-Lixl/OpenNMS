@@ -142,7 +142,7 @@ public class LocationAwareSnmpClientBlueprintIT extends CamelBlueprintTest {
     @Test
     public void canWalkIpAddressTableDirectly() throws InterruptedException {
         final IPAddressGatheringTracker tracker = new IPAddressGatheringTracker();
-        final SnmpWalker walker = SnmpUtils.createWalker(agentConfig, "IP address tables", tracker);
+        final SnmpWalker walker = SnmpUtils.createWalker(agentConfig, tracker.getDescription(), tracker);
         walker.start();
         walker.waitFor();
         ExpectedResults.compareToKnownIpAddressList(tracker.getIpAddresses());
@@ -154,10 +154,10 @@ public class LocationAwareSnmpClientBlueprintIT extends CamelBlueprintTest {
     @Test(timeout=60000)
     public void canWalkIpAddressTableViaCurrentLocation() throws UnknownHostException, InterruptedException, ExecutionException {
         final IPAddressGatheringTracker tracker = new IPAddressGatheringTracker();
-        tracker.processResults(locationAwareSnmpClient.walk(agentConfig, tracker.getBaseOids())
-                .withDescription(tracker.getDescription())
-                .atLocation(identity.getLocation())
-                .execute().get());
+        locationAwareSnmpClient.walk(agentConfig, tracker)
+            .withDescription(tracker.getDescription())
+            .atLocation(identity.getLocation())
+            .execute().get();
         ExpectedResults.compareToKnownIpAddressList(tracker.getIpAddresses());
     }
 
@@ -169,10 +169,10 @@ public class LocationAwareSnmpClientBlueprintIT extends CamelBlueprintTest {
     @Test(timeout=60000)
     public void canWalkIpAddressTableViaAnotherLocation() throws Exception {
         final IPAddressGatheringTracker tracker = new IPAddressGatheringTracker();
-        tracker.processResults(locationAwareSnmpClient.walk(agentConfig, tracker.getBaseOids())
-                .withDescription(tracker.getDescription())
-                .atLocation(REMOTE_LOCATION_NAME)
-                .execute().get());
+        locationAwareSnmpClient.walk(agentConfig, tracker)
+            .withDescription(tracker.getDescription())
+            .atLocation(REMOTE_LOCATION_NAME)
+            .execute().get();
         ExpectedResults.compareToKnownIpAddressList(tracker.getIpAddresses());
     }
 }

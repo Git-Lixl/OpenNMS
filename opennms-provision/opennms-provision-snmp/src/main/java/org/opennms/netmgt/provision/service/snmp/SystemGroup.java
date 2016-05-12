@@ -30,13 +30,9 @@ package org.opennms.netmgt.provision.service.snmp;
 
 
 import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.opennms.netmgt.snmp.AggregateTracker;
 import org.opennms.netmgt.snmp.NamedSnmpVar;
-import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.SnmpStore;
 import org.opennms.netmgt.snmp.proxy.ProxiableTracker;
@@ -281,18 +277,5 @@ public class SystemGroup extends AggregateTracker implements ProxiableTracker {
     @Override
     protected void reportNoSuchNameErr(String msg) {
         LOG.info("Error retrieving systemGroup from {}. {}", msg, m_address);
-    }
-
-    @Override
-    public List<SnmpObjId> getBaseOids() {
-        return Arrays.stream(ms_elemList)
-            .map(el -> el.getSnmpObjId())
-            .collect(Collectors.toList());
-    }
-
-    @Override
-    public void processResults(List<SnmpResult> results) {
-        // Store each result
-        results.forEach(res -> storeResult(res));
     }
 }

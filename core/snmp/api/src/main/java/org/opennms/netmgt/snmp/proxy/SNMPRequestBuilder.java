@@ -29,6 +29,7 @@
 package org.opennms.netmgt.snmp.proxy;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Fluent API for building SNMP requests.
@@ -42,6 +43,8 @@ public interface SNMPRequestBuilder<T> {
     SNMPRequestBuilder<T> atLocation(String location);
 
     SNMPRequestBuilder<T> withDescription(String string);
+
+    SNMPRequestBuilder<T> withTimeout(long duration, TimeUnit unit);
 
     CompletableFuture<T> execute();
 

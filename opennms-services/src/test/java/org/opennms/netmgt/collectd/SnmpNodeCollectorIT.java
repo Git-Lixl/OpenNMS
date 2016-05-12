@@ -42,9 +42,14 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class SnmpNodeCollectorIT extends SnmpCollectorITCase {
 
+    public SnmpNodeCollectorIT() {
+        setVersion(SnmpAgentConfig.VERSION2C);
+    }
+    
+    /*
 	public SnmpNodeCollectorIT(int config) {
 		setVersion(config);
 	}
@@ -58,7 +63,7 @@ public class SnmpNodeCollectorIT extends SnmpCollectorITCase {
 		};
 		return Arrays.asList(retval);
 	}
-
+    */
     @Test
     public void testZeroVars() throws Exception {
         SnmpNodeCollector collector = createNodeCollector();

@@ -38,12 +38,11 @@ import org.opennms.netmgt.snmp.SnmpInstId;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.SnmpValueFactory;
-import org.opennms.netmgt.snmp.proxy.common.SnmpResponseDTO;
 import org.opennms.netmgt.snmp.snmp4j.Snmp4JValueFactory;
 
-public class SnmpResponseDTOTest extends XmlTestNoCastor<SnmpResponseDTO> {
+public class SnmpMultiResponseDTOTest extends XmlTestNoCastor<SnmpMultiResponseDTO> {
 
-    public SnmpResponseDTOTest(SnmpResponseDTO sampleObject, String sampleXml) {
+    public SnmpMultiResponseDTOTest(SnmpMultiResponseDTO sampleObject, String sampleXml) {
         super(sampleObject, sampleXml, null);
     }
 
@@ -51,27 +50,33 @@ public class SnmpResponseDTOTest extends XmlTestNoCastor<SnmpResponseDTO> {
     public static Collection<Object[]> data() throws Exception {
         return Arrays.asList(new Object[][] {
                 {
-                    getSnmpWalkResponse(),
+                    getSnmpMultiResponse(),
                     "<?xml version=\"1.0\"?>\n" +
                     "<snmp-response>\n" +
-                        "<result>\n" +
-                          "<base>.1.3.6.1.2</base>\n" +
-                          "<instance>1.3.6.1.2.1.4.34.1.3.1.2.3.4</instance>\n" +
-                          "<value type=\"70\">Cg==</value>\n" +
-                        "</result>\n" +
+                        "<response correlation-id=\"42\">\n" +
+                            "<result>\n" +
+                              "<base>.1.3.6.1.2</base>\n" +
+                              "<instance>1.3.6.1.2.1.4.34.1.3.1.2.3.4</instance>\n" +
+                              "<value type=\"70\">Cg==</value>\n" +
+                            "</result>\n" +
+                        "</response>\n" +
                     "</snmp-response>"
                 }
         });
     }
 
-    private static SnmpResponseDTO getSnmpWalkResponse() {
+    private static SnmpMultiResponseDTO getSnmpMultiResponse() {
         final SnmpValueFactory snmpValueFactory = new Snmp4JValueFactory();
         final SnmpResult result = new SnmpResult(
                 SnmpObjId.get(".1.3.6.1.2"),
                 new SnmpInstId(".1.3.6.1.2.1.4.34.1.3.1.2.3.4"),
                 snmpValueFactory.getCounter64(BigInteger.TEN));
-        final SnmpResponseDTO walkResult = new SnmpResponseDTO();
-        walkResult.getResults().add(result);
-        return walkResult;
+        final SnmpResponseDTO responseDTO = new SnmpResponseDTO();
+        responseDTO.setCorrelationId(42);
+        responseDTO.getResults().add(result);
+
+        final SnmpMultiResponseDTO multiResponseDTO = new SnmpMultiResponseDTO();
+        multiResponseDTO.getResponses().add(responseDTO);
+        return multiResponseDTO;
     }
 }

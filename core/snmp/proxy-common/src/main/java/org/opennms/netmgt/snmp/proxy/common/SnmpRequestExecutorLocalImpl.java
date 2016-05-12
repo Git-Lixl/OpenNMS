@@ -38,6 +38,7 @@ import org.opennms.netmgt.snmp.AggregateTracker;
 import org.opennms.netmgt.snmp.Collectable;
 import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.ColumnTracker;
+import org.opennms.netmgt.snmp.SingleInstanceTracker;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.SnmpUtils;
@@ -53,32 +54,65 @@ import org.opennms.netmgt.snmp.SnmpWalker;
 public class SnmpRequestExecutorLocalImpl implements SnmpRequestExecutor {
 
     @Override
-    public CompletableFuture<SnmpResponseDTO> execute(SnmpRequestDTO request) {
-        switch (request.getType()) {
-        case GET:
-            return get(request);
-        case WALK:
-            return walk(request);
-        default:
-            throw new IllegalArgumentException("Unsupported request type " + request.getType());
+    public CompletableFuture<SnmpMultiResponseDTO> execute(SnmpRequestDTO request) {
+        CompletableFuture<SnmpMultiResponseDTO> combinedFuture = CompletableFuture
+                .completedFuture(new SnmpMultiResponseDTO());
+        for (SnmpGetRequestDTO getRequest : request.getGetRequests()) {
+            CompletableFuture<SnmpResponseDTO> future = get(request, getRequest);
+            combinedFuture = combinedFuture.thenCombine(future, (m,s) -> {
+                m.getResponses().add(s);
+                return m;
+            });
         }
+        for (SnmpWalkRequestDTO walkRequest : request.getWalkRequest()) {
+            CompletableFuture<SnmpResponseDTO> future = walk(request, walkRequest);
+            combinedFuture = combinedFuture.thenCombine(future, (m,s) -> {
+                m.getResponses().add(s);
+                return m;
+            });
+        }
+        return combinedFuture;
     }
 
-    public CompletableFuture<SnmpResponseDTO> walk(SnmpRequestDTO request) {
+    public CompletableFuture<SnmpResponseDTO> walk(SnmpRequestDTO request, SnmpWalkRequestDTO walk) {
         final List<SnmpResult> results = new ArrayList<>();
-        final Collection<Collectable> trackers = request.getOids().stream()
-            .map(oid -> SnmpObjId.get(oid))
-            .map(objId -> new ColumnTracker(objId))
-            .collect(Collectors.toList());
-        final CollectionTracker agg = new AggregateTracker(trackers) {
-            @Override
-            protected void storeResult(SnmpResult res) {
-                results.add(res);
-            }
-        };
-
         final CompletableFuture<SnmpResponseDTO> future = new CompletableFuture<SnmpResponseDTO>();
-        final SnmpWalker walker = SnmpUtils.createWalker(request.getAgent(), request.getDescription(), agg);
+        
+        CollectionTracker tracker;
+        if (walk.isSingleInstance()) {
+            if (walk.getOids().size() != 1) {
+                future.completeExceptionally(new IllegalArgumentException("Single instance requests must have a single OID."));
+                return future;
+            }
+            final SnmpObjId oid = walk.getOids().get(0);
+            int[] ids = oid.getIds();
+            if (ids.length < 1) {
+                future.completeExceptionally(new IllegalArgumentException("OID oups."));
+                return future;
+            }
+            int[] baseIds = new int[ids.length - 1];
+            for (int i = 0; i < ids.length - 1; i++) {
+                baseIds[i] = ids[i];
+            }
+            SnmpObjId baseOid = new SnmpObjId(baseIds, false);
+            tracker = new SingleInstanceTracker(baseOid, oid.getInstance(baseOid));
+        } else {
+            final Collection<Collectable> columnTrackers = walk.getOids().stream()
+                    .map(oid -> SnmpObjId.get(oid))
+                    .map(objId -> new ColumnTracker(objId))
+                    .collect(Collectors.toList());
+            tracker = new AggregateTracker(columnTrackers) {
+                @Override
+                protected void storeResult(SnmpResult res) {
+                    results.add(res);
+                }
+            };
+        }
+        if (walk.getMaxRepetitions() != null) {
+            tracker.setMaxRepetitions(walk.getMaxRepetitions());
+        }
+
+        final SnmpWalker walker = SnmpUtils.createWalker(request.getAgent(), request.getDescription(), tracker);
         walker.setCallback(new SnmpWalkCallback() {
             @Override
             public void complete(SnmpWalker tracker, Throwable t) {
@@ -86,6 +120,7 @@ public class SnmpRequestExecutorLocalImpl implements SnmpRequestExecutor {
                     future.completeExceptionally(t);
                 } else {
                     final SnmpResponseDTO response = new SnmpResponseDTO();
+                    response.setCorrelationId(walk.getCorrelationId());
                     response.setResults(results);
                     future.complete(response);
                 }
@@ -95,8 +130,8 @@ public class SnmpRequestExecutorLocalImpl implements SnmpRequestExecutor {
         return future;
     }
 
-    public CompletableFuture<SnmpResponseDTO> get(SnmpRequestDTO request) {
-        final SnmpObjId[] oids = request.getOids().toArray(new SnmpObjId[request.getOids().size()]);
+    public CompletableFuture<SnmpResponseDTO> get(SnmpRequestDTO request, SnmpGetRequestDTO get) {
+        final SnmpObjId[] oids = get.getOids().toArray(new SnmpObjId[get.getOids().size()]);
         final CompletableFuture<SnmpValue[]> future = SnmpUtils.getAsync(request.getAgent(), oids);
         return future.thenApply(values -> {
             final List<SnmpResult> results = new ArrayList<>(oids.length);
@@ -105,6 +140,7 @@ public class SnmpRequestExecutorLocalImpl implements SnmpRequestExecutor {
                 results.add(result);
             }
             final SnmpResponseDTO responseDTO = new SnmpResponseDTO();
+            responseDTO.setCorrelationId(get.getCorrelationId());
             responseDTO.setResults(results);
             return responseDTO;
         });

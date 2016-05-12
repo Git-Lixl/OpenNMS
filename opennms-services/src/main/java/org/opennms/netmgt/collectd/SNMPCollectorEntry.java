@@ -103,7 +103,8 @@ public final class SNMPCollectorEntry extends AbstractSnmpStore {
         putValue(key, res.getValue());
         List<SnmpAttributeType> attrTypes = findAttributeTypeForOid(res.getBase(), res.getInstance());
         if (attrTypes.isEmpty()) {
-        	throw new IllegalArgumentException("Received result for unexpected oid ["+res.getBase()+"].["+res.getInstance()+"]");
+            return;
+        	//throw new IllegalArgumentException("Received result for unexpected oid ["+res.getBase()+"].["+res.getInstance()+"]");
         }
         
         for (SnmpAttributeType attrType : attrTypes) {

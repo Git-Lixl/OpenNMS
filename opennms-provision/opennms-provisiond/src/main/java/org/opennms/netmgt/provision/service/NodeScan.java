@@ -62,10 +62,9 @@ import org.opennms.netmgt.provision.SnmpInterfacePolicy;
 import org.opennms.netmgt.provision.service.snmp.trackers.IPAddressTableTracker;
 import org.opennms.netmgt.provision.service.snmp.trackers.IPInterfaceTableTracker;
 import org.opennms.netmgt.provision.service.snmp.trackers.PhysInterfaceTableTracker;
+import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
-import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
-import org.opennms.netmgt.snmp.proxy.ProxiableTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -528,7 +527,7 @@ public class NodeScan implements Scan {
             walkTable(currentPhase, provisionedIps, ipIfTracker);
         }
 
-        private void walkTable(final BatchTask currentPhase, final Set<InetAddress> provisionedIps, final ProxiableTracker tracker) {
+        private void walkTable(final BatchTask currentPhase, final Set<InetAddress> provisionedIps, final CollectionTracker tracker) {
             final OnmsNode node = getNode();
             LOG.info("detecting IP interfaces for node {}/{}/{} using table tracker {}", node.getId(), node.getForeignSource(), node.getForeignId(), tracker);
 
@@ -538,12 +537,12 @@ public class NodeScan implements Scan {
                 Assert.notNull(getAgentConfigFactory(), "agentConfigFactory was not injected");
 
                 final SnmpAgentConfig agentConfig = getAgentConfigFactory().getAgentConfig(getAgentAddress());
-                final CompletableFuture<List<SnmpResult>> future = m_locationAwareSnmpClient.walk(agentConfig, tracker.getBaseOids())
+                final CompletableFuture<CollectionTracker> future = m_locationAwareSnmpClient.walk(agentConfig, tracker)
                         .atLocation(null)
                         .withDescription("IP address tables")
                         .execute();
                 try {
-                    tracker.processResults(future.get());
+                    future.get();
 
                     // After processing the SNMP provided interfaces then we need to scan any that 
                     // were provisioned but missing from the ip table
@@ -604,12 +603,12 @@ public class NodeScan implements Scan {
                 }
             };
 
-            final CompletableFuture<List<SnmpResult>> future = m_locationAwareSnmpClient.walk(agentConfig, physIfTracker.getBaseOids())
+            final CompletableFuture<PhysInterfaceTableTracker> future = m_locationAwareSnmpClient.walk(agentConfig, physIfTracker)
                     .atLocation(null)
                     .withDescription("ifTable/ifXTable")
                     .execute();
             try {
-                physIfTracker.processResults(future.get());
+                future.get();
                 LOG.debug("Finished phase {}", currentPhase);
             } catch (ExecutionException e) {
                 LOG.info("SNMP Walk failed while scanning the interface tables on {}.", agentConfig, e);

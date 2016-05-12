@@ -32,6 +32,6 @@ import java.util.concurrent.CompletableFuture;
 
 public interface SnmpRequestExecutor {
 
-    CompletableFuture<SnmpResponseDTO> execute(SnmpRequestDTO request);
+    CompletableFuture<SnmpMultiResponseDTO> execute(SnmpRequestDTO request);
 
 }

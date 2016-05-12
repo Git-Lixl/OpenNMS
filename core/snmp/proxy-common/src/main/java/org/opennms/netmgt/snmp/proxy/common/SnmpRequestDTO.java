@@ -37,13 +37,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.opennms.core.camel.JaxbUtilsMarshalProcessor;
 import org.opennms.core.camel.JaxbUtilsUnmarshalProcessor;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
-import org.opennms.netmgt.snmp.SnmpObjId;
-import org.opennms.netmgt.snmp.SnmpObjIdXmlAdapter;
 
 @XmlRootElement(name="snmp-request")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -60,26 +57,20 @@ public class SnmpRequestDTO {
         }
     }
 
-    public static enum Type {
-        GET,
-        WALK;
-    }
-
     @XmlAttribute(name="location")
     private String location;
 
     @XmlElement(name="agent")
     private SnmpAgentConfig agent;
 
-    @XmlAttribute(name="type")
-    private Type type;
-
-    @XmlElement(name="oid")
-    @XmlJavaTypeAdapter(SnmpObjIdXmlAdapter.class)
-    private List<SnmpObjId> oids = new ArrayList<>(0);
-
     @XmlAttribute(name="description")
     private String description;
+
+    @XmlElement(name="get")
+    private List<SnmpGetRequestDTO> gets = new ArrayList<>(0);
+
+    @XmlElement(name="walk")
+    private List<SnmpWalkRequestDTO> walks = new ArrayList<>(0);
 
     public String getLocation() {
         return location;
@@ -97,20 +88,20 @@ public class SnmpRequestDTO {
         this.agent = agent;
     }
 
-    public Type getType() {
-        return type;
+    public void setGetRequests(List<SnmpGetRequestDTO> gets) {
+        this.gets = gets;
     }
 
-    public void setType(Type type) {
-        this.type = type;
+    public List<SnmpGetRequestDTO> getGetRequests() {
+        return gets;
     }
 
-    public List<SnmpObjId> getOids() {
-        return oids;
+    public void setWalkRequests(List<SnmpWalkRequestDTO> walks) {
+        this.walks = walks;
     }
 
-    public void setOids(List<SnmpObjId> oids) {
-        this.oids = oids;
+    public List<SnmpWalkRequestDTO> getWalkRequest() {
+        return walks;
     }
 
     public String getDescription() {
@@ -123,7 +114,7 @@ public class SnmpRequestDTO {
 
     @Override
     public int hashCode() {
-        return Objects.hash(location, agent, type, oids, description);
+        return Objects.hash(location, agent, gets, walks, description);
     }
 
     @Override
@@ -137,8 +128,8 @@ public class SnmpRequestDTO {
         final SnmpRequestDTO other = (SnmpRequestDTO) obj;
         return Objects.equals(this.location, other.location)
                 && Objects.equals(this.agent, other.agent)
-                && Objects.equals(this.type, other.type)
-                && Objects.equals(this.oids, other.oids)
+                && Objects.equals(this.gets, other.gets)
+                && Objects.equals(this.walks, other.walks)
                 && Objects.equals(this.description, other.description);
     }
 }

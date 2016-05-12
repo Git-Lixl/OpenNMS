@@ -34,6 +34,9 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.netmgt.collection.api.CollectionAgent;
@@ -48,8 +51,9 @@ import org.opennms.netmgt.snmp.Collectable;
 import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpResult;
-import org.opennms.netmgt.snmp.SnmpUtils;
 import org.opennms.netmgt.snmp.SnmpWalker;
+import org.opennms.netmgt.snmp.exceptions.AgentTimedOutException;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,6 +93,7 @@ public class SnmpCollectionSet implements Collectable, CollectionSet {
     private int m_status=ServiceCollector.COLLECTION_FAILED;
     private boolean m_ignorePersist;
     private Date m_timestamp;
+    private final LocationAwareSnmpClient m_locationAwareSnmpClient;
 
     /**
      * <p>toString</p>
@@ -132,9 +137,10 @@ public class SnmpCollectionSet implements Collectable, CollectionSet {
      * @param agent a {@link org.opennms.netmgt.collection.api.CollectionAgent} object.
      * @param snmpCollection a {@link org.opennms.netmgt.collectd.OnmsSnmpCollection} object.
      */
-    public SnmpCollectionSet(SnmpCollectionAgent agent, OnmsSnmpCollection snmpCollection) {
+    public SnmpCollectionSet(SnmpCollectionAgent agent, OnmsSnmpCollection snmpCollection, LocationAwareSnmpClient locationAwareSnmpClient) {
         m_agent = agent;
         m_snmpCollection = snmpCollection;
+        m_locationAwareSnmpClient = Objects.requireNonNull(locationAwareSnmpClient);
     }
 
     /**
@@ -331,16 +337,6 @@ public class SnmpCollectionSet implements Collectable, CollectionSet {
         return new AggregateTracker(trackers);
     }
 
-    /**
-     * <p>createWalker</p>
-     *
-     * @return a {@link org.opennms.netmgt.snmp.SnmpWalker} object.
-     */
-    protected SnmpWalker createWalker() {
-        CollectionAgent agent = getCollectionAgent();
-        return SnmpUtils.createWalker(getAgentConfig(), "SnmpCollectors for " + agent.getHostAddress(), getTracker());
-    }
-
     private void logStartedWalker() {
         LOG.debug("collect: successfully instantiated SnmpNodeCollector() for {}", getCollectionAgent().getHostAddress());
     }
@@ -375,18 +371,30 @@ public class SnmpCollectionSet implements Collectable, CollectionSet {
         // XXX Should we have a call to hasDataToCollect here?
         try {
             // now collect the data
-            SnmpWalker walker = createWalker();
-            walker.start();
+            final CollectionAgent agent = getCollectionAgent();
+            final CompletableFuture<CollectionTracker> future = m_locationAwareSnmpClient.walk(getAgentConfig(), getTracker())
+                    .withDescription("SnmpCollectors for " + agent.getHostAddress())
+                    .execute();
 
             logStartedWalker();
-
-            // wait for collection to finish
-            walker.waitFor();
-
-            logFinishedWalker();
-
-            // Was the collection successful?
-            verifySuccessfulWalk(walker);
+            try {
+                // wait for collection to finish
+                future.get();
+            } catch (ExecutionException e) {
+                final Throwable cause = e.getCause();
+                String message = "collection failed for "
+                        + getCollectionAgent().getHostAddress();
+                if (cause == null) {
+                    throw new CollectionWarning(message + " due to unknown reason.", null);
+                } else if (cause instanceof AgentTimedOutException) {
+                    throw new CollectionTimedOut(cause.getMessage());
+                } else {
+                    message = " due to: " + cause.getMessage();
+                    throw new CollectionWarning(message, cause);
+                }
+            } finally {
+                logFinishedWalker();
+            }
 
             m_status = ServiceCollector.COLLECTION_SUCCEEDED;
         } catch (InterruptedException e) {

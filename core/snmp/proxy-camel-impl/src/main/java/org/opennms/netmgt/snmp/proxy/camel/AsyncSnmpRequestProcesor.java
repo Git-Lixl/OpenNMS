@@ -34,9 +34,9 @@ import org.apache.camel.AsyncCallback;
 import org.apache.camel.AsyncProcessor;
 import org.apache.camel.Exchange;
 import org.opennms.core.xml.JaxbUtils;
+import org.opennms.netmgt.snmp.proxy.common.SnmpMultiResponseDTO;
 import org.opennms.netmgt.snmp.proxy.common.SnmpRequestDTO;
 import org.opennms.netmgt.snmp.proxy.common.SnmpRequestExecutor;
-import org.opennms.netmgt.snmp.proxy.common.SnmpResponseDTO;
 
 /**
  * Asynchronously executes SNMP requests.
@@ -49,15 +49,17 @@ public class AsyncSnmpRequestProcesor implements AsyncProcessor {
 
     @Override
     public void process(Exchange exchange) throws Exception {
-        final SnmpRequestDTO requestDTO = exchange.getIn().getBody(SnmpRequestDTO.class);
-        final SnmpResponseDTO responseDTO = snmpRequestExecutor.execute(requestDTO).get();
-        exchange.getOut().setBody(responseDTO, SnmpResponseDTO.class);
+        final SnmpRequestDTO requestDTO = JaxbUtils.unmarshal(SnmpRequestDTO.class,
+                exchange.getIn().getBody(String.class));
+        final SnmpMultiResponseDTO responseDTO = snmpRequestExecutor.execute(requestDTO).get();
+        exchange.getOut().setBody(JaxbUtils.marshal(responseDTO), String.class);
     }
 
     @Override
     public boolean process(Exchange exchange, AsyncCallback callback) {
-        final SnmpRequestDTO requestDTO = exchange.getIn().getBody(SnmpRequestDTO.class);
-        final CompletableFuture<SnmpResponseDTO> future = snmpRequestExecutor.execute(requestDTO);
+        final SnmpRequestDTO requestDTO = JaxbUtils.unmarshal(SnmpRequestDTO.class,
+                exchange.getIn().getBody(String.class));
+        final CompletableFuture<SnmpMultiResponseDTO> future = snmpRequestExecutor.execute(requestDTO);
         future.whenComplete((res, ex) -> {
             if (ex != null) {
                 exchange.setException(ex);

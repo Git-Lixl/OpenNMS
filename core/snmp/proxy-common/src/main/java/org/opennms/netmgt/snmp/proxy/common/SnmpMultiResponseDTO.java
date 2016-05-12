@@ -34,41 +34,41 @@ import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.opennms.netmgt.snmp.SnmpResult;
+import org.opennms.core.camel.JaxbUtilsMarshalProcessor;
+import org.opennms.core.camel.JaxbUtilsUnmarshalProcessor;
 
 @XmlRootElement(name="snmp-response")
 @XmlAccessorType(XmlAccessType.NONE)
-public class SnmpResponseDTO {
-
-    @XmlAttribute(name="correlation-id")
-    private Integer correlationId;
-
-    @XmlElement(name="result")
-    private List<SnmpResult> results = new ArrayList<>(0);
-
-    public int getCorrelationId() {
-        return correlationId;
+public class SnmpMultiResponseDTO {
+    public static class Marshal extends JaxbUtilsMarshalProcessor {
+        public Marshal() {
+            super(SnmpMultiResponseDTO.class);
+        }
     }
 
-    public void setCorrelationId(Integer correlationId) {
-        this.correlationId = correlationId;
+    public static class Unmarshal extends JaxbUtilsUnmarshalProcessor {
+        public Unmarshal() {
+            super(SnmpMultiResponseDTO.class);
+        }
     }
 
-    public void setResults(List<SnmpResult> results) {
-        this.results = results;
+    @XmlElement(name="response")
+    private List<SnmpResponseDTO> responses = new ArrayList<>(0);
+
+    public void setResponses(List<SnmpResponseDTO> responses) {
+        this.responses = responses;
     }
 
-    public List<SnmpResult> getResults() {
-        return results;
+    public List<SnmpResponseDTO> getResponses() {
+        return responses;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(correlationId, results);
+        return Objects.hash(responses);
     }
 
     @Override
@@ -79,8 +79,7 @@ public class SnmpResponseDTO {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        final SnmpResponseDTO other = (SnmpResponseDTO) obj;
-        return Objects.equals(this.correlationId, other.correlationId)
-                && Objects.equals(this.results, other.results);
+        final SnmpMultiResponseDTO other = (SnmpMultiResponseDTO) obj;
+        return Objects.equals(this.responses, other.responses);
     }
 }

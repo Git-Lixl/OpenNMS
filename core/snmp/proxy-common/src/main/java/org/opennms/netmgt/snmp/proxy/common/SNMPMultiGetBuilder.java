@@ -28,25 +28,31 @@
 
 package org.opennms.netmgt.snmp.proxy.common;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpObjId;
-import org.opennms.netmgt.snmp.SnmpResult;
 import org.opennms.netmgt.snmp.SnmpValue;
-import org.opennms.netmgt.snmp.proxy.common.SnmpRequestDTO.Type;
 
 public class SNMPMultiGetBuilder extends AbstractSNMPRequestBuilder<List<SnmpValue>> {
 
     public SNMPMultiGetBuilder(DelegatingLocationAwareSnmpClientImpl client, SnmpAgentConfig agent, List<SnmpObjId> oids) {
-        super(client, agent, Type.GET, oids);
+        super(client, agent, buildGetRequests(oids), Collections.emptyList());
     }
 
+    private static List<SnmpGetRequestDTO> buildGetRequests(List<SnmpObjId> oids) {
+        final SnmpGetRequestDTO getRequest = new SnmpGetRequestDTO();
+        getRequest.setOids(oids);
+        return Collections.singletonList(getRequest);
+    }
+    
     @Override
-    protected List<SnmpValue> processResults(List<SnmpResult> result) {
-        return result.stream()
-                .map(res -> res.getValue())
-                .collect(Collectors.toList());
+    protected List<SnmpValue> processResponse(SnmpMultiResponseDTO response) {
+        return response.getResponses().stream()
+                    .flatMap(res -> res.getResults().stream())
+                    .map(res -> res.getValue())
+                    .collect(Collectors.toList());
     }
 }

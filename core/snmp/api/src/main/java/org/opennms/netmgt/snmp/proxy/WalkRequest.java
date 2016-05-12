@@ -28,14 +28,46 @@
 
 package org.opennms.netmgt.snmp.proxy;
 
-import java.util.List;
+import java.util.Objects;
 
-import org.opennms.netmgt.snmp.Collectable;
+import org.opennms.netmgt.snmp.SnmpObjId;
 
-public interface ProxiableTracker extends Collectable {
+public class WalkRequest {
 
-    public List<WalkRequest> getWalkRequests();
+    private final SnmpObjId baseOId;
+    private int maxRepetitions = 1;
+    private boolean singleInstance = false;
+    private int correlationId = 0;
 
-    public void handleWalkResponses(List<WalkResponse> responses);
+    public WalkRequest(SnmpObjId baseOid) {
+        this.baseOId = Objects.requireNonNull(baseOid);
+    }
 
+    public SnmpObjId getBaseOid() {
+        return baseOId;
+    }
+
+    public void setMaxRepetitions(int maxRepetitions) {
+        this.maxRepetitions = maxRepetitions;
+    }
+
+    public int getMaxRepetitions() {
+        return maxRepetitions;
+    }
+
+    public void setSingleInstance(boolean singleInstance) {
+        this.singleInstance = singleInstance;
+    }
+
+    public boolean isSingleInstance() {
+        return singleInstance;
+    }
+
+    public void setCorrelationId(int correlationId) {
+        this.correlationId = correlationId;
+    }
+
+    public int getCorrelationId() {
+        return correlationId;
+    }
 }

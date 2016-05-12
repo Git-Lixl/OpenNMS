@@ -70,6 +70,9 @@ import org.opennms.netmgt.rrd.jrobin.JRobinRrdStrategy;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpUtils;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
+import org.opennms.netmgt.snmp.proxy.common.DelegatingLocationAwareSnmpClientImpl;
+import org.opennms.netmgt.snmp.proxy.common.SnmpRequestExecutorLocalImpl;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.opennms.test.mock.MockUtil;
 import org.springframework.beans.factory.InitializingBean;
@@ -89,6 +92,7 @@ import org.springframework.transaction.annotation.Transactional;
         "classpath:/META-INF/opennms/applicationContext-daemon.xml",
         "classpath:/META-INF/opennms/mockEventIpcManager.xml",
         "classpath:/META-INF/opennms/applicationContext-proxy-snmp.xml"
+        //"classpath:/META-INF/opennms/applicationContext-mock-snmp-client-proxy.xml"
 })
 @JUnitConfigurationEnvironment(systemProperties="org.opennms.rrd.storeByGroup=false")
 @JUnitTemporaryDatabase(reuseDatabase=false) // Relies on records created in @Before so we need a fresh database for each test
@@ -173,6 +177,10 @@ public class SnmpCollectorIT implements InitializingBean, TestContextAware {
         m_collectionSpecification = CollectorTestUtils.createCollectionSpec("SNMP", collector, "default");
         m_collectionAgent = DefaultCollectionAgent.create(iface.getId(), m_ipInterfaceDao, m_transactionManager);
         m_agentConfig = SnmpPeerFactory.getInstance().getAgentConfig(InetAddressUtils.getLocalHostAddress());
+
+        //DelegatingLocationAwareSnmpClientImpl snmpClient = new DelegatingLocationAwareSnmpClientImpl();
+        //snmpClient.setLocalSnmpRequestExecutor(new SnmpRequestExecutorLocalImpl());
+        //m_locationAwareSnmpClient = snmpClient;
     }
 
     @After

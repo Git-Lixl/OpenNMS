@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.opennms.netmgt.collection.api.AttributeGroupType;
 import org.opennms.netmgt.collection.api.CollectionResource;
@@ -44,6 +45,7 @@ import org.opennms.netmgt.collection.api.ServiceParameters;
 import org.opennms.netmgt.config.DataCollectionConfigFactory;
 import org.opennms.netmgt.config.api.DataCollectionConfigDao;
 import org.opennms.netmgt.config.datacollection.MibObject;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +72,7 @@ public class OnmsSnmpCollection {
     private List<SnmpAttributeType> m_nodeAttributeTypes;
     private List<SnmpAttributeType> m_indexedAttributeTypes;
     private List<SnmpAttributeType> m_aliasAttributeTypes;
+    private final LocationAwareSnmpClient m_locationAwareSnmpClient;
 
     /**
      * <p>Constructor for OnmsSnmpCollection.</p>
@@ -77,8 +80,8 @@ public class OnmsSnmpCollection {
      * @param agent a {@link org.opennms.netmgt.collection.api.CollectionAgent} object.
      * @param params a {@link org.opennms.netmgt.collection.api.ServiceParameters} object.
      */
-    public OnmsSnmpCollection(SnmpCollectionAgent agent, ServiceParameters params) {
-        this(agent, params, null);
+    public OnmsSnmpCollection(SnmpCollectionAgent agent, ServiceParameters params, LocationAwareSnmpClient locationAwareSnmpClient) {
+        this(agent, params, null, locationAwareSnmpClient);
     }
 
     /**
@@ -88,7 +91,7 @@ public class OnmsSnmpCollection {
      * @param params a {@link org.opennms.netmgt.collection.api.ServiceParameters} object.
      * @param config a {@link org.opennms.netmgt.config.api.DataCollectionConfigDao} object.
      */
-    public OnmsSnmpCollection(SnmpCollectionAgent agent, ServiceParameters params, DataCollectionConfigDao config) {
+    public OnmsSnmpCollection(SnmpCollectionAgent agent, ServiceParameters params, DataCollectionConfigDao config, LocationAwareSnmpClient locationAwareSnmpClient) {
         setDataCollectionConfigDao(config);
 
         m_params = params;
@@ -96,6 +99,8 @@ public class OnmsSnmpCollection {
         if (Boolean.getBoolean("org.opennms.netmgt.collectd.OnmsSnmpCollection.loadResourceTypesInInit")) {
             getResourceTypes(agent);
         }
+
+        m_locationAwareSnmpClient = Objects.requireNonNull(locationAwareSnmpClient);
     }
 
     /**
@@ -314,7 +319,7 @@ public class OnmsSnmpCollection {
      * @return a {@link org.opennms.netmgt.collectd.SnmpCollectionSet} object.
      */
     public SnmpCollectionSet createCollectionSet(SnmpCollectionAgent agent) {
-        return new SnmpCollectionSet(agent, this);
+        return new SnmpCollectionSet(agent, this, m_locationAwareSnmpClient);
     }
     
     private List<SnmpAttributeType> getIndexedAttributeTypes(SnmpCollectionAgent agent) {

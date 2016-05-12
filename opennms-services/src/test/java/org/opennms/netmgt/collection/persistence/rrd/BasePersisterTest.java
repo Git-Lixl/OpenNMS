@@ -66,6 +66,7 @@ import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.netmgt.rrd.RrdStrategy;
 import org.opennms.netmgt.rrd.jrobin.JRobinRrdStrategy;
 import org.opennms.netmgt.snmp.SnmpUtils;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.opennms.test.FileAnticipator;
 import org.opennms.test.mock.EasyMockUtils;
 import org.opennms.test.mock.MockUtil;
@@ -90,6 +91,7 @@ public class BasePersisterTest {
     private ServiceParameters m_serviceParams;
     private RrdStrategy<?, ?> m_rrdStrategy;
     private FilesystemResourceStorageDao m_resourceStorageDao;
+    private LocationAwareSnmpClient m_locationAwareSnmpClient;
 
     /* erg, Rule fields must be public */
     @Rule public TestName m_testName = new TestName();
@@ -114,9 +116,10 @@ public class BasePersisterTest {
         
         m_ifDao = m_easyMockUtils.createMock(IpInterfaceDao.class);
         m_serviceParams = new ServiceParameters(new HashMap<String,Object>());
-        
+
+        m_locationAwareSnmpClient = EasyMock.createMock(LocationAwareSnmpClient.class);
     }
-    
+
     @After
     public void checkWarnings() throws Throwable {
         MockLogAppender.assertNoWarningsOrGreater();
@@ -206,7 +209,7 @@ public class BasePersisterTest {
         
         MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();
         
-        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig);
+        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig, m_locationAwareSnmpClient);
         
         NodeResourceType resourceType = new NodeResourceType(agent, collection);
         

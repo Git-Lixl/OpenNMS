@@ -55,6 +55,7 @@ import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.snmp.SnmpInstId;
 import org.opennms.netmgt.snmp.SnmpValue;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.opennms.netmgt.snmp.snmp4j.Snmp4JValueFactory;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -70,6 +71,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class PersistRegexSelectorStrategyTest {
 
     private IpInterfaceDao ipInterfaceDao;
+    private LocationAwareSnmpClient locationAwareSnmpClient;
     private GenericIndexResource resourceA;
     private GenericIndexResource resourceB;
     private ServiceParameters serviceParams;
@@ -77,6 +79,7 @@ public class PersistRegexSelectorStrategyTest {
     @Before
     public void setUp() throws Exception {
         ipInterfaceDao = EasyMock.createMock(IpInterfaceDao.class);
+        locationAwareSnmpClient = EasyMock.createMock(LocationAwareSnmpClient.class);
         String localhost = InetAddress.getLocalHost().getHostAddress();
 
         NetworkBuilder builder = new NetworkBuilder();
@@ -106,7 +109,7 @@ public class PersistRegexSelectorStrategyTest {
 
         PlatformTransactionManager ptm = new MockPlatformTransactionManager();
         SnmpCollectionAgent agent = DefaultCollectionAgent.create(1, ipInterfaceDao, ptm);
-        OnmsSnmpCollection snmpCollection = new OnmsSnmpCollection(agent, serviceParams, new MockDataCollectionConfigDao());
+        OnmsSnmpCollection snmpCollection = new OnmsSnmpCollection(agent, serviceParams, new MockDataCollectionConfigDao(), locationAwareSnmpClient);
 
         org.opennms.netmgt.config.datacollection.ResourceType rt = new org.opennms.netmgt.config.datacollection.ResourceType();
         rt.setName("myResourceType");

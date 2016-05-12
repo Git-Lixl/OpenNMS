@@ -116,9 +116,9 @@ public class LocationAwareSnmpClientIT {
     @Test
     public void canWalkIpAddressTableViaCurrentLocation() throws UnknownHostException, InterruptedException, ExecutionException {
         final IPAddressGatheringTracker tracker = new IPAddressGatheringTracker();
-        tracker.processResults(locationAwareSnmpClient.walk(agentConfig, tracker.getBaseOids())
-                .withDescription(tracker.getDescription())
-                .execute().get());
+        locationAwareSnmpClient.walk(agentConfig, tracker)
+            .withDescription(tracker.getDescription())
+            .execute().get();
         ExpectedResults.compareToKnownIpAddressList(tracker.getIpAddresses());
     }
 

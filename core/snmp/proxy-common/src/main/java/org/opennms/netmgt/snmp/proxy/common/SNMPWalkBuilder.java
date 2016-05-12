@@ -28,21 +28,30 @@
 
 package org.opennms.netmgt.snmp.proxy.common;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpResult;
-import org.opennms.netmgt.snmp.proxy.common.SnmpRequestDTO.Type;
 
 public class SNMPWalkBuilder extends AbstractSNMPRequestBuilder<List<SnmpResult>> {
 
     public SNMPWalkBuilder(DelegatingLocationAwareSnmpClientImpl client, SnmpAgentConfig agent, List<SnmpObjId> oids) {
-        super(client, agent, Type.WALK, oids);
+        super(client, agent, Collections.emptyList(), buildWalkRequests(oids));
+    }
+
+    private static List<SnmpWalkRequestDTO> buildWalkRequests(List<SnmpObjId> oids) {
+        final SnmpWalkRequestDTO walkRequest = new SnmpWalkRequestDTO();
+        walkRequest.setOids(oids);
+        return Collections.singletonList(walkRequest);
     }
 
     @Override
-    protected List<SnmpResult> processResults(List<SnmpResult> result) {
-        return result;
+    protected List<SnmpResult> processResponse(SnmpMultiResponseDTO response) {
+        return response.getResponses().stream()
+                .findFirst()
+                .map(res -> res.getResults())
+                .orElse(null);
     }
 }
