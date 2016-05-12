@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2006-2014 The OpenNMS Group, Inc.
+ * Copyright (C) 2007-2014 The OpenNMS Group, Inc.
  * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
@@ -26,20 +26,24 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.dao.api;
+package org.opennms.core.xml.adapters;
 
-import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
+import java.util.UUID;
 
-/**
- * <p>MonitoringLocationDao interface.</p>
- *
- * @author Seth
- * @author <a href="mailto:brozow@opennms.org">Mathew Brozowski</a>
- * @author <a href="mailto:david@opennms.org">David Hustace</a>
- */
-public interface MonitoringLocationDao extends OnmsDao<OnmsMonitoringLocation, String> {
-	public static final String DEFAULT_MONITORING_LOCATION_ID = "localhost";
+import javax.xml.bind.annotation.adapters.XmlAdapter;
 
-	OnmsMonitoringLocation getDefaultLocation();
-	OnmsMonitoringLocation getByLocationName(String locationName);
+public class UUIDXmlAdapter extends XmlAdapter<String, UUID> {
+
+    /** {@inheritDoc} */
+    @Override
+    public String marshal(final UUID uuid) throws Exception {
+        return uuid == null? null : uuid.toString();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public UUID unmarshal(final String uuid) throws Exception {
+        return (uuid == null || uuid.isEmpty())? null : UUID.fromString(uuid);
+    }
+
 }

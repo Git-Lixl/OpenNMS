@@ -72,10 +72,10 @@ import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsLocationMonitor;
 import org.opennms.netmgt.model.OnmsLocationMonitor.MonitorStatus;
-import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.opennms.netmgt.model.OnmsLocationSpecificStatus;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
+import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.opennms.netmgt.poller.PollStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -236,9 +236,23 @@ public class DefaultLocationDataService implements LocationDataService, Initiali
     public LocationInfo getLocationInfo(final String locationName) {
         waitForGeocoding("getLocationInfo");
 
-        final OnmsMonitoringLocation def = m_monitoringLocationDao.get(locationName);
+        final OnmsMonitoringLocation def = m_monitoringLocationDao.getByLocationName(locationName);
         if (def == null) {
             LOG.warn("no monitoring location found for name {}", locationName);
+            return null;
+        }
+        return getLocationInfo(def);
+    }
+
+    /** {@inheritDoc} */
+    @Transactional
+    @Override
+    public LocationInfo getLocationInfoById(final String id) {
+        waitForGeocoding("getLocationInfoById");
+
+        final OnmsMonitoringLocation def = m_monitoringLocationDao.get(id);
+        if (def == null) {
+            LOG.warn("no monitoring location found for id {}", id);
             return null;
         }
         return getLocationInfo(def);
@@ -337,7 +351,7 @@ public class DefaultLocationDataService implements LocationDataService, Initiali
         }
 
         final String definitionName = monitors.get(0).getLocation();
-        final OnmsMonitoringLocation def = m_monitoringLocationDao.get(definitionName);
+        final OnmsMonitoringLocation def = m_monitoringLocationDao.getByLocationName(definitionName);
         if (def == null) {
             LOG.warn("unable to find monitoring location definition for '{}'", definitionName);
             return null;
@@ -481,9 +495,23 @@ public class DefaultLocationDataService implements LocationDataService, Initiali
     public LocationDetails getLocationDetails(final String locationName) {
         waitForGeocoding("getLocationDetails");
 
-        final OnmsMonitoringLocation def = m_monitoringLocationDao.get(locationName);
+        final OnmsMonitoringLocation def = m_monitoringLocationDao.getByLocationName(locationName);
         if (def == null) {
             LOG.warn("no monitoring location found for name {}", locationName);
+            return null;
+        }
+        return getLocationDetails(def);
+    }
+
+    /** {@inheritDoc} */
+    @Transactional
+    @Override
+    public LocationDetails getLocationDetailsById(final String id) {
+        waitForGeocoding("getLocationDetailsById");
+
+        final OnmsMonitoringLocation def = m_monitoringLocationDao.get(id);
+        if (def == null) {
+            LOG.warn("no monitoring location found for id {}", id);
             return null;
         }
         return getLocationDetails(def);
@@ -610,7 +638,7 @@ public class DefaultLocationDataService implements LocationDataService, Initiali
         for (final OnmsLocationSpecificStatus status : m_locationDao.getStatusChangesBetween(startDate, endDate)) {
             final String definitionName = status.getLocationMonitor().getLocation();
             if (!definitions.containsKey(definitionName)) {
-                definitions.put(definitionName, m_monitoringLocationDao.get(definitionName));
+                definitions.put(definitionName, m_monitoringLocationDao.getByLocationName(definitionName));
             }
         }
 
@@ -960,7 +988,7 @@ public class DefaultLocationDataService implements LocationDataService, Initiali
 
         for(Map.Entry<String, StatusDetails> entry : statusDetails.entrySet()) {
 
-            OnmsMonitoringLocation def = m_monitoringLocationDao.get(entry.getKey());
+            OnmsMonitoringLocation def = m_monitoringLocationDao.getByLocationName(entry.getKey());
             LocationInfo locationInfo = this.getLocationInfo(def, entry.getValue());
             locations.add(locationInfo);
             

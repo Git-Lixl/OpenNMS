@@ -68,7 +68,7 @@ public class DistributedStatusDetailsValidator implements Validator, Initializin
                                "Value required.");
         } else {
             OnmsMonitoringLocation locationDef =
-                m_monitoringLocationDao.get(cmd.getLocation());
+                m_monitoringLocationDao.getByLocationName(cmd.getLocation());
             if (locationDef == null) {
                 errors.rejectValue("location", "location.not-found",
                                    new Object[] { cmd.getLocation() },

@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.api.AcknowledgmentDao;
@@ -374,6 +375,7 @@ public class DatabasePopulator {
         getAcknowledgmentDao().flush();
         
         final OnmsMonitoringLocation def = new OnmsMonitoringLocation();
+        def.setId(UUID.randomUUID().toString());
         def.setLocationName("RDU");
         def.setMonitoringArea("East Coast");
         def.setPollingPackageNames(Collections.singletonList("example1"));

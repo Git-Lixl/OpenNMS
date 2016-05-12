@@ -28,6 +28,9 @@
 
 package org.opennms.netmgt.dao.hibernate;
 
+import java.util.List;
+
+import org.opennms.core.criteria.CriteriaBuilder;
 import org.opennms.netmgt.dao.api.MonitoringLocationDao;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.slf4j.Logger;
@@ -49,5 +52,14 @@ public class MonitoringLocationDaoHibernate extends AbstractDaoHibernate<OnmsMon
 
     public OnmsMonitoringLocation getDefaultLocation() {
         return get(DEFAULT_MONITORING_LOCATION_ID);
+    }
+
+    @Override
+    public OnmsMonitoringLocation getByLocationName(final String locationName) {
+        final List<OnmsMonitoringLocation> locations = findMatching(new CriteriaBuilder(OnmsMonitoringLocation.class).eq("locationName", locationName).toCriteria());
+        if (locations != null && locations.size() > 0) {
+            return locations.get(0);
+        }
+        return null;
     }
 }

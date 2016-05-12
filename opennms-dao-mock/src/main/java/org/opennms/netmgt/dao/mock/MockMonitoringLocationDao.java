@@ -37,16 +37,26 @@ public class MockMonitoringLocationDao extends AbstractMockDao<OnmsMonitoringLoc
 
     @Override
     protected void generateId(final OnmsMonitoringLocation mon) {
-        mon.setLocationName(UUID.randomUUID().toString());
+        mon.setId(UUID.randomUUID().toString());
     }
 
     @Override
     protected String getId(final OnmsMonitoringLocation loc) {
-        return loc.getLocationName();
+        return loc.getId();
     }
 
     @Override
     public OnmsMonitoringLocation getDefaultLocation() {
         return get(DEFAULT_MONITORING_LOCATION_ID);
+    }
+
+    @Override
+    public OnmsMonitoringLocation getByLocationName(final String locationName) {
+        for (final OnmsMonitoringLocation location : findAll()) {
+            if (locationName.equals(location.getLocationName())) {
+                return location;
+            }
+        }
+        return null;
     }
 }

@@ -474,7 +474,7 @@ public class DefaultPollerBackEnd implements PollerBackEnd, SpringServiceDaemon 
     }
 
     private List<String> getPackageNameForLocation(final String location) {
-        final OnmsMonitoringLocation def = m_monitoringLocationDao.get(location);
+        final OnmsMonitoringLocation def = m_monitoringLocationDao.getByLocationName(location);
         if (def == null) {
             throw new IllegalStateException("Location definition '" + location + "' could not be found");
         }
@@ -625,10 +625,10 @@ public class DefaultPollerBackEnd implements PollerBackEnd, SpringServiceDaemon 
 
     /** {@inheritDoc} */
     @Override
-    public String registerLocationMonitor(final String monitoringLocationId) {
-        final OnmsMonitoringLocation def = m_monitoringLocationDao.get(monitoringLocationId);
+    public String registerLocationMonitor(final String locationName) {
+        final OnmsMonitoringLocation def = m_monitoringLocationDao.getByLocationName(locationName);
         if (def == null) {
-            throw new ObjectRetrievalFailureException(OnmsMonitoringLocation.class, monitoringLocationId, "Location monitor definition with the id '" + monitoringLocationId + "' not found", null);
+            throw new ObjectRetrievalFailureException(OnmsMonitoringLocation.class, locationName, "Location monitor definition with the locationName '" + locationName + "' not found", null);
         }
         final OnmsLocationMonitor mon = new OnmsLocationMonitor();
         mon.setId(UUID.randomUUID().toString());

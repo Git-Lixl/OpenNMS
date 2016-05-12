@@ -43,6 +43,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -180,11 +181,11 @@ public class RemotePollerAvailabilityService extends OnmsRestService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("availability/{location}")
-    public OnmsLocationAvailDefinitionList getAvailabilityByLocation(@Context final UriInfo uriInfo, @PathParam("location") String location) {
+    public OnmsLocationAvailDefinitionList getAvailabilityByLocation(@Context final UriInfo uriInfo, @PathParam("location") String location, @QueryParam("byname") boolean byname) {
 
         final MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
         
-        OnmsMonitoringLocation locationDefinition = m_monitoringLocationDao.get(location);
+        OnmsMonitoringLocation locationDefinition = byname? m_monitoringLocationDao.getByLocationName(location) : m_monitoringLocationDao.get(location);
         if (locationDefinition == null) {
             throw getException(Status.BAD_REQUEST, "Cannot find location definition: {}", location);
         }

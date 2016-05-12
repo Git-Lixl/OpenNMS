@@ -73,7 +73,7 @@ public class DefaultDistributedPollerService implements DistributedPollerService
         
         LocationMonitorListModel model = new LocationMonitorListModel();
         for (OnmsLocationMonitor monitor : monitors) {
-            OnmsMonitoringLocation def = m_monitoringLocationDao.get(monitor.getLocation());
+            final OnmsMonitoringLocation def = m_monitoringLocationDao.getByLocationName(monitor.getLocation());
             model.addLocationMonitor(new LocationMonitorModel(monitor, def));
         }
         
@@ -122,11 +122,11 @@ public class DefaultDistributedPollerService implements DistributedPollerService
             OnmsMonitoringLocation def2 = null;
             
             if (o1.getLocation() != null) {
-                def1 = m_monitoringLocationDao.get(o1.getLocation());
+                def1 = m_monitoringLocationDao.getByLocationName(o1.getLocation());
             }
             
             if (o2.getLocation() != null) {
-                def2 = m_monitoringLocationDao.get(o2.getLocation());
+                def2 = m_monitoringLocationDao.getByLocationName(o2.getLocation());
             }
             
             int diff;
@@ -160,7 +160,7 @@ public class DefaultDistributedPollerService implements DistributedPollerService
         }
         
         OnmsLocationMonitor monitor = m_locationMonitorDao.load(cmd.getMonitorId());
-        OnmsMonitoringLocation def = m_monitoringLocationDao.get(monitor.getLocation());
+        OnmsMonitoringLocation def = m_monitoringLocationDao.getByLocationName(monitor.getLocation());
         model.addLocationMonitor(new LocationMonitorModel(monitor, def));
 
         return model;
