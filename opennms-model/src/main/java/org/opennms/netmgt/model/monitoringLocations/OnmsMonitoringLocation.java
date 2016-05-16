@@ -167,6 +167,7 @@ public class OnmsMonitoringLocation implements Serializable {
 
     @XmlID
     @Id
+    @XmlAttribute(name="id")
     @Column(name="id", nullable=false)
     public String getId() {
         return m_id;
@@ -334,7 +335,8 @@ public class OnmsMonitoringLocation implements Serializable {
 
     @Override
     public String toString() {
-        return "OnmsMonitoringLocation [location-name=" + m_locationName +
+        return "OnmsMonitoringLocation [id=" + m_id +
+                ", location-name=" + m_locationName +
                 ", monitoring-area=" + m_monitoringArea +
                 ", polling-package-names=" + m_pollingPackageNames +
                 ", collection-package-names=" + m_collectionPackageNames +
