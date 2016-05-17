@@ -75,36 +75,40 @@ public class PollerConfigurationResourceIT extends AbstractSpringJerseyRestTestC
     @Autowired
     private MonitoringLocationDao m_monitoringLocationDao;
 
+    private OnmsMonitoringLocation m_locationRDU;
+    private OnmsMonitoringLocation m_location2;
+    private OnmsMonitoringLocation m_location3;
+
     @Override
     protected void afterServletStart() throws Exception {
         MockLogAppender.setupLogging(true, "DEBUG");
-        OnmsMonitoringLocation location = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "RDU", "East Coast", new String[] { "example1" }, new String[] { "example1" }, "Research Triangle Park, NC", 35.715751f, -79.16262f, 1L);
-        m_monitoringLocationDao.saveOrUpdate(location);
-        location = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "00002", "IN", new String[] { "example2" }, new String[0], "2 Open St., Network, MS 00002", 38.2096f, -85.8704f, 100L, "even");
-        m_monitoringLocationDao.saveOrUpdate(location);
-        location = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "00003", "IN", new String[] { "example2" }, new String[] { "example2" }, "2 Open St., Network, MS 00002", 38.2096f, -85.8704f, 100L, "odd");
-        m_monitoringLocationDao.saveOrUpdate(location);
+        m_locationRDU = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "RDU", "East Coast", new String[] { "example1" }, new String[] { "example1" }, "Research Triangle Park, NC", 35.715751f, -79.16262f, 1L);
+        m_monitoringLocationDao.saveOrUpdate(m_locationRDU);
+        m_location2 = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "00002", "IN", new String[] { "example2" }, new String[0], "2 Open St., Network, MS 00002", 38.2096f, -85.8704f, 100L, "even");
+        m_monitoringLocationDao.saveOrUpdate(m_location2);
+        m_location3 = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "00003", "IN", new String[] { "example2" }, new String[] { "example2" }, "2 Open St., Network, MS 00002", 38.2096f, -85.8704f, 100L, "odd");
+        m_monitoringLocationDao.saveOrUpdate(m_location3);
     }
     
     @Test
     public void testPollerConfig() throws Exception {
         sendRequest(GET, "/config/foo/polling", 404);
 
-        String xml = sendRequest(GET, "/config/RDU/polling", 200);
+        String xml = sendRequest(GET, "/config/" + m_locationRDU.getId() + "/polling", 200);
         PollerConfiguration config = JaxbUtils.unmarshal(PollerConfiguration.class, xml);
         assertNotNull(config);
         assertEquals(1, config.getPackages().size());
         assertEquals("example1", config.getPackages().get(0).getName());
         assertEquals(17, config.getMonitors().size());
 
-        xml = sendRequest(GET, "/config/00002/polling", 200);
+        xml = sendRequest(GET, "/config/" + m_location2.getId() + "/polling", 200);
         config = JaxbUtils.unmarshal(PollerConfiguration.class, xml);
         assertNotNull(config);
         assertEquals(1, config.getPackages().size());
         assertEquals("example2", config.getPackages().get(0).getName());
         assertEquals(1, config.getMonitors().size());
 
-        xml = sendRequest(GET, "/config/00003/polling", 200);
+        xml = sendRequest(GET, "/config/" + m_location3.getId() + "/polling", 200);
         config = JaxbUtils.unmarshal(PollerConfiguration.class, xml);
         assertNotNull(config);
         assertEquals(1, config.getPackages().size());

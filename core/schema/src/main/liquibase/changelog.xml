@@ -27,6 +27,7 @@
 	</preConditions>
 
 	<include file="create-sequences.xml" />
+	<include file="stored-procedures/generate_uuid_v4.xml"/>
 
 	<include file="1.6.0/changelog.xml" />
 	<include file="1.7.0/changelog.xml" />

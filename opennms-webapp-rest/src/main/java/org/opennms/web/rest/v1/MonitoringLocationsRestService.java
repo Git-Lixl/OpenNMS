@@ -41,6 +41,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
@@ -91,8 +92,11 @@ public class MonitoringLocationsRestService extends OnmsRestService {
 	@GET
 	@Path("{monitoringLocation}")
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_ATOM_XML})
-	public OnmsMonitoringLocation getMonitoringLocation(@PathParam("monitoringLocation") String monitoringLocation, @QueryParam("byname") boolean byname) {
-		final OnmsMonitoringLocation loc = byname? m_monitoringLocationDao.getByLocationName(monitoringLocation) : m_monitoringLocationDao.get(monitoringLocation);
+	public OnmsMonitoringLocation getMonitoringLocation(@Context final UriInfo uriInfo, @PathParam("monitoringLocation") String monitoringLocation) {
+	        final MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
+	        final Boolean byname = Boolean.valueOf(queryParameters.getFirst("byname"));
+
+	        final OnmsMonitoringLocation loc = byname? m_monitoringLocationDao.getByLocationName(monitoringLocation) : m_monitoringLocationDao.get(monitoringLocation);
 		if (loc == null) {
 			throw getException(Status.NOT_FOUND, "Monitoring location {} was not found.", monitoringLocation);
 		}

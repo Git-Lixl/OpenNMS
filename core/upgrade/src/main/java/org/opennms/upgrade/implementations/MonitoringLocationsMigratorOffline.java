@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Types;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.opennms.core.db.DataSourceFactory;
@@ -140,7 +141,7 @@ public class MonitoringLocationsMigratorOffline extends AbstractOnmsUpgrade {
                 connection = DataSourceFactory.getInstance().getConnection();
                 dbUtils.watch(connection);
 
-                PreparedStatement insertLocation = connection.prepareStatement("INSERT INTO monitoringlocations (id, monitoringarea, geolocation, latitude, longitude, priority) VALUES (?,?,?,?,?,?)");
+                PreparedStatement insertLocation = connection.prepareStatement("INSERT INTO monitoringlocations (id, locationname, monitoringarea, geolocation, latitude, longitude, priority) VALUES (?,?,?,?,?,?,?)");
                 PreparedStatement insertPollingPackage = connection.prepareStatement("INSERT INTO monitoringlocationspollingpackages (monitoringlocationid, packagename) VALUES (?,?)");
                 PreparedStatement insertCollectionPackage = connection.prepareStatement("INSERT INTO monitoringlocationscollectionpackages (monitoringlocationid, packagename) VALUES (?,?)");
                 PreparedStatement insertTag = connection.prepareStatement("INSERT INTO monitoringlocationstags (monitoringlocationid, tag) VALUES (?,?)");
@@ -151,50 +152,52 @@ public class MonitoringLocationsMigratorOffline extends AbstractOnmsUpgrade {
                 dbUtils.watch(insertTag);
 
                 for (LocationDef location : monitoringLocationsConfig.getLocations()) {
-                    insertLocation.setString(1, location.getLocationName()); // id
-                    insertLocation.setString(2, location.getMonitoringArea()); // monitoringarea
+                    final String id = UUID.randomUUID().toString();
+                    insertLocation.setString(1, id); // id
+                    insertLocation.setString(2, location.getLocationName()); // id
+                    insertLocation.setString(3, location.getMonitoringArea()); // monitoringarea
                     if (location.getGeolocation() != null && !"".equals(location.getGeolocation().trim())) {
-                        insertLocation.setString(3, location.getGeolocation()); // geolocation
+                        insertLocation.setString(4, location.getGeolocation()); // geolocation
                     } else {
-                        insertLocation.setNull(3, Types.VARCHAR);
+                        insertLocation.setNull(4, Types.VARCHAR);
                     }
 
                     if (location.getCoordinates() != null && !"".equals(location.getCoordinates())) {
                         String[] latLong = location.getCoordinates().split(",");
                         if (latLong.length == 2) {
-                            insertLocation.setDouble(4, Double.valueOf(latLong[0])); // latitude
-                            insertLocation.setDouble(5, Double.valueOf(latLong[1])); // longitude
+                            insertLocation.setDouble(5, Double.valueOf(latLong[0])); // latitude
+                            insertLocation.setDouble(6, Double.valueOf(latLong[1])); // longitude
                         } else {
-                            insertLocation.setNull(4, Types.DOUBLE);
                             insertLocation.setNull(5, Types.DOUBLE);
+                            insertLocation.setNull(6, Types.DOUBLE);
                         }
                     } else {
-                        insertLocation.setNull(4, Types.DOUBLE);
                         insertLocation.setNull(5, Types.DOUBLE);
+                        insertLocation.setNull(6, Types.DOUBLE);
                     }
                     if (location.getPriority() == null) {
-                        insertLocation.setNull(6, Types.INTEGER); // priority
+                        insertLocation.setNull(7, Types.INTEGER); // priority
                     } else {
-                        insertLocation.setLong(6, location.getPriority()); // priority
+                        insertLocation.setLong(7, location.getPriority()); // priority
                     }
                     insertLocation.execute();
                     count++;
 
                     if (location.getPollingPackageName() != null && !"".equals(location.getPollingPackageName())) {
-                        insertPollingPackage.setString(1, location.getLocationName()); // monitoringlocationid
+                        insertPollingPackage.setString(1, id); // monitoringlocationid
                         insertPollingPackage.setString(2, location.getPollingPackageName()); // packagename
                         insertPollingPackage.execute();
                     }
 
                     if (location.getCollectionPackageName() != null && !"".equals(location.getCollectionPackageName())) {
-                        insertCollectionPackage.setString(1, location.getLocationName()); // monitoringlocationid
+                        insertCollectionPackage.setString(1, id); // monitoringlocationid
                         insertCollectionPackage.setString(2, location.getCollectionPackageName()); // packagename
                         insertCollectionPackage.execute();
                     }
 
                     for (Tag tag : location.getTags()) {
                         if (tag.getName() != null && !"".equals(tag.getName().trim())) {
-                            insertTag.setString(1, location.getLocationName()); // monitoringlocationid
+                            insertTag.setString(1, id); // monitoringlocationid
                             insertTag.setString(2, tag.getName()); // tag
                             insertTag.execute();
                         }

@@ -221,7 +221,8 @@ CREATE TABLE accessLocks (
 --#
 --# This table contains the following information:
 --#
---# id            : The unique name of the location
+--# id            : A unique identifier
+--# locationname  : The name of the location
 --# monitoringarea: The monitoring location associated with the system
 --# geolocation   : Address used for geolocating the location
 --# coordinates   : Latitude/longitude coordinates determined by geolocating
@@ -241,7 +242,8 @@ CREATE TABLE monitoringlocations (
 
     CONSTRAINT monitoringlocations_pkey PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX monitoringlocations_locationname_idx ON monitoringlocations(locationname);
+CREATE INDEX monitoringlocations_locationname_idx           ON monitoringlocations(locationname);
+CREATE UNIQUE INDEX monitoringlocations_id_locationname_idx ON monitoringlocations(id,locationname);
 
 
 CREATE TABLE monitoringlocationspollingpackages (

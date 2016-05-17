@@ -77,22 +77,26 @@ public class CollectionConfigurationResourceIT extends AbstractSpringJerseyRestT
     @Autowired
     private MonitoringLocationDao m_monitoringLocationDao;
 
+    private OnmsMonitoringLocation m_locationRDU;
+    private OnmsMonitoringLocation m_location2;
+    private OnmsMonitoringLocation m_location3;
+
     @Override
     protected void afterServletStart() throws Exception {
         MockLogAppender.setupLogging(true, "DEBUG");
-        OnmsMonitoringLocation location = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "RDU", "East Coast", new String[] { "example1" }, new String[] { "example1" }, "Research Triangle Park, NC", 35.715751f, -79.16262f, 1L);
-        m_monitoringLocationDao.saveOrUpdate(location);
-        location = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "00002", "IN", new String[] { "example2" }, new String[0], "2 Open St., Network, MS 00002", 38.2096f, -85.8704f, 100L, "even");
-        m_monitoringLocationDao.saveOrUpdate(location);
-        location = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "00003", "IN", new String[] { "example2" }, new String[] { "example2" }, "2 Open St., Network, MS 00002", 38.2096f, -85.8704f, 100L, "odd");
-        m_monitoringLocationDao.saveOrUpdate(location);
+        m_locationRDU = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "RDU", "East Coast", new String[] { "example1" }, new String[] { "example1" }, "Research Triangle Park, NC", 35.715751f, -79.16262f, 1L);
+        m_monitoringLocationDao.saveOrUpdate(m_locationRDU);
+        m_location2 = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "00002", "IN", new String[] { "example2" }, new String[0], "2 Open St., Network, MS 00002", 38.2096f, -85.8704f, 100L, "even");
+        m_monitoringLocationDao.saveOrUpdate(m_location2);
+        m_location3 = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "00003", "IN", new String[] { "example2" }, new String[] { "example2" }, "2 Open St., Network, MS 00002", 38.2096f, -85.8704f, 100L, "odd");
+        m_monitoringLocationDao.saveOrUpdate(m_location3);
     }
 
     @Test
     public void testCollectdConfig() throws Exception {
         sendRequest(GET, "/config/foo/collection", 404);
 
-        String xml = sendRequest(GET, "/config/RDU/collection", 200);
+        String xml = sendRequest(GET, "/config/" + m_locationRDU.getId() + "/collection", 200);
         assertFalse(xml, xml.contains("vmware3"));
         assertFalse(xml, xml.contains("example2"));
         assertTrue(xml, xml.contains("JBoss4"));
@@ -103,9 +107,9 @@ public class CollectionConfigurationResourceIT extends AbstractSpringJerseyRestT
         assertEquals("example1", config.getPackages().get(0).getName());
         assertEquals(4, config.getCollectors().size());
 
-        xml = sendRequest(GET, "/config/00002/collection", 404);
+        xml = sendRequest(GET, "/config/" + m_location2.getId() + "/collection", 404);
 
-        xml = sendRequest(GET, "/config/00003/collection", 200);
+        xml = sendRequest(GET, "/config/" + m_location3.getId() + "/collection", 200);
         config = JaxbUtils.unmarshal(CollectdConfiguration.class, xml);
         assertNotNull(config);
         assertEquals(1, config.getPackages().size());
