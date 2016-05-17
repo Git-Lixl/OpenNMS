@@ -145,6 +145,10 @@
         </exclusion>
         <exclusion>
           <groupId>com.sun.xml.bind</groupId>
+          <artifactId>jaxb-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.xml.bind</groupId>
           <artifactId>jaxb-impl</artifactId>
         </exclusion>
         <exclusion>
@@ -165,6 +169,11 @@
           <artifactId>snappy-java</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>2.10.6</version>
     </dependency>
     <dependency>
       <groupId>org.opennms</groupId>
