@@ -76,9 +76,8 @@ public class TrapdHandlerDefaultIT extends CamelBlueprintTest {
 
 	private EventIpcManager m_eventIpcManager = new MockEventIpcManager();
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	protected String useOverridePropertiesWithConfigAdmin(Dictionary props) {
+	protected String setConfigAdminInitialConfiguration(Properties props) {
 		props.put("brokerUri", "vm:localhost?create=false");
 		// Return the PID
 		return "org.opennms.netmgt.trapd.handler.default";
