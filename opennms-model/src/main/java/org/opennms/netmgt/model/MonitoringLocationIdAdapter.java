@@ -36,13 +36,13 @@ public class MonitoringLocationIdAdapter extends XmlAdapter<String, OnmsMonitori
 
     @Override
     public String marshal(final OnmsMonitoringLocation v) throws Exception {
-        return v == null? null : v.getId().toString();
+        return v == null? null : v.getLocationName();
     }
 
     @Override
     public OnmsMonitoringLocation unmarshal(final String v) throws Exception {
         if (v == null) return null;
-        final OnmsMonitoringLocation location = new OnmsMonitoringLocation(v, v, v);
+        final OnmsMonitoringLocation location = new OnmsMonitoringLocation(v, v);
         return location;
     }
 

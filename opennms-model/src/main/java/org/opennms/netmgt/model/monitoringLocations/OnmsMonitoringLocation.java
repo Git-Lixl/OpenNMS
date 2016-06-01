@@ -78,12 +78,7 @@ public class OnmsMonitoringLocation implements Serializable {
     private static final long serialVersionUID = -7651610012389148818L;
 
     /**
-     * A unique identifier (UUID)
-     */
-    private String m_id;
-
-    /**
-     * The name of the location.
+     * The name of the location.  This must be a unique identifier.
      */
     private String m_locationName;
 
@@ -136,8 +131,8 @@ public class OnmsMonitoringLocation implements Serializable {
      * @param monitoringArea
      * @param pollingPackageName
      */
-    public OnmsMonitoringLocation(final String id, final String locationName, final String monitoringArea) {
-        this(id, locationName, monitoringArea, null, null, null, null, null, null);
+    public OnmsMonitoringLocation(final String locationName, final String monitoringArea) {
+        this(locationName, monitoringArea, null, null, null, null, null, null);
     }
 
     /**
@@ -147,12 +142,11 @@ public class OnmsMonitoringLocation implements Serializable {
      * @param monitoringArea
      * @param pollingPackageName
      */
-    public OnmsMonitoringLocation(final String id, final String locationName, final String monitoringArea, final String pollingPackageName) {
-        this(id, locationName, monitoringArea, null, new String[] { pollingPackageName }, null, null, null, null);
+    public OnmsMonitoringLocation(final String locationName, final String monitoringArea, final String pollingPackageName) {
+        this(locationName, monitoringArea, null, new String[] { pollingPackageName }, null, null, null, null);
     }
 
-    public OnmsMonitoringLocation(final String id, final String locationName, final String monitoringArea, final String[] pollingPackageNames, final String[] collectionPackageNames, final String geolocation, final Float latitude, final Float longitude, final Long priority, final String... tags) {
-        m_id = id;
+    public OnmsMonitoringLocation(final String locationName, final String monitoringArea, final String[] pollingPackageNames, final String[] collectionPackageNames, final String geolocation, final Float latitude, final Float longitude, final Long priority, final String... tags) {
         m_locationName = locationName;
         m_monitoringArea = monitoringArea;
         m_pollingPackageNames = (pollingPackageNames == null ? Collections.emptyList() : Arrays.asList(pollingPackageNames));
@@ -166,18 +160,9 @@ public class OnmsMonitoringLocation implements Serializable {
     }
 
     @XmlID
+    @XmlAttribute(name="location-name")
     @Id
     @Column(name="id", nullable=false)
-    public String getId() {
-        return m_id;
-    }
-
-    public void setId(final String id) {
-        m_id = id;
-    }
-
-    @XmlAttribute(name="location-name")
-    @Column(name="locationName", nullable=false)
     public String getLocationName() {
         return m_locationName;
     }

@@ -54,7 +54,7 @@ public class OnmsDistPoller extends OnmsMonitoringSystem implements Serializable
      *
      * @param id a {@link java.lang.String} object.
      */
-    public OnmsDistPoller(final String id) {
+    public OnmsDistPoller(String id) {
         super(id, "localhost");
     }
 }

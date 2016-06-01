@@ -75,7 +75,7 @@ public class NetworkBuilder {
      * @param distPoller a {@link org.opennms.netmgt.model.OnmsDistPoller} object.
      */
     public NetworkBuilder(final OnmsDistPoller distPoller) {
-        m_location = new OnmsMonitoringLocation(distPoller.getId(), "localhost", "localhost");
+        m_location = new OnmsMonitoringLocation("localhost", "localhost");
 
         m_distPoller = distPoller;
     }
@@ -86,10 +86,9 @@ public class NetworkBuilder {
      * @param distPollerId a {@link java.lang.String} object.
      */
     public NetworkBuilder() {
-        String id = "00000000-0000-0000-0000-000000000000";
-        m_location = new OnmsMonitoringLocation(id, "localhost", "localhost");
+        m_location = new OnmsMonitoringLocation("localhost", "localhost");
 
-        m_distPoller = new OnmsDistPoller(id);
+        m_distPoller = new OnmsDistPoller("00000000-0000-0000-0000-000000000000");
         m_distPoller.setLabel("localhost");
         m_distPoller.setLocation("localhost");
         m_distPoller.setType(OnmsMonitoringSystem.TYPE_OPENNMS);

@@ -45,7 +45,9 @@ import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.TestCase;
 
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.api.ApplicationDao;
@@ -60,6 +62,7 @@ import org.opennms.netmgt.model.OnmsAttribute;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsLocationMonitor;
 import org.opennms.netmgt.model.OnmsLocationMonitor.MonitorStatus;
+import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.opennms.netmgt.model.OnmsLocationSpecificStatus;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsNode;
@@ -67,7 +70,6 @@ import org.opennms.netmgt.model.OnmsResource;
 import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.PrefabGraph;
 import org.opennms.netmgt.model.ResourcePath;
-import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.test.ThrowableAnticipator;
 import org.opennms.test.mock.EasyMockUtils;
@@ -78,9 +80,6 @@ import org.opennms.web.svclayer.model.SimpleWebTable.Cell;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
-
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
 
 public class DefaultDistributedStatusServiceTest extends TestCase {
 
@@ -147,9 +146,9 @@ public class DefaultDistributedStatusServiceTest extends TestCase {
         m_service.setGraphDao(m_graphDao);
         m_service.afterPropertiesSet();
         
-        m_locationDefinition1 = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "Raleigh", "OpenNMS NC", "raleigh");
-        m_locationDefinition2 = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "Durham", "OpenNMS NC", "durham");
-        m_locationDefinition3 = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "Columbus", "OpenNMS OH", "columbus");
+        m_locationDefinition1 = new OnmsMonitoringLocation("Raleigh", "OpenNMS NC", "raleigh");
+        m_locationDefinition2 = new OnmsMonitoringLocation("Durham", "OpenNMS NC", "durham");
+        m_locationDefinition3 = new OnmsMonitoringLocation("Columbus", "OpenNMS OH", "columbus");
 
         m_application1 = new OnmsApplication();
         m_application1.setName("Application 1");

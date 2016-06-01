@@ -136,18 +136,29 @@ public class OnmsMonitoringSystem implements Serializable {
      * @param id a {@link java.lang.String} object.
      * @param ipAddress a {@link java.lang.String} object.
      */
-    public OnmsMonitoringSystem(final String id, final String location) {
+    public OnmsMonitoringSystem(String id, String location) {
         m_id = id;
         m_location = location;
     }
 
+    /**
+     * A human-readable name for each system.
+     * Typically, the system's hostname (not fully qualified).
+     *
+     * @return a {@link java.lang.String} object.
+     */
     @Id 
     @Column(name="id", nullable=false)
     public String getId() {
         return m_id;
     }
 
-    public void setId(final String id) {
+    /**
+     * <p>setName</p>
+     *
+     * @param id a {@link java.lang.String} object.
+     */
+    public void setId(String id) {
         m_id = id;
     }
 

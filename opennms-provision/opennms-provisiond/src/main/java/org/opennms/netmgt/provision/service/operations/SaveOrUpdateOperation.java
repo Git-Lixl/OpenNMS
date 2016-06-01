@@ -60,7 +60,7 @@ public abstract class SaveOrUpdateOperation extends ImportOperation {
         super(provisionService);
 
         // TODO: Is this the correct way to set OnmsMonitoringLocation?
-        m_node = new OnmsNode(new OnmsMonitoringLocation(null, location, location), nodeLabel);
+        m_node = new OnmsNode(new OnmsMonitoringLocation(location, location), nodeLabel);
         m_node.setId(nodeId);
         m_node.setLabelSource(NodeLabelSource.USER);
         m_node.setType(NodeType.ACTIVE);
