@@ -32,7 +32,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
-import java.util.UUID;
 
 import org.junit.Test;
 import org.opennms.core.xml.JaxbUtils;
@@ -57,7 +56,7 @@ public class ScanReportTest {
 		report.addProperty("reference-id", "ABZ135");
 		report.addProperty("time-zone", "-5:00");
 		report.setLocale("en-US");
-		report.setLocation(UUID.randomUUID().toString());
+		report.setLocation("RDU");
 		report.setTimestamp(new Date());
 		report.setLog(new ScanReportLog(report.getId(), "Hey, a log!"));
 		for (int i = 0; i < 5; i++) {

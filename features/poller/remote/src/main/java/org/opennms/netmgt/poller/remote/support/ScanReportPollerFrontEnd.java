@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -54,7 +53,6 @@ import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.model.ScanReport;
 import org.opennms.netmgt.model.ScanReportLog;
 import org.opennms.netmgt.model.ScanReportPollResult;
-import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.opennms.netmgt.poller.DistributionContext;
 import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.remote.ConfigurationChangedListener;
@@ -158,7 +156,7 @@ public class ScanReportPollerFrontEnd implements PollerFrontEnd, InitializingBea
 
     private Set<String> m_selectedApplications = null;
 
-    private OnmsMonitoringLocation m_location;
+    private String m_location;
 
     /** {@inheritDoc} */
     @Override
@@ -204,7 +202,7 @@ public class ScanReportPollerFrontEnd implements PollerFrontEnd, InitializingBea
      * @param location a {@link java.lang.String} object.
      */
     private void doRegister(final String location) {
-        m_location = getLocation(location);
+        m_location = location;
     }
 
     /**
@@ -377,7 +375,7 @@ public class ScanReportPollerFrontEnd implements PollerFrontEnd, InitializingBea
         firePropertyChange(ScanReportProperties.percentageComplete.toString(), null, 0.0);
 
         ScanReport scanReport = new ScanReport();
-        scanReport.setLocation(m_location.getId());
+        scanReport.setLocation(m_location);
         //scanReport.addProperty("monitoring-system-id", getMonitoringSystemId());
         scanReport.setTimestamp(new Date());
 
@@ -459,31 +457,13 @@ public class ScanReportPollerFrontEnd implements PollerFrontEnd, InitializingBea
     }
 
     private PollerConfiguration retrieveLatestConfiguration() {
-        PollerConfiguration config = m_backEnd.getPollerConfigurationForLocation(m_location.getLocationName());
+        PollerConfiguration config = m_backEnd.getPollerConfigurationForLocation(m_location);
         m_timeAdjustment.setMasterTime(config.getServerTime());
         return config;
     }
 
     private PollStatus doPoll(final PolledService polledService) {
         return m_pollService.poll(polledService);
-    }
-
-    private OnmsMonitoringLocation getLocation(final String location) {
-        boolean uuid;
-        try {
-            UUID.fromString(location);
-            uuid = true;
-        } catch (final IllegalArgumentException e) {
-            uuid = false;
-        }
-        for (final OnmsMonitoringLocation loc : m_backEnd.getMonitoringLocations()) {
-            if (uuid && loc.getId().equalsIgnoreCase(location)) {
-                return loc;
-            } else if (!uuid && loc.getLocationName().equals(location)) {
-                return loc;
-            }
-        }
-        return null;
     }
 
     private void firePropertyChange(final String propertyName, final Object oldValue, final Object newValue) {
