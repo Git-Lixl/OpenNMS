@@ -96,9 +96,9 @@ public class DefaultDistributedStatusServiceTest extends TestCase {
      *  pulls the first entry from the list of {@link LocationMonitorDao#findByLocationDefinition(OnmsMonitoringLocation)}
      *  and we need to be able to verify mock calls reliably.
      */
-    private static final String LOCATION_MONITOR_ID_A = "00000000-0000-0000-0000-000000000002";
-    private static final String LOCATION_MONITOR_ID_B = "00000000-0000-0000-0000-000000000003";
-    private static final String LOCATION_MONITOR_ID_C = "00000000-0000-0000-0000-000000000004";
+    private static final String LOCATION_MONITOR_ID_A = "00000000-0000-0000-0000-000000000001";
+    private static final String LOCATION_MONITOR_ID_B = "00000000-0000-0000-0000-000000000002";
+    private static final String LOCATION_MONITOR_ID_C = "00000000-0000-0000-0000-000000000003";
 
     private DefaultDistributedStatusService m_service = new DefaultDistributedStatusService();
     

@@ -280,7 +280,7 @@ CREATE UNIQUE INDEX monitoringlocationstags_id_pkg_idx on monitoringlocationstag
 --# The following command adds the initial localhost entry to
 --# the 'monitoringlocations' table.
 --##################################################################
-INSERT INTO monitoringlocations (id, locationname, monitoringarea) values ('00000000-0000-0000-0000-000000000001', 'localhost', 'localhost');
+INSERT INTO monitoringlocations (id, locationname, monitoringarea) values ('00000000-0000-4000-0000-000000000000', 'localhost', 'localhost');
 
 
 --#####################################################

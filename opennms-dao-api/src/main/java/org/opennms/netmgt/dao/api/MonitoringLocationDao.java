@@ -38,8 +38,7 @@ import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
  * @author <a href="mailto:david@opennms.org">David Hustace</a>
  */
 public interface MonitoringLocationDao extends OnmsDao<OnmsMonitoringLocation, String> {
-	public static final String DEFAULT_MONITORING_LOCATION_NAME = "localhost";
-	public static final String DEFAULT_MONITORING_LOCATION_ID = "00000000-0000-0000-0000-000000000001";
+	public static final String DEFAULT_MONITORING_LOCATION_ID = "localhost";
 
 	OnmsMonitoringLocation getDefaultLocation();
 	OnmsMonitoringLocation getByLocationName(String locationName);

@@ -31,7 +31,6 @@ package org.opennms.netmgt.mock;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.opennms.netmgt.events.api.EventConstants;
-import org.opennms.netmgt.model.MonitoringLocationIdAdapter;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.xml.event.Event;
 
@@ -62,7 +61,7 @@ public class MockNode extends MockContainer<MockNetwork, MockElement> {
     public MockNode(MockNetwork network, int nodeid, String label) {
         super(network);
         // org.opennms.netmgt.dao.api.MonitoringLocationDao.DEFAULT_MONITORING_LOCATION_ID
-        m_location = "00000000-0000-0000-0000-000000000001";
+        m_location = "localhost";
         m_nodeid = nodeid;
         m_label = label;
     }

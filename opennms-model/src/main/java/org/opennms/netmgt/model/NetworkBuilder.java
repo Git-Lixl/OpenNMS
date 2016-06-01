@@ -86,11 +86,10 @@ public class NetworkBuilder {
      * @param distPollerId a {@link java.lang.String} object.
      */
     public NetworkBuilder() {
-        final String locationId = "00000000-0000-0000-0000-000000000001";
-        m_location = new OnmsMonitoringLocation(locationId, "localhost", "localhost");
+        String id = "00000000-0000-0000-0000-000000000000";
+        m_location = new OnmsMonitoringLocation(id, "localhost", "localhost");
 
-        final String distpollerId = "00000000-0000-0000-0000-000000000000";
-        m_distPoller = new OnmsDistPoller(distpollerId);
+        m_distPoller = new OnmsDistPoller(id);
         m_distPoller.setLabel("localhost");
         m_distPoller.setLocation("localhost");
         m_distPoller.setType(OnmsMonitoringSystem.TYPE_OPENNMS);
