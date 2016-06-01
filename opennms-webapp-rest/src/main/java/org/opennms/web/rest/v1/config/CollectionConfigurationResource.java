@@ -34,11 +34,9 @@ import javax.annotation.Resource;
 import javax.ws.rs.GET;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.opennms.core.config.api.ConfigurationResource;
 import org.opennms.core.config.api.ConfigurationResourceException;
@@ -62,9 +60,7 @@ public class CollectionConfigurationResource {
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_ATOM_XML})
-    public Response getCollectdConfigurationForLocation(@Context final UriInfo uriInfo, @PathParam("location") final String location) throws ConfigurationResourceException {
-        final MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
-        final Boolean byname = Boolean.valueOf(queryParameters.getFirst("byname"));
+    public Response getCollectdConfigurationForLocation(@PathParam("location") final String location, @QueryParam("byname") final boolean byname) throws ConfigurationResourceException {
 
         final OnmsMonitoringLocation def = byname? m_monitoringLocationDao.getByLocationName(location) : m_monitoringLocationDao.get(location);
         if (def == null) {

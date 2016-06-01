@@ -54,13 +54,11 @@ import org.opennms.netmgt.dao.DatabasePopulator;
 import org.opennms.netmgt.dao.api.ApplicationDao;
 import org.opennms.netmgt.dao.api.LocationMonitorDao;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
-import org.opennms.netmgt.dao.api.MonitoringLocationDao;
 import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsLocationMonitor;
 import org.opennms.netmgt.model.OnmsLocationMonitor.MonitorStatus;
 import org.opennms.netmgt.model.OnmsLocationSpecificStatus;
 import org.opennms.netmgt.model.OnmsMonitoredService;
-import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.opennms.web.rest.v1.AvailCalculator.UptimeCalculator;
@@ -93,16 +91,12 @@ import org.springframework.transaction.support.TransactionTemplate;
 @JUnitTemporaryDatabase
 @Transactional
 public class RemotePollerAvailabilityRestServiceIT extends AbstractSpringJerseyRestTestCase {
-    //private static final Logger LOG = LoggerFactory.getLogger(RemotePollerAvailabilityRestServiceIT.class);
 
     @Autowired
     ApplicationDao m_applicationDao;
 
     @Autowired
     LocationMonitorDao m_locationMonitorDao;
-
-    @Autowired
-    MonitoringLocationDao m_monitoringLocationDao;
 
     @Autowired
     MonitoredServiceDao m_monServiceDao;
@@ -118,18 +112,12 @@ public class RemotePollerAvailabilityRestServiceIT extends AbstractSpringJerseyR
 
     public static final String BASE_REST_URL = "/remotelocations/availability";
 
-    protected OnmsMonitoringLocation m_monitoringLocationLocalhost;
-    protected OnmsMonitoringLocation m_monitoringLocationRDU;
-
     @Override
     protected void afterServletStart() {
         MockLogAppender.setupLogging();
 
         m_databasePopulator.populateDatabase();
 
-        m_monitoringLocationLocalhost = m_monitoringLocationDao.getByLocationName("localhost");
-        m_monitoringLocationRDU = m_monitoringLocationDao.getByLocationName("RDU");
-        
         try {
             createLocationMonitors();
         } catch (final InterruptedException e) {
@@ -184,10 +172,7 @@ public class RemotePollerAvailabilityRestServiceIT extends AbstractSpringJerseyR
         String json = sendRequest(jsonRequest, 200);
 
         JSONObject restObject = new JSONObject(json);
-        final String jsonText = IOUtils.toString(new FileInputStream("src/test/resources/v1/remotelocations.json"))
-                .replace("###IDLOCALHOST###", m_monitoringLocationLocalhost.getId())
-                .replace("###IDRDU###", m_monitoringLocationRDU.getId());
-        JSONObject expectedObject = new JSONObject(jsonText);
+        JSONObject expectedObject = new JSONObject(IOUtils.toString(new FileInputStream("src/test/resources/v1/remotelocations.json")));
         JSONAssert.assertEquals(expectedObject, restObject, true);
     }
 
@@ -227,29 +212,10 @@ public class RemotePollerAvailabilityRestServiceIT extends AbstractSpringJerseyR
     @Test
     public void testRemotePollerAvailabilitySingleLocation() throws Exception {
         final long startTime = System.currentTimeMillis();
-        final String url = BASE_REST_URL + "/" + m_monitoringLocationRDU.getId();
-        final Map<String, String> parameters = new HashMap<String, String>();
-        addStartTime(parameters);
-        addEndTime(parameters);
-
-        for (String resolution : new String[] {"minute", "hourly", "daily", "Minute", "hOURly", "daiLY"}){
-            parameters.put("resolution", resolution);
-            final String responseString = sendRequest(GET, url, parameters, 200);
-            assertTrue(responseString.contains("IPv6"));
-            assertTrue(responseString.contains("IPv4"));
-        }
-
-        System.err.println("total time taken: " + (System.currentTimeMillis() - startTime));
-    }
-
-    @Test
-    public void testRemotePollerAvailabilitySingleLocationByName() throws Exception {
-        final long startTime = System.currentTimeMillis();
         final String url = BASE_REST_URL + "/RDU";
         final Map<String, String> parameters = new HashMap<String, String>();
         addStartTime(parameters);
         addEndTime(parameters);
-        parameters.put("byname", "true");
 
         for (String resolution : new String[] {"minute", "hourly", "daily", "Minute", "hOURly", "daiLY"}){
             parameters.put("resolution", resolution);
@@ -294,12 +260,10 @@ public class RemotePollerAvailabilityRestServiceIT extends AbstractSpringJerseyR
                 System.err.println("======= Starting createLocationMonitors() ======");
                 OnmsLocationMonitor locMon1 = new OnmsLocationMonitor();
                 locMon1.setId(UUID.randomUUID().toString());
-                locMon1.setLocation(m_monitoringLocationRDU.getId());
+                locMon1.setLocation("RDU");
                 locMon1.setLastUpdated(new Date());
                 locMon1.setStatus(MonitorStatus.STARTED);
                 m_locationMonitorDao.save(locMon1);
-
-                final OnmsLocationMonitor locMon = m_locationMonitorDao.findAll().get(0);
 
                 OnmsApplication ipv6App = new OnmsApplication();
                 ipv6App.setName("IPv6");
@@ -324,16 +288,13 @@ public class RemotePollerAvailabilityRestServiceIT extends AbstractSpringJerseyR
                     m_monServiceDao.saveOrUpdate(service);
                     m_applicationDao.saveOrUpdate(ipv6App);
 
+                    OnmsLocationMonitor locMon = m_locationMonitorDao.findAll().get(0);
                     OnmsLocationSpecificStatus statusChange = new OnmsLocationSpecificStatus();
                     statusChange.setLocationMonitor(locMon);
                     statusChange.setPollResult(PollStatus.available());
                     statusChange.setMonitoredService(service);
                     m_locationMonitorDao.saveStatusChange(statusChange);
                 }
-
-                m_locationMonitorDao.flush();
-                m_applicationDao.flush();
-                m_monServiceDao.flush();
 
                 System.err.println("======= End createLocationMonitors() ======");
 
@@ -352,7 +313,7 @@ public class RemotePollerAvailabilityRestServiceIT extends AbstractSpringJerseyR
                     OnmsLocationMonitor locMon = m_locationMonitorDao.findAll().get(0);
                     OnmsLocationSpecificStatus statusChange = new OnmsLocationSpecificStatus();
                     statusChange.setLocationMonitor(locMon);
-                    statusChange.setPollResult(PollStatus.unavailable("Explosions."));
+                    statusChange.setPollResult(PollStatus.unavailable());
                     statusChange.setMonitoredService(service);
 
                     m_locationMonitorDao.saveStatusChange(statusChange);

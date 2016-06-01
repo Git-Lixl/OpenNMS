@@ -85,7 +85,7 @@ public class OnmsMonitoringLocation implements Serializable {
     /**
      * The name of the location.
      */
-    private String m_name;
+    private String m_locationName;
 
     /**
      * The name of the monitoring area.  This field is used to group
@@ -132,28 +132,28 @@ public class OnmsMonitoringLocation implements Serializable {
     /**
      * This constructor is only used during unit testing.
      * 
-     * @param name
+     * @param locationName
      * @param monitoringArea
      * @param pollingPackageName
      */
-    public OnmsMonitoringLocation(final String id, final String name, final String monitoringArea) {
-        this(id, name, monitoringArea, null, null, null, null, null, null);
+    public OnmsMonitoringLocation(final String id, final String locationName, final String monitoringArea) {
+        this(id, locationName, monitoringArea, null, null, null, null, null, null);
     }
 
     /**
      * This constructor is only used during unit testing.
      * 
-     * @param name
+     * @param locationName
      * @param monitoringArea
      * @param pollingPackageName
      */
-    public OnmsMonitoringLocation(final String id, final String name, final String monitoringArea, final String pollingPackageName) {
-        this(id, name, monitoringArea, null, new String[] { pollingPackageName }, null, null, null, null);
+    public OnmsMonitoringLocation(final String id, final String locationName, final String monitoringArea, final String pollingPackageName) {
+        this(id, locationName, monitoringArea, null, new String[] { pollingPackageName }, null, null, null, null);
     }
 
-    public OnmsMonitoringLocation(final String id, final String name, final String monitoringArea, final String[] pollingPackageNames, final String[] collectionPackageNames, final String geolocation, final Float latitude, final Float longitude, final Long priority, final String... tags) {
+    public OnmsMonitoringLocation(final String id, final String locationName, final String monitoringArea, final String[] pollingPackageNames, final String[] collectionPackageNames, final String geolocation, final Float latitude, final Float longitude, final Long priority, final String... tags) {
         m_id = id;
-        m_name = name;
+        m_locationName = locationName;
         m_monitoringArea = monitoringArea;
         m_pollingPackageNames = (pollingPackageNames == null ? Collections.emptyList() : Arrays.asList(pollingPackageNames));
         m_collectionPackageNames = (collectionPackageNames == null ? Collections.emptyList() : Arrays.asList(collectionPackageNames));
@@ -178,13 +178,13 @@ public class OnmsMonitoringLocation implements Serializable {
     }
 
     @XmlAttribute(name="location-name")
-    @Column(name="locationname", nullable=false)
+    @Column(name="locationName", nullable=false)
     public String getLocationName() {
-        return m_name;
+        return m_locationName;
     }
 
     public void setLocationName(final String locationName) {
-        m_name = locationName;
+        m_locationName = locationName;
     }
 
     @XmlAttribute(name="monitoring-area")
@@ -299,7 +299,7 @@ public class OnmsMonitoringLocation implements Serializable {
         result = prime * result + ((m_latitude == null) ? 0 : m_latitude.hashCode());
         result = prime * result + ((m_longitude == null) ? 0 : m_longitude.hashCode());
         result = prime * result + ((m_geolocation == null) ? 0 : m_geolocation.hashCode());
-        result = prime * result + ((m_name == null) ? 0 : m_name.hashCode());
+        result = prime * result + ((m_locationName == null) ? 0 : m_locationName.hashCode());
         result = prime * result + ((m_monitoringArea == null) ? 0 : m_monitoringArea.hashCode());
         result = prime * result + ((m_pollingPackageNames == null || m_pollingPackageNames.size() == 0) ? 0 : m_pollingPackageNames.hashCode());
         result = prime * result + ((m_collectionPackageNames == null || m_collectionPackageNames.size() == 0) ? 0 : m_collectionPackageNames.hashCode());
@@ -336,7 +336,7 @@ public class OnmsMonitoringLocation implements Serializable {
     @Override
     public String toString() {
         return "OnmsMonitoringLocation [id=" + m_id +
-                ", location-name=" + m_name +
+                ", location-name=" + m_locationName +
                 ", monitoring-area=" + m_monitoringArea +
                 ", polling-package-names=" + m_pollingPackageNames +
                 ", collection-package-names=" + m_collectionPackageNames +

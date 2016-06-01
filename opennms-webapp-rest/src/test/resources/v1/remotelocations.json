@@ -4,7 +4,6 @@
         {
             "collection-package-names": [],
             "geolocation": null,
-            "id": "###IDLOCALHOST###",
             "monitoring-area": "localhost",
             "latitude": null,
             "location-name": "localhost",
@@ -18,7 +17,6 @@
                 "example1"
             ], 
             "geolocation": "Research Triangle Park, NC", 
-            "id": "###IDRDU###",
             "monitoring-area": "East Coast", 
             "latitude": 35.71575, 
             "location-name": "RDU", 

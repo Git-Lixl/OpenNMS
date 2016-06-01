@@ -4,62 +4,16 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd" >
 
-  <changeSet author="ben" id="19.0.0-add-monitoringlocation-name-column">
-    <addColumn tableName="monitoringlocations">
-      <column name="locationname" type="TEXT" />
-    </addColumn>
-
-    <dropForeignKeyConstraint baseTableName="monitoringlocationspollingpackages"    constraintName="monitoringlocationspollingpackages_fkey" />
-    <dropForeignKeyConstraint baseTableName="monitoringlocationscollectionpackages" constraintName="monitoringlocationscollectionpackages_fkey" />
-    <dropForeignKeyConstraint baseTableName="monitoringlocationstags"               constraintName="monitoringlocationstags_fkey" />
-
-    <sql>
-      --# copy the ID column (formerly the location name) to the locationname column
-      UPDATE monitoringlocations SET locationname=id;
-
-      --# give monitoringlocations real IDs
-      UPDATE monitoringlocations SET id=generate_uuid_v4();
-
-      --# point the sub-tables' IDs at the newly-generated IDs
-      UPDATE monitoringlocationspollingpackages    SET monitoringlocationid=(SELECT id FROM monitoringlocations WHERE locationname=monitoringlocationid);
-      UPDATE monitoringlocationscollectionpackages SET monitoringlocationid=(SELECT id FROM monitoringlocations WHERE locationname=monitoringlocationid);
-      UPDATE monitoringlocationstags               SET monitoringlocationid=(SELECT id FROM monitoringlocations WHERE locationname=monitoringlocationid);
-    </sql>
-
-    <addNotNullConstraint tableName="monitoringlocations" columnName="locationname"/>
-
-    <createIndex indexName="monitoringlocations_locationname_idx" tableName="monitoringlocations" unique="false">
-      <column name="locationname" />
-    </createIndex>
-
-    <createIndex indexName="monitoringlocations_id_locationname_idx" tableName="monitoringlocations" unique="true">
-      <column name="id" />
-      <column name="locationname" />
-    </createIndex>
-
-    <addForeignKeyConstraint constraintName="monitoringlocationspollingpackages_fkey" onDelete="CASCADE"
-      baseTableName="monitoringlocationspollingpackages" baseColumnNames="monitoringlocationid"
-      referencedTableName="monitoringlocations" referencedColumnNames="id" />
-    <addForeignKeyConstraint constraintName="monitoringlocationscollectionpackages_fkey" onDelete="CASCADE"
-      baseTableName="monitoringlocationscollectionpackages" baseColumnNames="monitoringlocationid"
-      referencedTableName="monitoringlocations" referencedColumnNames="id" />
-    <addForeignKeyConstraint constraintName="monitoringlocationstags_fkey" onDelete="CASCADE"
-      baseTableName="monitoringlocationstags" baseColumnNames="monitoringlocationid"
-      referencedTableName="monitoringlocations" referencedColumnNames="id" />
-
-  </changeSet>
-
   <changeSet author="seth" id="19.0.0-insert-default-monitoringlocation">
     <insert tableName="monitoringlocations">
-      <column name="id" value="00000000-0000-0000-0000-000000000001"/>
-      <column name="locationname" value="localhost"/>
+      <column name="id" value="localhost"/>
       <column name="monitoringarea" value="localhost"/>
     </insert>
   </changeSet>
 
   <changeSet author="seth" id="19.0.0-associate-nodes-with-monitoringlocation">
     <addColumn tableName="node">
-      <column name="location" type="TEXT" value="00000000-0000-0000-0000-000000000001"/>
+      <column name="location" type="TEXT" value="localhost"/>
     </addColumn>
     <addNotNullConstraint tableName="node" columnName="location"/>
     <addForeignKeyConstraint constraintName="fk_node_location" baseTableName="node" baseColumnNames="location" referencedTableName="monitoringlocations" referencedColumnNames="id" deleteCascade="true"/>

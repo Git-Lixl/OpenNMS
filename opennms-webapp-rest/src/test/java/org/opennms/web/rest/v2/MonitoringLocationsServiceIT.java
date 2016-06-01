@@ -29,7 +29,6 @@
 package org.opennms.web.rest.v2;
 
 import java.util.Collections;
-import java.util.UUID;
 
 import javax.servlet.ServletContext;
 
@@ -89,8 +88,7 @@ public class MonitoringLocationsServiceIT extends AbstractSpringJerseyRestTestCa
 
         // Add 5 nodes
         for (int i = 0; i < 5; i++) {
-            String location = "<location id=\"" + UUID.randomUUID().toString() + "\" location-name=\"hello-world-" + i + "\" monitoring-area=\"" + i + "\"/>";
-            LOG.debug("location = {}", location);
+            String location = "<location location-name=\"hello-world-" + i + "\" monitoring-area=\"" + i + "\"/>";
             sendPost("/monitoringLocations", location, 201, null);
         }
 

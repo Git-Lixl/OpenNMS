@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -44,6 +43,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -77,7 +77,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Path("remotelocations")
 @Transactional
 public class RemotePollerAvailabilityService extends OnmsRestService {
-    //private static final Logger LOG = LoggerFactory.getLogger(RemotePollerAvailabilityService.class);
 
     @Autowired
     MonitoringLocationDao m_monitoringLocationDao;
@@ -118,7 +117,6 @@ public class RemotePollerAvailabilityService extends OnmsRestService {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public OnmsMonitoringLocationDefinitionList getRemoteLocationList(){
         List<OnmsMonitoringLocation> monitors = m_monitoringLocationDao.findAll();
-        monitors.sort(new MonitoringLocationComparator());
         return new OnmsMonitoringLocationDefinitionList(monitors);
     }
     
@@ -183,11 +181,11 @@ public class RemotePollerAvailabilityService extends OnmsRestService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("availability/{location}")
-    public OnmsLocationAvailDefinitionList getAvailabilityByLocation(@Context final UriInfo uriInfo, @PathParam("location") String location) {
-        final MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
-        final Boolean byname = Boolean.valueOf(queryParameters.getFirst("byname"));
+    public OnmsLocationAvailDefinitionList getAvailabilityByLocation(@Context final UriInfo uriInfo, @PathParam("location") String location, @QueryParam("byname") boolean byname) {
 
-        final OnmsMonitoringLocation locationDefinition = byname? m_monitoringLocationDao.getByLocationName(location) : m_monitoringLocationDao.get(location);
+        final MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
+        
+        OnmsMonitoringLocation locationDefinition = byname? m_monitoringLocationDao.getByLocationName(location) : m_monitoringLocationDao.get(location);
         if (locationDefinition == null) {
             throw getException(Status.BAD_REQUEST, "Cannot find location definition: {}", location);
         }
@@ -372,30 +370,6 @@ public class RemotePollerAvailabilityService extends OnmsRestService {
         sortedApplications = new ArrayList<OnmsApplication>(applications);
         Collections.sort(sortedApplications);
         return sortedApplications;
-    }
-
-    protected static final class MonitoringLocationComparator implements Comparator<OnmsMonitoringLocation> {
-        @Override
-        public int compare(final OnmsMonitoringLocation a, final OnmsMonitoringLocation b) {
-            int ret = a.getLocationName().toLowerCase().compareTo(b.getLocationName().toLowerCase());
-            if (ret != 0) {
-                return ret;
-            }
-            if (a.getMonitoringArea() != null) {
-                if (b.getMonitoringArea() != null) {
-                    ret = a.getMonitoringArea().toLowerCase().compareTo(b.getMonitoringArea().toLowerCase());
-                    if (ret != 0) {
-                        return ret;
-                    }
-                } else {
-                    return -1;
-                }
-            } else if (b.getMonitoringArea() != null) {
-                return 1;
-            }
-
-            return a.getId().compareTo(b.getId());
-        }
     }
 
 }
