@@ -34,7 +34,6 @@ import javax.annotation.Resource;
 import javax.ws.rs.GET;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -60,9 +59,9 @@ public class PollerConfigurationResource {
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_ATOM_XML})
-    public Response getPollerConfigurationForLocation(@PathParam("location") final String location, @QueryParam("byname") final boolean byname) throws ConfigurationResourceException {
+    public Response getPollerConfigurationForLocation(@PathParam("location") final String location) throws ConfigurationResourceException {
 
-        final OnmsMonitoringLocation def = byname? m_monitoringLocationDao.getByLocationName(location) : m_monitoringLocationDao.get(location);
+        final OnmsMonitoringLocation def = m_monitoringLocationDao.get(location);
         if (def == null) {
             LOG.warn("Unable to find monitoring location {}", location);
             return Response.status(Response.Status.NOT_FOUND).build();

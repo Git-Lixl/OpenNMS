@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
@@ -721,7 +720,6 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
             return createLocationIfNecessary(MonitoringLocationDao.DEFAULT_MONITORING_LOCATION_ID);
         } else {
             OnmsMonitoringLocation location = new OnmsMonitoringLocation();
-            location.setId(UUID.randomUUID().toString());
             location.setLocationName(locationName);
             // NMS-7968: Set monitoring area too because it is a non-null field
             location.setMonitoringArea(locationName);

@@ -126,8 +126,6 @@ public class PollerBackEndIT implements InitializingBean {
     @Autowired
     RrdStrategy<?, ?> m_rrdStrategy;
 
-    private String m_locationId;
-
     @Override
     public void afterPropertiesSet() throws Exception {
         BeanUtils.assertAutowiring(this);
@@ -137,8 +135,7 @@ public class PollerBackEndIT implements InitializingBean {
     public void setUp(){
         MockLogAppender.setupLogging();
 
-        m_locationId = UUID.randomUUID().toString();
-        OnmsMonitoringLocation location = new OnmsMonitoringLocation(m_locationId, "RDU", "East Coast", new String[] { "example1" }, new String[0], "Research Triangle Park, NC", 35.715751f, -79.16262f, 1L, "odd");
+        OnmsMonitoringLocation location = new OnmsMonitoringLocation(UUID.randomUUID().toString(), "RDU", "East Coast", new String[] { "example1" }, new String[0], "Research Triangle Park, NC", 35.715751f, -79.16262f, 1L, "odd");
         m_monitoringLocationDao.saveOrUpdate(location);
     }
 

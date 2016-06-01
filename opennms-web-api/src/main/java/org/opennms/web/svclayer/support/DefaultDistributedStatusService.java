@@ -314,7 +314,7 @@ public class DefaultDistributedStatusService implements DistributedStatusService
         Assert.notNull(locationName, "location cannot be null");
         Assert.notNull(applicationName, "application cannot be null");
         
-        OnmsMonitoringLocation location = m_monitoringLocationDao.getByLocationName(locationName);
+        OnmsMonitoringLocation location = m_monitoringLocationDao.get(locationName);
         if (location == null) {
             throw new IllegalArgumentException("Could not find location for "
                                                + "location name \""
@@ -730,7 +730,7 @@ public class DefaultDistributedStatusService implements DistributedStatusService
                 location = locationDefinitions.get(0);
             }
         } else {
-            location = m_monitoringLocationDao.getByLocationName(locationName);
+            location = m_monitoringLocationDao.get(locationName);
             if (location == null) {
                 errors.add("Could not find location definition '" + locationName + "'");
                 if (!locationDefinitions.isEmpty()) {

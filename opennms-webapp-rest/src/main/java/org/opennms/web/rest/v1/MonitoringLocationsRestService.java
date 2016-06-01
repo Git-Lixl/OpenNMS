@@ -38,12 +38,11 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.Duration;
 import org.opennms.netmgt.dao.api.MonitoringLocationDao;
@@ -91,8 +90,8 @@ public class MonitoringLocationsRestService extends OnmsRestService {
 	@GET
 	@Path("{monitoringLocation}")
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_ATOM_XML})
-	public OnmsMonitoringLocation getMonitoringLocation(@PathParam("monitoringLocation") String monitoringLocation, @QueryParam("byname") boolean byname) {
-		final OnmsMonitoringLocation loc = byname? m_monitoringLocationDao.getByLocationName(monitoringLocation) : m_monitoringLocationDao.get(monitoringLocation);
+	public OnmsMonitoringLocation getMonitoringLocation(@PathParam("monitoringLocation") String monitoringLocation) {
+		final OnmsMonitoringLocation loc = m_monitoringLocationDao.get(monitoringLocation);
 		if (loc == null) {
 			throw getException(Status.NOT_FOUND, "Monitoring location {} was not found.", monitoringLocation);
 		}
@@ -117,10 +116,10 @@ public class MonitoringLocationsRestService extends OnmsRestService {
 	@Path("{monitoringLocation}")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Transactional
-	public Response updateMonitoringLocation(@PathParam("monitoringLocation") String monitoringLocation, @QueryParam("byname") boolean byname, MultivaluedMapImpl params) {
+	public Response updateMonitoringLocation(@PathParam("monitoringLocation") String monitoringLocation, MultivaluedMapImpl params) {
 		writeLock();
 		try {
-			OnmsMonitoringLocation def = byname? m_monitoringLocationDao.getByLocationName(monitoringLocation) : m_monitoringLocationDao.get(monitoringLocation);
+			OnmsMonitoringLocation def = m_monitoringLocationDao.get(monitoringLocation);
 			LOG.debug("updateMonitoringLocation: updating monitoring location {}", monitoringLocation);
 
 			if (params.isEmpty()) return Response.notModified().build();

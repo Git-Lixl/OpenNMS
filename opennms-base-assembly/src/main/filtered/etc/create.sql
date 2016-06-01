@@ -232,7 +232,6 @@ CREATE TABLE accessLocks (
 
 CREATE TABLE monitoringlocations (
     id TEXT NOT NULL,
-    locationname TEXT NOT NULL,
     monitoringarea TEXT NOT NULL,
     geolocation TEXT,
     latitude DOUBLE PRECISION,
@@ -241,7 +240,6 @@ CREATE TABLE monitoringlocations (
 
     CONSTRAINT monitoringlocations_pkey PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX monitoringlocations_locationname_idx ON monitoringlocations(locationname);
 
 
 CREATE TABLE monitoringlocationspollingpackages (
@@ -280,7 +278,7 @@ CREATE UNIQUE INDEX monitoringlocationstags_id_pkg_idx on monitoringlocationstag
 --# The following command adds the initial localhost entry to
 --# the 'monitoringlocations' table.
 --##################################################################
-INSERT INTO monitoringlocations (id, locationname, monitoringarea) values ('00000000-0000-4000-0000-000000000000', 'localhost', 'localhost');
+INSERT INTO monitoringlocations (id, monitoringarea) values ('localhost', 'localhost');
 
 
 --#####################################################

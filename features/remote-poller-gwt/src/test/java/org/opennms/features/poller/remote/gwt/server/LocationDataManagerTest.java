@@ -197,7 +197,7 @@ public class LocationDataManagerTest implements InitializingBean {
     @Test
     public void testGetStatusDetailsForLocation() {
         
-        OnmsMonitoringLocation def = m_monitoringLocationDao.getByLocationName("00002");
+        OnmsMonitoringLocation def = m_monitoringLocationDao.get("00002");
         
         m_locationDataService.getStatusDetailsForLocation(def);
     }

@@ -60,13 +60,6 @@ public interface LocationDataService {
     /**
      * <p>getLocationInfo</p>
      *
-     * @param id a {@link java.lang.String} object.
-     * @return a {@link org.opennms.features.poller.remote.gwt.client.location.LocationInfo} object.
-     */
-    LocationInfo getLocationInfoById(final String id);
-    /**
-     * <p>getLocationInfo</p>
-     *
      * @param def a {@link org.opennms.netmgt.model.OnmsMonitoringLocationDefinition} object.
      * @return a {@link org.opennms.features.poller.remote.gwt.client.location.LocationInfo} object.
      */
@@ -100,13 +93,6 @@ public interface LocationDataService {
      * @return a {@link org.opennms.features.poller.remote.gwt.client.location.LocationDetails} object.
      */
     LocationDetails getLocationDetails(final String locationName);
-    /**
-     * <p>getLocationDetailsById</p>
-     *
-     * @param id a {@link java.lang.String} object.
-     * @return a {@link org.opennms.features.poller.remote.gwt.client.location.LocationDetails} object.
-     */
-    LocationDetails getLocationDetailsById(final String id);
     /**
      * <p>getLocationDetails</p>
      *
