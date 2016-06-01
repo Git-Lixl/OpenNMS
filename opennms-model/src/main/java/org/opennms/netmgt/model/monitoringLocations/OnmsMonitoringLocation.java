@@ -75,7 +75,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 @XmlRootElement(name="location")
 @XmlAccessorType(XmlAccessType.NONE)
 public class OnmsMonitoringLocation implements Serializable {
-    private static final long serialVersionUID = 862978972646518192L;
+    private static final long serialVersionUID = -7651610012389148818L;
 
     /**
      * A unique identifier (UUID)
