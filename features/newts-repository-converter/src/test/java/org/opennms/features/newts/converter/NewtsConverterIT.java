@@ -45,12 +45,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.cassandraunit.JUnitNewtsCassandra;
-import org.cassandraunit.JUnitNewtsCassandraExecutionListener;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-
-import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
