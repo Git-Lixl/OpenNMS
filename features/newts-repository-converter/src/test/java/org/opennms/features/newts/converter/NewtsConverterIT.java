@@ -86,7 +86,6 @@ import com.google.common.base.Throwables;
                                  "classpath:/META-INF/opennms/applicationContext-newts.xml"})
 @JUnitConfigurationEnvironment(systemProperties={
         "org.opennms.rrd.storeByForeignSource=true",
-        "org.opennms.newts.config.max_batch_delay=0", // No delay
         "org.opennms.timeseries.strategy=newts"
 })
 @JUnitTemporaryDatabase
