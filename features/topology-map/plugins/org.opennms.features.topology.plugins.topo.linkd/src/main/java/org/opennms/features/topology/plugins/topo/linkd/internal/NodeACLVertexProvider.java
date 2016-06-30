@@ -29,6 +29,7 @@
 package org.opennms.features.topology.plugins.topo.linkd.internal;
 
 import java.net.MalformedURLException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +38,7 @@ import java.util.Set;
 
 import javax.xml.bind.JAXBException;
 
+import org.opennms.features.topology.api.RawCriteria;
 import org.opennms.features.topology.api.browsers.ContentType;
 import org.opennms.features.topology.api.browsers.SelectionChangedListener;
 import org.opennms.features.topology.api.topo.Criteria;
@@ -235,7 +237,11 @@ public class NodeACLVertexProvider implements GraphProvider {
 
     @Override
     public List<Vertex> getVertices(Criteria... criteria) {
-        //Filter out vertices not in ACLs
+        RawCriteria rawCriteria = Arrays.stream(criteria).filter(c -> c instanceof RawCriteria).map(c -> (RawCriteria) c).findFirst().orElse(null);
+        if (rawCriteria != null) {
+            return m_delegate.getVertices(criteria);
+        }
+        // Filter out vertices not in ACLs
         return filterVertices(m_delegate.getVertices(criteria));
     }
 

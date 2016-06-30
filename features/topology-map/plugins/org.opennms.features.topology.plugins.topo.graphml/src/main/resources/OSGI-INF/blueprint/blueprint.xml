@@ -20,6 +20,14 @@
 		<property name="alarmDao" ref="alarmDao" />
 	</bean>
 
+	<service interface="org.opennms.features.topology.api.Operation">
+		<service-properties>
+			<entry key="operation.menuLocation" value="View" />
+			<entry key="operation.label" value="Export" />
+		</service-properties>
+		<bean class="org.opennms.features.topology.plugins.topo.graphml.GraphMLExportOperation"/>
+	</service>
+
 	<bean id="graphMLMetaTopologyFactory" class="org.opennms.features.topology.plugins.topo.graphml.internal.GraphMLMetaTopologyFactory">
 		<argument ref="blueprintBundleContext" />
 		<argument ref="serviceAccessor" />

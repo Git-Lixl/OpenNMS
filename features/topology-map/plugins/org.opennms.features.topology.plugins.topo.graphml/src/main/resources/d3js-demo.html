@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>D3.js Topology Example</title>
+  <style>
+
+
+.node {
+    fill: #ccc;
+    stroke: #fff;
+    stroke-width: 2px;
+}
+
+.link {
+    stroke: #777;
+    stroke-width: 2px;
+}
+
+    
+  </style>
+</head>
+<body>
+<!-- load the d3.js library -->
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var width = 1600;
+var height = 700;
+
+var svg = d3.select("body").append("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+d3.json("the-graph-simple.json", function(error, data) {
+  if (error) {
+    alert("Error while loading graph");
+    return;
+  }
+
+  var nodes = data.graphs[0].nodes;
+  var edges = data.graphs[0].edges;
+
+  // Now we create a force layout object and define its properties.
+  // Those include the dimensions of the visualization and the arrays
+  // of nodes and links.
+  var force = d3.layout.force()
+        .size([width, height])
+        .nodes(nodes)
+        .links(edges)
+        .linkDistance(100);
+
+  var link = svg.selectAll('.link')
+      .data(edges)
+      .enter().append('line')
+      .attr('class', 'link');
+
+  var node = svg.selectAll('.node')
+      .data(nodes)
+      .enter().append('circle')
+      .attr('class', 'node');
+
+  force.on('tick', function() {
+      svg.selectAll('.node').attr('r', 10)
+          .attr('cx', function(d) { return d.x; })
+          .attr('cy', function(d) { return d.y; });
+      svg.selectAll('.link').attr('x1', function(d) { return d.source.x; })
+          .attr('y1', function(d) { return d.source.y; })
+          .attr('x2', function(d) { return d.target.x; })
+          .attr('y2', function(d) { return d.target.y; });
+
+  });
+
+  force.start();
+});
+
+</script>
+</body>
+</html>

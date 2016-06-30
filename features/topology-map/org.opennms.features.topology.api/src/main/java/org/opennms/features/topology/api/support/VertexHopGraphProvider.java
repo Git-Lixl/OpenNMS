@@ -30,6 +30,7 @@ package org.opennms.features.topology.api.support;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 import javax.xml.bind.JAXBException;
 
 import org.opennms.features.topology.api.GraphContainer;
+import org.opennms.features.topology.api.RawCriteria;
 import org.opennms.features.topology.api.browsers.ContentType;
 import org.opennms.features.topology.api.browsers.SelectionAware;
 import org.opennms.features.topology.api.browsers.SelectionChangedListener;
@@ -56,8 +58,8 @@ import org.opennms.features.topology.api.topo.Edge;
 import org.opennms.features.topology.api.topo.EdgeListener;
 import org.opennms.features.topology.api.topo.EdgeRef;
 import org.opennms.features.topology.api.topo.GraphProvider;
-import org.opennms.features.topology.api.topo.TopologyProviderInfo;
 import org.opennms.features.topology.api.topo.RefComparator;
+import org.opennms.features.topology.api.topo.TopologyProviderInfo;
 import org.opennms.features.topology.api.topo.Vertex;
 import org.opennms.features.topology.api.topo.VertexListener;
 import org.opennms.features.topology.api.topo.VertexRef;
@@ -365,6 +367,11 @@ public class VertexHopGraphProvider implements GraphProvider, SelectionAware {
 
     @Override
     public List<Vertex> getVertices(Criteria... criteria) {
+
+        RawCriteria rawCriteria = Arrays.stream(criteria).filter(c -> c instanceof RawCriteria).map(c -> (RawCriteria) c).findFirst().orElse(null);
+        if (rawCriteria != null) {
+            return m_delegate.getVertices(criteria);
+        }
 
         Set<VertexRef> focusNodes = getFocusNodes(criteria);
         int maxSemanticZoomLevel = getMaxSemanticZoomLevel(criteria);
