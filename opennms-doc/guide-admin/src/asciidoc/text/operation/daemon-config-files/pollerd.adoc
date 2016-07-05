@@ -15,9 +15,11 @@
 [options="header, autowidth"]
 |===
 | File                        | Restart Required | Reload Event | Description
-| `poller-configuration.xml`  | yes              | yes          | Restart is required in case new monitors are created or removed.
+| `poller-configuration.xml`  | yes              | yes          | It is the main configuration file for _Pollerd_, and it can be reloaded using _reloadDaemonConfig_.
+                                                                  Restart is required in case new monitors are created or removed.
                                                                   Reload Event loads changed configuration parameters of existing monitors.
-| `response-graph.properties` | no               | no           | Graph definition for response time graphs from monitors
-| `poll-outages.xml`          | ?                | ?            | ?
+| `response-graph.properties` | no               | no           | It contains the graph templates for the metrics collected by _Pollerd_, but the file itself is not managed by _Pollerd_.
+                                                                  Any graph related file is reloaded automatically, every time it is changed.
+| `poll-outages.xml`          | ?                | ?            | It is related with the scheduled outages feature.
 | `poller-config.properties`  | ?                | ?            | ?
 |===
