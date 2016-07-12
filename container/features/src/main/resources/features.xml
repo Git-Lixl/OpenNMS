@@ -883,6 +883,7 @@
       <feature>opennms-icmp-api</feature>
       <bundle>mvn:org.opennms/opennms-detector-lineoriented/${project.version}</bundle>
       <bundle>mvn:org.opennms/opennms-detector-datagram/${project.version}</bundle>
+      <bundle>mvn:org.opennms/opennms-detector-generic/${project.version}</bundle>
       <bundle>mvn:org.opennms/opennms-detector-simple/${project.version}</bundle>
       <bundle>mvn:org.opennms/opennms-detector-registry/${project.version}</bundle>
     </feature>
