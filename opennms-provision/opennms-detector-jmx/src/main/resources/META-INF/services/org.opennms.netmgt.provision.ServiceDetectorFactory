@@ -1,0 +1,2 @@
+org.opennms.netmgt.provision.detector.jmx.JBossDetectorFactory
+org.opennms.netmgt.provision.detector.jmx.MX4JDetectorFactory
