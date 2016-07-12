@@ -28,9 +28,11 @@
 
 package org.opennms.netmgt.provision.detector.web;
 
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
+import org.opennms.netmgt.provision.AbstractServiceDetectorFactory;
+import org.springframework.stereotype.Component;
 
-public class WebDetectorFactory implements ServiceDetectorFactory<WebDetector> {
+@Component
+public class WebDetectorFactory extends AbstractServiceDetectorFactory<WebDetector> {
 
     @Override
     public WebDetector createDetector() {

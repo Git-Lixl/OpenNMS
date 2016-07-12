@@ -28,9 +28,12 @@
 
 package org.opennms.netmgt.provision.detector.generic;
 
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
+import org.opennms.netmgt.provision.AbstractServiceDetectorFactory;
+import org.springframework.stereotype.Component;
 
-public class GpDetectorFactory implements ServiceDetectorFactory<GpDetector> {
+
+@Component
+public class GpDetectorFactory extends AbstractServiceDetectorFactory<GpDetector> {
 
     @Override
     public GpDetector createDetector() {

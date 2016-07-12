@@ -28,9 +28,12 @@
 
 package org.opennms.netmgt.provision.detector.jmx;
 
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
+import org.opennms.netmgt.provision.AbstractServiceDetectorFactory;
+import org.springframework.stereotype.Component;
 
-public class JBossDetectorFactory implements ServiceDetectorFactory<JBossDetector> {
+
+@Component
+public class JBossDetectorFactory extends AbstractServiceDetectorFactory<JBossDetector> {
 
     @Override
     public JBossDetector createDetector() {

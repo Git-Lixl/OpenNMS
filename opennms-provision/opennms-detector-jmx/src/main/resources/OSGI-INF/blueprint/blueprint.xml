@@ -16,6 +16,14 @@
 			<entry key="implementation" value="org.opennms.netmgt.provision.detector.jmx.JBossDetector" />
 		</service-properties>
 	</service>
+	
+	<bean id="jsr160DetectorFactory" class="org.opennms.netmgt.provision.detector.jmx.Jsr160DetectorFactory" />
+	<service ref="jsr160DetectorFactory" interface="org.opennms.netmgt.provision.ServiceDetectorFactory">
+		<service-properties>
+			<entry key="implementation" value="org.opennms.netmgt.provision.detector.jmx.Jsr160Detector" />
+		</service-properties>
+	</service>
+	
 
     <bean id="mx4jDetectorFactory" class="org.opennms.netmgt.provision.detector.jmx.MX4JDetectorFactory" />
 	<service ref="mx4jDetectorFactory" interface="org.opennms.netmgt.provision.ServiceDetectorFactory">

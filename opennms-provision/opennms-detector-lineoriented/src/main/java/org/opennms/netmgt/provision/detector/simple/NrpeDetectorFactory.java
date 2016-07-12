@@ -28,9 +28,11 @@
 
 package org.opennms.netmgt.provision.detector.simple;
 
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
+import org.opennms.netmgt.provision.AbstractServiceDetectorFactory;
+import org.springframework.stereotype.Component;
 
-public class NrpeDetectorFactory implements ServiceDetectorFactory<NrpeDetector>{
+@Component
+public class NrpeDetectorFactory extends AbstractServiceDetectorFactory<NrpeDetector> {
 
     @Override
     public NrpeDetector createDetector() {

@@ -28,9 +28,11 @@
 
 package org.opennms.netmgt.provision.detector.datagram;
 
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
+import org.opennms.netmgt.provision.AbstractServiceDetectorFactory;
+import org.springframework.stereotype.Component;
 
-public class NtpDetectorFactory implements ServiceDetectorFactory<NtpDetector> {
+@Component
+public class NtpDetectorFactory extends AbstractServiceDetectorFactory<NtpDetector> {
 
     @Override
     public NtpDetector createDetector() {

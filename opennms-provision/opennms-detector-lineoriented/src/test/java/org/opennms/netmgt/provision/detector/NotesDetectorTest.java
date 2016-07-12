@@ -41,6 +41,7 @@ import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.netmgt.provision.DetectFuture;
 import org.opennms.netmgt.provision.detector.simple.NotesHttpDetector;
+import org.opennms.netmgt.provision.detector.simple.NotesHttpDetectorFactory;
 import org.opennms.netmgt.provision.server.SimpleServer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class NotesDetectorTest implements InitializingBean {
 
     @Autowired
+    private NotesHttpDetectorFactory m_detectorFactory;
+    
     private NotesHttpDetector m_detector;
 
     private SimpleServer m_server;
@@ -99,6 +102,7 @@ public class NotesDetectorTest implements InitializingBean {
 
     @Before
     public void setUp() throws Exception {
+        m_detector = m_detectorFactory.createDetector();
         m_detector.setPort(80);
         m_detector.setUrl("/");
         m_detector.setMaxRetCode(399);

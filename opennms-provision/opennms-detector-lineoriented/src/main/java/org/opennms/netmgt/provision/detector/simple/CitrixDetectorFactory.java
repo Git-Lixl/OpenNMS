@@ -28,9 +28,11 @@
 
 package org.opennms.netmgt.provision.detector.simple;
 
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
+import org.opennms.netmgt.provision.AbstractServiceDetectorFactory;
+import org.springframework.stereotype.Component;
 
-public class CitrixDetectorFactory implements ServiceDetectorFactory<CitrixDetector> {
+@Component
+public class CitrixDetectorFactory extends AbstractServiceDetectorFactory<CitrixDetector> {
 
     @Override
     public CitrixDetector createDetector() {

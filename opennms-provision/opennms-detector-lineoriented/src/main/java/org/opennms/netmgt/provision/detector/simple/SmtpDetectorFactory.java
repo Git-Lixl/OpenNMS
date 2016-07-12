@@ -28,9 +28,11 @@
 
 package org.opennms.netmgt.provision.detector.simple;
 
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
+import org.opennms.netmgt.provision.AbstractServiceDetectorFactory;
+import org.springframework.stereotype.Component;
 
-public class SmtpDetectorFactory implements ServiceDetectorFactory<SmtpDetector> {
+@Component
+public class SmtpDetectorFactory extends AbstractServiceDetectorFactory<SmtpDetector> {
 
     @Override
     public SmtpDetector createDetector() {

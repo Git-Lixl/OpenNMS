@@ -26,12 +26,13 @@
  *      http://www.opennms.com/
  *******************************************************************************/
 
-
 package org.opennms.netmgt.provision.detector.simple;
 
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
+import org.opennms.netmgt.provision.AbstractServiceDetectorFactory;
+import org.springframework.stereotype.Component;
 
-public class LdapDetectorFactory implements ServiceDetectorFactory<LdapDetector> {
+@Component
+public class LdapDetectorFactory extends AbstractServiceDetectorFactory<LdapDetector> {
 
     @Override
     public LdapDetector createDetector() {

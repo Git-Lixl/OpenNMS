@@ -28,9 +28,11 @@
 
 package org.opennms.netmgt.provision.detector.bsf;
 
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
+import org.opennms.netmgt.provision.AbstractServiceDetectorFactory;
+import org.springframework.stereotype.Component;
 
-public class BSFDetectorFactory  implements ServiceDetectorFactory<BSFDetector>{
+@Component
+public class BSFDetectorFactory extends AbstractServiceDetectorFactory<BSFDetector> {
 
     @Override
     public BSFDetector createDetector() {

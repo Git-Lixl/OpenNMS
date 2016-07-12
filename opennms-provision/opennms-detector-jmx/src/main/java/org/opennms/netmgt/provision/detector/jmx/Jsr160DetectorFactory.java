@@ -26,17 +26,17 @@
  *      http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.provision.detector.simple;
+package org.opennms.netmgt.provision.detector.jmx;
 
 import org.opennms.netmgt.provision.AbstractServiceDetectorFactory;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TrivialTimeDetectorFactory extends AbstractServiceDetectorFactory<TrivialTimeDetector> {
+public class Jsr160DetectorFactory extends AbstractServiceDetectorFactory<Jsr160Detector> {
 
     @Override
-    public TrivialTimeDetector createDetector() {
-        return new TrivialTimeDetector();
+    public Jsr160Detector createDetector() {
+        return new Jsr160Detector();
     }
 
 }

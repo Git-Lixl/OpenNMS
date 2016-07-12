@@ -1,2 +1,0 @@
-org.opennms.netmgt.provision.detector.datagram.DnsDetectorFactory
-org.opennms.netmgt.provision.detector.datagram.NtpDetectorFactory
