@@ -1,0 +1,3 @@
+org.opennms.netmgt.provision.detector.jdbc.JdbcDetectorFactory
+org.opennms.netmgt.provision.detector.jdbc.JdbcQueryDetectorFactory
+org.opennms.netmgt.provision.detector.jdbc.JdbcStoredProcedureDetectorFactory
