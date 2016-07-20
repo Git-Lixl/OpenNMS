@@ -76,15 +76,47 @@
 
 --%>
 
+<style type="text/css">
+
+    .row.gutter-10 {
+        margin-right: -5px;
+        margin-left: -5px;
+    }
+
+    .gutter-10 > [class^="col-"], .gutter-10 > [class^=" col-"] {
+        padding-right: 5px;
+        padding-left: 5px;
+    }
+
+    .alert-trend {
+        background-color: #4c9d29;
+        border-color: #4c9d29;
+        color: white;
+    }
+
+    .alert-trend hr {
+        border-top-color: white;
+    }
+
+    .alert-trend .alert-link {
+        color: white;
+    }
+
+    .alert-trend a {
+        color: white;
+    }
+
+</style>
+
 <div class="panel panel-default">
     <div class="panel-heading">
         <h3 class="panel-title">Trend</h3>
     </div>
 
     <div class="panel-body">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="alert alert-success" role="alert">
+        <div class="row gutter-10">
+            <div class="col-xs-4">
+                <div class="alert alert-trend" role="alert">
                     <div class="row">
                         <div class="col-xs-8">
                             <h2 style="margin:0;">Alarms</h2>
@@ -107,8 +139,8 @@
                           sparkHighlightLineColor="white">1,1,0,4,4,7,5,9,10,4,3,2,5,3,1,2</span>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="alert alert-success" role="alert">
+            <div class="col-xs-4">
+                <div class="alert alert-trend" role="alert">
                     <div class="row">
                         <div class="col-xs-8">
                             <h2 style="margin:0;">Alarms</h2>
@@ -131,8 +163,8 @@
                           sparkHighlightLineColor="white">1,1,0,4,4,7,5,9,10,4,3,2,5,3,1,2</span>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="alert alert-success" role="alert">
+            <div class="col-xs-4">
+                <div class="alert alert-trend" role="alert">
                     <div class="row">
                         <div class="col-xs-8">
                             <h2 style="margin:0;">Alarms</h2>
@@ -157,9 +189,9 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-4">
-                <div class="alert alert-success" role="alert">
+        <div class="row gutter-10">
+            <div class="col-xs-4">
+                <div class="alert alert-trend" role="alert">
                     <div class="row">
                         <div class="col-xs-4">
                             <h3 style="margin:0;">Alarms</h3><h4 style="margin:0;">13,477,573</h4>
@@ -181,8 +213,8 @@
                     <a href="#">MORE</a>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="alert alert-success" role="alert">
+            <div class="col-xs-4">
+                <div class="alert alert-trend" role="alert">
                     <div class="row">
                         <div class="col-xs-4">
                             <h3 style="margin:0;">Severity</h3><h4 style="margin:0;">13,477,573</h4>
@@ -195,7 +227,7 @@
                                  sparkHeight="35"
                                  sparkBarWidth="4"
                                  sparkBarSpacing="3"
-                                 sparkSliceColors="[#f5cdcd,#ffd7cd,blanchedalmond,#fff5cd,#ebebcd,#d7e1cd,#eeeeee]">
+                                 sparkSliceColors="[#88DD88,#99DD99,#AADDAA,#BBDDBB,#CCDDCC,#DDDDDD,#EEDDEE]">
                                 <!-- 20,20,15,15,10,10,10 -->
                             </div>
 
