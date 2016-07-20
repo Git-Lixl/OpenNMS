@@ -33,7 +33,6 @@
 
 <jsp:include page="/includes/bootstrap.jsp" flush="false">
     <jsp:param name="title" value="Trend"/>
-    <jsp:param name="norequirejs" value="true"/>
 </jsp:include>
 
 <jsp:include page="trend-box.jsp" flush="false"/>

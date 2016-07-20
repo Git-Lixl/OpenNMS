@@ -44,40 +44,175 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<script type="text/javascript" src="/opennms/js/jquery.sparkline.min.js"></script>
+<%--
+
+.severity .severity-critical, .severity .severity-Critical {
+  background-color: #f5cdcd;
+}
+
+.severity .severity-major, .severity .severity-Major {
+  background-color: #ffd7cd;
+}
+
+.severity .severity-minor, .severity .severity-Minor {
+  background-color: blanchedalmond;
+}
+
+.severity .severity-warning, .severity .severity-Warning {
+  background-color: #fff5cd;
+}
+
+.severity .severity-indeterminate, .severity .severity-Indeterminate {
+  background-color: #ebebcd;
+}
+
+.severity .severity-normal, .severity .severity-Normal {
+  background-color: #d7e1cd;
+}
+
+.severity .severity-cleared, .severity .severity-Cleared {
+  background-color: #eeeeee;
+}
+
+--%>
 
 <div class="panel panel-default">
     <div class="panel-heading">
         <h3 class="panel-title">Trend</h3>
     </div>
 
-    <br/>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="alert alert-success" role="alert">
+                    <div class="row">
+                        <div class="col-xs-8">
+                            <h2 style="margin:0;">Alarms</h2>
+                        </div>
+                        <div class="col-xs-4 text-right">
+                            <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
+                        </div>
+                    </div>
+                    <span class="inlinesparkline"
+                          sparkWidth="100%"
+                          sparkHeight="70"
+                          sparkLineColor="white"
+                          sparkLineWidth="1.5"
+                          sparkFillColor="false"
+                          sparkSpotColor="white"
+                          sparkMinSpotColor="white"
+                          sparkMaxSpotColor="white"
+                          sparkSpotRadius="3"
+                          sparkHighlightSpotColor="white"
+                          sparkHighlightLineColor="white">1,1,0,4,4,7,5,9,10,4,3,2,5,3,1,2</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-success" role="alert">
+                    <div class="row">
+                        <div class="col-xs-8">
+                            <h2 style="margin:0;">Alarms</h2>
+                        </div>
+                        <div class="col-xs-4 text-right">
+                            <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
+                        </div>
+                    </div>
+                    <span class="inlinesparkline"
+                          sparkWidth="100%"
+                          sparkHeight="70"
+                          sparkLineColor="white"
+                          sparkLineWidth="1.5"
+                          sparkFillColor="false"
+                          sparkSpotColor="white"
+                          sparkMinSpotColor="white"
+                          sparkMaxSpotColor="white"
+                          sparkSpotRadius="3"
+                          sparkHighlightSpotColor="white"
+                          sparkHighlightLineColor="white">1,1,0,4,4,7,5,9,10,4,3,2,5,3,1,2</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-success" role="alert">
+                    <div class="row">
+                        <div class="col-xs-8">
+                            <h2 style="margin:0;">Alarms</h2>
+                        </div>
+                        <div class="col-xs-4 text-right">
+                            <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
+                        </div>
+                    </div>
+                    <span class="inlinesparkline"
+                          sparkWidth="100%"
+                          sparkHeight="70"
+                          sparkLineColor="white"
+                          sparkLineWidth="1.5"
+                          sparkFillColor="false"
+                          sparkSpotColor="white"
+                          sparkMinSpotColor="white"
+                          sparkMaxSpotColor="white"
+                          sparkSpotRadius="3"
+                          sparkHighlightSpotColor="white"
+                          sparkHighlightLineColor="white">1,1,0,4,4,7,5,9,10,4,3,2,5,3,1,2</span>
+                </div>
+            </div>
+        </div>
 
-    <div class="row">
-        <div class="col-md-1"></div>
-        <div class="col-md-4">
-            <div class="jumbotron">
-                Hello
-                <span class="inlinesparkline">1,4,4,7,5,9,10</span>
-                <h1>Hello, world!</h1>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="alert alert-success" role="alert">
+                    <div class="row">
+                        <div class="col-xs-4">
+                            <h3 style="margin:0;">Alarms</h3><h4 style="margin:0;">13,477,573</h4>
+                        </div>
+                        <div class="col-xs-8 text-right">
+
+                            <div class="bar-sparkline"
+                                 sparkType="bar"
+                                 sparkBarColor="white"
+                                 sparkHeight="35"
+                                 sparkBarWidth="4"
+                                 sparkBarSpacing="3">
+                                <!-- 28,15,40,12,13,20,17,29,10,6,11,12 -->
+                            </div>
+
+                        </div>
+                    </div>
+                    <hr style="margin-top:5px;margin-bottom:5px;"/>
+                    <a href="#">MORE</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-success" role="alert">
+                    <div class="row">
+                        <div class="col-xs-4">
+                            <h3 style="margin:0;">Severity</h3><h4 style="margin:0;">13,477,573</h4>
+                        </div>
+                        <div class="col-xs-8 text-right">
+
+                            <div class="pie-sparkline"
+                                 sparkType="pie"
+                                 sparkBarColor="white"
+                                 sparkHeight="35"
+                                 sparkBarWidth="4"
+                                 sparkBarSpacing="3"
+                                 sparkSliceColors="[#f5cdcd,#ffd7cd,blanchedalmond,#fff5cd,#ebebcd,#d7e1cd,#eeeeee]">
+                                <!-- 20,20,15,15,10,10,10 -->
+                            </div>
+
+                        </div>
+                    </div>
+                    <hr style="margin-top:5px;margin-bottom:5px;"/>
+                    <a href="#">MORE</a>
+                </div>
             </div>
         </div>
-        <div class="col-md-2"></div>
-        <div class="col-md-4">
-            <div class="jumbotron">
-                Hello
-                <span class="inlinesparkline">1,4,4,7,5,9,10</span>
-                <h1>Hello, world!</h1>
-                <span id="inlinesparkline"></span>
-            </div>
-        </div>
-        <div class="col-md-1"></div>
     </div>
 </div>
 
 <script type="text/javascript">
-    $(function() {
-        console.log($('.inlinesparkline').text());
-        $('.inlinesparkline').sparkline();
+    require(['jquery', '../js/jquery.sparkline.min'], function( $ ) {
+        $('.inlinesparkline').sparkline('html', { enableTagOptions: true });
+        $('.bar-sparkline').sparkline('html', { enableTagOptions: true });
+        $('.pie-sparkline').sparkline('html', { enableTagOptions: true });
     });
 </script>
