@@ -35,6 +35,6 @@
     <jsp:param name="title" value="Trend"/>
 </jsp:include>
 
-<jsp:include page="trend-box.jsp" flush="false"/>
+<jsp:include page="/trend/trend-box.jsp" flush="false"/>
 
 <jsp:include page="/includes/bootstrap-footer.jsp" flush="false"/>

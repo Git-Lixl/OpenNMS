@@ -29,18 +29,7 @@
 
 --%>
 
-<%--
-  This page is included by other JSPs to create a box containing a treemap/heatmap of
-  outages grouped by nodes, foreignSources or categories.
-
-  It expects that a <base> tag has been set in the including page
-  that directs all URLs to be relative to the servlet context.
---%>
-
-<%@page language="java"
-        contentType="text/html"
-        session="true"
-%>
+<%@page language="java" contentType="text/html" session="true" %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
@@ -76,175 +65,43 @@
 
 --%>
 
-<style type="text/css">
-
-    .row.gutter-10 {
-        margin-right: -5px;
-        margin-left: -5px;
-    }
-
-    .gutter-10 > [class^="col-"], .gutter-10 > [class^=" col-"] {
-        padding-right: 5px;
-        padding-left: 5px;
-    }
-
-    .alert-trend {
-        background-color: #4c9d29;
-        border-color: #4c9d29;
-        color: white;
-    }
-
-    .alert-trend hr {
-        border-top-color: white;
-    }
-
-    .alert-trend .alert-link {
-        color: white;
-    }
-
-    .alert-trend a {
-        color: white;
-    }
-
-</style>
-
 <div class="panel panel-default">
     <div class="panel-heading">
         <h3 class="panel-title">Trend</h3>
     </div>
 
     <div class="panel-body">
+
+        <%
+            for(int i=0;i<2;i++) {
+                String nameLine = "NameLine"+i;
+                String nameBar = "NameBar"+i;
+                String namePie = "NamePie"+i;
+        %>
         <div class="row gutter-10">
             <div class="col-xs-4">
-                <div class="alert alert-trend" role="alert">
-                    <div class="row">
-                        <div class="col-xs-8">
-                            <h2 style="margin:0;">Alarms</h2>
-                        </div>
-                        <div class="col-xs-4 text-right">
-                            <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
-                        </div>
-                    </div>
-                    <span class="inlinesparkline"
-                          sparkWidth="100%"
-                          sparkHeight="70"
-                          sparkLineColor="white"
-                          sparkLineWidth="1.5"
-                          sparkFillColor="false"
-                          sparkSpotColor="white"
-                          sparkMinSpotColor="white"
-                          sparkMaxSpotColor="white"
-                          sparkSpotRadius="3"
-                          sparkHighlightSpotColor="white"
-                          sparkHighlightLineColor="white">1,1,0,4,4,7,5,9,10,4,3,2,5,3,1,2</span>
-                </div>
+                <jsp:include page="/trend/trend.htm" flush="false">
+                    <jsp:param name="name" value="<%=nameLine%>"/>
+                    <jsp:param name="type" value="line"/>
+                </jsp:include>
             </div>
             <div class="col-xs-4">
-                <div class="alert alert-trend" role="alert">
-                    <div class="row">
-                        <div class="col-xs-8">
-                            <h2 style="margin:0;">Alarms</h2>
-                        </div>
-                        <div class="col-xs-4 text-right">
-                            <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
-                        </div>
-                    </div>
-                    <span class="inlinesparkline"
-                          sparkWidth="100%"
-                          sparkHeight="70"
-                          sparkLineColor="white"
-                          sparkLineWidth="1.5"
-                          sparkFillColor="false"
-                          sparkSpotColor="white"
-                          sparkMinSpotColor="white"
-                          sparkMaxSpotColor="white"
-                          sparkSpotRadius="3"
-                          sparkHighlightSpotColor="white"
-                          sparkHighlightLineColor="white">1,1,0,4,4,7,5,9,10,4,3,2,5,3,1,2</span>
-                </div>
+                <jsp:include page="/trend/trend.htm" flush="false">
+                    <jsp:param name="name" value="<%=nameBar%>"/>
+                    <jsp:param name="type" value="bar"/>
+                </jsp:include>
             </div>
             <div class="col-xs-4">
-                <div class="alert alert-trend" role="alert">
-                    <div class="row">
-                        <div class="col-xs-8">
-                            <h2 style="margin:0;">Alarms</h2>
-                        </div>
-                        <div class="col-xs-4 text-right">
-                            <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
-                        </div>
-                    </div>
-                    <span class="inlinesparkline"
-                          sparkWidth="100%"
-                          sparkHeight="70"
-                          sparkLineColor="white"
-                          sparkLineWidth="1.5"
-                          sparkFillColor="false"
-                          sparkSpotColor="white"
-                          sparkMinSpotColor="white"
-                          sparkMaxSpotColor="white"
-                          sparkSpotRadius="3"
-                          sparkHighlightSpotColor="white"
-                          sparkHighlightLineColor="white">1,1,0,4,4,7,5,9,10,4,3,2,5,3,1,2</span>
-                </div>
+                <jsp:include page="/trend/trend.htm" flush="false">
+                    <jsp:param name="name" value="<%=namePie%>"/>
+                    <jsp:param name="type" value="pie"/>
+                </jsp:include>
             </div>
         </div>
-
-        <div class="row gutter-10">
-            <div class="col-xs-4">
-                <div class="alert alert-trend" role="alert">
-                    <div class="row">
-                        <div class="col-xs-4">
-                            <h3 style="margin:0;">Alarms</h3><h4 style="margin:0;">13,477,573</h4>
-                        </div>
-                        <div class="col-xs-8 text-right">
-
-                            <div class="bar-sparkline"
-                                 sparkType="bar"
-                                 sparkBarColor="white"
-                                 sparkHeight="35"
-                                 sparkBarWidth="4"
-                                 sparkBarSpacing="3">
-                                <!-- 28,15,40,12,13,20,17,29,10,6,11,12 -->
-                            </div>
-
-                        </div>
-                    </div>
-                    <hr style="margin-top:5px;margin-bottom:5px;"/>
-                    <a href="#">MORE</a>
-                </div>
-            </div>
-            <div class="col-xs-4">
-                <div class="alert alert-trend" role="alert">
-                    <div class="row">
-                        <div class="col-xs-4">
-                            <h3 style="margin:0;">Severity</h3><h4 style="margin:0;">13,477,573</h4>
-                        </div>
-                        <div class="col-xs-8 text-right">
-
-                            <div class="pie-sparkline"
-                                 sparkType="pie"
-                                 sparkBarColor="white"
-                                 sparkHeight="35"
-                                 sparkBarWidth="4"
-                                 sparkBarSpacing="3"
-                                 sparkSliceColors="[#88DD88,#99DD99,#AADDAA,#BBDDBB,#CCDDCC,#DDDDDD,#EEDDEE]">
-                                <!-- 20,20,15,15,10,10,10 -->
-                            </div>
-
-                        </div>
-                    </div>
-                    <hr style="margin-top:5px;margin-bottom:5px;"/>
-                    <a href="#">MORE</a>
-                </div>
-            </div>
-        </div>
+        <%
+            }
+        %>
     </div>
 </div>
 
-<script type="text/javascript">
-    require(['jquery', '../js/jquery.sparkline.min'], function( $ ) {
-        $('.inlinesparkline').sparkline('html', { enableTagOptions: true });
-        $('.bar-sparkline').sparkline('html', { enableTagOptions: true });
-        $('.pie-sparkline').sparkline('html', { enableTagOptions: true });
-    });
-</script>
+
