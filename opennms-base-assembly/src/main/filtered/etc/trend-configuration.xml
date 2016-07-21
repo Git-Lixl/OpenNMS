@@ -1,0 +1,37 @@
+<trend-configuration>
+    <trend-definition name="def1" type="line">
+        <title>Definition #1</title>
+        <description>Description #1</description>
+        <trend-attributes>
+            <trend-attribute key="key1_1" value="value1_1"/>
+            <trend-attribute key="key1_2" value="value1_2"/>
+        </trend-attributes>
+        <query>
+            select * from (values (1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3)) as t;
+        </query>
+    </trend-definition>
+
+    <trend-definition name="def2" type="bar">
+        <title>Definition #2</title>
+        <description>Description #2</description>
+        <trend-attributes>
+            <trend-attribute key="key2_1" value="value2_1"/>
+            <trend-attribute key="key2_2" value="value2_2"/>
+        </trend-attributes>
+        <query>
+            select * from (values (1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3)) as t;
+        </query>
+    </trend-definition>
+
+    <trend-definition name="def3" type="pie">
+        <title>Definition #3</title>
+        <description>Description #3</description>
+        <trend-attributes>
+            <trend-attribute key="key3_1" value="value3_1"/>
+            <trend-attribute key="key3_2" value="value3_2"/>
+        </trend-attributes>
+        <query>
+            select * from (values (1),(2),(3),(1),(2),(3)) as t;
+        </query>
+    </trend-definition>
+</trend-configuration>

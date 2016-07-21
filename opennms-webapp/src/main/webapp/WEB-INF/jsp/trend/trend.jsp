@@ -47,6 +47,7 @@
     .alert-trend {
         background-color: #4c9d29;
         border-color: #4c9d29;
+        height: 120px;
         color: white;
     }
 
@@ -64,11 +65,11 @@
 
 </style>
 
-<c:if test="${param['type'] == 'line'}">
+<c:if test="${type == 'line'}">
     <div class="alert alert-trend" role="alert">
         <div class="row">
             <div class="col-xs-8">
-                <h2 style="margin:0;"><%= request.getParameter("name") %></h2>
+                <h3 style="margin:0;">${title}</h3><h4 style="margin:0;">${description}</h4>
             </div>
             <div class="col-xs-4 text-right">
                 <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
@@ -86,16 +87,16 @@
               sparkSpotRadius="3"
               sparkHighlightSpotColor="white"
               sparkHighlightLineColor="white">
-             <!-- 1,1,0,4,4,7,5,9,10,4,3,2,5,3,1,2 -->
-            </span>
+                ${valuesString}
+        </span>
     </div>
 </c:if>
 
-<c:if test="${param['type'] == 'bar'}">
+<c:if test="${type == 'bar'}">
     <div class="alert alert-trend" role="alert">
         <div class="row">
             <div class="col-xs-4">
-                <h3 style="margin:0;"><%= request.getParameter("name") %></h3><h4 style="margin:0;">13,477,573</h4>
+                <h3 style="margin:0;">${title}</h3><h4 style="margin:0;">${description}</h4>
             </div>
             <div class="col-xs-8 text-right">
                 <div class="sparkline-<%= request.getParameter("name") %>"
@@ -104,7 +105,7 @@
                      sparkHeight="35"
                      sparkBarWidth="4"
                      sparkBarSpacing="3">
-                    <!-- 28,15,40,12,13,20,17,29,10,6,11,12 -->
+                        ${valuesString}
                 </div>
             </div>
         </div>
@@ -113,11 +114,11 @@
     </div>
 </c:if>
 
-<c:if test="${param['type'] == 'pie'}">
+<c:if test="${type == 'pie'}">
     <div class="alert alert-trend" role="alert">
         <div class="row">
             <div class="col-xs-4">
-                <h3 style="margin:0;"><%= request.getParameter("name") %></h3><h4 style="margin:0;">13,477,573</h4>
+                <h3 style="margin:0;">${title}</h3><h4 style="margin:0;">${description}</h4>
             </div>
             <div class="col-xs-8 text-right">
 
@@ -128,7 +129,7 @@
                      sparkBarWidth="4"
                      sparkBarSpacing="3"
                      sparkSliceColors="[#88DD88,#99DD99,#AADDAA,#BBDDBB,#CCDDCC,#DDDDDD,#EEDDEE]">
-                    <!-- 20,20,15,15,10,10,10 -->
+                        ${valuesString}
                 </div>
 
             </div>
@@ -143,6 +144,3 @@
         $('.sparkline-<%= request.getParameter("name") %>').sparkline('html', { enableTagOptions: true });
     });
 </script>
-
-
-
