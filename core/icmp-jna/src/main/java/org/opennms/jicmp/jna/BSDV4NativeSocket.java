@@ -28,6 +28,7 @@
 
 package org.opennms.jicmp.jna;
 
+import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
@@ -62,12 +63,13 @@ public class BSDV4NativeSocket extends NativeDatagramSocket {
 	public native int close(int socket) throws LastErrorException;
 
 	@Override
-	public void setTrafficClass(final int tc) throws LastErrorException {
+	public void setTrafficClass(final int tc) throws IOException {
 	    final IntByReference tc_ptr = new IntByReference(tc);
-	    final int ret = setsockopt(m_sock, IPPROTO_IP, IP_TOS, tc_ptr.getPointer(), Pointer.SIZE);
-	    if (ret == -1) { // SOCKET_ERROR
-	        throw new LastErrorException(Native.getLastError());
-	    }
+            try {
+                setsockopt(m_sock, IPPROTO_IPV6, IP_TOS, tc_ptr.getPointer(), Pointer.SIZE);
+            } catch (final LastErrorException e) {
+                throw new IOException("setsockopt: " + strerror(e.getErrorCode()));
+            }
 	}
 
 	@Override

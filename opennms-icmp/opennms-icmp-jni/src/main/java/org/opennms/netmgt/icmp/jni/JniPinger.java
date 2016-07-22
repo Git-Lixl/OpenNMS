@@ -28,9 +28,9 @@
 
 package org.opennms.netmgt.icmp.jni;
 
+import static org.opennms.netmgt.icmp.PingConstants.DEFAULT_PACKET_SIZE;
 import static org.opennms.netmgt.icmp.PingConstants.DEFAULT_RETRIES;
 import static org.opennms.netmgt.icmp.PingConstants.DEFAULT_TIMEOUT;
-import static org.opennms.netmgt.icmp.PingConstants.DEFAULT_PACKET_SIZE;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -307,6 +307,7 @@ public class JniPinger implements Pinger {
 
     @Override
     public void setTrafficClass(int tc) throws Exception {
+        initialize();
         m_messenger.setTrafficClass(tc);
     }
 

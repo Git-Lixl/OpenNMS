@@ -71,7 +71,7 @@ final public class CLIPinger {
     private static int s_count = 5;
     
     @Option(name = "--dscp", aliases = {"-d"}, required = false, usage = "the DSCP traffic control value")
-    private static int s_dscp = 0;
+    private static String s_dscp = "0";
 
     @Argument
     private static List<String> s_arguments = new ArrayList<String>();
@@ -102,7 +102,7 @@ final public class CLIPinger {
         
         try {
             host = InetAddress.getByName(s_arguments.get(0));
-            Pinger p = PingerFactory.getInstance(s_dscp);
+            Pinger p = PingerFactory.getInstance(Integer.decode(s_dscp));
             for (int i = 0; i < s_count; i++) {
                 Number rtt = p.ping(host, s_timeout, s_retries);
                 if (rtt == null) {
@@ -118,8 +118,9 @@ final public class CLIPinger {
         } catch (UnknownHostException ex) {
             System.out.println("Unknown host " + args[0]);
             System.exit(1);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             System.out.println("Unexpected exception while pinging " + args[0] + ": " + ex.getMessage());
+            ex.printStackTrace();
             System.exit(1);
         } finally {
             System.exit(0);

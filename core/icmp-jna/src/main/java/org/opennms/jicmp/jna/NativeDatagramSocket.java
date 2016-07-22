@@ -28,12 +28,12 @@
 
 package org.opennms.jicmp.jna;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.jna.LastErrorException;
 import com.sun.jna.Platform;
 
 /**
@@ -110,7 +110,9 @@ public abstract class NativeDatagramSocket {
             "NativeSocket";
     }
 
-    public abstract void setTrafficClass(int tc) throws LastErrorException;
+    public native String strerror(int errnum);
+
+    public abstract void setTrafficClass(int tc) throws IOException;
     public abstract int receive(NativeDatagramPacket p) throws UnknownHostException;
     public abstract int send(NativeDatagramPacket p);
     public abstract int close();

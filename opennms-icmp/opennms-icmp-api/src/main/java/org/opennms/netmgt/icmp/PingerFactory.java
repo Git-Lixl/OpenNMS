@@ -38,9 +38,11 @@ import org.slf4j.LoggerFactory;
  * @author <A HREF="mailto:brozow@opennms.org">Matt Brozowski</A>
  */
 public abstract class PingerFactory {
+    private static final int MAX_DSCP = (1 << 16) - 1;
+
     private static final Logger LOG = LoggerFactory.getLogger(PingerFactory.class);
 
-    private static Pinger[] m_pingers = new Pinger[Integer.MAX_VALUE];
+    private static Pinger[] m_pingers = new Pinger[MAX_DSCP];
     //private static Map<Integer, Pinger> m_pingers = new ConcurrentHashMap<>();
     //private static Pinger m_pinger;
 

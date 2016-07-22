@@ -333,6 +333,8 @@ public class Jni6Pinger implements Pinger {
 
     @Override
     public void setTrafficClass(int tc) throws Exception {
+        initialize4();
+        initialize6();
         m_jniPinger.setTrafficClass(tc);
     }
 

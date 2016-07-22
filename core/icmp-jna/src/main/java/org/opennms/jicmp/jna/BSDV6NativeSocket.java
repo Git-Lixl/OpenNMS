@@ -64,9 +64,10 @@ public class BSDV6NativeSocket extends NativeDatagramSocket {
 	@Override
 	public void setTrafficClass(final int tc) throws LastErrorException {
 	    final IntByReference tc_ptr = new IntByReference(tc);
-	    final int ret = setsockopt(m_sock, IPPROTO_IPV6, IPV6_TCLASS, tc_ptr.getPointer(), Pointer.SIZE);
-	    if (ret == -1) { // SOCKET_ERROR
-	        throw new LastErrorException(Native.getLastError());
+	    try {
+	        setsockopt(m_sock, IPPROTO_IPV6, IPV6_TCLASS, tc_ptr.getPointer(), Pointer.SIZE);
+	    } catch (final LastErrorException e) {
+	        throw new RuntimeException("setsockopt: " + strerror(e.getErrorCode()));
 	    }
 	}
 

@@ -231,6 +231,7 @@ public class JnaPinger implements Pinger {
 
     @Override
     public void setTrafficClass(int tc) throws Exception {
+        initialize();
         m_messenger.setTrafficClass(tc);
     }
 
