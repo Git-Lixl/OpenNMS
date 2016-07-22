@@ -33,6 +33,7 @@ import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sun.jna.LastErrorException;
 import com.sun.jna.Platform;
 
 /**
@@ -58,9 +59,14 @@ public abstract class NativeDatagramSocket {
     public static final int SOCK_RAW = Platform.isSolaris() ? 4 
                                      : 3;
 
+    public static final int IPPROTO_IP = 0;
+    public static final int IPPROTO_IPV6 = 41;
     public static final int IPPROTO_ICMP = 1;
     public static final int IPPROTO_UDP = 17;
     public static final int IPPROTO_ICMPV6 = 58;
+
+    // platform-specific  :/
+    // public static final int IPV6_TCLASS = 36;
 
     public NativeDatagramSocket() {
         if (AF_INET6 == -1) {
@@ -104,6 +110,7 @@ public abstract class NativeDatagramSocket {
             "NativeSocket";
     }
 
+    public abstract void setTrafficClass(int tc) throws LastErrorException;
     public abstract int receive(NativeDatagramPacket p) throws UnknownHostException;
     public abstract int send(NativeDatagramPacket p);
     public abstract int close();

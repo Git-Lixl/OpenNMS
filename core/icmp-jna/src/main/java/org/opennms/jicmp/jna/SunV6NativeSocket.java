@@ -34,6 +34,8 @@ import java.nio.ByteBuffer;
 
 import com.sun.jna.LastErrorException;
 import com.sun.jna.Native;
+import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
 
 /**
  * UnixNativeSocketFactory
@@ -46,6 +48,7 @@ public class SunV6NativeSocket extends NativeDatagramSocket {
         Native.register((String)null);
     }
 
+    private static final int IPV6_TCLASS = 0x26;
     private final int m_sock;
 
     public SunV6NativeSocket(int family, int type, int protocol) throws Exception {
@@ -56,11 +59,22 @@ public class SunV6NativeSocket extends NativeDatagramSocket {
 
     public native int socket(int domain, int type, int protocol) throws LastErrorException;
 
+    public native int setsockopt(int socket, int level, int option_name, Pointer value, int option_len);
+
     public native int sendto(int socket, Buffer buffer, int buflen, int flags, sun_sockaddr_in6 dest_addr, int dest_addr_len) throws LastErrorException;
 
     public native int recvfrom(int socket, Buffer buffer, int buflen, int flags, sun_sockaddr_in6 in_addr, int[] in_addr_len) throws LastErrorException;
 
     public native int close(int socket) throws LastErrorException;
+
+    @Override
+    public void setTrafficClass(final int tc) throws LastErrorException {
+        final IntByReference tc_ptr = new IntByReference(tc);
+        final int ret = setsockopt(m_sock, IPPROTO_IPV6, IPV6_TCLASS, tc_ptr.getPointer(), Pointer.SIZE);
+        if (ret == -1) { // SOCKET_ERROR
+            throw new LastErrorException(Native.getLastError());
+        }
+    }
 
     @Override
     public int receive(NativeDatagramPacket p) throws UnknownHostException {

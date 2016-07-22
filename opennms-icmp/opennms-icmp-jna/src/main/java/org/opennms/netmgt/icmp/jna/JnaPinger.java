@@ -229,4 +229,9 @@ public class JnaPinger implements Pinger {
         return cb.getResponseTimes();
     }
 
+    @Override
+    public void setTrafficClass(int tc) throws Exception {
+        m_messenger.setTrafficClass(tc);
+    }
+
 }

@@ -109,4 +109,9 @@ public class JnaIcmpMessenger implements Messenger<JnaPingRequest, JnaPingReply>
         m_callback.handleReply(new JnaPingReply(address, packet));
 	}
 
+        public void setTrafficClass(int tc) {
+            m_v4.getPingSocket().setTrafficClass(tc);
+            m_v6.getPingSocket().setTrafficClass(tc);
+        }
+
 }

@@ -68,4 +68,8 @@ public class NullPinger implements Pinger {
         return true;
     }
 
+    @Override
+    public void setTrafficClass(int tc) throws Exception {
+    }
+
 }

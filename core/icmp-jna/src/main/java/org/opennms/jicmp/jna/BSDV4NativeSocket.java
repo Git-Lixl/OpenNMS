@@ -33,6 +33,8 @@ import java.nio.ByteBuffer;
 
 import com.sun.jna.LastErrorException;
 import com.sun.jna.Native;
+import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
 
 /**
  * UnixNativeSocketFactory
@@ -45,6 +47,7 @@ public class BSDV4NativeSocket extends NativeDatagramSocket {
 		Native.register((String)null);
 	}
 
+	private static final int IP_TOS = 3;
 	private int m_sock;
 
 	public BSDV4NativeSocket(final int family, final int type, final int protocol) throws Exception {
@@ -53,9 +56,19 @@ public class BSDV4NativeSocket extends NativeDatagramSocket {
 
 	public native int bind(int socket, bsd_sockaddr_in address, int address_len) throws LastErrorException;
 	public native int socket(int domain, int type, int protocol) throws LastErrorException;
+	public native int setsockopt(int socket, int level, int option_name, Pointer value, int option_len);
 	public native int sendto(int socket, Buffer buffer, int buflen, int flags, bsd_sockaddr_in dest_addr, int dest_addr_len) throws LastErrorException;
 	public native int recvfrom(int socket, Buffer buffer, int buflen, int flags, bsd_sockaddr_in in_addr, int[] in_addr_len) throws LastErrorException;
 	public native int close(int socket) throws LastErrorException;
+
+	@Override
+	public void setTrafficClass(final int tc) throws LastErrorException {
+	    final IntByReference tc_ptr = new IntByReference(tc);
+	    final int ret = setsockopt(m_sock, IPPROTO_IP, IP_TOS, tc_ptr.getPointer(), Pointer.SIZE);
+	    if (ret == -1) { // SOCKET_ERROR
+	        throw new LastErrorException(Native.getLastError());
+	    }
+	}
 
 	@Override
 	public int receive(final NativeDatagramPacket p) {

@@ -39,23 +39,32 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class PingerFactory {
     private static final Logger LOG = LoggerFactory.getLogger(PingerFactory.class);
-	/**
-     * The {@link Pinger} instance.
+
+    private static Pinger[] m_pingers = new Pinger[Integer.MAX_VALUE];
+    //private static Map<Integer, Pinger> m_pingers = new ConcurrentHashMap<>();
+    //private static Pinger m_pinger;
+
+    /**
+     * @deprecated Use {@link #getInstance(int)} instead.
      */
-    private static Pinger m_pinger;
+    public static Pinger getInstance() {
+        return PingerFactory.getInstance(0);
+    }
 
     /**
      * Returns an implementation of the default {@link Pinger} class
      *
      * @return a {@link Pinger} object.
      */
-    public static Pinger getInstance() {
-        if (m_pinger == null) {
+    public static Pinger getInstance(final int tc) {
+        if (m_pingers[tc] == null) {
             final String pingerClassName = System.getProperty("org.opennms.netmgt.icmp.pingerClass", "org.opennms.netmgt.icmp.jni6.Jni6Pinger");
             Class<? extends Pinger> clazz = null;
             try {
                 clazz = Class.forName(pingerClassName).asSubclass(Pinger.class);
-                m_pinger = clazz.newInstance();
+                final Pinger pinger = clazz.newInstance();
+                pinger.setTrafficClass(tc);
+                m_pingers[tc] = pinger;
             } catch (final ClassNotFoundException e) {
                 IllegalArgumentException ex = new IllegalArgumentException("Unable to find class named " + pingerClassName, e);
                 LOG.error(ex.getLocalizedMessage(), ex);
@@ -74,24 +83,31 @@ public abstract class PingerFactory {
                 throw ex;
             }
         }
-        return m_pinger;
+        return m_pingers[tc];
     }
 
     /**
-     * <p>setIpcManager</p>
-     *
-     * @param pinger a {@link Pinger} object.
+     * @deprecated Use {@link #setInstance(int, Pinger)} instead.
+
      */
     public static void setInstance(final Pinger pinger) {
-        m_pinger = pinger;
+        m_pingers[0] = pinger;
     }
-    
+
+    public static void setInstance(final int tc, final Pinger pinger) {
+        m_pingers[tc] = pinger;
+    }
+
     /**
-     * This is here for unit testing so we can reset this class before
-     * every test.
+     * @deprecated Use {@link #reset(int)} instead.
      */
     protected static void reset() {
-        m_pinger = null;
+        for (int i=0; i < Integer.MAX_VALUE; i++) {
+            m_pingers[i] = null;
+        }
     }
     
+    protected static void reset(final int tc) {
+        m_pingers[tc] = null;
+    }
 }

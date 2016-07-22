@@ -70,6 +70,11 @@ public class Win32V4NativeSocket extends NativeDatagramSocket {
     }
 
     @Override
+    public void setTrafficClass(final int tc) throws LastErrorException {
+        // it appears that IP_TOS and IPV6_TCLASS do not exist in Win32 anymore
+    }
+
+    @Override
     public int receive(NativeDatagramPacket p) {
         sockaddr_in in_addr = new sockaddr_in();
         int[] szRef = new int[] { in_addr.size() };

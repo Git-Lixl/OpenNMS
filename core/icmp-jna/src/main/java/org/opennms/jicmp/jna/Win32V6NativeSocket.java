@@ -63,6 +63,11 @@ public class Win32V6NativeSocket extends NativeDatagramSocket {
     public native int closesocket(int socket) throws LastErrorException;
 
     @Override
+    public void setTrafficClass(final int tc) throws LastErrorException {
+        // it appears that IP_TOS and IPV6_TCLASS do not exist in Win32 anymore
+    }
+
+    @Override
     public int receive(NativeDatagramPacket p) throws UnknownHostException {
         sockaddr_in6 in_addr = new sockaddr_in6();
         int[] szRef = new int[] { in_addr.size() };

@@ -128,6 +128,7 @@ public class JniPinger implements Pinger {
 
     private RequestTracker<JniPingRequest, JniPingResponse> s_pingTracker;
     private Throwable m_error = null;
+    private JniIcmpMessenger m_messenger;
 
     public JniPinger() {}
 
@@ -139,9 +140,11 @@ public class JniPinger implements Pinger {
     private synchronized void initialize() throws Exception {
         if (s_pingTracker != null) return;
         try {
+            m_messenger = new JniIcmpMessenger(m_pingerId);
             s_pingTracker = Logging.withPrefix("icmp", new Callable<RequestTracker<JniPingRequest, JniPingResponse>>() {
+
                 @Override public RequestTracker<JniPingRequest, JniPingResponse> call() throws Exception {
-                    return new RequestTracker<JniPingRequest, JniPingResponse>("JNI-ICMP-"+m_pingerId, new JniIcmpMessenger(m_pingerId), new IDBasedRequestLocator<JniPingRequestId, JniPingRequest, JniPingResponse>());
+                    return new RequestTracker<JniPingRequest, JniPingResponse>("JNI-ICMP-"+m_pingerId, m_messenger, new IDBasedRequestLocator<JniPingRequestId, JniPingRequest, JniPingResponse>());
                 }
             });
             s_pingTracker.start();
@@ -300,6 +303,11 @@ public class JniPinger implements Pinger {
 
         cb.waitFor();
         return cb.getResponseTimes();
+    }
+
+    @Override
+    public void setTrafficClass(int tc) throws Exception {
+        m_messenger.setTrafficClass(tc);
     }
 
 }

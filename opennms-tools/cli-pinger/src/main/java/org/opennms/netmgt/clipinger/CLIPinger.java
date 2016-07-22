@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -69,6 +70,9 @@ final public class CLIPinger {
     @Option(name = "--count", aliases = {"-c"}, required = false, usage = "number of pings (default 5)")
     private static int s_count = 5;
     
+    @Option(name = "--dscp", aliases = {"-d"}, required = false, usage = "the DSCP traffic control value")
+    private static int s_dscp = 0;
+
     @Argument
     private static List<String> s_arguments = new ArrayList<String>();
     
@@ -76,7 +80,6 @@ final public class CLIPinger {
         new CLIPinger().doMain(args);
     }
     
-    @SuppressWarnings("SleepWhileInLoop")
     public void doMain(String[] args) throws CmdLineException {
         setPropertiesIfPossible();
         
@@ -99,7 +102,7 @@ final public class CLIPinger {
         
         try {
             host = InetAddress.getByName(s_arguments.get(0));
-            Pinger p = PingerFactory.getInstance();
+            Pinger p = PingerFactory.getInstance(s_dscp);
             for (int i = 0; i < s_count; i++) {
                 Number rtt = p.ping(host, s_timeout, s_retries);
                 if (rtt == null) {
