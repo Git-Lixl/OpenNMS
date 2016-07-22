@@ -39,11 +39,11 @@ import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -71,12 +71,13 @@ public class JUnitServer {
             factory.setKeyStorePath(config.keystore());
             factory.setKeyStorePassword(config.keystorePassword());
             factory.setKeyManagerPassword(config.keyPassword());
-            factory.setTrustStore(config.keystore());
+            factory.setTrustStorePath(config.keystore());
             factory.setTrustStorePassword(config.keystorePassword());
 
-            final SslSocketConnector connector = new SslSocketConnector(factory);
-            connector.setPort(config.port());
-            server.setConnectors(new Connector[] { connector });
+            ServerConnector https = new ServerConnector(server);
+            https.setPort(config.port());
+
+            server.setConnectors(new Connector[] { https });
         } else {
             server = new Server(config.port());
         }
@@ -98,7 +99,7 @@ public class JUnitServer {
             LOG.debug("configuring basic auth");
 
             final HashLoginService loginService = new HashLoginService("MyRealm", config.basicAuthFile());
-            loginService.setRefreshInterval(300000);
+            loginService.setHotReload(true);
             m_server.addBean(loginService);
 
             final ConstraintSecurityHandler security = new ConstraintSecurityHandler();
@@ -120,7 +121,7 @@ public class JUnitServer {
             security.setConstraintMappings(Collections.singletonList(mapping), knownRoles);
             security.setAuthenticator(new BasicAuthenticator());
             security.setLoginService(loginService);
-            security.setStrict(false);
+            // JW: TODO: security.setStrict(false);
             security.setRealmName("MyRealm");
 
             security.setHandler(context);
@@ -187,7 +188,9 @@ public class JUnitServer {
 
         for (final Connector conn : m_server.getConnectors()) {
             System.err.println("connector = " + conn);
-            return conn.getLocalPort();
+            if (conn instanceof ServerConnector) {
+                return ((ServerConnector)conn).getLocalPort();
+            }
         }
 
         return -1;
