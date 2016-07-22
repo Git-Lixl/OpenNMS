@@ -47,7 +47,7 @@
     .alert-trend {
         background-color: #4c9d29;
         border-color: #4c9d29;
-        height: 120px;
+        height: 100px;
         color: white;
     }
 
@@ -68,45 +68,52 @@
 <c:if test="${type == 'line'}">
     <div class="alert alert-trend" role="alert">
         <div class="row">
-            <div class="col-xs-8">
+            <div class="col-md-6">
                 <h3 style="margin:0;">${title}</h3><h4 style="margin:0;">${description}</h4>
             </div>
-            <div class="col-xs-4 text-right">
+            <div class="col-md-5 text-right">
+                <span class="sparkline-<%= request.getParameter("name") %>"
+                      sparkWidth="100%"
+                      sparkHeight="35"
+                      sparkLineColor="white"
+                      sparkLineWidth="1.5"
+                      sparkFillColor="false"
+                      sparkSpotColor="white"
+                      sparkMinSpotColor="white"
+                      sparkMaxSpotColor="white"
+                      sparkSpotRadius="3"
+                      sparkHighlightSpotColor="white"
+                      sparkHighlightLineColor="white">
+                        ${valuesString}
+                </span>
+            </div>
+            <div class="col-md-1 text-right" style="padding-left:0">
                 <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
             </div>
         </div>
-        <span class="sparkline-<%= request.getParameter("name") %>"
-              sparkWidth="100%"
-              sparkHeight="70"
-              sparkLineColor="white"
-              sparkLineWidth="1.5"
-              sparkFillColor="false"
-              sparkSpotColor="white"
-              sparkMinSpotColor="white"
-              sparkMaxSpotColor="white"
-              sparkSpotRadius="3"
-              sparkHighlightSpotColor="white"
-              sparkHighlightLineColor="white">
-                ${valuesString}
-        </span>
+        <hr style="margin-top:5px;margin-bottom:5px;"/>
+        <a href="#">MORE</a>
     </div>
 </c:if>
 
 <c:if test="${type == 'bar'}">
     <div class="alert alert-trend" role="alert">
         <div class="row">
-            <div class="col-xs-4">
+            <div class="col-md-6">
                 <h3 style="margin:0;">${title}</h3><h4 style="margin:0;">${description}</h4>
             </div>
-            <div class="col-xs-8 text-right">
-                <div class="sparkline-<%= request.getParameter("name") %>"
-                     sparkType="bar"
-                     sparkBarColor="white"
-                     sparkHeight="35"
-                     sparkBarWidth="4"
-                     sparkBarSpacing="3">
+            <div class="col-md-5 text-right">
+                <span class="sparkline-<%= request.getParameter("name") %>"
+                      sparkType="bar"
+                      sparkBarColor="white"
+                      sparkHeight="35"
+                      sparkBarWidth="4"
+                      sparkBarSpacing="3">
                         ${valuesString}
-                </div>
+                </span>
+            </div>
+            <div class="col-md-1 text-right" style="padding-left:0">
+                <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
             </div>
         </div>
         <hr style="margin-top:5px;margin-bottom:5px;"/>
@@ -117,21 +124,22 @@
 <c:if test="${type == 'pie'}">
     <div class="alert alert-trend" role="alert">
         <div class="row">
-            <div class="col-xs-4">
+            <div class="col-md-6">
                 <h3 style="margin:0;">${title}</h3><h4 style="margin:0;">${description}</h4>
             </div>
-            <div class="col-xs-8 text-right">
-
-                <div class="sparkline-<%= request.getParameter("name") %>"
-                     sparkType="pie"
-                     sparkBarColor="white"
-                     sparkHeight="35"
-                     sparkBarWidth="4"
-                     sparkBarSpacing="3"
-                     sparkSliceColors="[#88DD88,#99DD99,#AADDAA,#BBDDBB,#CCDDCC,#DDDDDD,#EEDDEE]">
+            <div class="col-md-5 text-right">
+                <span class="sparkline-<%= request.getParameter("name") %>"
+                      sparkType="pie"
+                      sparkBarColor="white"
+                      sparkHeight="35"
+                      sparkBarWidth="4"
+                      sparkBarSpacing="3"
+                      sparkSliceColors="[#88DD88,#99DD99,#AADDAA,#BBDDBB,#CCDDCC,#DDDDDD,#EEDDEE]">
                         ${valuesString}
-                </div>
-
+                </span>
+            </div>
+            <div class="col-md-1 text-right" style="padding-left:0">
+                <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
             </div>
         </div>
         <hr style="margin-top:5px;margin-bottom:5px;"/>
@@ -144,3 +152,6 @@
         $('.sparkline-<%= request.getParameter("name") %>').sparkline('html', { enableTagOptions: true });
     });
 </script>
+
+
+

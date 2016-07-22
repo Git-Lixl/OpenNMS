@@ -71,36 +71,28 @@
     </div>
 
     <div class="panel-body">
-
-        <%
-            for(int i=0;i<2;i++) {
-                String nameLine = "NameLine"+i;
-                String nameBar = "NameBar"+i;
-                String namePie = "NamePie"+i;
-        %>
         <div class="row gutter-10">
             <div class="col-xs-4">
                 <jsp:include page="/trend/trend.htm" flush="false">
-                    <jsp:param name="name" value="<%=nameLine%>"/>
-                    <jsp:param name="type" value="line"/>
+                    <jsp:param name="name" value="def1"/>
                 </jsp:include>
             </div>
             <div class="col-xs-4">
                 <jsp:include page="/trend/trend.htm" flush="false">
-                    <jsp:param name="name" value="<%=nameBar%>"/>
-                    <jsp:param name="type" value="bar"/>
+                    <jsp:param name="name" value="def2"/>
                 </jsp:include>
             </div>
             <div class="col-xs-4">
                 <jsp:include page="/trend/trend.htm" flush="false">
-                    <jsp:param name="name" value="<%=namePie%>"/>
-                    <jsp:param name="type" value="pie"/>
+                    <jsp:param name="name" value="def3"/>
+                </jsp:include>
+            </div>
+            <div class="col-xs-4">
+                <jsp:include page="/trend/trend.htm" flush="false">
+                    <jsp:param name="name" value="def4"/>
                 </jsp:include>
             </div>
         </div>
-        <%
-            }
-        %>
     </div>
 </div>
 

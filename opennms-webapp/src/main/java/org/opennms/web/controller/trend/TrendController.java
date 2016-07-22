@@ -93,8 +93,6 @@ public class TrendController extends AbstractController implements InitializingB
             LOG.error("BMRHGA: trend definition is null for name '{}'", request.getParameter("name"));
         }
 
-        LOG.error("BMRHGA: returning model for name '{}'", trendDefinition.getName());
-
         return modelAndView;
     }
 
