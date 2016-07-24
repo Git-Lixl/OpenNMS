@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2012-2016 The OpenNMS Group, Inc.
+ * Copyright (C) 2016 The OpenNMS Group, Inc.
  * OpenNMS(R) is Copyright (C) 1999-2016 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
@@ -21,31 +21,49 @@
  *      http://www.gnu.org/licenses/
  *
  * For more information contact:
- *     OpenNMS(R) Licensing <license@opennms.org>
- *     http://www.opennms.org/
- *     http://www.opennms.com/
+ * OpenNMS(R) Licensing <license@opennms.org>
+ *      http://www.opennms.org/
+ *      http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.bsm.service.model.functions.reduce;
+package org.opennms.netmgt.bsm.service.model;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
-import org.opennms.netmgt.bsm.service.model.Status;
-import org.opennms.netmgt.bsm.service.model.StatusWithIndex;
-import org.opennms.netmgt.bsm.service.model.StatusWithIndices;
-import org.opennms.netmgt.bsm.service.model.functions.annotations.Function;
+public class StatusWithIndex {
 
-@Function(name="HighestSeverity", description = "Uses the value of the highest severity")
-public class HighestSeverity implements ReductionFunction {
+    private final Status status;
+    private final int index;
 
-    @Override
-    public Optional<StatusWithIndices> reduce(List<StatusWithIndex> statuses) {
-        return HighestSeverityAbove.reduceWithHighestSeverityAbove(statuses, Status.INDETERMINATE);
+    public StatusWithIndex(Status status, int index) {
+        this.status = Objects.requireNonNull(status);
+        this.index = index;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     @Override
-    public <T> T accept(ReduceFunctionVisitor<T> visitor) {
-        return visitor.visit(this);
+    public int hashCode() {
+        return Objects.hash(status, index);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        StatusWithIndex other = (StatusWithIndex) obj;
+        return Objects.equals(this.status, other.status)
+                && Objects.equals(this.index, other.index);
+    }
+
 }

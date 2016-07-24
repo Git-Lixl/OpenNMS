@@ -28,38 +28,19 @@
 
 package org.opennms.netmgt.bsm.service.model.functions.reduce;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
-import org.junit.Test;
 import org.opennms.netmgt.bsm.service.model.Status;
 import org.opennms.netmgt.bsm.service.model.StatusWithIndex;
 
-import com.google.common.collect.Lists;
+public class Utils {
 
-public class HighestSeverityAboveTest {
-
-    public static List<StatusWithIndex> toListWithIndices(List<Status> statuses) {
-        final List<StatusWithIndex> indexedStatuses = new ArrayList<>();
-        for (int i = 0; i < statuses.size(); i++) {
-            indexedStatuses.add(new StatusWithIndex(statuses.get(i), i));
-        }
-        return indexedStatuses;
+    protected static List<Integer> getIndicesWithStatusGe(List<StatusWithIndex> statuses, Status threshold) {
+        return statuses.stream()
+            .filter(si -> si.getStatus().isGreaterThanOrEqual(threshold))
+            .map(si -> si.getIndex())
+            .collect(Collectors.toList());
     }
 
-    @Test
-    public void testReduce() {
-        HighestSeverityAbove reduceFunction = new HighestSeverityAbove();
-        reduceFunction.setThreshold(Status.MAJOR);
-
-        assertEquals(Optional.empty(), reduceFunction.reduce(Lists.newArrayList()));
-        assertEquals(Optional.empty(), reduceFunction.reduce(toListWithIndices(Lists.newArrayList(
-                Status.MINOR, Status.MAJOR, Status.WARNING))));
-
-        assertEquals(Status.CRITICAL, reduceFunction.reduce(toListWithIndices(Lists.newArrayList(
-                Status.MINOR, Status.MAJOR, Status.WARNING, Status.CRITICAL))).get().getStatus());
-    }
 }

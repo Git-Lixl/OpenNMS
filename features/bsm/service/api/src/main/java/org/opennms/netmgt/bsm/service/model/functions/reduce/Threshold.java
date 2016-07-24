@@ -33,8 +33,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.opennms.netmgt.bsm.service.model.Status;
+import org.opennms.netmgt.bsm.service.model.StatusWithIndex;
+import org.opennms.netmgt.bsm.service.model.StatusWithIndices;
 import org.opennms.netmgt.bsm.service.model.functions.annotations.Function;
 import org.opennms.netmgt.bsm.service.model.functions.annotations.Parameter;
 
@@ -64,21 +67,6 @@ public class Threshold implements ReductionFunction {
     }
 
     @Override
-    public Optional<Status> reduce(List<Status> statuses) {
-        final Map<Status, Integer> hitsByStatus = getHitsByStatus(statuses);
-
-        // Return status with the highest severity where the number of relative hits
-        // is greater than the configured threshold
-        for (Map.Entry<Status, Integer> statusWithHits : hitsByStatus.entrySet()) {
-            if (statusWithHits.getValue() / (double)statuses.size() >= m_threshold) {
-                return Optional.of(statusWithHits.getKey());
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    @Override
     public String toString() {
         return com.google.common.base.Objects.toStringHelper(this)
                 .add("threshold", m_threshold)
@@ -86,8 +74,30 @@ public class Threshold implements ReductionFunction {
     }
 
     @Override
+    public Optional<StatusWithIndices> reduce(List<StatusWithIndex> statuses) {
+        final Map<Status, Integer> hitsByStatus = getHitsByStatusWithIndex(statuses);
+
+        // Determine the status with the highest severity where the number of relative hits
+        // is greater than the configured threshold
+        for (Map.Entry<Status, Integer> statusWithHits : hitsByStatus.entrySet()) {
+            if (statusWithHits.getValue() / (double)statuses.size() >= m_threshold) {
+                return Optional.of(new StatusWithIndices(statusWithHits.getKey(),
+                        Utils.getIndicesWithStatusGe(statuses, statusWithHits.getKey())));
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
     public <T> T accept(ReduceFunctionVisitor<T> visitor) {
         return visitor.visit(this);
+    }
+
+    public Map<Status, Integer> getHitsByStatusWithIndex(List<StatusWithIndex> statuses) {
+        return getHitsByStatus(statuses.stream()
+                .map(si -> si.getStatus())
+                .collect(Collectors.toList()));
     }
 
     // We increment the number of "hits" for a particular Status key

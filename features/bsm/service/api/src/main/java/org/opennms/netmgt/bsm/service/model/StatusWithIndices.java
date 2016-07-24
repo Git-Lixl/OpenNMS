@@ -1,3 +1,5 @@
+package org.opennms.netmgt.bsm.service.model;
+
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
@@ -26,32 +28,43 @@
  *      http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.bsm.service.model.functions.reduce;
+import java.util.List;
+import java.util.Objects;
 
-import static org.junit.Assert.assertEquals;
+public class StatusWithIndices {
 
-import java.util.Arrays;
+    private final Status status;
+    private final List<Integer> indices;
 
-import org.junit.Test;
-import org.opennms.netmgt.bsm.service.model.Status;
-
-public class ThresholdTest {
-
-    @Test
-    public void verifyReduce() {
-        // Example from http://www.opennms.org/wiki/BusinessServiceMonitoring
-        assertEquals(Status.MAJOR, applyThreshold(0.75f, Status.MAJOR, Status.MAJOR, Status.CRITICAL, Status.CRITICAL, Status.WARNING));
-
-        // Another Example with higher threshold
-        assertEquals(Status.WARNING, applyThreshold(1.0f, Status.MAJOR, Status.MAJOR, Status.CRITICAL, Status.CRITICAL, Status.WARNING));
-
-        // Another Example
-        assertEquals(Status.MINOR, applyThreshold(1.0f, Status.CRITICAL, Status.MINOR));
+    public StatusWithIndices(Status status, List<Integer> indices) {
+        this.status = Objects.requireNonNull(status);
+        this.indices = Objects.requireNonNull(indices);
     }
 
-    private Status applyThreshold(float threshold, Status...statuses) {
-        Threshold t = new Threshold();
-        t.setThreshold(threshold);
-        return t.reduce(HighestSeverityAboveTest.toListWithIndices(Arrays.asList(statuses))).get().getStatus();
+    public Status getStatus() {
+        return status;
     }
+
+    public List<Integer> getIndices() {
+        return indices;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(status, indices);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        StatusWithIndices other = (StatusWithIndices) obj;
+        return Objects.equals(this.status, other.status)
+                && Objects.equals(this.indices, other.indices);
+    }
+
 }
