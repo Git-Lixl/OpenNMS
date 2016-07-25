@@ -32,14 +32,19 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
@@ -67,17 +72,35 @@ public class JUnitServer {
         Server server = null;
         if (config.https()) {
             server = new Server();
-            final SslContextFactory factory = new SslContextFactory(config.keystore());
-            factory.setKeyStorePath(config.keystore());
-            factory.setKeyStorePassword(config.keystorePassword());
-            factory.setKeyManagerPassword(config.keyPassword());
-            factory.setTrustStorePath(config.keystore());
-            factory.setTrustStorePassword(config.keystorePassword());
 
-            ServerConnector https = new ServerConnector(server);
-            https.setPort(config.port());
+            // SSL context configuration
+            SslContextFactory sslContextFactory = new SslContextFactory();
+            sslContextFactory.setKeyStorePath(config.keystore());
+            sslContextFactory.setKeyStorePassword(config.keystorePassword());
+            sslContextFactory.setKeyManagerPassword(config.keyPassword());
+            sslContextFactory.setTrustStorePath(config.keystore());
+            sslContextFactory.setTrustStorePassword(config.keystorePassword());
 
-            server.setConnectors(new Connector[] { https });
+            // HTTP Configuration
+            HttpConfiguration http_config = new HttpConfiguration();
+            http_config.setSecureScheme("https");
+            http_config.setSecurePort(config.port());
+            http_config.setOutputBufferSize(32768);
+            http_config.setRequestHeaderSize(8192);
+            http_config.setResponseHeaderSize(8192);
+            http_config.setSendServerVersion(true);
+            http_config.setSendDateHeader(false);
+
+            // SSL HTTP Configuration
+            HttpConfiguration https_config = new HttpConfiguration(http_config);
+            https_config.addCustomizer(new SecureRequestCustomizer());
+
+            // SSL Connector
+            ServerConnector sslConnector = new ServerConnector(server,
+                new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
+                new HttpConnectionFactory(https_config));
+            sslConnector.setPort(config.port());
+            server.addConnector(sslConnector);
         } else {
             server = new Server(config.port());
         }
@@ -121,7 +144,6 @@ public class JUnitServer {
             security.setConstraintMappings(Collections.singletonList(mapping), knownRoles);
             security.setAuthenticator(new BasicAuthenticator());
             security.setLoginService(loginService);
-            // JW: TODO: security.setStrict(false);
             security.setRealmName("MyRealm");
 
             security.setHandler(context);
