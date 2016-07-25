@@ -47,8 +47,10 @@ import org.springframework.stereotype.Component;
 @Component
 @Scope("prototype")
 public class IcmpDetector extends SyncAbstractDetector {
-    
     private static final Logger LOG = LoggerFactory.getLogger(IcmpDetector.class);
+
+    private int m_dscp;
+
     /**
      * <p>Constructor for IcmpDetector.</p>
      */
@@ -57,6 +59,14 @@ public class IcmpDetector extends SyncAbstractDetector {
         init();
     }
     
+    public void setDscp(final int dscp) {
+        m_dscp = dscp;
+    }
+
+    public int getDscp() {
+        return m_dscp;
+    }
+
     /** {@inheritDoc} */
     @Override
     public boolean isServiceDetected(InetAddress address) {
@@ -65,7 +75,7 @@ public class IcmpDetector extends SyncAbstractDetector {
         boolean found = false;
         try {
             for(int i = 0; i < getRetries() && !found; i++) {
-                Number retval = PingerFactory.getInstance().ping(address, getTimeout(), getRetries());
+                Number retval = PingerFactory.getInstance(getDscp()).ping(address, getTimeout(), getRetries());
                 
                 LOG.debug("isServiceDetected: Response time for address: {} is: {}.", address, retval);
                 

@@ -62,8 +62,15 @@ public abstract class PingerFactory {
         if (m_pingers[tc] == null) {
             final String pingerClassName = System.getProperty("org.opennms.netmgt.icmp.pingerClass", "org.opennms.netmgt.icmp.jni6.Jni6Pinger");
             Class<? extends Pinger> clazz = null;
+
             try {
-                clazz = Class.forName(pingerClassName).asSubclass(Pinger.class);
+                if (m_pingers[0] != null) {
+                    // If the default (0) DSCP pinger has already been initialized, use the
+                    // same class in case it's been manually overridden (ie, in the Remote Poller)
+                    clazz = m_pingers[0].getClass();
+                } else {
+                    clazz = Class.forName(pingerClassName).asSubclass(Pinger.class);
+                }
                 final Pinger pinger = clazz.newInstance();
                 pinger.setTrafficClass(tc);
                 m_pingers[tc] = pinger;

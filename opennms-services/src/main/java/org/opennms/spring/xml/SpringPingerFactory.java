@@ -36,6 +36,6 @@ public class SpringPingerFactory {
 
     @Bean(name="pingerService")
     public Pinger createPinger() {
-        return PingerFactory.getInstance();
+        return PingerFactory.getInstance(0);
     }
 }
