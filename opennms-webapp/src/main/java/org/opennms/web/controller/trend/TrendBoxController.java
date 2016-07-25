@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,65 +46,26 @@ import org.opennms.core.db.DataSourceFactory;
 import org.opennms.netmgt.config.trend.TrendAttribute;
 import org.opennms.netmgt.config.trend.TrendConfiguration;
 import org.opennms.netmgt.config.trend.TrendDefinition;
-import org.opennms.web.controller.support.SupportController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.AbstractController;
 
-public class TrendController extends AbstractController implements InitializingBean {
-    private static final Logger LOG = LoggerFactory.getLogger(TrendController.class);
+public class TrendBoxController extends AbstractController implements InitializingBean {
+    private static final Logger LOG = LoggerFactory.getLogger(TrendBoxController.class);
     private final File CONFIG_FILE = new File("etc/trend-configuration.xml");
 
     @Override
     protected ModelAndView handleRequestInternal(final HttpServletRequest request, final HttpServletResponse response) throws Exception {
-
-        final ModelAndView modelAndView = new ModelAndView("trend/trend");
-
-        final TrendDefinition trendDefinition = getConfiguration().getTrendDefintionForName(request.getParameter("name"));
-
-        if (trendDefinition != null) {
-            final List<Double> valuesList = lookupData(trendDefinition.getQuery());
-            final String valuesString = StringUtils.join(valuesList, ',');
-            modelAndView.addObject("trendDefinition", trendDefinition);
-            modelAndView.addObject("trendValues", valuesList);
-            modelAndView.addObject("trendValuesString", valuesString);
-        } else {
-            LOG.warn("trend definition is null for name '{}'", request.getParameter("name"));
-        }
-
+        final ModelAndView modelAndView = new ModelAndView("trend/trend-box");
+        final List<TrendDefinition> filteredTrendDefinitions = getConfiguration().getTrendDefinitions().stream().filter( trendDefinition -> trendDefinition.isVisible() ).collect(Collectors.toList());
+        modelAndView.addObject("trendDefinitions", filteredTrendDefinitions);
         return modelAndView;
     }
 
     public TrendConfiguration getConfiguration() {
         return JAXB.unmarshal(CONFIG_FILE, TrendConfiguration.class);
-    }
-
-    public List<Double> lookupData(final String query) throws SQLException {
-        final List<Double> dataSet = new ArrayList<Double>();
-
-        Connection conn = null;
-
-        try {
-            conn = DataSourceFactory.getInstance().getConnection();
-
-            final Statement statement = conn.createStatement();
-
-            final ResultSet resultSet = statement.executeQuery(query);
-
-            while (resultSet.next()) {
-                dataSet.add(resultSet.getDouble(1));
-            }
-
-            resultSet.close();
-            statement.close();
-        } finally {
-            if (conn != null) {
-                conn.close();
-            }
-        }
-        return dataSet;
     }
 
     @Override

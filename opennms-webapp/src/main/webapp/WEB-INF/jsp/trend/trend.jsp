@@ -29,26 +29,18 @@
 
 --%>
 
-<%@ page language="java" contentType="text/html" session="true" %>
+<%@ page language="java" contentType="text/html" session="true" import="org.opennms.netmgt.config.trend.TrendAttribute"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
 <style type="text/css">
-
-    .row.gutter-10 {
-        margin-right: -5px;
-        margin-left: -5px;
-    }
-
-    .gutter-10 > [class^="col-"], .gutter-10 > [class^=" col-"] {
-        padding-right: 5px;
-        padding-left: 5px;
-    }
 
     .alert-trend {
         background-color: #4c9d29;
         border-color: #4c9d29;
-        height: 100px;
+        height: 90px;
         color: white;
+        margin-bottom: 5px;
     }
 
     .alert-trend hr {
@@ -63,93 +55,48 @@
         color: white;
     }
 
+    .jqstooltip {
+        width: auto !important;
+        height: auto !important;
+    }
+
 </style>
 
-<c:if test="${type == 'line'}">
-    <div class="alert alert-trend" role="alert">
-        <div class="row">
-            <div class="col-md-6">
-                <h3 style="margin:0;">${title}</h3><h4 style="margin:0;">${description}</h4>
-            </div>
-            <div class="col-md-5 text-right">
-                <span class="sparkline-<%= request.getParameter("name") %>"
-                      sparkWidth="100%"
-                      sparkHeight="35"
-                      sparkLineColor="white"
-                      sparkLineWidth="1.5"
-                      sparkFillColor="false"
-                      sparkSpotColor="white"
-                      sparkMinSpotColor="white"
-                      sparkMaxSpotColor="white"
-                      sparkSpotRadius="3"
-                      sparkHighlightSpotColor="white"
-                      sparkHighlightLineColor="white">
-                        ${valuesString}
-                </span>
-            </div>
-            <div class="col-md-1 text-right" style="padding-left:0">
-                <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
-            </div>
-        </div>
-        <hr style="margin-top:5px;margin-bottom:5px;"/>
-        <a href="#">MORE</a>
-    </div>
-</c:if>
+<div class="alert alert-trend" role="alert">
+    <table cellpadding="0" cellspacing="0" width="100%" border="0">
+        <tr>
+            <td width="1%">
+                <h1 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h1>
+            </td>
+            <td style="white-space: nowrap; padding-left:5px; padding-right:5px;">
+                <h3 style="margin:0;">${trendDefinition.title}</h3><h4 style="margin:0;">${trendDefinition.description}</h4>
+            </td>
+            <td width="50%" align="right">
 
-<c:if test="${type == 'bar'}">
-    <div class="alert alert-trend" role="alert">
-        <div class="row">
-            <div class="col-md-6">
-                <h3 style="margin:0;">${title}</h3><h4 style="margin:0;">${description}</h4>
-            </div>
-            <div class="col-md-5 text-right">
-                <span class="sparkline-<%= request.getParameter("name") %>"
-                      sparkType="bar"
-                      sparkBarColor="white"
-                      sparkHeight="35"
-                      sparkBarWidth="4"
-                      sparkBarSpacing="3">
-                        ${valuesString}
-                </span>
-            </div>
-            <div class="col-md-1 text-right" style="padding-left:0">
-                <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
-            </div>
-        </div>
-        <hr style="margin-top:5px;margin-bottom:5px;"/>
-        <a href="#">MORE</a>
-    </div>
-</c:if>
-
-<c:if test="${type == 'pie'}">
-    <div class="alert alert-trend" role="alert">
-        <div class="row">
-            <div class="col-md-6">
-                <h3 style="margin:0;">${title}</h3><h4 style="margin:0;">${description}</h4>
-            </div>
-            <div class="col-md-5 text-right">
-                <span class="sparkline-<%= request.getParameter("name") %>"
-                      sparkType="pie"
-                      sparkBarColor="white"
-                      sparkHeight="35"
-                      sparkBarWidth="4"
-                      sparkBarSpacing="3"
-                      sparkSliceColors="[#88DD88,#99DD99,#AADDAA,#BBDDBB,#CCDDCC,#DDDDDD,#EEDDEE]">
-                        ${valuesString}
-                </span>
-            </div>
-            <div class="col-md-1 text-right" style="padding-left:0">
-                <h2 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h2>
-            </div>
-        </div>
-        <hr style="margin-top:5px;margin-bottom:5px;"/>
-        <a href="#">MORE</a>
-    </div>
-</c:if>
+                <jsp:text><![CDATA[<span "]]></jsp:text>
+                class="sparkline-${trendDefinition.name}"
+                <c:forEach var="trendAttribute" items="${trendDefinition.trendAttributes}">
+                    <c:if test="${fn:startsWith(trendAttribute.key,'spark')}">
+                        ${trendAttribute.key}="${trendAttribute.value}"
+                    </c:if>
+                </c:forEach>
+                >
+                ${trendValuesString}
+                <jsp:text><![CDATA[</span>]]></jsp:text>
+            </td>
+        </tr>
+    </table>
+    <hr style="margin-top:5px;margin-bottom:5px;"/>
+    <%--
+        <c:when test="${trendDefinition.link!=''}">
+            <a href="${trendDefinition.link}">${trendDefinition.linkTitle}</a>
+        </c:when>
+    --%>
+</div>
 
 <script type="text/javascript">
     require(['jquery', '../js/jquery.sparkline.min'], function( $ ) {
-        $('.sparkline-<%= request.getParameter("name") %>').sparkline('html', { enableTagOptions: true });
+        $('.sparkline-${trendDefinition.name}').sparkline('html', { enableTagOptions: true });
     });
 </script>
 

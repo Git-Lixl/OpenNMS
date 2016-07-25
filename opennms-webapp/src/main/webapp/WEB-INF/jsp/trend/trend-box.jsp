@@ -29,69 +29,51 @@
 
 --%>
 
-<%@page language="java" contentType="text/html" session="true" %>
+<%@page language="java"
+        contentType="text/html"
+        session="true"
+        import="org.opennms.netmgt.config.trend.TrendDefinition"%>
+
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<%--
+<style type="text/css">
 
-.severity .severity-critical, .severity .severity-Critical {
-  background-color: #f5cdcd;
-}
+    .row.gutter-10 {
+        margin-right: -5px;
+        margin-left: -5px;
+    }
 
-.severity .severity-major, .severity .severity-Major {
-  background-color: #ffd7cd;
-}
+    .gutter-10 > [class^="col-"], .gutter-10 > [class^=" col-"] {
+        padding-right: 5px;
+        padding-left: 5px;
+    }
 
-.severity .severity-minor, .severity .severity-Minor {
-  background-color: blanchedalmond;
-}
+</style>
 
-.severity .severity-warning, .severity .severity-Warning {
-  background-color: #fff5cd;
-}
+<%
+    int columns = 2;
 
-.severity .severity-indeterminate, .severity .severity-Indeterminate {
-  background-color: #ebebcd;
-}
+    if (request.getParameter("columns") != null) {
+        columns = Integer.parseInt(request.getParameter("columns"));
+    }
 
-.severity .severity-normal, .severity .severity-Normal {
-  background-color: #d7e1cd;
-}
-
-.severity .severity-cleared, .severity .severity-Cleared {
-  background-color: #eeeeee;
-}
-
---%>
+    int colClass = 12 / columns;
+%>
 
 <div class="panel panel-default">
     <div class="panel-heading">
         <h3 class="panel-title">Trend</h3>
     </div>
-
     <div class="panel-body">
         <div class="row gutter-10">
-            <div class="col-xs-4">
-                <jsp:include page="/trend/trend.htm" flush="false">
-                    <jsp:param name="name" value="def1"/>
-                </jsp:include>
-            </div>
-            <div class="col-xs-4">
-                <jsp:include page="/trend/trend.htm" flush="false">
-                    <jsp:param name="name" value="def2"/>
-                </jsp:include>
-            </div>
-            <div class="col-xs-4">
-                <jsp:include page="/trend/trend.htm" flush="false">
-                    <jsp:param name="name" value="def3"/>
-                </jsp:include>
-            </div>
-            <div class="col-xs-4">
-                <jsp:include page="/trend/trend.htm" flush="false">
-                    <jsp:param name="name" value="def4"/>
-                </jsp:include>
-            </div>
+            <c:forEach var="trendDefinition" items="${trendDefinitions}">
+                <div class="col-xs-<%= colClass %>">
+                    <jsp:include page="/trend/trend.htm" flush="false">
+                        <jsp:param name="name" value="${trendDefinition.name}"/>
+                    </jsp:include>
+                </div>
+            </c:forEach>
         </div>
     </div>
 </div>

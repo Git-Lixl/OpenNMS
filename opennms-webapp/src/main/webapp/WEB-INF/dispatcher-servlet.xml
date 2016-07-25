@@ -236,6 +236,9 @@
     <bean name="/trend/trend.htm" class="org.opennms.web.controller.trend.TrendController">
     </bean>
 
+    <bean name="/trend/trend-box.htm" class="org.opennms.web.controller.trend.TrendBoxController">
+    </bean>
+
     <bean name="/application/summary-box.htm" class="org.opennms.web.controller.application.ApplicationBoxController">
         <property name="successView" value="application/summary-box"/>
         <property name="applicationDao" ref="applicationDao"/>

@@ -54,9 +54,6 @@ public class TrendDefinition implements Serializable {
     @XmlAttribute(name="name")
     private String name;
 
-    @XmlAttribute(name="type")
-    private String type;
-
     @XmlElement(name="title")
     private String title;
 
@@ -65,6 +62,15 @@ public class TrendDefinition implements Serializable {
 
     @XmlElement(name="query")
     private String query;
+
+    @XmlElement(name="link")
+    private String link;
+
+    @XmlElement(name="linkTitle")
+    private String linkTitle;
+
+    @XmlElement(name="visible")
+    private boolean visible;
 
     @XmlElementWrapper(name="trend-attributes")
     @XmlElement(name="trend-attribute")
@@ -76,14 +82,6 @@ public class TrendDefinition implements Serializable {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getTitle() {
@@ -116,5 +114,29 @@ public class TrendDefinition implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
+
+    public String getLinkTitle() {
+        return linkTitle;
+    }
+
+    public void setLinkTitle(String linkTitle) {
+        this.linkTitle = linkTitle;
     }
 }

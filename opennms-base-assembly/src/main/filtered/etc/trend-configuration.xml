@@ -1,37 +1,83 @@
 <trend-configuration>
-    <trend-definition name="def1" type="line">
+
+    <trend-definition name="def1">
         <title>Definition #1</title>
         <description>Description #1</description>
+        <visible>true</visible>
         <trend-attributes>
-            <trend-attribute key="key1_1" value="value1_1"/>
-            <trend-attribute key="key1_2" value="value1_2"/>
+            <trend-attribute key="sparkWidth" value="100%"/>
+            <trend-attribute key="sparkHeight" value="35"/>
+            <trend-attribute key="sparkLineColor" value="white"/>
+            <trend-attribute key="sparkLineWidth" value="1.5"/>
+            <trend-attribute key="sparkFillColor" value="false"/>
+            <trend-attribute key="sparkSpotColor" value="white"/>
+            <trend-attribute key="sparkMinSpotColor" value="white"/>
+            <trend-attribute key="sparkMaxSpotColor" value="white"/>
+            <trend-attribute key="sparkSpotRadius" value="3"/>
+            <trend-attribute key="sparkHighlightSpotColor" value="white"/>
+            <trend-attribute key="sparkHighlightLineColor" value="white"/>
         </trend-attributes>
+        <link>#</link>
+        <linkTitle>MORE1</linkTitle>
         <query>
             select * from (values (1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3)) as t;
         </query>
     </trend-definition>
 
-    <trend-definition name="def2" type="bar">
+    <trend-definition name="def2">
         <title>Definition #2</title>
         <description>Description #2</description>
+        <visible>true</visible>
         <trend-attributes>
-            <trend-attribute key="key2_1" value="value2_1"/>
-            <trend-attribute key="key2_2" value="value2_2"/>
+            <trend-attribute key="sparkType" value="bar"/>
+            <trend-attribute key="sparkBarColor" value="white"/>
+            <trend-attribute key="sparkHeight" value="35"/>
+            <trend-attribute key="sparkBarWidth" value="4"/>
+            <trend-attribute key="sparkBarSpacing" value="3"/>
         </trend-attributes>
+        <link>#</link>
+        <linkTitle>MORE2</linkTitle>
         <query>
             select * from (values (1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3)) as t;
         </query>
     </trend-definition>
 
-    <trend-definition name="def3" type="pie">
+    <trend-definition name="def3">
         <title>Definition #3</title>
         <description>Description #3</description>
+        <visible>false</visible>
         <trend-attributes>
-            <trend-attribute key="key3_1" value="value3_1"/>
-            <trend-attribute key="key3_2" value="value3_2"/>
+            <trend-attribute key="sparkType" value="pie"/>
+            <trend-attribute key="sparkBarColor" value="white"/>
+            <trend-attribute key="sparkHeight" value="35"/>
+            <trend-attribute key="sparkBarWidth" value="4"/>
+            <trend-attribute key="sparkBarSpacing" value="3"/>
+            <trend-attribute key="sparkSliceColors" value="[#88DD88,#99DD99,#AADDAA,#BBDDBB,#CCDDCC,#DDDDDD,#EEDDEE]"/>
         </trend-attributes>
+        <link>#</link>
+        <linkTitle>MORE3</linkTitle>
         <query>
             select * from (values (1),(2),(3),(1),(2),(3)) as t;
         </query>
     </trend-definition>
+
+    <trend-definition name="def4">
+        <title>Definition #4</title>
+        <description>Description #4</description>
+        <visible>true</visible>
+        <trend-attributes>
+            <trend-attribute key="sparkType" value="pie"/>
+            <trend-attribute key="sparkBarColor" value="white"/>
+            <trend-attribute key="sparkHeight" value="35"/>
+            <trend-attribute key="sparkBarWidth" value="4"/>
+            <trend-attribute key="sparkBarSpacing" value="3"/>
+            <trend-attribute key="sparkSliceColors" value="[#88DD88,#99DD99,#AADDAA,#BBDDBB,#CCDDCC,#DDDDDD,#EEDDEE]"/>
+        </trend-attributes>
+        <link>#</link>
+        <linkTitle>MORE4</linkTitle>
+        <query>
+            select * from (values (1),(2),(3),(1),(2),(3)) as t;
+        </query>
+    </trend-definition>
+
 </trend-configuration>
