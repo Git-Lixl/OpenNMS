@@ -36,7 +36,7 @@
         <title>Outages</title>
         <subtitle>Last 24h</subtitle>
         <visible>true</visible>
-        <icon>glyphicon-warning-sign</icon>
+        <icon>glyphicon-exclamation-sign</icon>
         <trend-attributes>
             <trend-attribute key="sparkWidth" value="100%"/>
             <trend-attribute key="sparkHeight" value="35"/>
@@ -90,22 +90,28 @@
         </query>
     </trend-definition>
 
-    <trend-definition name="def2">
-        <title>Definition #2</title>
-        <subtitle>Description #2</subtitle>
-        <visible>false</visible>
-        <icon>glyphicon-warning-sign</icon>
+    <trend-definition name="bsm">
+        <title>BSM</title>
+        <subtitle>Business Service</subtitle>
+        <visible>true</visible>
+        <icon>glyphicon-tasks</icon>
         <trend-attributes>
             <trend-attribute key="sparkType" value="bar"/>
             <trend-attribute key="sparkBarColor" value="white"/>
             <trend-attribute key="sparkHeight" value="35"/>
-            <trend-attribute key="sparkBarWidth" value="4"/>
+            <trend-attribute key="sparkBarWidth" value="2"/>
             <trend-attribute key="sparkBarSpacing" value="3"/>
         </trend-attributes>
-        <descriptionLink>#</descriptionLink>
-        <description>MORE2</description>
+        <descriptionLink>topology?szl=1amp;layout=Hierarchy+Layout&amp;provider=Business+Services</descriptionLink>
+        <description>DETAILS</description>
         <query>
-            select * from (values (1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3)) as t;
+            <![CDATA[
+                select (
+                    select count(*) from alarms where firsteventtime > S and firsteventtime <= E and eventuei='uei.opennms.org/bsm/serviceProblem'
+                ) from (
+                    select now() - interval '1 hour' * (O + 1) AS S, NOW() - interval '1 hour' * O as E from generate_series(0, 23) as O
+                ) I order by S;
+            ]]>
         </query>
     </trend-definition>
 
