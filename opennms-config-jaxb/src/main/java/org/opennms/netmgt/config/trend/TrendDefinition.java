@@ -54,6 +54,9 @@ public class TrendDefinition implements Serializable {
     @XmlAttribute(name="name")
     private String name;
 
+    @XmlElement(name="icon")
+    private String icon;
+
     @XmlElement(name="title")
     private String title;
 
@@ -138,5 +141,13 @@ public class TrendDefinition implements Serializable {
 
     public void setLinkTitle(String linkTitle) {
         this.linkTitle = linkTitle;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 }

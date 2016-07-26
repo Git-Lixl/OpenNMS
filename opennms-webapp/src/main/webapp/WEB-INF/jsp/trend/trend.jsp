@@ -66,7 +66,7 @@
     <table cellpadding="0" cellspacing="0" width="100%" border="0">
         <tr>
             <td width="1%">
-                <h1 style="margin:0;"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></h1>
+                <h1 style="margin:0;"><span class="glyphicon ${trendDefinition.icon}" aria-hidden="true"></span></h1>
             </td>
             <td style="white-space: nowrap; padding-left:5px; padding-right:5px;">
                 <h3 style="margin:0;">${trendDefinition.title}</h3><h4 style="margin:0;">${trendDefinition.description}</h4>
@@ -87,11 +87,9 @@
         </tr>
     </table>
     <hr style="margin-top:5px;margin-bottom:5px;"/>
-    <%--
-        <c:when test="${trendDefinition.link!=''}">
-            <a href="${trendDefinition.link}">${trendDefinition.linkTitle}</a>
-        </c:when>
-    --%>
+    <c:if test="${trendDefinition.link!=''}">
+        <a href="${trendDefinition.link}">${trendDefinition.linkTitle}</a>
+    </c:if>
 </div>
 
 <script type="text/javascript">

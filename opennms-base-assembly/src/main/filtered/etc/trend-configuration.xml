@@ -1,8 +1,9 @@
 <trend-configuration>
 
-    <trend-definition name="def1">
-        <title>Definition #1</title>
-        <description>Description #1</description>
+    <trend-definition name="alerts">
+        <title>Alarms</title>
+        <description>Last 24h</description>
+        <icon>glyphicon-bell</icon>
         <visible>true</visible>
         <trend-attributes>
             <trend-attribute key="sparkWidth" value="100%"/>
@@ -17,17 +18,81 @@
             <trend-attribute key="sparkHighlightSpotColor" value="white"/>
             <trend-attribute key="sparkHighlightLineColor" value="white"/>
         </trend-attributes>
-        <link>#</link>
-        <linkTitle>MORE1</linkTitle>
+        <link>alarm/list.htm</link>
+        <linkTitle>DETAILS</linkTitle>
         <query>
-            select * from (values (1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3)) as t;
+            <![CDATA[
+                select (
+                    select count(*) from alarms where firsteventtime > S and firsteventtime <= E
+                ) from (
+                    select now() - interval '1 hour' * (O + 1) AS S, NOW() - interval '1 hour' * O as E from generate_series(0, 23) as O
+                ) I order by S;
+            ]]>
+        </query>
+    </trend-definition>
+
+    <trend-definition name="outages">
+        <title>Outages</title>
+        <description>Last 24h</description>
+        <visible>true</visible>
+        <icon>glyphicon-warning-sign</icon>
+        <trend-attributes>
+            <trend-attribute key="sparkWidth" value="100%"/>
+            <trend-attribute key="sparkHeight" value="35"/>
+            <trend-attribute key="sparkLineColor" value="white"/>
+            <trend-attribute key="sparkLineWidth" value="1.5"/>
+            <trend-attribute key="sparkFillColor" value="false"/>
+            <trend-attribute key="sparkSpotColor" value="white"/>
+            <trend-attribute key="sparkMinSpotColor" value="white"/>
+            <trend-attribute key="sparkMaxSpotColor" value="white"/>
+            <trend-attribute key="sparkSpotRadius" value="3"/>
+            <trend-attribute key="sparkHighlightSpotColor" value="white"/>
+            <trend-attribute key="sparkHighlightLineColor" value="white"/>
+        </trend-attributes>
+        <link>outage/list.htm?outtype=both</link>
+        <linkTitle>DETAILS</linkTitle>
+        <query>
+            <![CDATA[
+                select (
+                    select count(*) from outages where iflostservice < E and (ifregainedservice is null or ifregainedservice >= S)
+                ) from (
+                    select now() - interval '1 hour' * (O + 1) AS S, NOW() - interval '1 hour' * O as E from generate_series(0, 23) as O
+                ) I order by S;
+            ]]>
+        </query>
+    </trend-definition>
+
+    <trend-definition name="severity">
+        <title>Severity</title>
+        <description>Last 24h</description>
+        <visible>true</visible>
+        <icon>glyphicon-dashboard</icon>
+        <trend-attributes>
+            <trend-attribute key="sparkType" value="pie"/>
+            <trend-attribute key="sparkBarColor" value="white"/>
+            <trend-attribute key="sparkHeight" value="35"/>
+            <trend-attribute key="sparkBarWidth" value="4"/>
+            <trend-attribute key="sparkBarSpacing" value="3"/>
+            <trend-attribute key="sparkSliceColors" value="[#CC0000,#FF3300,#FF9900,#FFCC00,#999900,#336600,#999]"/>
+        </trend-attributes>
+        <link></link>
+        <linkTitle>MORE3</linkTitle>
+        <query>
+            <![CDATA[
+                select (
+                    select count(*) from alarms where firsteventtime > now() - interval '24 hours' and severity = S
+                ) from (
+                    select S from generate_series(1,7) as S
+                ) I order by S desc;
+            ]]>
         </query>
     </trend-definition>
 
     <trend-definition name="def2">
         <title>Definition #2</title>
         <description>Description #2</description>
-        <visible>true</visible>
+        <visible>false</visible>
+        <icon>glyphicon-warning-sign</icon>
         <trend-attributes>
             <trend-attribute key="sparkType" value="bar"/>
             <trend-attribute key="sparkBarColor" value="white"/>
@@ -39,44 +104,6 @@
         <linkTitle>MORE2</linkTitle>
         <query>
             select * from (values (1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3)) as t;
-        </query>
-    </trend-definition>
-
-    <trend-definition name="def3">
-        <title>Definition #3</title>
-        <description>Description #3</description>
-        <visible>false</visible>
-        <trend-attributes>
-            <trend-attribute key="sparkType" value="pie"/>
-            <trend-attribute key="sparkBarColor" value="white"/>
-            <trend-attribute key="sparkHeight" value="35"/>
-            <trend-attribute key="sparkBarWidth" value="4"/>
-            <trend-attribute key="sparkBarSpacing" value="3"/>
-            <trend-attribute key="sparkSliceColors" value="[#88DD88,#99DD99,#AADDAA,#BBDDBB,#CCDDCC,#DDDDDD,#EEDDEE]"/>
-        </trend-attributes>
-        <link>#</link>
-        <linkTitle>MORE3</linkTitle>
-        <query>
-            select * from (values (1),(2),(3),(1),(2),(3)) as t;
-        </query>
-    </trend-definition>
-
-    <trend-definition name="def4">
-        <title>Definition #4</title>
-        <description>Description #4</description>
-        <visible>true</visible>
-        <trend-attributes>
-            <trend-attribute key="sparkType" value="pie"/>
-            <trend-attribute key="sparkBarColor" value="white"/>
-            <trend-attribute key="sparkHeight" value="35"/>
-            <trend-attribute key="sparkBarWidth" value="4"/>
-            <trend-attribute key="sparkBarSpacing" value="3"/>
-            <trend-attribute key="sparkSliceColors" value="[#88DD88,#99DD99,#AADDAA,#BBDDBB,#CCDDCC,#DDDDDD,#EEDDEE]"/>
-        </trend-attributes>
-        <link>#</link>
-        <linkTitle>MORE4</linkTitle>
-        <query>
-            select * from (values (1),(2),(3),(1),(2),(3)) as t;
         </query>
     </trend-definition>
 
