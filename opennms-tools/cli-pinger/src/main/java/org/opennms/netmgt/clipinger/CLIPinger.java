@@ -73,6 +73,9 @@ final public class CLIPinger {
     @Option(name = "--dscp", aliases = {"-d"}, required = false, usage = "the DSCP traffic control value")
     private static String s_dscp = "0";
 
+    @Option(name = "--allow-fragmentation", aliases = {"-a"}, required = false, usage = "whether to allow fragmentation")
+    private static boolean s_allowFragmentation = true;
+
     @Argument
     private static List<String> s_arguments = new ArrayList<String>();
     
@@ -102,7 +105,7 @@ final public class CLIPinger {
         
         try {
             host = InetAddress.getByName(s_arguments.get(0));
-            Pinger p = PingerFactory.getInstance(Integer.decode(s_dscp));
+            Pinger p = PingerFactory.getInstance(Integer.decode(s_dscp), s_allowFragmentation);
             for (int i = 0; i < s_count; i++) {
                 Number rtt = p.ping(host, s_timeout, s_retries);
                 if (rtt == null) {

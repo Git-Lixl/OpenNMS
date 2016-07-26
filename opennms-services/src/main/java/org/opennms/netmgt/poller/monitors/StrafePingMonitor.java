@@ -111,9 +111,10 @@ final public class StrafePingMonitor extends AbstractServiceMonitor {
             int count = ParameterMap.getKeyedInteger(parameters, "ping-count", DEFAULT_MULTI_PING_COUNT);
             long pingInterval = ParameterMap.getKeyedLong(parameters, "wait-interval", DEFAULT_PING_INTERVAL);
             int failurePingCount = ParameterMap.getKeyedInteger(parameters, "failure-ping-count", DEFAULT_FAILURE_PING_COUNT);
-            int dscp = ParameterMap.getKeyedDecodedInteger(parameters, "dscp", 0);
+            final int dscp = ParameterMap.getKeyedDecodedInteger(parameters, "dscp", 0);
+            final boolean allowFragmentation = ParameterMap.getKeyedBoolean(parameters, "allow-fragmentation", true);
 
-            responseTimes = new ArrayList<Number>(PingerFactory.getInstance(dscp).parallelPing(host, count, timeout, pingInterval));
+            responseTimes = new ArrayList<Number>(PingerFactory.getInstance(dscp, allowFragmentation).parallelPing(host, count, timeout, pingInterval));
 
             if (CollectionMath.countNull(responseTimes) >= failurePingCount) {
 		LOG.debug("Service {} on interface {} is down, but continuing to gather latency data", svc.getSvcName(), svc.getIpAddr());

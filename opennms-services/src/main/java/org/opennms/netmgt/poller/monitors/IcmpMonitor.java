@@ -99,9 +99,10 @@ final public class IcmpMonitor extends AbstractServiceMonitor {
             int retries = ParameterMap.getKeyedInteger(parameters, "retry", PingConstants.DEFAULT_RETRIES);
             long timeout = ParameterMap.getKeyedLong(parameters, "timeout", PingConstants.DEFAULT_TIMEOUT);
             int packetSize = ParameterMap.getKeyedInteger(parameters, "packet-size", PingConstants.DEFAULT_PACKET_SIZE);
-            int dscp = ParameterMap.getKeyedDecodedInteger(parameters, "dscp", 0);
+            final int dscp = ParameterMap.getKeyedDecodedInteger(parameters, "dscp", 0);
+            final boolean allowFragmentation = ParameterMap.getKeyedBoolean(parameters, "allow-fragmentation", true);
 
-            rtt = PingerFactory.getInstance(dscp).ping(host, timeout, retries,packetSize);
+            rtt = PingerFactory.getInstance(dscp, allowFragmentation).ping(host, timeout, retries,packetSize);
         } catch (Throwable e) {
             LOG.debug("failed to ping {}", host, e);
         }

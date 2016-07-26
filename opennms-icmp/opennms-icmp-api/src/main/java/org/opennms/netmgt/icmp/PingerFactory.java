@@ -39,10 +39,12 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class PingerFactory {
     private static final int MAX_DSCP = (1 << 16) - 1;
+    private static final int FRAG_FALSE = 0;
+    private static final int FRAG_TRUE = 1;
 
     private static final Logger LOG = LoggerFactory.getLogger(PingerFactory.class);
 
-    private static Pinger[] m_pingers = new Pinger[MAX_DSCP];
+    private static Pinger[][] m_pingers = new Pinger[MAX_DSCP][1];
     //private static Map<Integer, Pinger> m_pingers = new ConcurrentHashMap<>();
     //private static Pinger m_pinger;
 
@@ -50,7 +52,7 @@ public abstract class PingerFactory {
      * @deprecated Use {@link #getInstance(int)} instead.
      */
     public static Pinger getInstance() {
-        return PingerFactory.getInstance(0);
+        return PingerFactory.getInstance(0, true);
     }
 
     /**
@@ -58,22 +60,23 @@ public abstract class PingerFactory {
      *
      * @return a {@link Pinger} object.
      */
-    public static Pinger getInstance(final int tc) {
+    public static Pinger getInstance(final int tc, final boolean allowFragmentation) {
+        final int isFrag = allowFragmentation? FRAG_TRUE : FRAG_FALSE;
         if (m_pingers[tc] == null) {
             final String pingerClassName = System.getProperty("org.opennms.netmgt.icmp.pingerClass", "org.opennms.netmgt.icmp.jni6.Jni6Pinger");
             Class<? extends Pinger> clazz = null;
 
             try {
-                if (m_pingers[0] != null) {
+                if (m_pingers[0] != null && m_pingers[0][FRAG_TRUE] != null) {
                     // If the default (0) DSCP pinger has already been initialized, use the
                     // same class in case it's been manually overridden (ie, in the Remote Poller)
-                    clazz = m_pingers[0].getClass();
+                    clazz = m_pingers[0][FRAG_TRUE].getClass();
                 } else {
                     clazz = Class.forName(pingerClassName).asSubclass(Pinger.class);
                 }
                 final Pinger pinger = clazz.newInstance();
                 pinger.setTrafficClass(tc);
-                m_pingers[tc] = pinger;
+                m_pingers[tc][isFrag] = pinger;
             } catch (final ClassNotFoundException e) {
                 IllegalArgumentException ex = new IllegalArgumentException("Unable to find class named " + pingerClassName, e);
                 LOG.error(ex.getLocalizedMessage(), ex);
@@ -92,7 +95,7 @@ public abstract class PingerFactory {
                 throw ex;
             }
         }
-        return m_pingers[tc];
+        return m_pingers[tc][isFrag];
     }
 
     /**
@@ -100,11 +103,11 @@ public abstract class PingerFactory {
 
      */
     public static void setInstance(final Pinger pinger) {
-        m_pingers[0] = pinger;
+        m_pingers[0][FRAG_TRUE] = pinger;
     }
 
-    public static void setInstance(final int tc, final Pinger pinger) {
-        m_pingers[tc] = pinger;
+    public static void setInstance(final int tc, final boolean allowFragmentation, final Pinger pinger) {
+        m_pingers[tc][allowFragmentation? FRAG_TRUE : FRAG_FALSE] = pinger;
     }
 
     /**

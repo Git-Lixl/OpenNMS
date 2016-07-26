@@ -449,7 +449,7 @@ public class DefaultPollContext implements PollContext, EventListener {
         try {
             int retries = OpennmsServerConfigFactory.getInstance().getDefaultCriticalPathRetries();
             int timeout = OpennmsServerConfigFactory.getInstance().getDefaultCriticalPathTimeout();
-            Number retval = PingerFactory.getInstance(0).ping(ipAddress, timeout, retries);
+            Number retval = PingerFactory.getInstance(0, true).ping(ipAddress, timeout, retries);
             if (retval != null) {
                 available = true;
             }

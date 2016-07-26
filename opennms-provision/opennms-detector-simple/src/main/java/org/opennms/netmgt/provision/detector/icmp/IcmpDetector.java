@@ -50,6 +50,7 @@ public class IcmpDetector extends SyncAbstractDetector {
     private static final Logger LOG = LoggerFactory.getLogger(IcmpDetector.class);
 
     private int m_dscp;
+    private boolean m_allowFragmentation;
 
     /**
      * <p>Constructor for IcmpDetector.</p>
@@ -67,6 +68,14 @@ public class IcmpDetector extends SyncAbstractDetector {
         return m_dscp;
     }
 
+    public boolean isAllowFragmentation() {
+        return m_allowFragmentation;
+    }
+
+    public void setAllowFragmentation(final boolean allowFragmentation) {
+        m_allowFragmentation = allowFragmentation;
+    }
+
     /** {@inheritDoc} */
     @Override
     public boolean isServiceDetected(InetAddress address) {
@@ -75,8 +84,7 @@ public class IcmpDetector extends SyncAbstractDetector {
         boolean found = false;
         try {
             for(int i = 0; i < getRetries() && !found; i++) {
-                Number retval = PingerFactory.getInstance(getDscp()).ping(address, getTimeout(), getRetries());
-                
+                final Number retval = PingerFactory.getInstance(m_dscp, m_allowFragmentation).ping(address, getTimeout(), getRetries());
                 LOG.debug("isServiceDetected: Response time for address: {} is: {}.", address, retval);
                 
                 if (retval != null) {
