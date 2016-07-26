@@ -43,8 +43,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.opennms.netmgt.config.poller.CriticalService;
-
 
 @XmlRootElement(name="trend-definition")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -60,17 +58,17 @@ public class TrendDefinition implements Serializable {
     @XmlElement(name="title")
     private String title;
 
-    @XmlElement(name="description")
-    private String description;
+    @XmlElement(name="subtitle")
+    private String subtitle;
 
     @XmlElement(name="query")
     private String query;
 
-    @XmlElement(name="link")
-    private String link;
+    @XmlElement(name="description")
+    private String description;
 
-    @XmlElement(name="linkTitle")
-    private String linkTitle;
+    @XmlElement(name="descriptionLink")
+    private String descriptionLink;
 
     @XmlElement(name="visible")
     private boolean visible;
@@ -111,12 +109,12 @@ public class TrendDefinition implements Serializable {
         this.trendAttributes = trendAttributes;
     }
 
-    public String getDescription() {
-        return description;
+    public String getSubtitle() {
+        return subtitle;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setSubtitle(String subtitle) {
+        this.subtitle = subtitle;
     }
 
     public boolean isVisible() {
@@ -127,20 +125,20 @@ public class TrendDefinition implements Serializable {
         this.visible = visible;
     }
 
-    public String getLink() {
-        return link;
+    public String getDescription() {
+        return description;
     }
 
-    public void setLink(String link) {
-        this.link = link;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public String getLinkTitle() {
-        return linkTitle;
+    public String getDescriptionLink() {
+        return descriptionLink;
     }
 
-    public void setLinkTitle(String linkTitle) {
-        this.linkTitle = linkTitle;
+    public void setDescriptionLink(String descriptionLink) {
+        this.descriptionLink = descriptionLink;
     }
 
     public String getIcon() {

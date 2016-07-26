@@ -69,10 +69,9 @@
                 <h1 style="margin:0;"><span class="glyphicon ${trendDefinition.icon}" aria-hidden="true"></span></h1>
             </td>
             <td style="white-space: nowrap; padding-left:5px; padding-right:5px;">
-                <h3 style="margin:0;">${trendDefinition.title}</h3><h4 style="margin:0;">${trendDefinition.description}</h4>
+                <h3 style="margin:0;">${trendDefinition.title}</h3><h4 style="margin:0;">${trendDefinition.subtitle}</h4>
             </td>
             <td width="50%" align="right">
-
                 <jsp:text><![CDATA[<span "]]></jsp:text>
                 class="sparkline-${trendDefinition.name}"
                 <c:forEach var="trendAttribute" items="${trendDefinition.trendAttributes}">
@@ -87,9 +86,14 @@
         </tr>
     </table>
     <hr style="margin-top:5px;margin-bottom:5px;"/>
-    <c:if test="${trendDefinition.link!=''}">
-        <a href="${trendDefinition.link}">${trendDefinition.linkTitle}</a>
-    </c:if>
+    <c:choose>
+        <c:when test="${trendDefinition.descriptionLink!=''}">
+            <a href="${trendDefinition.descriptionLink}">${trendDefinition.description}</a>
+        </c:when>
+        <c:otherwise>
+            ${trendDefinition.description}
+        </c:otherwise>
+    </c:choose>
 </div>
 
 <script type="text/javascript">

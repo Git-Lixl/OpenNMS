@@ -2,15 +2,16 @@
 
     <trend-definition name="alerts">
         <title>Alarms</title>
-        <description>Last 24h</description>
+        <subtitle>Last 24h</subtitle>
         <icon>glyphicon-bell</icon>
         <visible>true</visible>
         <trend-attributes>
             <trend-attribute key="sparkWidth" value="100%"/>
             <trend-attribute key="sparkHeight" value="35"/>
+            <trend-attribute key="sparkChartRangeMin" value="0"/>
             <trend-attribute key="sparkLineColor" value="white"/>
             <trend-attribute key="sparkLineWidth" value="1.5"/>
-            <trend-attribute key="sparkFillColor" value="false"/>
+            <trend-attribute key="sparkFillColor" value="#88BB55"/>
             <trend-attribute key="sparkSpotColor" value="white"/>
             <trend-attribute key="sparkMinSpotColor" value="white"/>
             <trend-attribute key="sparkMaxSpotColor" value="white"/>
@@ -18,8 +19,8 @@
             <trend-attribute key="sparkHighlightSpotColor" value="white"/>
             <trend-attribute key="sparkHighlightLineColor" value="white"/>
         </trend-attributes>
-        <link>alarm/list.htm</link>
-        <linkTitle>DETAILS</linkTitle>
+        <descriptionLink>alarm/list.htm</descriptionLink>
+        <description>DETAILS</description>
         <query>
             <![CDATA[
                 select (
@@ -33,15 +34,16 @@
 
     <trend-definition name="outages">
         <title>Outages</title>
-        <description>Last 24h</description>
+        <subtitle>Last 24h</subtitle>
         <visible>true</visible>
         <icon>glyphicon-warning-sign</icon>
         <trend-attributes>
             <trend-attribute key="sparkWidth" value="100%"/>
             <trend-attribute key="sparkHeight" value="35"/>
+            <trend-attribute key="sparkChartRangeMin" value="0"/>
             <trend-attribute key="sparkLineColor" value="white"/>
             <trend-attribute key="sparkLineWidth" value="1.5"/>
-            <trend-attribute key="sparkFillColor" value="false"/>
+            <trend-attribute key="sparkFillColor" value="#88BB55"/>
             <trend-attribute key="sparkSpotColor" value="white"/>
             <trend-attribute key="sparkMinSpotColor" value="white"/>
             <trend-attribute key="sparkMaxSpotColor" value="white"/>
@@ -49,8 +51,8 @@
             <trend-attribute key="sparkHighlightSpotColor" value="white"/>
             <trend-attribute key="sparkHighlightLineColor" value="white"/>
         </trend-attributes>
-        <link>outage/list.htm?outtype=both</link>
-        <linkTitle>DETAILS</linkTitle>
+        <descriptionLink>outage/list.htm?outtype=both</descriptionLink>
+        <description>DETAILS</description>
         <query>
             <![CDATA[
                 select (
@@ -64,7 +66,7 @@
 
     <trend-definition name="severity">
         <title>Severity</title>
-        <description>Last 24h</description>
+        <subtitle>Last 24h</subtitle>
         <visible>true</visible>
         <icon>glyphicon-dashboard</icon>
         <trend-attributes>
@@ -75,8 +77,8 @@
             <trend-attribute key="sparkBarSpacing" value="3"/>
             <trend-attribute key="sparkSliceColors" value="[#CC0000,#FF3300,#FF9900,#FFCC00,#999900,#336600,#999]"/>
         </trend-attributes>
-        <link></link>
-        <linkTitle>MORE3</linkTitle>
+        <descriptionLink></descriptionLink>
+        <description></description>
         <query>
             <![CDATA[
                 select (
@@ -90,7 +92,7 @@
 
     <trend-definition name="def2">
         <title>Definition #2</title>
-        <description>Description #2</description>
+        <subtitle>Description #2</subtitle>
         <visible>false</visible>
         <icon>glyphicon-warning-sign</icon>
         <trend-attributes>
@@ -100,8 +102,8 @@
             <trend-attribute key="sparkBarWidth" value="4"/>
             <trend-attribute key="sparkBarSpacing" value="3"/>
         </trend-attributes>
-        <link>#</link>
-        <linkTitle>MORE2</linkTitle>
+        <descriptionLink>#</descriptionLink>
+        <description>MORE2</description>
         <query>
             select * from (values (1),(2),(3),(1),(2),(3),(1),(2),(3),(1),(2),(3)) as t;
         </query>
