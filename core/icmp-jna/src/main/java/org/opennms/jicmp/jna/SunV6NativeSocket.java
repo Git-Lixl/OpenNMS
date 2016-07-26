@@ -28,6 +28,7 @@
 
 package org.opennms.jicmp.jna;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -71,10 +72,15 @@ public class SunV6NativeSocket extends NativeDatagramSocket {
     public void setTrafficClass(final int tc) throws LastErrorException {
         final IntByReference tc_ptr = new IntByReference(tc);
         try {
-            setsockopt(m_sock, IPPROTO_IPV6, IPV6_TCLASS, tc_ptr.getPointer(), Pointer.SIZE);
+            setsockopt(getSock(), IPPROTO_IPV6, IPV6_TCLASS, tc_ptr.getPointer(), Pointer.SIZE);
         } catch (final LastErrorException e) {
             throw new RuntimeException("setsockopt: " + strerror(e.getErrorCode()));
         }
+    }
+
+    @Override
+    public void allowFragmentation(final boolean frag) throws IOException {
+        allowFragmentation(IPPROTO_IPV6, IPV6_DONTFRAG, frag);
     }
 
     @Override
@@ -104,7 +110,8 @@ public class SunV6NativeSocket extends NativeDatagramSocket {
         return close(getSock());
     }
 
-    protected int getSock() {
+    @Override
+    public int getSock() {
         return m_sock;
     }
 

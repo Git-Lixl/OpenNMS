@@ -66,10 +66,15 @@ public class BSDV4NativeSocket extends NativeDatagramSocket {
 	public void setTrafficClass(final int tc) throws IOException {
 	    final IntByReference tc_ptr = new IntByReference(tc);
             try {
-                setsockopt(m_sock, IPPROTO_IPV6, IP_TOS, tc_ptr.getPointer(), Pointer.SIZE);
+                setsockopt(getSock(), IPPROTO_IPV6, IP_TOS, tc_ptr.getPointer(), Pointer.SIZE);
             } catch (final LastErrorException e) {
                 throw new IOException("setsockopt: " + strerror(e.getErrorCode()));
             }
+	}
+
+	@Override
+	public void allowFragmentation(final boolean frag) throws IOException {
+	    allowFragmentation(IPPROTO_IP, IP_MTU_DISCOVER, frag);
 	}
 
 	@Override
@@ -77,9 +82,10 @@ public class BSDV4NativeSocket extends NativeDatagramSocket {
 		final bsd_sockaddr_in in_addr = new bsd_sockaddr_in();
 		final int[] szRef = new int[] { in_addr.size() };
 		final ByteBuffer buf = p.getContent();
+		final int socket = getSock();
 
-		SocketUtils.assertSocketValid(m_sock);
-		final int n = recvfrom(m_sock, buf, buf.capacity(), 0, in_addr, szRef);
+		SocketUtils.assertSocketValid(socket);
+		final int n = recvfrom(socket, buf, buf.capacity(), 0, in_addr, szRef);
 		p.setLength(n);
 		p.setAddress(in_addr.getAddress());
 		p.setPort(in_addr.getPort());
@@ -91,8 +97,9 @@ public class BSDV4NativeSocket extends NativeDatagramSocket {
 	public int send(final NativeDatagramPacket p) {
 		final bsd_sockaddr_in destAddr = new bsd_sockaddr_in(p.getAddress(), p.getPort());
 		final ByteBuffer buf = p.getContent();
-		SocketUtils.assertSocketValid(m_sock);
-		return sendto(m_sock, buf, buf.remaining(), 0, destAddr, destAddr.size());
+		final int socket = getSock();
+		SocketUtils.assertSocketValid(socket);
+		return sendto(socket, buf, buf.remaining(), 0, destAddr, destAddr.size());
 	}
 
 	@Override
@@ -102,4 +109,8 @@ public class BSDV4NativeSocket extends NativeDatagramSocket {
 		return ret;
 	}
 
+	@Override
+	public int getSock() {
+	    return m_sock;
+	}
 }
