@@ -33,13 +33,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
-import org.drools.core.FactHandle;
 import org.junit.Before;
 import org.junit.Test;
+import org.kie.api.runtime.rule.FactHandle;
 import org.opennms.netmgt.correlation.drools.DroolsCorrelationEngine;
-import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.MonitoringLocationDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.NetworkBuilder;
@@ -54,10 +54,7 @@ public class DependencyLoadingRulesIT extends CorrelationRulesITCase {
 	
 	@Autowired
 	private NCSComponentRepository m_repository;
-	
-	@Autowired
-	private DistPollerDao m_distPollerDao;
-	
+
 	@Autowired
 	MonitoringLocationDao m_locationDao;
 	
@@ -477,20 +474,20 @@ public class DependencyLoadingRulesIT extends CorrelationRulesITCase {
 	}
 	
 	private FactHandle insertFactAndFireRules(Object fact) {
-		FactHandle handle = m_engine.getWorkingMemory().insert( fact );
-        m_engine.getWorkingMemory().fireAllRules();
+	    m_engine.getKieSession().insert(fact);
+		FactHandle handle = m_engine.getKieSession().insert( fact );
+        m_engine.getKieSession().fireAllRules();
 		return handle;
 	}
 	
 	private void retractFactAndFireRules(FactHandle fact) {
-		m_engine.getWorkingMemory().retract( fact );
-		m_engine.getWorkingMemory().fireAllRules();
+		m_engine.getKieSession().delete(fact);
+		m_engine.getKieSession().fireAllRules();
 	}
-    
-	
+
 	private void verifyFacts() {
-		List<Object> memObjects = m_engine.getMemoryObjects();
-		
+		Collection<? extends Object> memObjects = m_engine.getKieSessionObjects();
+
 		String memContents = memObjects.toString();
 		
 		for(Object anticipated : m_anticipatedWorkingMemory) {
@@ -499,8 +496,6 @@ public class DependencyLoadingRulesIT extends CorrelationRulesITCase {
 		}
 		
 		assertEquals("Unexpected objects in working memory " + memObjects, 0, memObjects.size());
-		
 	}
-    
-    
+
 }
