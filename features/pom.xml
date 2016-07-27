@@ -9,6 +9,15 @@
   <artifactId>org.opennms.features</artifactId>
   <packaging>pom</packaging>
   <name>OpenNMS :: Features</name>
+  <profiles>
+    <profile>
+      <id>build-bamboo</id>
+      <modules>
+        <module>remote-poller-jnlp</module>
+      </modules>
+    </profile>
+  </profiles>
+
   <modules>
 
     <!-- ActiveMQ broker -->
@@ -46,7 +55,6 @@
 
     <!-- OpenNMS Remote Poller daemon and UI -->
     <module>remote-poller</module>
-    <module>remote-poller-jnlp</module>
     <module>remote-poller-gwt</module>
 
     <!-- OpenNMS Ticketing API and implementations -->
